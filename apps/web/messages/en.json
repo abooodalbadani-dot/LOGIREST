@@ -456,7 +456,8 @@
       "save": "Save",
       "submit": "Submit",
       "view_all": "View All",
-      "void": "Void Document"
+      "void": "Void Document",
+      "review": "Review"
     },
     "languages": {
       "arabic": "Arabic",
@@ -1076,7 +1077,14 @@
     },
     "clear_filters": "Clear Filters",
     "expiry_date": "Expiry Date",
-    "yes": "Yes"
+    "yes": "Yes",
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "normal": "Normal"
+    },
+    "monthly_spend": "Monthly Spend"
   },
   "communications": {
     "notifications": {
@@ -1320,7 +1328,34 @@
       "uptime": "Uptime"
     },
     "title": "Dashboard",
-    "users_online": "{count} Users Online"
+    "users_online": "{count} Users Online",
+    "procurement": {
+      "strategic": "Strategic",
+      "sourcing": "Sourcing",
+      "supply_chain": "Supply Chain",
+      "central_procurement_unit": "Central Procurement Unit",
+      "new_request": "New Request",
+      "generate_po": "Generate PO",
+      "pending_prs": "Pending PRs",
+      "awaiting_po": "Awaiting PO",
+      "active_pos": "Active POs",
+      "issued_to_suppliers": "Issued to Suppliers",
+      "pending_grns": "Pending GRNs",
+      "inbound_logistics": "Inbound Logistics",
+      "monthly_spend": "Monthly Spend",
+      "approved_budget": "Approved Budget",
+      "active_pipeline": "Active Pipeline",
+      "real_time_tracking": "Real Time Tracking",
+      "updated_now": "Updated Now",
+      "purchase_request": "Purchase Request",
+      "vendor_analytics": "Vendor Analytics",
+      "trusted_suppliers": "Trusted Suppliers",
+      "top_vendors": "Top Vendors",
+      "manage_vendors": "Manage Vendors",
+      "efficiency": "Efficiency",
+      "po_conversion_rate": "PO Conversion Rate",
+      "avg_fulfillment_cycle": "Avg. Fulfillment Cycle: {days} days"
+    }
   },
   "fefo": {
     "override_warning": "Warning: This product is expired — you must enter an override reason",
@@ -2094,7 +2129,8 @@
       "financial_terms": "Financial Terms",
       "financial_terms_desc": "Currency and payment agreements",
       "metrics": {
-        "compliance": "Compliance"
+        "compliance": "Compliance",
+        "total_suppliers": "Total Suppliers"
       },
       "name_ar": "Name (Arabic)",
       "name_ar_placeholder": "الموزعون العالميون",
@@ -2128,7 +2164,7 @@
         "title": "Vendor Profile",
         "trends": "Landed Cost Trends"
       },
-      "search_placeholder": "Search suppliers by name or code...",
+      "search_placeholder": "Search suppliers by code or name...",
       "status": "Status",
       "tax_number": "VAT / Tax Number",
       "terms_placeholder": "e.g., Net 30 days",
@@ -2205,7 +2241,8 @@
         "code_required": "Unit code is required",
         "code_uppercase": "Code must be uppercase alphabetic",
         "name_ar_required": "Arabic name is required",
-        "name_en_required": "English name is required"
+        "name_en_required": "English name is required",
+        "name_required": "UoM Name is required"
       },
       "view_title": "UoM Details",
       "category_options": {
@@ -2313,6 +2350,19 @@
       "resto_pro": "RESTO_PRO"
     },
     "title": "Page Not Found",
+    "trusted_by": "Trusted By Industry Leaders"
+  },
+  "forbidden": {
+    "description": "You do not have the required security credentials to access this system module. Please contact your operations supervisor or system administrator.",
+    "go_home": "Back to Control Center",
+    "mission_description": "At Otantik Restaurant, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.",
+    "mission_title": "Our Mission",
+    "partners": {
+      "food_logistics": "FOOD_LOGISTICS",
+      "global_kitchen": "GLOBAL_KITCHEN",
+      "resto_pro": "RESTO_PRO"
+    },
+    "title": "Access Denied",
     "trusted_by": "Trusted By Industry Leaders"
   },
   "notifications": {

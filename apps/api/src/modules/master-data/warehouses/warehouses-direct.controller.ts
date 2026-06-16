@@ -19,6 +19,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -26,7 +27,7 @@ import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
 @Controller('warehouses')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class WarehousesDirectController {
   constructor(private readonly prisma: PrismaService) {}

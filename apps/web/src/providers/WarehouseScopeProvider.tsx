@@ -20,8 +20,7 @@ export function WarehouseScopeProvider({ children }: { children: ReactNode }) {
   const warehouseId = activeScope?.warehouseId;
   const { data: lockState, isLoading: lockLoading } = useWarehouseLock(warehouseId ?? null);
 
-  const scopeNotResolved = !!user && (!activeScope?.branchId || !activeScope?.warehouseId);
-  const isLoadingCombined = authLoading || scopeNotResolved || (!!warehouseId && lockLoading);
+  const isLoadingCombined = authLoading || (!!warehouseId && lockLoading);
 
   const value: WarehouseScopeContextValue = {
     isLocked: lockState?.isLocked ?? false,

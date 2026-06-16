@@ -29,7 +29,7 @@ export function StatusTimeline({ steps, className, ...props }: StatusTimelinePro
  const iconClasses = {
  completed: "bg-operational-cyan text-white shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.4)]",
  current: "border-2 border-operational-cyan bg-surface-container-high text-operational-cyan",
- pending: "border-2 border-surface-container-highest bg-surface-container-low text-surface-container-highest",
+ pending: "border-2 border-surface-container-highest bg-card border border-border shadow-sm text-surface-container-highest",
  error: "bg-status-error text-white shadow-[0_0_8px_rgba(var(--status-error-rgb),0.4)]"
  };
 

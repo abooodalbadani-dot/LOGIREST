@@ -9,7 +9,7 @@ export default async function TransferReceivePage({
  const resolvedParams = await params;
  return (
  <ProtectedRoute requiredResource="transfer" requiredAction="edit">
-  <TransferReceiveClient id={resolvedParams.id} locale={resolvedParams.locale} />
+ <TransferReceiveClient id={resolvedParams.id} locale={resolvedParams.locale} />
  </ProtectedRoute>
  );
 }

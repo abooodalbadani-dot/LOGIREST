@@ -4,6 +4,43 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
 
+/** 
+ * Route prefix → allowed roles mapping.
+ * Checked by base64-decoded JWT payload in the proxy.
+ * This is a UX guard only. The API enforces the real boundary.
+ */
+const ROUTE_ROLE_MAP: Record<string, string[]> = {
+  '/stocktake':     ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/adjustments':   ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/transfers':     ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/issues':        ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF', 'AUDITOR', 'GM'],
+  '/goods-received': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'PROC_OFFICER', 'PROC_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/inventory':     ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF', 'AUDITOR', 'GM', 'VIEWER'],
+  '/purchase-requests': ['ADMIN', 'INV_MGR', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR', 'STORE_MGR', 'APPROVER', 'AUDITOR', 'GM', 'VIEWER'],
+  '/purchase-orders':   ['ADMIN', 'PROC_MGR', 'PROC_OFFICER', 'BRANCH_MGR', 'INV_MGR', 'APPROVER', 'AUDITOR', 'GM', 'VIEWER'],
+  '/kitchen-requests':  ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF'],
+  '/admin':         ['ADMIN'],
+  '/reports':       ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'GM', 'AUDITOR', 'VIEWER', 'APPROVER'],
+};
+
+/** 
+ * Reads role from JWT payload via base64 decode (no signature verification).
+ * Returns null if token is malformed.
+ */
+function getRoleFromToken(token: string): string | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(
+      Buffer.from(parts[1], 'base64url').toString('utf-8')
+    ) as Record<string, unknown>;
+    return typeof payload['role'] === 'string' ? payload['role'] : null;
+  } catch {
+    return null;
+  }
+}
+
+
 /**
  * Proxy function for handling internationalization and authentication.
  * Per Next.js 16 convention, this file acts as the primary gateway.
@@ -80,6 +117,20 @@ export function proxy(request: NextRequest) {
   if (!token && !isPublicPage) {
     console.log(`[Proxy] Unauthenticated access to protected route: ${pathname} -> Redirecting to /login`);
     return NextResponse.redirect(constructUrl('/login'));
+  }
+
+  // D. Role-based route protection (UX layer)
+  if (token) {
+    const userRole = getRoleFromToken(token);
+    for (const [routePrefix, allowedRoles] of Object.entries(ROUTE_ROLE_MAP)) {
+      if (normalizedPath.startsWith(routePrefix)) {
+        if (!userRole || !allowedRoles.includes(userRole)) {
+          console.log(`[Proxy] Role '${userRole}' not authorized for route: ${normalizedPath} → 403`);
+          return NextResponse.rewrite(constructUrl('/403'));
+        }
+        break; // first match wins
+      }
+    }
   }
 
   // C. Authenticated on Public Page -> Dashboard

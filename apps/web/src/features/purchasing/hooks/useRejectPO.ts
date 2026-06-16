@@ -6,26 +6,26 @@ import { PO_STATUS } from '@logirest/shared-types';
 import { PODetail } from './usePO';
 
 export function useRejectPO(options?: { onConflict?: () => void }) {
-  const queryClient = useQueryClient();
+ const queryClient = useQueryClient();
 
-  return useSafeMutation({
-    onConflict: options?.onConflict,
-    mutationFn: async ({ id, reason, version, signal }: { id: string; reason: string; version: number; signal?: AbortSignal }) => {
-      const response = await apiClient.post(`/procurement/purchase-orders/${id}/reject`, successSchema, { reason, version }, { signal });
-      return response;
-    },
-    onSuccess: (_, { id }) => {
-      // Simulate state transition in cache
-      queryClient.setQueryData(['purchase-orders', id], (old: PODetail | undefined) => {
-        if (!old) return old;
-        return { ...old, status: PO_STATUS.REJECTED };
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
-    },
-    onError: (error) => {
-      console.error('[useRejectPO] Failed to reject PO:', error);
-    },
-  });
+ return useSafeMutation({
+  onConflict: options?.onConflict,
+  mutationFn: async ({ id, reason, version, signal }: { id: string; reason: string; version: number; signal?: AbortSignal }) => {
+   const response = await apiClient.post(`/procurement/purchase-orders/${id}/reject`, successSchema, { reason, version }, { signal });
+   return response;
+  },
+  onSuccess: (_, { id }) => {
+   // Simulate state transition in cache
+   queryClient.setQueryData(['purchase-orders', id], (old: PODetail | undefined) => {
+    if (!old) return old;
+    return { ...old, status: PO_STATUS.REJECTED };
+   });
+   
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
+  },
+  onError: (error) => {
+   console.error('[useRejectPO] Failed to reject PO:', error);
+  },
+ });
 }

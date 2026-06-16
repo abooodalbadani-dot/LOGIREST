@@ -69,26 +69,25 @@ export function DataTable<TData, TValue>({
 
  return (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
- {searchKey ? (
- <div className="relative max-w-sm w-full">
- <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
- <Input
+  <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 py-4 mb-4">
+  {searchKey ? (
+  <div className="relative w-full sm:max-w-sm shrink-0">
+  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+  <Input
   placeholder={searchPlaceholder || t("table.search")} value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""} onChange={(event) =>
- table.getColumn(searchKey)?.setFilterValue(event.target.value)
- }
- className="max-w-sm ps-10"
- />
- </div>
- ) : <div />}
- {enableExport && (
- <Button variant="outline" onClick={onExport} className="bg-surface-container-low hover:bg-surface-container-high">
- <Download className="me-2 h-4 w-4" />
- {t("table.export")}
- </Button>
- )}
- </div>
- <div className="rounded-[var(--radius)] bg-surface-container-low overflow-hidden shadow-sm">
+  table.getColumn(searchKey)?.setFilterValue(event.target.value)
+  }
+  className="w-full ps-10 bg-background border-border text-foreground transition-colors focus:border-brand-gold"
+  />
+  </div>
+  ) : <div />}
+  {enableExport && (
+  <Button variant="outline" onClick={onExport} className="shrink-0 gap-2 border-border text-foreground hover:bg-muted font-medium uppercase">
+  <Download className="w-4 h-4" /> {t("table.export")}
+  </Button>
+  )}
+  </div>
+ <div className="rounded-[var(--radius)] bg-card border border-border shadow-sm overflow-hidden shadow-sm">
  <Table>
  <TableHeader>
  {table.getHeaderGroups().map((headerGroup) => (
@@ -136,9 +135,9 @@ export function DataTable<TData, TValue>({
  <div className="flex items-center justify-end gap-2 py-4">
  <div className="flex-1 text-body-md text-muted-foreground">
  {t("table.pagination", {
-  start: table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1,
-  end: Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length),
-  total: table.getFilteredRowModel().rows.length
+ start: table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1,
+ end: Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length),
+ total: table.getFilteredRowModel().rows.length
  })}
  </div>
  <div className="flex items-center gap-2">
@@ -147,7 +146,7 @@ export function DataTable<TData, TValue>({
  size="sm"
  onClick={() => table.previousPage()}
  disabled={!table.getCanPreviousPage()}
- className="bg-surface-container-low"
+ className="bg-card border border-border shadow-sm"
  >
  <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
  <span className="sr-only">{t("table.previous")}</span>
@@ -157,7 +156,7 @@ export function DataTable<TData, TValue>({
  size="sm"
  onClick={() => table.nextPage()}
  disabled={!table.getCanNextPage()}
- className="bg-surface-container-low"
+ className="bg-card border border-border shadow-sm"
  >
  <ChevronRight className="h-4 w-4 rtl:rotate-180" />
  <span className="sr-only">{t("table.next")}</span>

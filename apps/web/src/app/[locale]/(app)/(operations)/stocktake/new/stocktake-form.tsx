@@ -51,86 +51,86 @@ const buildFormSchema = (t: (k: string) => string) => z.object({
 type StocktakeFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
-  const t = useTranslations("operations.stocktake");
-  const tc = useTranslations("common");
-  const { data: warehousesData, isLoading: warehousesLoading } = useWarehouses(); const warehouses = warehousesData?.data || [];
-  const { user } = useAuth();
-  const createStocktake = useCreateStocktake();
-  const { playSound } = useAudioFeedback();
+ const t = useTranslations("operations.stocktake");
+ const tc = useTranslations("common");
+ const { data: warehousesData, isLoading: warehousesLoading } = useWarehouses(); const warehouses = warehousesData?.data || [];
+ const { user } = useAuth();
+ const createStocktake = useCreateStocktake();
+ const { playSound } = useAudioFeedback();
 
-  const assignedWarehouseIds = React.useMemo(() => {
-    if (!user?.scopes) return null;
-    const ids = user.scopes.map(s => s.warehouseId).filter(Boolean) as string[];
-    return ids.length > 0 ? ids : null;
-  }, [user?.scopes]);
+ const assignedWarehouseIds = React.useMemo(() => {
+  if (!user?.scopes) return null;
+  const ids = user.scopes.map(s => s.warehouseId).filter(Boolean) as string[];
+  return ids.length > 0 ? ids : null;
+ }, [user?.scopes]);
 
-  const filteredWarehouses = React.useMemo(() => {
-    if (!warehouses || !assignedWarehouseIds) return warehouses;
-    return warehouses.filter(w => assignedWarehouseIds.includes(w.id));
-  }, [warehouses, assignedWarehouseIds]);
+ const filteredWarehouses = React.useMemo(() => {
+  if (!warehouses || !assignedWarehouseIds) return warehouses;
+  return warehouses.filter(w => assignedWarehouseIds.includes(w.id));
+ }, [warehouses, assignedWarehouseIds]);
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
+ const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
+ const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
-  const form = useForm<StocktakeFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      warehouseId: "",
-      sessionName: "",
-      description: "",
-    },
-  });
+ const form = useForm<StocktakeFormValues>({
+  resolver: zodResolver(formSchema),
+  defaultValues: {
+   warehouseId: "",
+   sessionName: "",
+   description: "",
+  },
+ });
 
-  const { router } = useUnsavedChangesGuard(form.formState.isDirty);
+ const { router } = useUnsavedChangesGuard(form.formState.isDirty);
 
  const watchedWarehouse = useWatch({
  control: form.control,
  name: "warehouseId",
  });
-  const { data: lockStatus } = useWarehouseLock(watchedWarehouse);
-  const isWarehouseLocked = !!lockStatus?.isLocked;
+ const { data: lockStatus } = useWarehouseLock(watchedWarehouse);
+ const isWarehouseLocked = !!lockStatus?.isLocked;
 
-  const { data: inventoryBalances, isLoading: isBalanceLoading } = useInventoryBalance(
-    watchedWarehouse ? { warehouse_id: watchedWarehouse } : undefined,
-    { enabled: !!watchedWarehouse }
-  );
-  const eligibleItemCount = inventoryBalances?.data?.length ?? 0;
+ const { data: inventoryBalances, isLoading: isBalanceLoading } = useInventoryBalance(
+  watchedWarehouse ? { warehouse_id: watchedWarehouse } : undefined,
+  { enabled: !!watchedWarehouse }
+ );
+ const eligibleItemCount = inventoryBalances?.data?.length ?? 0;
 
  const onSubmit = (data: StocktakeFormValues) => {
-    createStocktake.mutate({
-      data: {
-        sessionName: data.sessionName,
-        warehouseId: data.warehouseId,
-        description: data.description,
-      },
-    }, {
-      onSuccess: (session) => {
-        playSound('success');
-        router.push(`/stocktake/${session.id}`, { skipGuard: true });
-      },
-      onError: (error) => {
-        playSound('error');
-        console.error("Failed to create stocktake session", error);
-      },
-    });
-  };
+  createStocktake.mutate({
+   data: {
+    sessionName: data.sessionName,
+    warehouseId: data.warehouseId,
+    description: data.description,
+   },
+  }, {
+   onSuccess: (session) => {
+    playSound('success');
+    router.push(`/stocktake/${session.id}`, { skipGuard: true });
+   },
+   onError: (error) => {
+    playSound('error');
+    console.error("Failed to create stocktake session", error);
+   },
+  });
+ };
 
-  if (warehousesLoading) {
-  return (
-  <div className="space-y-6 animate-pulse">
-  <div className="h-20 bg-surface-container-low rounded-3xl" />
-  <div className="h-64 bg-surface-container-low rounded-[2.5rem]" />
-  </div>
-  );
-  }
+ if (warehousesLoading) {
+ return (
+ <div className="space-y-6 animate-pulse">
+ <div className="h-20 bg-card border border-border shadow-sm rounded-3xl" />
+ <div className="h-64 bg-card border border-border shadow-sm rounded-[2.5rem]" />
+ </div>
+ );
+ }
 
-  const warehouseItems = (filteredWarehouses || []).map(w => ({
-    id: w.id,
-    name_en: w.name || '',
-    name_ar: w.name || '',
-    code: w.code,
-  }));
+ const warehouseItems = (filteredWarehouses || []).map(w => ({
+  id: w.id,
+  name_en: w.name || '',
+  name_ar: w.name || '',
+  code: w.code,
+ }));
 
  return (
  <PermissionGate resource="operations_stocktake" action="create">
@@ -150,7 +150,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  onClick={() => router.back()}
  className="text-label-xs font-semibold uppercase text-muted-foreground/60 hover:text-foreground h-10 px-4 rounded-xl"
  >
- <ArrowLeft className={`w-4 h-4 ${locale === 'ar' ? 'rotate-180 ml-2' : 'mr-2'}`} />
+ <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
  {tc('back')}
  </Button>
  }
@@ -162,8 +162,8 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  </div>
  )}
 
- <Card className="bg-surface-container-low border-none shadow-2xl shadow-black/5 rounded-[2.5rem] overflow-hidden">
- <CardContent className="p-10 space-y-10">
+ 
+ 
  {/* Form Header Info */}
  <div className="flex items-center gap-6 pb-8">
  <div className="p-4 rounded-[1.5rem] bg-cyan-600/10 text-cyan-500 border border-cyan-500/20 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
@@ -180,26 +180,26 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
  <FormField
  control={form.control}
-  name="warehouseId"
-  render={({ field }) => (
-  <FormItem className="space-y-4">
-  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2 px-1">
-  <Warehouse className="w-3.5 h-3.5" />
-  {tc('warehouse')}
-  </FormLabel>
-  <FormControl>
-    <SmartCombobox
-      items={warehouseItems}
-      value={field.value}
-      onSelect={(wh) => field.onChange(wh.id)}
-      placeholder={t('select_warehouse')}
-      triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
-    />
-  </FormControl>
-  <FormMessage className="text-label-xxs font-semibold uppercase px-1" />
-  </FormItem>
-  )}
+ name="warehouseId"
+ render={({ field }) => (
+ <FormItem className="space-y-4">
+ <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2 px-1">
+ <Warehouse className="w-3.5 h-3.5" />
+ {tc('warehouse')}
+ </FormLabel>
+ <FormControl>
+  <SmartCombobox
+   items={warehouseItems}
+   value={field.value}
+   onSelect={(wh) => field.onChange(wh.id)}
+   placeholder={t('select_warehouse')}
+   triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
   />
+ </FormControl>
+ <FormMessage className="text-label-xxs font-semibold uppercase px-1" />
+ </FormItem>
+ )}
+ />
 
  <FormField
  control={form.control}
@@ -213,7 +213,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  <FormControl>
  <Input 
  placeholder={t('session_name_placeholder')} 
- className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all" 
+ className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all w-full" 
  {...field} 
  />
  </FormControl>
@@ -243,7 +243,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  )}
  />
  </div>
- </CardContent>
+ 
 
  {/* Submission Area */}
  <div className="p-10 bg-surface-container-medium/30 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -271,32 +271,32 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  {createStocktake.isPending ? tc('saving') : (
  <>
  {t('initialize_session')}
- <ChevronRight className={`ms-2 w-4 h-4 transition-transform group-hover:translate-x-1 ${locale === 'ar' ? 'rotate-180' : ''}`} />
+ <ChevronRight className="ms-2 w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
  </>
  )}
  </Button>
  </div>
  </div>
- </Card>
+ 
  </form>
 
-  <PostConfirmDialog
-    open={confirmOpen}
-    onOpenChange={setConfirmOpen}
-    onConfirm={() => {
-      setConfirmOpen(false);
-      form.handleSubmit(onSubmit, onFormError)();
-    }}
-    title={t('create_confirm_title')}
-    description={isBalanceLoading
-      ? (locale === 'ar' ? 'جاري حساب الأصناف المؤهلة...' : 'Calculating eligible items...')
-      : (locale === 'ar'
-        ? `أنت على وشك أخذ لقطة لـ ${eligibleItemCount} صنف`
-        : `You are about to snapshot ${eligibleItemCount} items`)
-    }
-    confirmText={tc('confirm')}
-    icon="info"
-  />
+ <PostConfirmDialog
+  open={confirmOpen}
+  onOpenChange={setConfirmOpen}
+  onConfirm={() => {
+   setConfirmOpen(false);
+   form.handleSubmit(onSubmit, onFormError)();
+  }}
+  title={t('create_confirm_title')}
+  description={isBalanceLoading
+   ? (locale === 'ar' ? 'جاري حساب الأصناف المؤهلة...' : 'Calculating eligible items...')
+   : (locale === 'ar'
+    ? `أنت على وشك أخذ لقطة لـ ${eligibleItemCount} صنف`
+    : `You are about to snapshot ${eligibleItemCount} items`)
+  }
+  confirmText={tc('confirm')}
+  icon="info"
+ />
  </Form>
  </PermissionGate>
  );

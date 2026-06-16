@@ -59,7 +59,7 @@ describe('Missing Flows E2E', () => {
     departmentId = department.id;
 
     const category = await prisma.category.create({
-      data: { name: `Category ${suffix}` },
+      data: { name: `Category ${suffix}`, code: `CAT-${suffix}` },
     });
     categoryId = category.id;
 

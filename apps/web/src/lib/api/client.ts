@@ -368,8 +368,8 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
     } catch (parseError: unknown) {
       if (parseError instanceof z.ZodError) {
         console.error(`[Zod Parsing Error] Failed to parse response for ${method} ${path}`, {
-          error: parseError.issues,
-          payload: data
+          error: JSON.stringify(parseError.issues, null, 2),
+          payload: JSON.stringify(data, null, 2)
         });
         throw new Error(`Data validation failed for ${path}: ${parseError.issues[0]?.message || 'Invalid response format'}`);
       }

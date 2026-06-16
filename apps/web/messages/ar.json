@@ -456,7 +456,8 @@
       "save": "حفظ",
       "submit": "إرسال",
       "view_all": "عرض الكل",
-      "void": "إبطال المستند"
+      "void": "إبطال المستند",
+      "review": "مراجعة"
     },
     "languages": {
       "arabic": "العربية",
@@ -1076,7 +1077,14 @@
     },
     "clear_filters": "مسح الفلاتر",
     "expiry_date": "تاريخ الانتهاء",
-    "yes": "نعم"
+    "yes": "نعم",
+    "priority": {
+      "high": "عالي",
+      "medium": "متوسط",
+      "low": "منخفض",
+      "normal": "عادي"
+    },
+    "monthly_spend": "الإنفاق الشهري"
   },
   "communications": {
     "notifications": {
@@ -1320,7 +1328,34 @@
       "uptime": "وقت التشغيل"
     },
     "title": "لوحة التحكم",
-    "users_online": "{count} مستخدم متصل"
+    "users_online": "{count} مستخدم متصل",
+    "procurement": {
+      "strategic": "المصادر",
+      "sourcing": "الاستراتيجية",
+      "supply_chain": "سلسلة الإمداد",
+      "central_procurement_unit": "وحدة المشتريات المركزية",
+      "new_request": "طلب جديد",
+      "generate_po": "إنشاء أمر شراء",
+      "pending_prs": "طلبات شراء معلقة",
+      "awaiting_po": "بانتظار التوثيق",
+      "active_pos": "أوامر شراء نشطة",
+      "issued_to_suppliers": "صادرة للموردين",
+      "pending_grns": "استلامات معلقة",
+      "inbound_logistics": "لوجستيات التوريد",
+      "monthly_spend": "الإنفاق الشهري",
+      "approved_budget": "مقارنة بالميزانية المعتمدة",
+      "active_pipeline": "متابعة العمليات النشطة",
+      "real_time_tracking": "تتبع لحظي للإجراءات",
+      "updated_now": "محدث الآن",
+      "purchase_request": "طلب شراء",
+      "vendor_analytics": "تحليلات الموردين",
+      "trusted_suppliers": "الموردين المعتمدين",
+      "top_vendors": "أفضل الموردين",
+      "manage_vendors": "إدارة الموردين",
+      "efficiency": "الكفاءة",
+      "po_conversion_rate": "معدل تحويل الطلبات",
+      "avg_fulfillment_cycle": "متوسط دورة الإنجاز: {days} يوم"
+    }
   },
   "fefo": {
     "override_warning": "تحذير: هذا المنتج منتهي الصلاحية — يجب إدخال سبب الاستخدام",
@@ -2094,7 +2129,8 @@
       "financial_terms": "الشروط المالية",
       "financial_terms_desc": "اتفاقيات العملة والدفع",
       "metrics": {
-        "compliance": "الامتثال"
+        "compliance": "الامتثال",
+        "total_suppliers": "إجمالي الموردين"
       },
       "name_ar": "الاسم (بالعربية)",
       "name_ar_placeholder": "الموزعون العالميون (AR)",
@@ -2128,7 +2164,7 @@
         "title": "ملف المورد",
         "trends": "اتجهات التكلفة الإضافية"
       },
-      "search_placeholder": "البحث في الموردين حسب الاسم أو الكود...",
+      "search_placeholder": "البحث عن الموردين بالكود أو الاسم...",
       "status": "الحالة",
       "tax_number": "الرقم الضريبي (VAT)",
       "terms_placeholder": "صف دورات الدفع أو الاتفاقيات الخاصة...",
@@ -2205,7 +2241,8 @@
         "code_required": "كود الوحدة مطلوب",
         "code_uppercase": "يجب أن يكون الكود أحرف كبيرة فقط",
         "name_ar_required": "الاسم بالعربية مطلوب",
-        "name_en_required": "الاسم بالإنجليزية مطلوب"
+        "name_en_required": "الاسم بالإنجليزية مطلوب",
+        "name_required": "اسم الوحدة مطلوب"
       },
       "view_title": "تفاصيل وحدة القياس",
       "category_options": {
@@ -2313,6 +2350,19 @@
       "resto_pro": "RESTO_PRO"
     },
     "title": "الصفحة غير موجودة",
+    "trusted_by": "موثوق من قبل قادة الصناعة"
+  },
+  "forbidden": {
+    "description": "ليس لديك صلاحيات الوصول الأمنية المطلوبة للوصول إلى وحدة النظام هذه. يرجى الاتصال بمشرف العمليات أو مسؤول النظام.",
+    "go_home": "العودة إلى مركز التحكم",
+    "mission_description": "في Otantik Restaurant، نؤمن بالدقة المتناهية. نظامنا مبني لضمان عدم ضياع أي جرام من المخزون في فراغ عدم الكفاءة.",
+    "mission_title": "مهمتنا",
+    "partners": {
+      "food_logistics": "FOOD_LOGISTICS",
+      "global_kitchen": "GLOBAL_KITCHEN",
+      "resto_pro": "RESTO_PRO"
+    },
+    "title": "تم رفض الوصول",
     "trusted_by": "موثوق من قبل قادة الصناعة"
   },
   "notifications": {

@@ -20,7 +20,7 @@ export default async function AdjustmentDetailPage(props: { params: Promise<{ lo
 
  return (
  <ProtectedRoute requiredAction={isNew ? "create" : "view"} requiredResource="adjustment">
-  <AdjustmentDetailClient id={params.id} />
+ <AdjustmentDetailClient id={params.id} />
  </ProtectedRoute>
  );
 }

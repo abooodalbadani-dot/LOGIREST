@@ -6,21 +6,21 @@ import { InventoryLotSchema, InventoryLot } from '@/types/inventory';
 import { useAuth } from '@/providers/AuthProvider';
 
 export function useInventoryLots(
-  filters: { include_expired?: boolean; page?: number } = {},
-  options?: { enabled?: boolean }
+ filters: { include_expired?: boolean; page?: number } = {},
+ options?: { enabled?: boolean }
 ) {
-  const { activeScope } = useAuth();
-  return useQuery({
-    queryKey: ['inventory/lots', filters],
-    queryFn: async ({ signal }) => {
-      const qs = new URLSearchParams();
-      if (filters.include_expired) qs.append('include_expired', 'true');
-      if (filters.page) qs.append('page', filters.page.toString());
-      const path = `/inventory/lots${qs.toString() ? `?${qs.toString()}` : ''}`;
-      return apiClient.get<PaginatedResponse<InventoryLot>>(path, paginatedSchema(InventoryLotSchema), { signal });
-    },
-    staleTime: 60_000,
-    ...options,
-    enabled: options?.enabled !== undefined ? options.enabled : !!activeScope.warehouseId,
-  });
+ const { activeScope } = useAuth();
+ return useQuery({
+  queryKey: ['inventory/lots', filters],
+  queryFn: async ({ signal }) => {
+   const qs = new URLSearchParams();
+   if (filters.include_expired) qs.append('include_expired', 'true');
+   if (filters.page) qs.append('page', filters.page.toString());
+   const path = `/inventory/lots${qs.toString() ? `?${qs.toString()}` : ''}`;
+   return apiClient.get<PaginatedResponse<InventoryLot>>(path, paginatedSchema(InventoryLotSchema), { signal });
+  },
+  staleTime: 60_000,
+  ...options,
+  enabled: options?.enabled !== undefined ? options.enabled : !!activeScope.warehouseId,
+ });
 }

@@ -40,6 +40,7 @@ const SCOPE_EXEMPT_ROUTES = [
   '/api/v1/departments',
   '/api/v1/currencies',
   '/api/v1/master-data/',
+  '/api/v1/settings/',
 ];
 
 @Injectable()

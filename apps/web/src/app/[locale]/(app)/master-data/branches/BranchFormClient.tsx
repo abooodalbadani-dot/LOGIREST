@@ -49,14 +49,14 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const t = useTranslations('common');
   const tb = useTranslations('master_data.branches');
   const abortController = useAbortController();
-  
-  const { 
-    register, 
-    handleSubmit, 
-    reset, 
-    setValue, 
-    control, 
-    formState 
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    control,
+    formState
   } = useForm<BranchFormValues>({
     resolver: zodResolver(BranchFormSchema),
     disabled: isReadOnly,
@@ -66,12 +66,12 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
 
   console.log('Form State - isSubmitting:', formState.isSubmitting, 'isValid:', formState.isValid);
 
-  const { 
-    data, 
-    isLoading, 
-    isError, 
+  const {
+    data,
+    isLoading,
+    isError,
     refetch,
-    fetchStatus 
+    fetchStatus
   } = useBranch(id);
   const { data: branchesData } = useBranches();
   const createBranch = useCreateBranch();
@@ -106,7 +106,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const onValid = (values: BranchFormValues) => {
     console.log('3. [BranchForm] Validation PASSED. Data:', values);
     if (isReadOnly) return;
-    
+
     if (id) {
       updateBranch.mutate({ id, values, signal: abortController.signal }, {
         onSuccess: () => {
@@ -157,13 +157,13 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   // Standardized Error State (Server Error)
   if (id && isError) {
     return (
-      <MasterDataFormLayout 
-        title={editTitle} 
+      <MasterDataFormLayout
+        title={editTitle}
         backHref="/master-data/branches"
         onCancel={() => guardedRouter.push('/master-data/branches')}
       >
         <div className="h-[400px] flex items-center justify-center">
-          <ErrorState 
+          <ErrorState
             type="server_error"
             onRetry={() => refetch()}
           />
@@ -175,13 +175,13 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   // Standardized Not Found State
   if (id && !data && !isLoading) {
     return (
-      <MasterDataFormLayout 
-        title={editTitle} 
+      <MasterDataFormLayout
+        title={editTitle}
         backHref="/master-data/branches"
         onCancel={() => guardedRouter.push('/master-data/branches')}
       >
         <div className="h-[400px] flex items-center justify-center">
-          <ErrorState 
+          <ErrorState
             type="not_found"
             title={tb('errors.not_found_title')}
             description={tb('errors.not_found_description')}
@@ -194,138 +194,122 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const isSaving = createBranch.isPending || updateBranch.isPending || deleteBranch.isPending;
 
   // Determine the display title
-  const displayTitle = id 
+  const displayTitle = id
     ? (isReadOnly ? (viewTitle || tb('view_title')) : editTitle)
     : createTitle;
 
   return (
     <>
-    <MasterDataFormLayout
-      title={displayTitle}
-      backHref='/master-data/branches'
-      isSaving={isSaving} saveDisabled={conflict.saveDisabled}
-      onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/branches', { skipGuard: true })}
-      hideSave={isReadOnly}
-      isDirty={isDirty}
-      isValid={isValid}
-      resource="master_data_branches"
-      saveAction={id ? 'edit' : 'create'}
-      headerActions={
-        id && !isReadOnly && (
-          <PermissionGate action="delete" resource="master_data_branches">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isSaving}
-            >
-              <Trash2 className="w-5 h-5" />
-            </Button>
-          </PermissionGate>
-        )
-      }
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{tb('details_title') || t('details')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tb('details_description') || t('details_desc')}</p>
-                </div>
-              </div>
+      <MasterDataFormLayout
+        title={displayTitle}
+        backHref='/master-data/branches'
+        isSaving={isSaving} saveDisabled={conflict.saveDisabled}
+        onSubmit={onSubmit}
+        onCancel={() => guardedRouter.push('/master-data/branches', { skipGuard: true })}
+        hideSave={isReadOnly}
+        isDirty={isDirty}
+        isValid={isValid}
+        resource="master_data_branches"
+        saveAction={id ? 'edit' : 'create'}
+        headerActions={
+          id && !isReadOnly && (
+            <PermissionGate action="delete" resource="master_data_branches">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isSaving}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </PermissionGate>
+          )
+        }
+      >
 
+        <div className="col-span-12 w-full max-w-3xl mx-auto flex flex-col gap-8 p-6 bg-card border border-border rounded-xl mt-6">
+          {/* Details Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Building2 className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{tb('details_title') || t('details')}</h3>
+            </div>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Code */}
-              <div className="space-y-2 max-w-md">
-                <Label htmlFor="branch-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
+              <div className="col-span-1 md:col-span-4 w-full text-start">
+                <Label htmlFor="branch-code" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{t('code')}</Label>
                 <Controller
                   control={control}
                   name="code"
                   render={({ field }) => (
-                    <Input 
-                      id="branch-code" 
-                      dir="ltr" 
-                      {...field} 
+                    <Input
+                      id="branch-code"
+                      dir="ltr"
+                      {...field}
                       disabled={isReadOnly}
-                      className="font-mono font-semibold uppercase text-status-active" 
-                      placeholder={tb('placeholders.code')} 
+                      className={errors.code ? "border-red-500 focus:ring-red-500" : ""}
+                      placeholder={tb('placeholders.code')}
                     />
                   )}
                 />
-                {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.code.message as string)}</p>}
+                {errors.code && <p className="text-xs text-red-500 mt-1">{t(errors.code.message as string)}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Name EN */}
-                <div className="space-y-2">
-                  <Label htmlFor="branch-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name')}</Label>
-                  <Controller
-                    control={control}
-                    name="name"
-                    render={({ field }) => (
-                      <Input 
-                        id="branch-name" 
-                        dir="ltr" 
-                        {...field} 
-                        disabled={isReadOnly}
-                        className="font-semibold" 
-                        placeholder={tb('placeholders.name')} 
-                      />
-                    )}
-                  />
-                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.name.message as string)}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-8">
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('status_label')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('operational_status')}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
-                <div className="space-y-1">
-                  <Label htmlFor="branch-is-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
-                  <p className={`text-label-sm font-semibold uppercase ${(isActive ?? true) ? 'text-status-active' : 'text-status-error'}`}>{(isActive ?? true) ? t('statuses.active') : t('statuses.inactive')}</p>
-                </div>
+              {/* Name */}
+              <div className="col-span-1 md:col-span-8 w-full text-start">
+                <Label htmlFor="branch-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{t('name')}</Label>
                 <Controller
                   control={control}
-                  name="isActive"
+                  name="name"
                   render={({ field }) => (
-                    <Switch
-                      id="branch-is-active"
-                      checked={field.value ?? true}
-                      onCheckedChange={field.onChange}
+                    <Input
+                      id="branch-name"
+                      dir="ltr"
+                      {...field}
                       disabled={isReadOnly}
-                      className="data-[state=checked]:bg-status-active"
+                      className={errors.name ? "border-red-500 focus:ring-red-500" : ""}
+                      placeholder={tb('placeholders.name')}
                     />
                   )}
                 />
+                {errors.name && <p className="text-xs text-red-500 mt-1">{t(errors.name.message as string)}</p>}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          {/* Status Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <ShieldCheck className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{t('status_label')}</h3>
+            </div>
+
+            <div className="flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors hover:bg-muted/30">
+              <div className="flex flex-col space-y-1 text-start min-w-0">
+                <span className="text-sm font-medium text-text-main dark:text-white">{t('is_active')}</span>
+                <span className="text-xs text-muted-foreground dark:text-gray-400">{(isActive ?? true) ? t('statuses.active') : t('statuses.inactive')}</span>
+              </div>
+              <Controller
+                control={control}
+                name="isActive"
+                render={({ field }) => (
+                  <Switch
+                    id="branch-is-active"
+                    checked={field.value ?? true}
+                    onCheckedChange={field.onChange}
+                    disabled={isReadOnly}
+                    activeClassName="bg-status-active"
+                  />
+                )}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </MasterDataFormLayout>
+
+      </MasterDataFormLayout>
       <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
 
       <PostConfirmDialog

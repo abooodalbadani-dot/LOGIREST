@@ -10,11 +10,10 @@ import { useRouter } from '@/i18n/navigation';
 import { ImportWizardState } from '../types';
  
  interface Step4CommitProps {
-  wizard: ImportWizardState;
-  locale: string;
+ wizard: ImportWizardState;
  }
 
-export function Step4Commit({ wizard, locale }: Step4CommitProps) {
+export function Step4Commit({ wizard }: Step4CommitProps) {
  const t = useTranslations('master_data.import');
  const tc = useTranslations('common');
  const router = useRouter();
@@ -52,7 +51,7 @@ export function Step4Commit({ wizard, locale }: Step4CommitProps) {
  className="flex-1 h-16 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold uppercase text-label-xs"
  onClick={handleFinish}
  >
- <ExternalLink className="w-4 h-4 mr-2" />
+ <ExternalLink className="w-4 h-4 me-2" />
  View {wizard.importType}
  </Button>
  </div>
@@ -87,22 +86,22 @@ export function Step4Commit({ wizard, locale }: Step4CommitProps) {
  disabled={wizard.isCommitting}
  onClick={wizard.prevStep}
  >
- <ArrowLeft className={cn("w-4 h-4", locale === 'ar' ? "ml-2" : "mr-2")} />
+ <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
  {tc('back')}
  </Button>
  <Button 
- className="flex-1 h-14 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase text-label-xs shadow-lg shadow-cyan-500/20"
+ className="flex-1 h-14 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase text-label-xs shadow-sm shadow-cyan-500/20"
  disabled={wizard.isCommitting}
  onClick={wizard.handleCommit}
  >
  {wizard.isCommitting ? (
  <>
- <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+ <Loader2 className="w-4 h-4 me-2 animate-spin" />
  Committing...
  </>
  ) : (
  <>
- <Save className="w-4 h-4 mr-2" />
+ <Save className="w-4 h-4 me-2" />
  Confirm & Save
  </>
  )}

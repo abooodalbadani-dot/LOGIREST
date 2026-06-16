@@ -149,7 +149,7 @@ describe('Void Workflow (e2e)', () => {
     warehouseId = warehouse.id;
 
     const category = await prisma.category.create({
-      data: { name: `VoidCat ${suffix}` },
+      data: { name: `VoidCat ${suffix}`, code: `VCAT-${suffix}` },
     });
     categoryId = category.id;
 

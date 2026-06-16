@@ -55,7 +55,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  
  const isNew = id === 'new';
  const { data: issue, isLoading } = useIssue(isNew ? null : id);
-  const postIssue = usePostIssue();
+ const postIssue = usePostIssue();
  
  const [lines, setLines] = useState<LineItem[]>([]);
  const [warehouseId, setWarehouseId] = useState(activeScope?.warehouseId || '');
@@ -74,94 +74,99 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
 
  const { data: lockState } = useWarehouseLock(warehouseId);
  
+ useEffect(() => {
+  if (activeScope?.warehouseId && !issue) {
+   setWarehouseId(activeScope.warehouseId);
+  }
+ }, [activeScope?.warehouseId, issue]);
+
   useEffect(() => {
-    if (activeScope?.warehouseId && !issue) {
-      setWarehouseId(activeScope.warehouseId);
-    }
-  }, [activeScope?.warehouseId, issue]);
+  if (issue) {
+   // Synchronize internal state with fetched issue data
+   setLines((issue.lines || []).map(l => ({
+    id: l.id,
+    item: l.item,
+    qty: l.qty,
+    uomId: l.uomId,
+    lotAllocations: l.lotAllocations,
+   })));
+  
+   setWarehouseId(issue.warehouseId || activeScope?.warehouseId || '');
+  }
+  }, [issue, activeScope?.warehouseId]);
 
-   useEffect(() => {
-   if (issue) {
-     // Synchronize internal state with fetched issue data
-     setLines((issue.lines || []).map(l => ({
-       id: l.id,
-       item: l.item,
-       qty: l.qty,
-       uomId: l.uomId,
-       lotAllocations: l.lotAllocations,
-     })));
-    
-     setWarehouseId(issue.warehouseId || activeScope?.warehouseId || '');
+ const handleScan = async (barcode: string) => {
+ try {
+  setScanError('');
+  const ItemSchema = z.object({
+   data: z.array(z.object({
+    id: z.string(), code: z.string(), name: z.string(),
+    primaryUom: z.object({ id: z.string(), code: z.string() })
+   }))
+  });
+  const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
+  if (res.data && res.data.length > 0) {
+   const item = res.data[0];
+   let targetLine: LineItem | undefined;
+   setLines(prev => {
+    const existing = prev.find(l => l.item.id === item.id);
+    if (existing) {
+     targetLine = { ...existing, qty: existing.qty + 1 };
+     return prev.map(l => l.item.id === item.id ? targetLine! : l);
+    }
+    targetLine = { id: `new-${Date.now()}`, item, qty: 1, uomId: item.primaryUom.id, lotAllocations: [] };
+    return [...prev, targetLine];
+   });
+   setScanLog(prev => [{ barcode, item_name: item.name, timestamp: new Date(), success: true }, ...prev].slice(0, 10));
+   // Auto-open FEFO allocator for new scans
+   setTimeout(() => {
+    if (targetLine) { setActiveLine(targetLine); setFefoOpen(true); }
+   }, 100);
+   } else {
+    setScanLog(prev => [{ barcode, item_name: '', timestamp: new Date(), success: false }, ...prev].slice(0, 10));
+    setScanError(t('no_item_found'));
+    throw new Error('ItemNotFound');
    }
-   }, [issue, activeScope?.warehouseId]);
-
-  const handleScan = async (barcode: string) => {
-  try {
-    setScanError('');
-    const ItemSchema = z.object({
-      data: z.array(z.object({
-        id: z.string(), code: z.string(), name: z.string(),
-        primaryUom: z.object({ id: z.string(), code: z.string() })
-      }))
-    });
-    const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
-    if (res.data && res.data.length > 0) {
-      const item = res.data[0];
-      let targetLine: LineItem | undefined;
-      setLines(prev => {
-        const existing = prev.find(l => l.item.id === item.id);
-        if (existing) {
-          targetLine = { ...existing, qty: existing.qty + 1 };
-          return prev.map(l => l.item.id === item.id ? targetLine! : l);
-        }
-        targetLine = { id: `new-${Date.now()}`, item, qty: 1, uomId: item.primaryUom.id, lotAllocations: [] };
-        return [...prev, targetLine];
-      });
-      setScanLog(prev => [{ barcode, item_name: item.name, timestamp: new Date(), success: true }, ...prev].slice(0, 10));
-      // Auto-open FEFO allocator for new scans
-      setTimeout(() => {
-        if (targetLine) { setActiveLine(targetLine); setFefoOpen(true); }
-      }, 100);
-    } else {
-      setScanLog(prev => [{ barcode, item_name: '', timestamp: new Date(), success: false }, ...prev].slice(0, 10));
-      setScanError(t('no_item_found'));
-    }
- } catch {
- setScanLog(prev => [{ barcode, item_name: '', timestamp: new Date(), success: false }, ...prev].slice(0, 10));
- setScanError(t('no_item_found'));
- }
+  } catch (err) {
+   if (err instanceof Error && err.message === 'ItemNotFound') {
+    throw err;
+   }
+   setScanLog(prev => [{ barcode, item_name: '', timestamp: new Date(), success: false }, ...prev].slice(0, 10));
+   setScanError(t('no_item_found'));
+   throw err;
+  }
  };
 
-   const handlePost = async () => {
-     try {
-       await postIssue.mutateAsync({ 
-         id,
-         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', 
-         version: issue?.version || 0 
-       });
-       setIsPostDialogOpen(false);
-       router.push("/issues");
-     } catch (err: unknown) {
-       const apiErr = err as { code?: string; message?: string };
-       if (apiErr?.code === 'WAREHOUSE_LOCKED') {
-         setIsWarehouseLockedError(true);
-       } else {
-         const message = err instanceof Error ? err.message : (apiErr?.message || 'Failed to post issue');
-         toast.error(message);
-       }
-       setIsPostDialogOpen(false);
-     }
-   };
+  const handlePost = async () => {
+   try {
+    await postIssue.mutateAsync({ 
+     id,
+     confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', 
+     version: issue?.version || 0 
+    });
+    setIsPostDialogOpen(false);
+    router.push("/issues");
+   } catch (err: unknown) {
+    const apiErr = err as { code?: string; message?: string };
+    if (apiErr?.code === 'WAREHOUSE_LOCKED') {
+     setIsWarehouseLockedError(true);
+    } else {
+     const message = err instanceof Error ? err.message : (apiErr?.message || 'Failed to post issue');
+     toast.error(message);
+    }
+    setIsPostDialogOpen(false);
+   }
+  };
 
-  const isPosted = isIssuePosted(issue?.status);
+ const isPosted = isIssuePosted(issue?.status);
  const isLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
 
  if (isLoading) return <div className="p-8 text-center">{t('scan_mode.loading')}</div>;
 
  return (
- <div className="min-h-screen bg-surface-container-lowest flex flex-col p-4 space-y-6">
+ <div className=" min-w-0 bg-card flex-1 gap-6 border p-4 shadow-sm flex-col flex min-h-screen border-border space-y-6 w-full dark:bg-card-dark">
  {/* Immersive Header */}
- <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-2xl border-s-4 border-operational-cyan shadow-xl">
+ <div className="flex justify-between items-center bg-card border border-border shadow-sm p-6 rounded-2xl border-s-4 border-operational-cyan shadow-xl">
  <div>
  <h1 className="text-headline-lg font-bold">{isNew ? t('create_new') : issue?.documentNumber}</h1>
  <div className="flex items-center gap-2 mt-1">
@@ -183,7 +188,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  {(isLocked) && <LockBanner lockState={lockState} />}
 
  {/* Massive Scan Input for Tablets */}
- <div className="bg-surface-container-low p-8 rounded-3xl border border-cyan-500/20 shadow-2xl flex-1 flex flex-col">
+ <div className="bg-card border border-border shadow-sm p-8 rounded-3xl border border-cyan-500/20 shadow-2xl flex-1 flex flex-col min-w-0">
  <ScanInput 
  onScan={handleScan} 
  disabled={isPosted || isLocked} 
@@ -224,7 +229,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  })}
  </div>
  ) : (
- <div className="flex h-full items-center justify-center flex-col text-muted-foreground">
+ <div className="flex h-full items-center justify-center flex-col text-muted-foreground min-w-0">
  <div className="text-headline-lg mb-4">📦</div>
  <div className="text-headline-lg">{t('scan_mode.awaiting_first_scan')}</div>
  </div>
@@ -234,7 +239,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
 
  {/* Scan Log */}
  {scanLog.length > 0 && (
- <div className="bg-surface-container-low p-5 rounded-2xl shadow-inner border border-white/5">
+ <div className="bg-card border border-border shadow-sm p-5 rounded-2xl shadow-inner border border-white/5">
  <h3 className="text-label-xs text-cyan-500/60 mb-3 uppercase font-semibold">{t('scan_log_title')}</h3>
  <ScanLog entries={scanLog} />
  </div>

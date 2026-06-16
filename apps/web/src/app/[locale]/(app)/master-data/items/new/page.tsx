@@ -11,20 +11,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function NewItemPage(props: { params: Promise<{ locale: string }> }) {
-  const params = await props.params;
-  setRequestLocale(params.locale);
-  const t = await getTranslations('master_data.items');
-  
-  return (
-    <ProtectedRoute requiredAction="create" requiredResource="master_data_items">
-      <ItemFormClient
-        id={null}
-        createTitle={t('create_title')}
-        editTitle={t('edit_title')}
-        viewTitle={t('view_title')}
-        locale={params.locale}
-        isReadOnly={false}
-      />
-    </ProtectedRoute>
-  );
+ const params = await props.params;
+ setRequestLocale(params.locale);
+ const t = await getTranslations('master_data.items');
+ 
+ return (
+  <ProtectedRoute requiredAction="create" requiredResource="master_data_items">
+   <ItemFormClient
+    id={null}
+    createTitle={t('create_title')}
+    editTitle={t('edit_title')}
+    viewTitle={t('view_title')}
+    locale={params.locale}
+    isReadOnly={false}
+   />
+  </ProtectedRoute>
+ );
 }

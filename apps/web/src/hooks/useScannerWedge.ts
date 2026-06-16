@@ -66,10 +66,15 @@ export function useScannerWedge({ onScan, enabled = true, latencyThreshold = 80 
         // Play success beep
         audioAlerts.playScanSuccess();
       } catch (err) {
-        if (err instanceof Error && err.message === 'WarehouseLocked') {
-          audioAlerts.playScanBlocked();
+        if (err instanceof Error) {
+          if (err.message === 'WarehouseLocked') {
+            audioAlerts.playScanBlocked();
+          } else if (err.message === 'ScanDuplicate') {
+            audioAlerts.playScanDuplicate();
+          } else {
+            audioAlerts.playScanInvalid();
+          }
         } else {
-          // Play invalid/error tone
           audioAlerts.playScanInvalid();
         }
       }

@@ -75,28 +75,12 @@ describe('Inventory Controllers', () => {
     });
 
     describe('unfreeze', () => {
-      it('should throw ForbiddenException if user is not ADMIN', async () => {
-        await expect(
-          inventoryController.unfreeze(
-            'item-1',
-            'wh-1',
-            'user-1',
-            Role.INV_MGR,
-            'reason',
-            '127.0.0.1',
-          ),
-        ).rejects.toThrow(ForbiddenException);
-
-        expect(mockInventoryService.unfreeze).not.toHaveBeenCalled();
-      });
-
       it('should throw BadRequestException if reason is missing or empty', async () => {
         await expect(
           inventoryController.unfreeze(
             'item-1',
             'wh-1',
             'user-1',
-            Role.ADMIN,
             ' ',
             '127.0.0.1',
           ),
@@ -117,7 +101,6 @@ describe('Inventory Controllers', () => {
           'item-1',
           'wh-1',
           'user-1',
-          Role.ADMIN,
           'Reconciliation ok',
           '127.0.0.1',
         );

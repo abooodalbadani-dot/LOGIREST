@@ -40,7 +40,7 @@ describe('Database Integrity Constraints (US2)', () => {
     warehouseId = warehouse.id;
 
     const category = await prisma.category.create({
-      data: { name: `Test Category ${Date.now()}` },
+      data: { name: `Test Category ${Date.now()}`, code: `TC-${Date.now()}` },
     });
     categoryId = category.id;
 

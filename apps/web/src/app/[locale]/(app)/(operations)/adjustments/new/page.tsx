@@ -19,9 +19,9 @@ export default async function AdjustmentNewPage(props: { params: Promise<{ local
 
  return (
  <ProtectedRoute requiredAction="create" requiredResource="adjustment">
-   <Suspense fallback={<div>Loading...</div>}>
-     <AdjustmentCreateClient locale={locale as 'ar' | 'en'} />
-   </Suspense>
+  <Suspense fallback={<div>Loading...</div>}>
+   <AdjustmentCreateClient locale={locale as 'ar' | 'en'} />
+  </Suspense>
  </ProtectedRoute>
  );
 }

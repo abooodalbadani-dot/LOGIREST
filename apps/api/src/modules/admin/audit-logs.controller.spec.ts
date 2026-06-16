@@ -31,7 +31,10 @@ describe('AuditLogsController', () => {
         id: 'log-1',
         createdAt: new Date(),
         userId: 'admin-1',
-        user: { role: Role.ADMIN },
+        action: 'UPDATE',
+        targetTable: 'Item',
+        targetId: 'item-1',
+        user: { role: Role.ADMIN, name: 'Admin User' },
         beforeStateJson: JSON.stringify({ status: 'ACTIVE', isActive: true }),
         afterStateJson: JSON.stringify({ status: 'RELEASED', isActive: false }),
       },
@@ -45,11 +48,16 @@ describe('AuditLogsController', () => {
     expect(result.data).toHaveLength(1);
     expect(result.data[0]).toEqual({
       id: 'log-1',
+      entityType: 'Item',
+      entityId: 'item-1',
+      action: 'UPDATE',
+      userId: 'admin-1',
+      userName: 'Admin User',
+      changes: [
+        { field: 'status', oldValue: 'ACTIVE', newValue: 'RELEASED' },
+        { field: 'isActive', oldValue: true, newValue: false },
+      ],
       createdAt: expect.any(Date),
-      performedByUserId: 'admin-1',
-      performedByRole: Role.ADMIN,
-      beforeStateJson: { status: 'ACTIVE', isActive: true },
-      afterStateJson: { status: 'RELEASED', isActive: false },
     });
     expect(result.meta).toEqual({
       total: 1,
@@ -66,7 +74,10 @@ describe('AuditLogsController', () => {
         id: 'log-2',
         createdAt: new Date(),
         userId: 'mgr-1',
-        user: { role: Role.INV_MGR },
+        action: 'UPDATE',
+        targetTable: 'Item',
+        targetId: 'item-2',
+        user: { role: Role.INV_MGR, name: 'Manager User' },
         beforeStateJson: null,
         afterStateJson: JSON.stringify({ status: 'RELEASED', isActive: false }),
       },
@@ -78,8 +89,8 @@ describe('AuditLogsController', () => {
       userId: 'mgr-1',
     });
 
-    expect(result.data[0].performedByRole).toBe(Role.INV_MGR);
-    expect(result.data[0].beforeStateJson).toBeNull();
+    expect(result.data[0].userName).toBe('Manager User');
+    expect(result.data[0].changes).toHaveLength(2);
   });
 
   it('should return paginated and mapped audit logs for AUDITOR', async () => {
@@ -89,7 +100,10 @@ describe('AuditLogsController', () => {
         id: 'log-3',
         createdAt: new Date(),
         userId: 'auditor-1',
-        user: { role: Role.AUDITOR },
+        action: 'UPDATE',
+        targetTable: 'Item',
+        targetId: 'item-3',
+        user: { role: Role.AUDITOR, name: 'Auditor User' },
         beforeStateJson: null,
         afterStateJson: JSON.stringify({ status: 'RELEASED', isActive: false }),
       },
@@ -100,6 +114,6 @@ describe('AuditLogsController', () => {
       limit: 50,
     });
 
-    expect(result.data[0].performedByRole).toBe(Role.AUDITOR);
+    expect(result.data[0].userName).toBe('Auditor User');
   });
 });

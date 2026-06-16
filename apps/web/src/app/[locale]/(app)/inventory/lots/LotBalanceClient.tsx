@@ -51,7 +51,7 @@ export default function LotBalanceClient() {
   const handleQuarantine = async (lotId: string) => {
     setActionLoadingMap(prev => ({ ...prev, [lotId]: true }));
     try {
-      await apiClient.patch(`/lots/${lotId}/quarantine`, z.any(), {});
+      await apiClient.patch(`/lots/${lotId}/quarantine`, z.unknown(), {});
       playSound('success');
       toast.success('Lot successfully quarantined. Stock has been locked and excluded from future stocktake allocation.');
       queryClient.invalidateQueries({ queryKey: ['inventory/lots'] });
@@ -67,7 +67,7 @@ export default function LotBalanceClient() {
   const handleRelease = async (lotId: string) => {
     setActionLoadingMap(prev => ({ ...prev, [lotId]: true }));
     try {
-      await apiClient.patch(`/lots/${lotId}/release-quarantine`, z.any(), {});
+      await apiClient.patch(`/lots/${lotId}/release-quarantine`, z.unknown(), {});
       playSound('success');
       toast.success('Lot successfully released from quarantine. Stock has been unlocked for operational use.');
       queryClient.invalidateQueries({ queryKey: ['inventory/lots'] });
@@ -119,7 +119,7 @@ export default function LotBalanceClient() {
           </div>
 
           {/* Quick Filters */}
-          <div className="flex flex-wrap items-center gap-4 bg-surface-container-low p-3 rounded-2xl border border-white/5">
+          <div className="flex flex-wrap items-center gap-4 bg-card border border-border shadow-sm p-3 rounded-2xl">
             <div className="flex items-center gap-2 px-2">
               <Switch
                 id="expired-switch"
@@ -143,7 +143,7 @@ export default function LotBalanceClient() {
         </div>
 
         {/* Directory Controls & Table */}
-        <div className="p-6 md:p-8 rounded-[2.5rem] bg-surface-container-low border border-white/5 space-y-6 shadow-sm">
+        <div className="p-6 md:p-8 rounded-[2.5rem] bg-card border border-border space-y-6 shadow-sm">
           {/* Search Inputs */}
           <div className="relative group max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-operational-cyan transition-colors" />
@@ -152,7 +152,7 @@ export default function LotBalanceClient() {
               placeholder="Search by lot number, SKU, or name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 font-medium bg-surface-container-lowest border-outline-low rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all"
+              className="pl-12 h-12 font-medium bg-card border border-border shadow-sm border-outline-low rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all"
             />
           </div>
 
@@ -163,57 +163,57 @@ export default function LotBalanceClient() {
               <p className="text-xs text-muted-foreground">Indexing ledger lots...</p>
             </div>
           ) : filteredLots.length === 0 ? (
-            <div className="py-24 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="p-4 bg-surface-container-high rounded-full">
+            <div className="py-24 flex flex-col items-center justify-center text-center space-y-4 w-full">
+              <div className="p-4 bg-surface-container-high rounded-full shrink-0">
                 <Database className="w-8 h-8 text-muted-foreground/40" />
               </div>
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-foreground">No Lots Located</p>
-                <p className="text-xs text-muted-foreground max-w-xs">
+              <div className="space-y-1 w-full max-w-[320px] px-4 shrink-0">
+                <p className="text-sm font-bold text-foreground w-full">No Lots Located</p>
+                <p className="text-xs text-muted-foreground w-full">
                   No inventory lots matching the active filters or search terms could be found.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-surface-highest/10">
-                    <th className="py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 w-1/4">
+            <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+              <table className="w-full text-start border-collapse">
+                <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-4 font-medium text-start whitespace-nowrap w-1/4">
                       Lot Identity
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 w-1/4">
+                    <th className="px-6 py-4 font-medium text-start whitespace-nowrap w-1/4">
                       Inventory Item SKU
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 text-right w-1/6">
+                    <th className="px-6 py-4 font-medium text-end whitespace-nowrap w-1/6">
                       Available Stock
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 w-1/6 text-center">
+                    <th className="px-6 py-4 font-medium text-center whitespace-nowrap w-1/6">
                       Expiration Date
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 w-1/6 text-center">
+                    <th className="px-6 py-4 font-medium text-center whitespace-nowrap w-1/6">
                       Status State
                     </th>
                     {canManageLots && (
-                      <th className="py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 text-center w-1/6">
+                      <th className="px-6 py-4 font-medium text-center whitespace-nowrap w-1/6">
                         Override Actions
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-surface-highest/5">
+                <tbody className="bg-card divide-y divide-border">
                   {filteredLots.map((lot) => {
                     const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
                     return (
-                      <tr key={lot.id} className="group hover:bg-surface-container-lowest/30 transition-colors">
-                        <td className="py-4 px-4">
+                      <tr key={lot.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors group">
+                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap">
                           <div className="space-y-1">
-                            <span className="text-xs font-mono font-bold text-foreground bg-surface-container-high/50 px-2 py-0.5 rounded border border-white/5">
+                            <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
                               {lot.lotNumber}
                             </span>
                           </div>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap">
                           <div className="space-y-0.5">
                             <span className="text-[10px] font-mono text-muted-foreground">
                               {lot.itemCode}
@@ -223,18 +223,18 @@ export default function LotBalanceClient() {
                             </p>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-right">
+                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-end">
                           <span className="text-xs font-bold font-mono text-foreground">
                             {Number(lot.qtyAvailable).toLocaleString()}
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-center">
+                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
                           <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <Calendar className="w-3.5 h-3.5" />
                             {lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString() : '—'}
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-center">
+                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
                           <div className="flex justify-center">
                             {status === 'QUARANTINE' ? (
                               <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
@@ -255,7 +255,7 @@ export default function LotBalanceClient() {
                           </div>
                         </td>
                         {canManageLots && (
-                          <td className="py-4 px-4 text-center">
+                          <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
                             <div className="flex justify-center">
                               {status === 'QUARANTINE' ? (
                                 <Button

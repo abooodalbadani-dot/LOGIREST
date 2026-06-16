@@ -66,7 +66,7 @@ describe('Document Number Concurrency (e2e)', () => {
     });
 
     const category = await prisma.category.create({
-      data: { name: `Category ${suffix}` },
+      data: { name: `Category ${suffix}`, code: `CAT-${suffix}` },
     });
     categoryId = category.id;
 

@@ -49,7 +49,7 @@ export default function ProtectedRoute({
 
  useEffect(() => {
  if (isMounted && !isLoading && !user) {
-  router.replace('/login');
+ router.replace('/login');
  }
  }, [user, isLoading, router, isMounted]);
 

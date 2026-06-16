@@ -44,182 +44,182 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from "@/hooks/useFormError";
 
 const buildLineSchema = (t: (k: string) => string) => z.object({
-  itemId: z.string().min(1, t('validation.item_required')),
-  requestedQty: z.number().min(0.01, t('validation.qty_positive')),
-  qty: z.number(),
-  lotAllocations: z.array(z.custom<IssueLot>()),
-  notes: z.string().optional(),
+ itemId: z.string().min(1, t('validation.item_required')),
+ requestedQty: z.number().min(0.01, t('validation.qty_positive')),
+ qty: z.number(),
+ lotAllocations: z.array(z.custom<IssueLot>()),
+ notes: z.string().optional(),
 });
 
 const buildFormSchema = (t: (k: string) => string) => z.object({
-  warehouseId: z.string().min(1, t('validation.warehouse_required')),
-  destinationDeptId: z.string().min(1, t('validation.department_required')),
-  lines: z.array(buildLineSchema(t)).min(1, t('validation.items_required')),
-  notes: z.string().optional(),
+ warehouseId: z.string().min(1, t('validation.warehouse_required')),
+ destinationDeptId: z.string().min(1, t('validation.department_required')),
+ lines: z.array(buildLineSchema(t)).min(1, t('validation.items_required')),
+ notes: z.string().optional(),
 });
 
 type IssueFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 interface CustomLineItem extends LineItem {
-  qtyAllocated: number;
-  index: number;
-  selectedItem?: Item;
+ qtyAllocated: number;
+ index: number;
+ selectedItem?: Item;
 }
 
 
 
 export function IssueForm() {
-  const t = useTranslations("operations.issue");
-  const tc = useTranslations("common");
-  const locale = useLocale();
-  const { router, registerDirty } = useUnsavedChangesGuard();
-  const createIssue = useCreateIssue();
-  const { playSound } = useAudioFeedback();
+ const t = useTranslations("operations.issue");
+ const tc = useTranslations("common");
+ const locale = useLocale();
+ const { router, registerDirty } = useUnsavedChangesGuard();
+ const createIssue = useCreateIssue();
+ const { playSound } = useAudioFeedback();
 
-  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
-  const { data: deptData } = useDepartments();
-  const departments = deptData?.data || [];
-  const { data: itemsData } = useItems(); const items = itemsData?.data || [];
+ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
+ const { data: deptData } = useDepartments();
+ const departments = deptData?.data || [];
+ const { data: itemsData } = useItems(); const items = itemsData?.data || [];
 
-  const [allocatorOpen, setAllocatorOpen] = useState(false);
-  const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+ const [allocatorOpen, setAllocatorOpen] = useState(false);
+ const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
+ const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
+ const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
-  const form = useForm<IssueFormValues>({
-  resolver: zodResolver(formSchema),
-  defaultValues: {
-    warehouseId: "",
-    destinationDeptId: "",
-    lines: [],
-    notes: "",
-  },
+ const form = useForm<IssueFormValues>({
+ resolver: zodResolver(formSchema),
+ defaultValues: {
+  warehouseId: "",
+  destinationDeptId: "",
+  lines: [],
+  notes: "",
+ },
  });
 
  // Register dirty state
  useEffect(() => {
-   registerDirty(form.formState.isDirty);
+  registerDirty(form.formState.isDirty);
  }, [form.formState.isDirty, registerDirty]);
 
  const { fields, append, remove, update } = useFieldArray({
+ control: form.control,
+ name: "lines",
+ });
+
+ const watchedLines = useWatch({
   control: form.control,
   name: "lines",
  });
 
-  const watchedLines = useWatch({
-   control: form.control,
-   name: "lines",
-  });
+ const watchedWarehouse = useWatch({ control: form.control, name: "warehouseId" });
+ const activeItemId = activeLineIndex !== null ? fields[activeLineIndex]?.itemId : undefined;
+ const { data: availableLots } = useLotsByItem({
+  itemId: activeItemId,
+  warehouseId: watchedWarehouse,
+ });
 
-  const watchedWarehouse = useWatch({ control: form.control, name: "warehouseId" });
-  const activeItemId = activeLineIndex !== null ? fields[activeLineIndex]?.itemId : undefined;
-  const { data: availableLots } = useLotsByItem({
-    itemId: activeItemId,
-    warehouseId: watchedWarehouse,
-  });
-
-  const tableLines = React.useMemo<CustomLineItem[]>(() => {
-    return fields.map((field, index) => {
-      const lineVal = watchedLines?.[index];
-      const selectedItem = items?.find(i => i.id === lineVal?.itemId);
-      return {
-        id: field.id,
-        item: {
-          id: lineVal?.itemId || '',
-          code: selectedItem?.barcode || selectedItem?.code || '',
-          name: selectedItem?.name || '',
-          primaryUom: {
-            code: selectedItem?.primaryUom?.code || '',
-          }
-        },
-        qty: lineVal?.requestedQty ?? 1,
-        uomId: selectedItem?.primaryUom?.id || '',
-        lotAllocations: (lineVal?.lotAllocations || []).map(lot => ({
-          lotId: lot.lotNumber,
-          lotNumber: lot.lotNumber,
-          expiryDate: lot.expiryDate,
-          allocatedQty: lot.allocatedQty,
-        })),
-        qtyAllocated: lineVal?.qty ?? 0,
-        index,
-        selectedItem,
-      };
-    });
-  }, [fields, watchedLines, items]);
-
-  const extraColumns = React.useMemo<ExtraColumn<CustomLineItem>[]>(() => [
-    {
-      header: t('fulfillment_status'),
-      cell: (line: CustomLineItem) => {
-        const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
-        return (
-          <div className="flex justify-center">
-            <div className={cn(
-              "h-10 px-4 rounded-xl flex items-center justify-between gap-3 transition-all duration-300 font-mono text-label-xs font-bold",
-              isAllocated 
-                ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
-                : "bg-surface-container-high/30 text-muted-foreground/60 border border-transparent"
-            )}>
-              <span>{line.qtyAllocated || 0} / {line.qty || 0}</span>
-              {isAllocated ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5 opacity-30" />}
-            </div>
-          </div>
-        );
-      }
+ const tableLines = React.useMemo<CustomLineItem[]>(() => {
+  return fields.map((field, index) => {
+   const lineVal = watchedLines?.[index];
+   const selectedItem = items?.find(i => i.id === lineVal?.itemId);
+   return {
+    id: field.id,
+    item: {
+     id: lineVal?.itemId || '',
+     code: selectedItem?.barcode || selectedItem?.code || '',
+     name: selectedItem?.name || '',
+     primaryUom: {
+      code: selectedItem?.primaryUom?.code || '',
+     }
     },
-    {
-      header: tc('table_headers.actions') || 'Allocate',
-      cell: (line: CustomLineItem) => {
-        const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
-        const hasSelection = !!line.item.id;
-        return (
-          <div className="flex justify-center">
-            <Button
-              type="button"
-              variant={isAllocated ? "outline" : "default"}
-              disabled={!hasSelection}
-              className={cn(
-                "h-10 px-4 rounded-xl text-label-xs font-semibold uppercase transition-all duration-300",
-                isAllocated 
-                  ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white" 
-                  : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/10"
-              )}
-              onClick={() => handleOpenAllocator(line.index)}
-            >
-              {isAllocated ? t('redefine_batches') : t('sync_fefo')}
-              <ChevronRight className="ms-2 w-3.5 h-3.5" />
-            </Button>
-          </div>
-        );
-      }
-    }
-  ], [t, tc]);
+    qty: lineVal?.requestedQty ?? 1,
+    uomId: selectedItem?.primaryUom?.id || '',
+    lotAllocations: (lineVal?.lotAllocations || []).map(lot => ({
+     lotId: lot.lotNumber,
+     lotNumber: lot.lotNumber,
+     expiryDate: lot.expiryDate,
+     allocatedQty: lot.allocatedQty,
+    })),
+    qtyAllocated: lineVal?.qty ?? 0,
+    index,
+    selectedItem,
+   };
+  });
+ }, [fields, watchedLines, items]);
 
-  const renderQty = React.useCallback((line: CustomLineItem) => (
-    <div className="flex flex-col items-center gap-1">
-      <div className="flex justify-center">
-        <Input 
-          type="number"
-          step="0.01"
-          dir="ltr"
-          {...form.register(`lines.${line.index}.requestedQty`, { valueAsNumber: true })}
-          className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
-        />
+ const extraColumns = React.useMemo<ExtraColumn<CustomLineItem>[]>(() => [
+  {
+   header: t('fulfillment_status'),
+   cell: (line: CustomLineItem) => {
+    const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
+    return (
+     <div className="flex justify-center">
+      <div className={cn(
+       "h-10 px-4 rounded-xl flex items-center justify-between gap-3 transition-all duration-300 font-mono text-label-xs font-bold",
+       isAllocated 
+        ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+        : "bg-surface-container-high/30 text-muted-foreground/60 border border-transparent"
+      )}>
+       <span>{line.qtyAllocated || 0} / {line.qty || 0}</span>
+       {isAllocated ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5 opacity-30" />}
       </div>
-      {form.formState.errors.lines?.[line.index]?.requestedQty && (
-        <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">
-          {t('validation.qty_positive')}
-        </p>
-      )}
-    </div>
-  ), [form, t]);
+     </div>
+    );
+   }
+  },
+  {
+   header: tc('table_headers.actions') || 'Allocate',
+   cell: (line: CustomLineItem) => {
+    const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
+    const hasSelection = !!line.item.id;
+    return (
+     <div className="flex justify-center">
+      <Button
+       type="button"
+       variant={isAllocated ? "outline" : "default"}
+       disabled={!hasSelection}
+       className={cn(
+        "h-10 px-4 rounded-xl text-label-xs font-semibold uppercase transition-all duration-300",
+        isAllocated 
+         ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white" 
+         : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-500/10"
+       )}
+       onClick={() => handleOpenAllocator(line.index)}
+      >
+       {isAllocated ? t('redefine_batches') : t('sync_fefo')}
+       <ChevronRight className="ms-2 w-3.5 h-3.5" />
+      </Button>
+     </div>
+    );
+   }
+  }
+ ], [t, tc]);
 
-  const renderUom = React.useCallback((line: CustomLineItem) => (
-    <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-      {line.selectedItem?.primaryUom?.code || '---'}
-    </span>
-  ), []);
+ const renderQty = React.useCallback((line: CustomLineItem) => (
+  <div className="flex flex-col items-center gap-1">
+   <div className="flex justify-center">
+    <Input 
+     type="number"
+     step="0.01"
+     dir="ltr"
+     {...form.register(`lines.${line.index}.requestedQty`, { valueAsNumber: true })}
+     className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50 w-full h-10"
+    />
+   </div>
+   {form.formState.errors.lines?.[line.index]?.requestedQty && (
+    <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">
+     {t('validation.qty_positive')}
+    </p>
+   )}
+  </div>
+ ), [form, t]);
+
+ const renderUom = React.useCallback((line: CustomLineItem) => (
+  <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+   {line.selectedItem?.primaryUom?.code || '---'}
+  </span>
+ ), []);
 
  const { data: lockState } = useWarehouseLock(watchedWarehouse || null);
  const isWarehouseLocked = lockState?.isLocked ?? false;
@@ -230,46 +230,46 @@ export function IssueForm() {
  };
 
  const handleAllocate = (lotAllocations: IssueLot[]) => {
-  if (activeLineIndex === null) return;
-  const line = fields[activeLineIndex];
-  const allocated = lotAllocations.reduce((s, l) => s + l.allocatedQty, 0);
-  update(activeLineIndex, {
-    ...line,
-    qty: allocated,
-    lotAllocations,
-  });
+ if (activeLineIndex === null) return;
+ const line = fields[activeLineIndex];
+ const allocated = lotAllocations.reduce((s, l) => s + l.allocatedQty, 0);
+ update(activeLineIndex, {
+  ...line,
+  qty: allocated,
+  lotAllocations,
+ });
  };
 
  const allLinesAllocated = fields.length > 0 && fields.every(
-  (f) => (f.qty ?? 0) >= (f.requestedQty ?? 0)
+ (f) => (f.qty ?? 0) >= (f.requestedQty ?? 0)
  );
 
-  const onSubmit = (data: IssueFormValues) => {
-  if (!allLinesAllocated) return;
-   const payload: CreateIssuePayload = {
-     warehouseId: data.warehouseId,
-     destinationDeptId: data.destinationDeptId,
-     notes: data.notes,
-     lines: data.lines.map(line => ({
-       itemId: line.itemId,
-       requestedQty: line.requestedQty,
-       notes: line.notes,
-       lotAllocations: line.lotAllocations.map(lot => ({
-         lotNumber: lot.lotNumber,
-         allocatedQty: lot.allocatedQty,
-       })),
-     })),
-   };
-   createIssue.mutate(payload, {
-  onSuccess: (issue) => {
-   playSound('success');
-   router.push(`/issues/${issue.id}`, { skipGuard: true });
-  },
-  onError: () => {
-   playSound('error');
-   console.error("Failed to create issue");
-  },
-  });
+ const onSubmit = (data: IssueFormValues) => {
+ if (!allLinesAllocated) return;
+  const payload: CreateIssuePayload = {
+   warehouseId: data.warehouseId,
+   destinationDeptId: data.destinationDeptId,
+   notes: data.notes,
+   lines: data.lines.map(line => ({
+    itemId: line.itemId,
+    requestedQty: line.requestedQty,
+    notes: line.notes,
+    lotAllocations: line.lotAllocations.map(lot => ({
+     lotNumber: lot.lotNumber,
+     allocatedQty: lot.allocatedQty,
+    })),
+   })),
+  };
+  createIssue.mutate(payload, {
+ onSuccess: (issue) => {
+  playSound('success');
+  router.push(`/issues/${issue.id}`, { skipGuard: true });
+ },
+ onError: () => {
+  playSound('error');
+  console.error("Failed to create issue");
+ },
+ });
  };
 
  return (
@@ -277,7 +277,7 @@ export function IssueForm() {
  <form onSubmit={form.handleSubmit(() => setConfirmOpen(true), onFormError)} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
  
  {/* Fulfillment Orchestration Header */}
- <div className="bg-surface-container-low p-10 rounded-[2.5rem] border border-surface-container-high/20 shadow-2xl shadow-primary/5">
+ <div className="bg-card border border-border shadow-sm p-10 rounded-[2.5rem] border border-surface-container-high/20 shadow-2xl shadow-primary/5">
  <div className="flex items-center gap-6 mb-10 border-b border-surface-container-high/50 pb-8">
  <div className="p-4 rounded-[1.5rem] bg-cyan-600/10 text-cyan-500 border border-cyan-500/20 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
  <Settings2 className="w-8 h-8" />
@@ -298,51 +298,51 @@ export function IssueForm() {
  )}
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-  <FormField<IssueFormValues, "warehouseId">
-  control={form.control}
-  name="warehouseId"
-  render={({ field }) => (
-  <FormItem>
-  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
-  <Warehouse className="w-3.5 h-3.5" />
-  {tc('warehouse')}
-  </FormLabel>
-  <FormControl>
-  <SmartCombobox
-  items={warehouses || []}
-  value={field.value}
-  onSelect={(item) => field.onChange(item.id)}
-  placeholder={tc('warehouse') || "Select Warehouse"}
-  triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
-  />
-  </FormControl>
-  <FormMessage className="text-label-xxs font-semibold uppercase" />
-  </FormItem>
-  )}
-  />
+ <FormField<IssueFormValues, "warehouseId">
+ control={form.control}
+ name="warehouseId"
+ render={({ field }) => (
+ <FormItem>
+ <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+ <Warehouse className="w-3.5 h-3.5" />
+ {tc('warehouse')}
+ </FormLabel>
+ <FormControl>
+ <SmartCombobox
+ items={warehouses || []}
+ value={field.value}
+ onSelect={(item) => field.onChange(item.id)}
+ placeholder={tc('warehouse') || "Select Warehouse"}
+ triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
+ />
+ </FormControl>
+ <FormMessage className="text-label-xxs font-semibold uppercase" />
+ </FormItem>
+ )}
+ />
 
-  <FormField<IssueFormValues, "destinationDeptId">
-  control={form.control}
-  name="destinationDeptId"
-  render={({ field }) => (
-  <FormItem>
-  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
-  <Building2 className="w-3.5 h-3.5" />
-  {t('destination')}
-  </FormLabel>
-  <FormControl>
-  <SmartCombobox
-  items={departments}
-  value={field.value}
-  onSelect={(item) => field.onChange(item.id)}
-  placeholder={t('select_department')}
-  triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
-  />
-  </FormControl>
-  <FormMessage className="text-label-xxs font-semibold uppercase" />
-  </FormItem>
-  )}
-  />
+ <FormField<IssueFormValues, "destinationDeptId">
+ control={form.control}
+ name="destinationDeptId"
+ render={({ field }) => (
+ <FormItem>
+ <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+ <Building2 className="w-3.5 h-3.5" />
+ {t('destination')}
+ </FormLabel>
+ <FormControl>
+ <SmartCombobox
+ items={departments}
+ value={field.value}
+ onSelect={(item) => field.onChange(item.id)}
+ placeholder={t('select_department')}
+ triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
+ />
+ </FormControl>
+ <FormMessage className="text-label-xxs font-semibold uppercase" />
+ </FormItem>
+ )}
+ />
 
  <FormField<IssueFormValues, "notes">
  control={form.control}
@@ -354,7 +354,7 @@ export function IssueForm() {
  {t('operational_notes')}
  </FormLabel>
  <FormControl>
- <Input placeholder={t('notes_placeholder')} className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20" {...field} />
+ <Input placeholder={t('notes_placeholder')} className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -364,7 +364,7 @@ export function IssueForm() {
  </div>
 
  {/* Fulfillment Manifest Section */}
- <div className="space-y-8">
+ <div className="col-span-1 md:col-span-12 space-y-8">
  <div className="flex items-center justify-between px-6">
  <div className="flex items-center gap-5">
  <div className="p-3.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
@@ -375,69 +375,69 @@ export function IssueForm() {
  <p className="text-label-xxs font-semibold text-muted-foreground/60/20 uppercase mt-1">{t('ledger_subtitle')}</p>
  </div>
  </div>
-  </div>
+ </div>
 
-  <div className="mb-8 w-full max-w-xl mx-auto space-y-2">
-    <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block text-center whitespace-nowrap">
-      {tc('select_item') || "Search Item"}
-    </label>
-    <SmartCombobox
-      items={items || []}
-      onSelect={(item) => {
-        const existingIndex = watchedLines?.findIndex(i => i?.itemId === item.id) ?? -1;
-        if (existingIndex !== -1) {
-          const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
-          form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
-        } else {
-          append({ itemId: item.id, requestedQty: 1, qty: 0, lotAllocations: [] });
-        }
-      }}
-      placeholder={tc('select_item') || "Search and Select Item"}
-    />
-  </div>
+ <div className="mb-8 w-full max-w-xl mx-auto space-y-2">
+  <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block text-center whitespace-nowrap">
+   {tc('select_item') || "Search Item"}
+  </label>
+  <SmartCombobox
+   items={items || []}
+   onSelect={(item) => {
+    const existingIndex = watchedLines?.findIndex(i => i?.itemId === item.id) ?? -1;
+    if (existingIndex !== -1) {
+     const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
+     form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+    } else {
+     append({ itemId: item.id, requestedQty: 1, qty: 0, lotAllocations: [] });
+    }
+   }}
+   placeholder={tc('select_item') || "Search and Select Item"}
+  />
+ </div>
 
-  <div className="grid grid-cols-1 gap-5">
-  {fields.length === 0 ? (
-  <div className="py-24 text-center bg-surface-container-low rounded-[3rem] border-2 border-dashed border-surface-container-high/50 animate-in fade-in duration-500">
-  <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
-  <ListFilter className="w-10 h-10" />
-  </div>
-  <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">{t('empty_manifest')}</p>
-  </div>
-  ) : (
-    <DocumentLineItemTable
-      lines={tableLines}
-      extraColumns={extraColumns}
-      onRemoveLine={(lineId) => {
-        const idx = tableLines.findIndex(l => l.id === lineId);
-        if (idx !== -1) remove(idx);
-      }}
-      renderQty={renderQty}
-      renderUom={renderUom}
-      hideLotColumns={true}
-      headers={{
-        code: tc('table_headers.code') || 'Code',
-        name: tc('table_headers.name') || 'Name',
-        qty: t('request_qty') || 'Requested Qty',
-        uom: tc('table_headers.uom') || 'UOM',
-      }}
-    />
-  )}
-  </div>
+ <div className="grid grid-cols-1 gap-5">
+ {fields.length === 0 ? (
+ <div className="py-24 text-center bg-card border border-border shadow-sm rounded-[3rem] border-2 border-dashed border-surface-container-high/50 animate-in fade-in duration-500">
+ <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
+ <ListFilter className="w-10 h-10" />
+ </div>
+ <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">{t('empty_manifest')}</p>
+ </div>
+ ) : (
+  <DocumentLineItemTable
+   lines={tableLines}
+   extraColumns={extraColumns}
+   onRemoveLine={(lineId) => {
+    const idx = tableLines.findIndex(l => l.id === lineId);
+    if (idx !== -1) remove(idx);
+   }}
+   renderQty={renderQty}
+   renderUom={renderUom}
+   hideLotColumns={true}
+   headers={{
+    code: tc('table_headers.code') || 'Code',
+    name: tc('table_headers.name') || 'Name',
+    qty: t('request_qty') || 'Requested Qty',
+    uom: tc('table_headers.uom') || 'UOM',
+   }}
+  />
+ )}
+ </div>
  </div>
 
  {/* Global Fulfillment Summary */}
- <div className="p-6 md:p-10 bg-surface-container-low rounded-[3rem] border border-surface-container-high/20 shadow-inner flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
+ <div className="p-6 md:p-10 bg-card border border-border shadow-sm rounded-[3rem] border border-surface-container-high/20 shadow-inner flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
  <div className="flex items-center gap-6">
- <div className="w-16 h-16 rounded-[1.75rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
+ <div className="w-16 h-16 rounded-[1.75rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-sm shadow-cyan-500/5">
  <PackageCheck className="w-8 h-8 text-cyan-500" />
  </div>
-  <div>
-  <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
-  <div className="text-title-lg font-bold text-foreground">
-  {fields.filter(f => (f.qty ?? 0) >= (f.requestedQty ?? 0)).length} / {fields.length} {t('protocol_validations')}
-  </div>
-  </div>
+ <div>
+ <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
+ <div className="text-title-lg font-bold text-foreground">
+ {fields.filter(f => (f.qty ?? 0) >= (f.requestedQty ?? 0)).length} / {fields.length} {t('protocol_validations')}
+ </div>
+ </div>
  </div>
  
  <div className="flex items-center gap-6">
@@ -460,23 +460,23 @@ export function IssueForm() {
  </div>
  </form>
 
-  {/* FEFO Allocator Overlay */}
-  {activeLineIndex !== null && (
-   <FEFOLotAllocator
-   isOpen={allocatorOpen}
-   onClose={() => setAllocatorOpen(false)}
-   itemId={fields[activeLineIndex].itemId}
-   requestedQty={fields[activeLineIndex].requestedQty || 1}
-   onAllocate={handleAllocate}
-   lots={availableLots?.map(l => ({ 
-      lotNumber: l.lotNumber, 
-      expiryDate: l.expiryDate ?? '', 
-      allocatedQty: 0, 
-      availableQty: l.qtyAvailable, 
-      isExpired: l.isExpired 
-    }))}
-   />
-  )}
+ {/* FEFO Allocator Overlay */}
+ {activeLineIndex !== null && (
+  <FEFOLotAllocator
+  isOpen={allocatorOpen}
+  onClose={() => setAllocatorOpen(false)}
+  itemId={fields[activeLineIndex].itemId}
+  requestedQty={fields[activeLineIndex].requestedQty || 1}
+  onAllocate={handleAllocate}
+  lots={availableLots?.map(l => ({ 
+   lotNumber: l.lotNumber, 
+   expiryDate: l.expiryDate ?? '', 
+   allocatedQty: 0, 
+   availableQty: l.qtyAvailable, 
+   isExpired: l.isExpired 
+  }))}
+  />
+ )}
 
  {/* Posting Confirmation Sequence */}
  <PostConfirmDialog

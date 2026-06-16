@@ -20,6 +20,25 @@ import {
 const MAX_EXPORT_ROWS = 50000;
 const EXPORT_CHUNK_SIZE = 1000;
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  SAR: '\uFDFC',
+  USD: '$',
+  EUR: '\u20AC',
+  GBP: '\u00A3',
+  AED: '\u062F.\u0625',
+  QAR: '\u0631.\u0642',
+  KWD: '\u062F.\u0643',
+  BHD: '\u062F.\u0628',
+  OMR: '\u0631.\u0639',
+  EGP: '\u00A3',
+  TRY: '\u20BA',
+  PKR: '\u20A8',
+  INR: '\u20B9',
+  CNY: '\u00A5',
+  JPY: '\u00A5',
+  KRW: '\u20A9',
+};
+
 export interface MovementExportRow {
   postedAt: Date;
   itemName: string;
@@ -1132,6 +1151,34 @@ export class ReportsService {
     return 'Otantik Restuarant System';
   }
 
+  async getBaseCurrencyConfig(): Promise<{
+    currency: string;
+    currencySymbol: string;
+  }> {
+    const setting = await this.prisma.systemSetting.findUnique({
+      where: { key: 'system_settings' },
+    });
+
+    let code: string | undefined;
+    if (setting?.value) {
+      try {
+        const parsed = JSON.parse(setting.value) as Record<string, unknown>;
+        if (typeof parsed.baseCurrency === 'string') {
+          code = parsed.baseCurrency;
+        } else if (typeof parsed.base_currency === 'string') {
+          code = parsed.base_currency;
+        }
+      } catch {
+        // Ignore JSON parse error
+      }
+    }
+
+    const currency = code || process.env.BASE_CURRENCY_CODE || 'USD';
+    const currencySymbol = CURRENCY_SYMBOLS[currency] ?? currency;
+
+    return { currency, currencySymbol };
+  }
+
   async exportMovementsCursorChunk(
     warehouseId: string,
     cursor?: string,
@@ -1201,6 +1248,13 @@ export class ReportsService {
   }
 
   async getGlobalDashboardStats() {
+    const { currency, currencySymbol } = await this.getBaseCurrencyConfig();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     const [
       warehouseItems,
       pendingPrs,
@@ -1215,6 +1269,19 @@ export class ReportsService {
       activityLedger,
       expiringLots,
       pendingApprovals,
+      // Dynamic aggregations:
+      pendingFulfillmentCount,
+      totalWarehouseItems,
+      stockedWarehouseItems,
+      deadLetteredCount,
+      todayIssues,
+      globalGrnLines,
+      suppliers,
+      totalPrsCount,
+      convertedPrsCount,
+      fulfilledRequests,
+      ledgerAggregation,
+      auditLogsList,
     ] = await Promise.all([
       // Total inventory value (sum of WAC * qtyOnHand)
       this.prisma.warehouseItem.findMany({
@@ -1330,6 +1397,95 @@ export class ReportsService {
           warehouse: { select: { name: true } },
         },
       }),
+      // 1. Pending fulfillment
+      this.prisma.kitchenRequest.count({
+        where: { status: { in: ['DRAFT', 'SUBMITTED'] } },
+      }),
+      // 2. Total warehouse items count
+      this.prisma.warehouseItem.count(),
+      // 3. Stocked warehouse items count
+      this.prisma.warehouseItem.count({
+        where: { qtyOnHand: { gt: 0 } },
+      }),
+      // 4. Dead lettered outbox events
+      this.prisma.outboxEvent.count({
+        where: { deadLettered: true },
+      }),
+      // 5. Today's posted inventory issues
+      this.prisma.inventoryIssue.findMany({
+        where: {
+          status: 'POSTED',
+          createdAt: { gte: startOfToday },
+        },
+        include: {
+          lines: { select: { quantity: true } },
+        },
+      }),
+      // 6. Posted GRN Lines for total procurement spend
+      this.prisma.gRNLine.findMany({
+        where: {
+          goodsReceivedNote: { status: 'POSTED' },
+        },
+        select: {
+          quantityReceived: true,
+          unitPrice: true,
+        },
+      }),
+      // 7. Suppliers for Top Vendors
+      this.prisma.supplier.findMany({
+        where: { isActive: true },
+        include: {
+          purchaseOrders: {
+            include: {
+              goodsReceivedNotes: {
+                where: { status: 'POSTED' },
+                include: {
+                  lines: {
+                    select: {
+                      quantityReceived: true,
+                      unitPrice: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      // 8. Total PRs Count
+      this.prisma.purchaseRequest.count(),
+      // 9. Converted POs Count
+      this.prisma.purchaseOrder.count({
+        where: { prId: { not: null } },
+      }),
+      // 10. Fulfilled Kitchen Requests
+      this.prisma.kitchenRequest.findMany({
+        where: {
+          status: 'FULFILLED',
+          issueId: { not: null },
+        },
+        include: {
+          inventoryIssue: {
+            select: { createdAt: true },
+          },
+        },
+      }),
+      // 11. Throughput StockLedger Sum
+      this.prisma.stockLedger.aggregate({
+        where: {
+          postedAt: { gte: sevenDaysAgo },
+          documentType: { in: ['INVENTORY_ISSUE', 'TRANSFER'] },
+        },
+        _sum: {
+          quantity: true,
+        },
+      }),
+      // 12. System audit logs
+      this.prisma.auditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { user: true },
+      }),
     ]);
 
     // Calculate total inventory value
@@ -1404,158 +1560,441 @@ export class ReportsService {
       createdAt: pr.createdAt.toISOString(),
     }));
 
+    // Calculate today consumption
+    let todayConsumption = 0;
+    for (const issue of todayIssues) {
+      for (const line of issue.lines) {
+        todayConsumption += Number(line.quantity);
+      }
+    }
+
+    // Calculate warehouseCapacity
+    const warehouseCapacity =
+      totalWarehouseItems > 0
+        ? Math.round((stockedWarehouseItems / totalWarehouseItems) * 100)
+        : 0;
+
+    // Calculate systemHealth
+    const systemHealth = Math.max(0, 100 - deadLetteredCount * 10);
+
+    // Calculate stockHealth
+    const stockHealth =
+      totalWarehouseItems > 0
+        ? Math.round(
+            ((totalWarehouseItems - lowStockCount) / totalWarehouseItems) * 100,
+          )
+        : 100;
+
+    // Calculate total procurement spend
+    const totalProcurementSpend = globalGrnLines.reduce(
+      (sum, line) =>
+        sum + Number(line.quantityReceived) * Number(line.unitPrice),
+      0,
+    );
+
+    // Calculate top vendors
+    const vendorSpendMap = suppliers.map((supplier) => {
+      let totalSpend = 0;
+      for (const po of supplier.purchaseOrders) {
+        for (const grn of po.goodsReceivedNotes) {
+          for (const line of grn.lines) {
+            totalSpend +=
+              Number(line.quantityReceived) * Number(line.unitPrice);
+          }
+        }
+      }
+      return {
+        name: supplier.name,
+        spend: totalSpend,
+        status: supplier.isActive ? 'ACTIVE' : 'INACTIVE',
+      };
+    });
+
+    const topVendors = vendorSpendMap
+      .sort((a, b) => b.spend - a.spend)
+      .slice(0, 5);
+
+    // Calculate efficiency metrics
+    const poConversionRate =
+      totalPrsCount > 0
+        ? Math.round((convertedPrsCount / totalPrsCount) * 100)
+        : 100;
+
+    let totalDays = 0;
+    let fulfilledCount = 0;
+    for (const req of fulfilledRequests) {
+      if (req.inventoryIssue) {
+        const diffMs =
+          req.inventoryIssue.createdAt.getTime() - req.createdAt.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        totalDays += diffDays;
+        fulfilledCount++;
+      }
+    }
+    const fulfillmentCycleDays =
+      fulfilledCount > 0
+        ? parseFloat((totalDays / fulfilledCount).toFixed(1))
+        : 0;
+    const throughputWeek = Math.abs(
+      Number(ledgerAggregation._sum.quantity || 0),
+    );
+
+    // Parallelized query generation for monthly charts
+    const chartPromises: Promise<[number, number, number]>[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const startOfMonth = new Date();
+      startOfMonth.setMonth(startOfMonth.getMonth() - i);
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const endOfMonth = new Date(startOfMonth);
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+      chartPromises.push(
+        Promise.all([
+          this.prisma.purchaseRequest.count({
+            where: { createdAt: { gte: startOfMonth, lt: endOfMonth } },
+          }),
+          this.prisma.purchaseOrder.count({
+            where: {
+              prId: { not: null },
+              createdAt: { gte: startOfMonth, lt: endOfMonth },
+            },
+          }),
+          this.prisma.inventoryIssue.count({
+            where: {
+              status: 'POSTED',
+              createdAt: { gte: startOfMonth, lt: endOfMonth },
+            },
+          }),
+        ]),
+      );
+    }
+
+    const chartResults = await Promise.all(chartPromises);
+    const conversionChart = chartResults.map(([prs, converted]) =>
+      prs > 0 ? Math.round((converted / prs) * 100) : 100,
+    );
+    const velocityChart = chartResults.map(([, , issues]) =>
+      Math.min(100, Math.round((issues / 50) * 100)),
+    );
+
+    const systemAuditLogs = auditLogsList.map((log) => ({
+      id: log.id,
+      action: log.action,
+      user: log.user?.name || log.userId || 'System',
+      time: log.createdAt.toISOString(),
+      type: log.targetTable,
+    }));
+
     return {
+      currency,
+      currencySymbol,
       totalValue,
-      pendingFulfillment: 0,
+      pendingFulfillment: pendingFulfillmentCount,
       shortages: lowStockCount,
-      warehouseCapacity: 78,
+      warehouseCapacity,
       pendingPrs,
       activeStocktakes,
       lowStockItems: lowStockCount,
-      systemHealth: 100,
+      systemHealth,
       activeUsers: activeUserCount,
       nearExpiryCount,
-      todayConsumption: 0,
-      stockHealth: 100,
+      todayConsumption,
+      stockHealth,
       activePos: activePOs,
       pendingGrns: pendingGRNs,
-      totalProcurementSpend: 184500,
+      totalProcurementSpend,
       recentRequests,
       activityLog,
       expiringLots: expiringLotsFormatted,
       fulfillmentQueue: [],
       pendingApprovals: pendingApprovalsFormatted,
-      topVendors: [],
+      topVendors,
       efficiencyMetrics: {
-        poConversionRate: 87.5,
-        fulfillmentCycleDays: 2.4,
-        throughputWeek: 142,
-        conversionChart: [70, 75, 80, 85, 87, 87.5],
-        velocityChart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
+        poConversionRate,
+        fulfillmentCycleDays,
+        throughputWeek,
+        conversionChart,
+        velocityChart,
       },
-      systemAuditLogs: [],
+      systemAuditLogs,
     };
   }
 
   // ─── Private Helpers ─────────────────────────────────────────
 
   async getDashboardStats(role: string, warehouseId: string) {
-    const warehouseItems = await this.prisma.warehouseItem.findMany({
-      where: { warehouseId },
-      select: { qtyOnHand: true, wac: true },
-    });
+    const { currency, currencySymbol } = await this.getBaseCurrencyConfig();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+    const [
+      warehouseItems,
+      pending_fulfillment,
+      shortagesItems,
+      pending_prs,
+      active_stocktakes,
+      active_users,
+      near_expiry_count,
+      active_pos,
+      pending_grns,
+      grnLines,
+      issuesList,
+      transfersList,
+      auditLogsList,
+      expiringLotsList,
+      pendingPRsList,
+      // Scoped dynamic calculations:
+      deadLetteredCount,
+      todayIssues,
+      suppliers,
+      totalPrsCount,
+      convertedPrsCount,
+      fulfilledRequests,
+      ledgerAggregation,
+    ] = await Promise.all([
+      this.prisma.warehouseItem.findMany({
+        where: { warehouseId },
+        select: { qtyOnHand: true, wac: true },
+      }),
+      this.prisma.kitchenRequest.count({
+        where: {
+          warehouseId,
+          status: { in: ['SUBMITTED', 'DRAFT'] },
+        },
+      }),
+      this.prisma.warehouseItem.findMany({
+        where: {
+          warehouseId,
+          item: {
+            reorderPoint: { not: null },
+          },
+        },
+        include: {
+          item: true,
+        },
+      }),
+      this.prisma.purchaseRequest.count({
+        where: {
+          warehouseId,
+          status: { in: ['DRAFT', 'SUBMITTED'] },
+        },
+      }),
+      this.prisma.stocktakeSession.count({
+        where: {
+          warehouseId,
+          status: { in: ['DRAFT', 'STARTED', 'COUNTING', 'REVIEW'] },
+        },
+      }),
+      this.prisma.user.count({
+        where: { isActive: true },
+      }),
+      this.prisma.lot.count({
+        where: {
+          status: 'ACTIVE',
+          expiryDate: {
+            gt: new Date(),
+            lte: thirtyDaysFromNow,
+          },
+          warehouseItemLots: {
+            some: {
+              warehouseId,
+              qtyOnHand: { gt: 0 },
+            },
+          },
+        },
+      }),
+      this.prisma.purchaseOrder.count({
+        where: {
+          status: { in: ['DRAFT', 'SUBMITTED', 'APPROVED'] },
+        },
+      }),
+      this.prisma.goodsReceivedNote.count({
+        where: {
+          warehouseId,
+          status: { in: ['DRAFT', 'SUBMITTED'] },
+        },
+      }),
+      this.prisma.gRNLine.findMany({
+        where: {
+          goodsReceivedNote: {
+            warehouseId,
+            status: 'POSTED',
+          },
+        },
+        select: {
+          quantityReceived: true,
+          unitPrice: true,
+        },
+      }),
+      this.prisma.inventoryIssue.findMany({
+        where: { warehouseId },
+        include: {
+          department: { select: { name: true } },
+          lines: { select: { id: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      this.prisma.transfer.findMany({
+        where: {
+          OR: [
+            { fromWarehouseId: warehouseId },
+            { toWarehouseId: warehouseId },
+          ],
+        },
+        include: {
+          toWarehouse: { select: { name: true } },
+          lines: { select: { id: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      this.prisma.auditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { user: true },
+      }),
+      this.prisma.lot.findMany({
+        where: {
+          status: 'ACTIVE',
+          expiryDate: {
+            gt: new Date(),
+            lte: thirtyDaysFromNow,
+          },
+          warehouseItemLots: {
+            some: {
+              warehouseId,
+            },
+          },
+        },
+        include: {
+          item: {
+            include: {
+              unitOfMeasure: true,
+            },
+          },
+          warehouseItemLots: {
+            where: { warehouseId },
+            include: {
+              warehouse: true,
+            },
+          },
+        },
+        take: 5,
+      }),
+      this.prisma.purchaseRequest.findMany({
+        where: { warehouseId, status: 'SUBMITTED' },
+        include: {
+          warehouse: { select: { name: true } },
+          lines: {
+            include: {
+              item: {
+                include: {
+                  warehouseItems: {
+                    where: { warehouseId },
+                    select: { wac: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+        take: 5,
+      }),
+      this.prisma.outboxEvent.count({
+        where: { deadLettered: true },
+      }),
+      this.prisma.inventoryIssue.findMany({
+        where: {
+          warehouseId,
+          status: 'POSTED',
+          createdAt: { gte: startOfToday },
+        },
+        include: {
+          lines: { select: { quantity: true } },
+        },
+      }),
+      this.prisma.supplier.findMany({
+        where: { isActive: true },
+        include: {
+          purchaseOrders: {
+            include: {
+              goodsReceivedNotes: {
+                where: {
+                  status: 'POSTED',
+                  warehouseId,
+                },
+                include: {
+                  lines: {
+                    select: {
+                      quantityReceived: true,
+                      unitPrice: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.purchaseRequest.count({
+        where: { warehouseId },
+      }),
+      this.prisma.purchaseOrder.count({
+        where: {
+          prId: { not: null },
+          purchaseRequest: { warehouseId },
+        },
+      }),
+      this.prisma.kitchenRequest.findMany({
+        where: {
+          warehouseId,
+          status: 'FULFILLED',
+          issueId: { not: null },
+        },
+        include: {
+          inventoryIssue: {
+            select: { createdAt: true },
+          },
+        },
+      }),
+      this.prisma.stockLedger.aggregate({
+        where: {
+          warehouseId,
+          postedAt: { gte: sevenDaysAgo },
+          documentType: { in: ['INVENTORY_ISSUE', 'TRANSFER'] },
+        },
+        _sum: {
+          quantity: true,
+        },
+      }),
+    ]);
+
     let total_value = 0;
     for (const item of warehouseItems) {
       total_value += Number(item.qtyOnHand) * Number(item.wac || 0);
     }
 
-    const pending_fulfillment = await this.prisma.kitchenRequest.count({
-      where: {
-        warehouseId,
-        status: { in: ['SUBMITTED', 'DRAFT'] },
-      },
-    });
-
-    const shortagesItems = await this.prisma.warehouseItem.findMany({
-      where: {
-        warehouseId,
-        item: {
-          reorderPoint: { not: null },
-        },
-      },
-      include: {
-        item: true,
-      },
-    });
     const shortages = shortagesItems.filter(
       (wi) =>
         wi.item.reorderPoint !== null &&
         Number(wi.qtyOnHand) < Number(wi.item.reorderPoint),
     ).length;
 
-    const pending_prs = await this.prisma.purchaseRequest.count({
-      where: {
-        warehouseId,
-        status: { in: ['DRAFT', 'SUBMITTED'] },
-      },
-    });
+    const total_procurement_spend = grnLines.reduce(
+      (sum, line) =>
+        sum + Number(line.quantityReceived) * Number(line.unitPrice),
+      0,
+    );
 
-    const active_stocktakes = await this.prisma.stocktakeSession.count({
-      where: {
-        warehouseId,
-        status: { in: ['DRAFT', 'STARTED', 'COUNTING', 'REVIEW'] },
-      },
-    });
-
-    const active_users = await this.prisma.user.count({
-      where: { isActive: true },
-    });
-
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const near_expiry_count = await this.prisma.lot.count({
-      where: {
-        status: 'ACTIVE',
-        expiryDate: {
-          gt: new Date(),
-          lte: thirtyDaysFromNow,
-        },
-        warehouseItemLots: {
-          some: {
-            warehouseId,
-            qtyOnHand: { gt: 0 },
-          },
-        },
-      },
-    });
-
-    const active_pos = await this.prisma.purchaseOrder.count({
-      where: {
-        status: { in: ['DRAFT', 'SUBMITTED', 'APPROVED'] },
-      },
-    });
-
-    const pending_grns = await this.prisma.goodsReceivedNote.count({
-      where: {
-        warehouseId,
-        status: { in: ['DRAFT', 'SUBMITTED'] },
-      },
-    });
-
-    const grnSum = await this.prisma.gRNLine.aggregate({
-      where: {
-        goodsReceivedNote: {
-          warehouseId,
-          status: 'POSTED',
-        },
-      },
-      _sum: {
-        quantityReceived: true,
-        unitPrice: true,
-      },
-    });
-    const total_procurement_spend =
-      Number(grnSum._sum.quantityReceived || 0) *
-        Number(grnSum._sum.unitPrice || 0) || 184500;
-
-    const issuesList = await this.prisma.inventoryIssue.findMany({
-      where: { warehouseId },
-      include: {
-        department: { select: { name: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
-    const transfersList = await this.prisma.transfer.findMany({
-      where: {
-        OR: [{ fromWarehouseId: warehouseId }, { toWarehouseId: warehouseId }],
-      },
-      include: {
-        toWarehouse: { select: { name: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
     const recentRequests = [
       ...issuesList.map((i) => ({
         id: i.id,
@@ -1584,24 +2023,6 @@ export class ReportsService {
       )
       .slice(0, 5);
 
-    if (recentRequests.length === 0) {
-      recentRequests.push({
-        id: 'req-1',
-        documentNumber: 'ISS-2026-001',
-        type: 'ISSUE',
-        status: 'DRAFT',
-        priority: 'HIGH',
-        itemsSummary: 'Beef (Frozen) x 20 KG, Cooking Oil x 5 L',
-        createdAt: new Date().toISOString(),
-        destination: 'Kitchen-Main',
-      });
-    }
-
-    const auditLogsList = await this.prisma.auditLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: { user: true },
-    });
     const activityLog = auditLogsList.map((log) => ({
       id: log.id,
       itemName: log.targetTable,
@@ -1614,74 +2035,22 @@ export class ReportsService {
       type: log.action,
     }));
 
-    if (activityLog.length === 0) {
-      activityLog.push(
-        {
-          id: 'act-1',
-          itemName: 'Beef (Frozen)',
-          qty: 20,
-          uom: 'KG',
-          time: '10:30',
-          type: 'OUT (Issue)',
-        },
-        {
-          id: 'act-2',
-          itemName: 'Cooking Oil',
-          qty: 5,
-          uom: 'L',
-          time: '11:15',
-          type: 'OUT (Issue)',
-        },
-      );
-    }
-
-    const expiringLotsList = await this.prisma.lot.findMany({
-      where: {
-        status: 'ACTIVE',
-        expiryDate: {
-          gt: new Date(),
-          lte: thirtyDaysFromNow,
-        },
-        warehouseItemLots: {
-          some: {
-            warehouseId,
-          },
-        },
-      },
-      include: {
-        item: true,
-      },
-      take: 5,
+    const expiringLots = expiringLotsList.map((l) => {
+      const wil = l.warehouseItemLots[0];
+      return {
+        id: l.id,
+        itemId: l.itemId,
+        itemName: l.item.name,
+        lotNumber: l.lotNumber,
+        expiryDate: l.expiryDate?.toISOString().split('T')[0] || '',
+        daysLeft: Math.ceil(
+          ((l.expiryDate?.getTime() || 0) - Date.now()) / (1000 * 60 * 60 * 24),
+        ),
+        warehouseName: wil?.warehouse?.name || 'Main Warehouse',
+        qty: Number(wil?.qtyOnHand || 0),
+        uom: l.item.unitOfMeasure?.code || 'PCS',
+      };
     });
-    const expiringLots = expiringLotsList.map((l) => ({
-      id: l.id,
-      itemId: l.itemId,
-      itemName: l.item.name,
-      lotNumber: l.lotNumber,
-      expiryDate: l.expiryDate?.toISOString().split('T')[0] || '',
-      daysLeft: Math.ceil(
-        ((l.expiryDate?.getTime() || 0) - Date.now()) / (1000 * 60 * 60 * 24),
-      ),
-      warehouseName: 'Main Warehouse',
-      qty: 10,
-      uom: 'PCS',
-    }));
-
-    if (expiringLots.length === 0) {
-      expiringLots.push({
-        id: 'exp-1',
-        itemId: 'exp-1',
-        itemName: 'Milk (Fresh)',
-        lotNumber: 'LOT-M-001',
-        expiryDate: new Date(Date.now() + 5 * 24 * 3600000)
-          .toISOString()
-          .split('T')[0],
-        daysLeft: 5,
-        warehouseName: 'Cold Storage WH',
-        qty: 12,
-        uom: 'LTR',
-      });
-    }
 
     const fulfillmentQueue = [
       ...issuesList
@@ -1692,7 +2061,7 @@ export class ReportsService {
           type: 'ISSUE' as const,
           status: i.status,
           priority: 'HIGH',
-          itemsCount: 2,
+          itemsCount: i.lines.length,
           destination: i.department?.name || i.departmentId,
           createdAt: i.createdAt.toISOString(),
         })),
@@ -1704,68 +2073,155 @@ export class ReportsService {
           type: 'TRANSFER' as const,
           status: t.status,
           priority: 'NORMAL',
-          itemsCount: 3,
+          itemsCount: t.lines.length,
           destination: t.toWarehouse?.name || t.toWarehouseId,
           createdAt: t.createdAt.toISOString(),
         })),
     ].slice(0, 5);
 
-    if (fulfillmentQueue.length === 0) {
-      fulfillmentQueue.push({
-        id: 'fq-1',
-        documentNumber: 'ISS-2026-004',
-        type: 'ISSUE',
-        status: 'POSTED',
+    const pendingApprovals = pendingPRsList.map((pr) => {
+      const totalVal = pr.lines.reduce((sum, line) => {
+        const wac = Number(line.item.warehouseItems[0]?.wac || 0);
+        return sum + Number(line.quantity) * wac;
+      }, 0);
+      return {
+        id: pr.id,
+        documentNumber: pr.requestNumber,
+        type: 'PR' as const,
+        status: pr.status,
         priority: 'HIGH',
-        itemsCount: 3,
-        destination: 'Kitchen-Pastry',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-      });
-    }
-
-    const pendingPRsList = await this.prisma.purchaseRequest.findMany({
-      where: { warehouseId, status: 'SUBMITTED' },
-      include: {
-        warehouse: { select: { name: true } },
-      },
-      take: 5,
+        destination: pr.warehouse?.name || pr.warehouseId,
+        createdAt: pr.createdAt.toISOString(),
+        totalValue: totalVal,
+      };
     });
-    const pendingApprovals = pendingPRsList.map((pr) => ({
-      id: pr.id,
-      documentNumber: pr.requestNumber,
-      type: 'PR' as const,
-      status: pr.status,
-      priority: 'HIGH',
-      destination: pr.warehouse?.name || pr.warehouseId,
-      createdAt: pr.createdAt.toISOString(),
-      totalValue: 15000,
-    }));
 
-    if (pendingApprovals.length === 0) {
-      pendingApprovals.push({
-        id: 'app-1',
-        documentNumber: 'PR-2026-005',
-        type: 'PR',
-        status: 'DRAFT',
-        priority: 'HIGH',
-        destination: 'Cold Storage WH',
-        createdAt: new Date().toISOString(),
-        totalValue: 15000,
-      });
+    // Scoped capacity
+    const totalItemsInWarehouse = warehouseItems.length;
+    const stockedItemsInWarehouse = warehouseItems.filter(
+      (item) => Number(item.qtyOnHand) > 0,
+    ).length;
+
+    const warehouseCapacity =
+      totalItemsInWarehouse > 0
+        ? Math.round((stockedItemsInWarehouse / totalItemsInWarehouse) * 100)
+        : 0;
+
+    // Scoped system health (global dead letters check)
+    const systemHealth = Math.max(0, 100 - deadLetteredCount * 10);
+
+    // Scoped stock health
+    const stockHealth =
+      totalItemsInWarehouse > 0
+        ? Math.round(
+            ((totalItemsInWarehouse - shortages) / totalItemsInWarehouse) * 100,
+          )
+        : 100;
+
+    // Scoped today's consumption
+    let todayConsumption = 0;
+    for (const issue of todayIssues) {
+      for (const line of issue.lines) {
+        todayConsumption += Number(line.quantity);
+      }
     }
 
-    const topVendors = [
-      { name: 'National Poultry Co', spend: 85000, status: 'Active' },
-      { name: 'Gulf Canned Goods', spend: 45000, status: 'Active' },
-      { name: 'Almarai Dairy', spend: 32000, status: 'Active' },
-    ];
+    const vendorSpendMap = suppliers.map((supplier) => {
+      let totalSpend = 0;
+      for (const po of supplier.purchaseOrders) {
+        for (const grn of po.goodsReceivedNotes) {
+          for (const line of grn.lines) {
+            totalSpend +=
+              Number(line.quantityReceived) * Number(line.unitPrice);
+          }
+        }
+      }
+      return {
+        name: supplier.name,
+        spend: totalSpend,
+        status: supplier.isActive ? 'ACTIVE' : 'INACTIVE',
+      };
+    });
+
+    const topVendors = vendorSpendMap
+      .sort((a, b) => b.spend - a.spend)
+      .slice(0, 5);
+
+    const poConversionRate =
+      totalPrsCount > 0
+        ? Math.round((convertedPrsCount / totalPrsCount) * 100)
+        : 100;
+
+    let totalDays = 0;
+    let fulfilledCount = 0;
+    for (const req of fulfilledRequests) {
+      if (req.inventoryIssue) {
+        const diffMs =
+          req.inventoryIssue.createdAt.getTime() - req.createdAt.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        totalDays += diffDays;
+        fulfilledCount++;
+      }
+    }
+    const fulfillmentCycleDays =
+      fulfilledCount > 0
+        ? parseFloat((totalDays / fulfilledCount).toFixed(1))
+        : 0;
+    const throughputWeek = Math.abs(
+      Number(ledgerAggregation._sum.quantity || 0),
+    );
+
+    // Parallelized query generation for scoped monthly charts
+    const chartPromises: Promise<[number, number, number]>[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const startOfMonth = new Date();
+      startOfMonth.setMonth(startOfMonth.getMonth() - i);
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const endOfMonth = new Date(startOfMonth);
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+      chartPromises.push(
+        Promise.all([
+          this.prisma.purchaseRequest.count({
+            where: {
+              warehouseId,
+              createdAt: { gte: startOfMonth, lt: endOfMonth },
+            },
+          }),
+          this.prisma.purchaseOrder.count({
+            where: {
+              prId: { not: null },
+              purchaseRequest: { warehouseId },
+              createdAt: { gte: startOfMonth, lt: endOfMonth },
+            },
+          }),
+          this.prisma.inventoryIssue.count({
+            where: {
+              warehouseId,
+              status: 'POSTED',
+              createdAt: { gte: startOfMonth, lt: endOfMonth },
+            },
+          }),
+        ]),
+      );
+    }
+
+    const chartResults = await Promise.all(chartPromises);
+    const conversionChart = chartResults.map(([prs, converted]) =>
+      prs > 0 ? Math.round((converted / prs) * 100) : 100,
+    );
+    const velocityChart = chartResults.map(([, , issues]) =>
+      Math.min(100, Math.round((issues / 50) * 100)),
+    );
 
     const efficiencyMetrics = {
-      poConversionRate: 87.5,
-      fulfillmentCycleDays: 2.4,
-      throughputWeek: 142,
-      conversionChart: [70, 75, 80, 85, 87, 87.5],
-      velocityChart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
+      poConversionRate,
+      fulfillmentCycleDays,
+      throughputWeek,
+      conversionChart,
+      velocityChart,
     };
 
     const systemAuditLogs = auditLogsList.map((log) => ({
@@ -1776,29 +2232,21 @@ export class ReportsService {
       type: log.targetTable,
     }));
 
-    if (systemAuditLogs.length === 0) {
-      systemAuditLogs.push({
-        id: 'sa-1',
-        action: 'Update Item Info',
-        user: 'بركات امين',
-        time: new Date().toISOString(),
-        type: 'ITEM',
-      });
-    }
-
     return {
+      currency,
+      currencySymbol,
       totalValue: total_value,
       pendingFulfillment: pending_fulfillment,
       shortages,
-      warehouseCapacity: 78,
+      warehouseCapacity,
       pendingPrs: pending_prs,
       activeStocktakes: active_stocktakes,
       lowStockItems: shortages,
-      systemHealth: 99,
+      systemHealth,
       activeUsers: active_users,
       nearExpiryCount: near_expiry_count,
-      todayConsumption: 1240,
-      stockHealth: 94,
+      todayConsumption,
+      stockHealth,
       activePos: active_pos,
       pendingGrns: pending_grns,
       totalProcurementSpend: total_procurement_spend,
@@ -1814,6 +2262,7 @@ export class ReportsService {
   }
 
   async getKitchenChiefDashboardStats(departmentId: string) {
+    const { currency, currencySymbol } = await this.getBaseCurrencyConfig();
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
@@ -1824,6 +2273,9 @@ export class ReportsService {
       recentRequestsForHealth,
       recentKitchenRequests,
       recentIssuesForLog,
+      // Kitchen specific dynamic dependencies:
+      deadLetteredCount,
+      activeUsersCount,
     ] = await Promise.all([
       // 1. Pending requests count
       this.prisma.kitchenRequest.count({
@@ -1908,6 +2360,14 @@ export class ReportsService {
           },
         },
       }),
+      // 7. Dead lettered outbox events
+      this.prisma.outboxEvent.count({
+        where: { deadLettered: true },
+      }),
+      // 8. Active users
+      this.prisma.user.count({
+        where: { isActive: true },
+      }),
     ]);
 
     // Calculate shortages
@@ -1974,16 +2434,21 @@ export class ReportsService {
       }
     }
 
+    // Calculate systemHealth
+    const systemHealth = Math.max(0, 100 - deadLetteredCount * 10);
+
     return {
+      currency,
+      currencySymbol,
       totalValue: 0,
       pendingFulfillment: pendingRequests,
       shortages,
-      warehouseCapacity: 100,
+      warehouseCapacity: 0,
       pendingPrs: 0,
       activeStocktakes: 0,
       lowStockItems: shortages,
-      systemHealth: 100,
-      activeUsers: 0,
+      systemHealth,
+      activeUsers: activeUsersCount,
       nearExpiryCount: 0,
       todayConsumption,
       stockHealth,
@@ -1997,11 +2462,11 @@ export class ReportsService {
       pendingApprovals: [],
       topVendors: [],
       efficiencyMetrics: {
-        poConversionRate: 100,
-        fulfillmentCycleDays: 1,
+        poConversionRate: 0,
+        fulfillmentCycleDays: 0,
         throughputWeek: 0,
-        conversionChart: [],
-        velocityChart: [],
+        conversionChart: [0, 0, 0, 0, 0, 0],
+        velocityChart: [0, 0, 0, 0, 0, 0],
       },
       systemAuditLogs: [],
     };

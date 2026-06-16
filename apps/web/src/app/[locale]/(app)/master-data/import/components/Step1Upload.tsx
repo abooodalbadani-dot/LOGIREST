@@ -18,19 +18,19 @@ export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
  const tc = useTranslations('common');
  
  const handleFile = (file: File) => {
-  if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-  const data = new Uint8Array(e.target?.result as ArrayBuffer);
-  const workbook = XLSX.read(data, { type: 'array' });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  const json = XLSX.utils.sheet_to_json(worksheet);
-  
-  wizard.setFileData(file.name, file.size, json as Record<string, unknown>[]);
-  };
-  reader.readAsArrayBuffer(file);
-  }
+ if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+ const reader = new FileReader();
+ reader.onload = (e) => {
+ const data = new Uint8Array(e.target?.result as ArrayBuffer);
+ const workbook = XLSX.read(data, { type: 'array' });
+ const sheetName = workbook.SheetNames[0];
+ const worksheet = workbook.Sheets[sheetName];
+ const json = XLSX.utils.sheet_to_json(worksheet);
+ 
+ wizard.setFileData(file.name, file.size, json as Record<string, unknown>[]);
+ };
+ reader.readAsArrayBuffer(file);
+ }
  };
 
 
@@ -96,7 +96,7 @@ export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
  onClick={downloadTemplate}
  >
  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
- <Download className="w-4 h-4 mr-2 text-cyan-500 group-hover:-translate-y-1 transition-transform" />
+ <Download className="w-4 h-4 me-2 text-cyan-500 group-hover:-translate-y-1 transition-transform" />
  <span className="font-bold">{t('download_template')}</span>
  </Button>
  </div>

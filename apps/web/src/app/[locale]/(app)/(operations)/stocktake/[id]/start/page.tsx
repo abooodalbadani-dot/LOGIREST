@@ -9,6 +9,6 @@ export default async function StocktakeStartPage({
  const { locale, id } = await params;
  
  return (
- <StocktakeStartClient id={id} locale={locale} />
+ <StocktakeStartClient id={id} />
  );
 }

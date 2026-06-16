@@ -33,22 +33,22 @@ export default async function MasterDataHubPage(props: { params: Promise<{ local
  const commonT = await getTranslations('common');
 
  const modules = [
-  { name: t('branches.title'), href: `/master-data/branches`, icon: Building2, resource: 'branches' },
-  { name: t('warehouses.title'), href: `/master-data/warehouses`, icon: Warehouse, resource: 'warehouses' },
-  { name: t('departments.title'), href: `/master-data/departments`, icon: Users2, resource: 'departments' },
-  { name: t('suppliers.title'), href: `/master-data/suppliers`, icon: Truck, resource: 'suppliers' },
-  { name: t('categories.title'), href: `/master-data/categories`, icon: Tags, resource: 'categories' },
-  { name: t('items.title'), href: `/master-data/items`, icon: Package, resource: 'items' },
-  { name: t('uom.title'), href: `/master-data/units-of-measure`, icon: Scale, resource: 'uom' },
-  { name: t('barcodes.title'), href: `/master-data/barcodes`, icon: Barcode, resource: 'barcodes' },
-  { name: t('currencies.title'), href: `/master-data/currencies`, icon: Coins, resource: 'currencies' },
-  { name: t('currencies.fx_rates_title'), href: `/master-data/currencies`, icon: TrendingUp, resource: 'currencies' },
-  { name: t('import.title'), href: `/master-data/import`, icon: Upload, resource: 'import' },
+ { name: t('branches.title'), href: `/master-data/branches`, icon: Building2, resource: 'branches' },
+ { name: t('warehouses.title'), href: `/master-data/warehouses`, icon: Warehouse, resource: 'warehouses' },
+ { name: t('departments.title'), href: `/master-data/departments`, icon: Users2, resource: 'departments' },
+ { name: t('suppliers.title'), href: `/master-data/suppliers`, icon: Truck, resource: 'suppliers' },
+ { name: t('categories.title'), href: `/master-data/categories`, icon: Tags, resource: 'categories' },
+ { name: t('items.title'), href: `/master-data/items`, icon: Package, resource: 'items' },
+ { name: t('uom.title'), href: `/master-data/units-of-measure`, icon: Scale, resource: 'uom' },
+ { name: t('barcodes.title'), href: `/master-data/barcodes`, icon: Barcode, resource: 'barcodes' },
+ { name: t('currencies.title'), href: `/master-data/currencies`, icon: Coins, resource: 'currencies' },
+ { name: t('currencies.fx_rates_title'), href: `/master-data/currencies`, icon: TrendingUp, resource: 'currencies' },
+ { name: t('import.title'), href: `/master-data/import`, icon: Upload, resource: 'import' },
  ];
 
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">
- <div className="flex flex-col gap-8">
+ <div className="flex flex-col gap-8 min-w-0">
  <PageHeader 
  title={t('common.master_data')} 
  description={commonT('master_data')}
@@ -59,12 +59,12 @@ export default async function MasterDataHubPage(props: { params: Promise<{ local
  <Link
  key={module.href + module.name}
  href={module.href}
- className="flex items-center gap-4 p-6 bg-surface-container-low rounded-lg transition-all hover:bg-surface-container-high group"
+ className="flex items-center gap-4 p-6 bg-card border border-border shadow-sm rounded-lg transition-all hover:bg-surface-container-high group"
  >
  <div className="p-3 rounded-md bg-surface-container-high group-hover:bg-status-active/10 transition-colors">
  <module.icon className="w-6 h-6 text-muted-foreground/60 group-hover:text-status-active transition-colors" />
  </div>
- <div className="flex flex-col">
+ <div className="flex flex-col min-w-0">
  <span className="font-semibold text-foreground group-hover:text-status-active transition-colors">
  {module.name}
  </span>

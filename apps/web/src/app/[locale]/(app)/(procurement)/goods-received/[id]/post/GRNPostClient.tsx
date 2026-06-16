@@ -29,7 +29,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const fxRateSchema = z.object({
-  fx_rate: z.number().min(0.0001, 'Invalid rate')
+ fx_rate: z.number().min(0.0001, 'Invalid rate')
 });
 
 type FXRateFormValues = z.infer<typeof fxRateSchema>;
@@ -46,34 +46,34 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  const queryClient = useQueryClient();
  const { user } = useAuth();
  
-  const { toast } = useToast();
-  const { playSound } = useAudioFeedback();
-  
-  const { data: grn, isLoading: isLoadingGRN } = useGRN(id);
+ const { toast } = useToast();
+ const { playSound } = useAudioFeedback();
+ 
+ const { data: grn, isLoading: isLoadingGRN } = useGRN(id);
  
  
-  const form = useForm<FXRateFormValues>({
-    resolver: zodResolver(fxRateSchema),
-    defaultValues: {
-      fx_rate: 1
-    }
-  });
+ const form = useForm<FXRateFormValues>({
+  resolver: zodResolver(fxRateSchema),
+  defaultValues: {
+   fx_rate: 1
+  }
+ });
 
-  const fxRate = useWatch({ control: form.control, name: 'fx_rate' });
-  const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
-  const postMutation = usePostGRN();
+ const fxRate = useWatch({ control: form.control, name: 'fx_rate' });
+ const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
+ const postMutation = usePostGRN();
 
-  const { baseCurrency, isLoading: loadingSettings } = useSettings();
-  const supplierCurrency = grn?.currencyId;
+ const { baseCurrency, isLoading: loadingSettings } = useSettings();
+ const supplierCurrency = grn?.currencyId;
 
-  // Live FX conversion logic for display
-  const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
-  
-  useEffect(() => {
-    if (fxRates?.[0]?.rate && !form.formState.isDirty) {
-      form.reset({ fx_rate: fxRates[0].rate });
-    }
-  }, [fxRates, form]);
+ // Live FX conversion logic for display
+ const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
+ 
+ useEffect(() => {
+  if (fxRates?.[0]?.rate && !form.formState.isDirty) {
+   form.reset({ fx_rate: fxRates[0].rate });
+  }
+ }, [fxRates, form]);
 
  const totalSupplier = useMemo(() => {
  return grn?.lines.reduce((acc, line) => acc + (line.receivedQty * (line.unitCostForeign || 0)), 0) || 0;
@@ -97,48 +97,48 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  if (grn && !isLoadingGRN) {
  // If already posted, redirect
  if (isDocumentLocked('GRN', grn.status as DocumentStatus)) {
-      router.replace(`/goods-received/${id}`);
+   router.replace(`/goods-received/${id}`);
  return;
  }
  
  // Strict enforcement: only documents allowed by the engine can be posted
  if (!canPerformActionV2('GRN', grn.status as DocumentStatus, 'POST', user?.role)) {
-      router.replace(`/goods-received/${id}`);
-    }
+   router.replace(`/goods-received/${id}`);
   }
+ }
 }, [grn, isLoadingGRN, id, router, canPost, user]);
 
-  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+ const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
-  const handlePost = () => {
-    postMutation.mutate({
-      id,
-      version: grn?.version || 1
-    }, {
-      onSuccess: () => {
-        playSound('success');
-        toast.success(t('posted_success'));
-        setIsPostDialogOpen(false);
-        guardedRouter.push(`/goods-received/${id}`, { skipGuard: true });
-      },
-      onError: () => {
-        playSound('error');
-        toast.error(tc('error'));
-      }
-    });
-  };
+ const handlePost = () => {
+  postMutation.mutate({
+   id,
+   version: grn?.version || 1
+  }, {
+   onSuccess: () => {
+    playSound('success');
+    toast.success(t('posted_success'));
+    setIsPostDialogOpen(false);
+    guardedRouter.push(`/goods-received/${id}`, { skipGuard: true });
+   },
+   onError: () => {
+    playSound('error');
+    toast.error(tc('error'));
+   }
+  });
+ };
 
-  if (isLoadingGRN || loadingSettings) {
-    return <PageSkeleton />;
-  }
+ if (isLoadingGRN || loadingSettings) {
+  return <PageSkeleton />;
+ }
 
-  if (!grn) {
-    return <ErrorState message={tc('not_found')} onRetry={() => queryClient.invalidateQueries({ queryKey: ['grn', id] })} />;
-  }
+ if (!grn) {
+  return <ErrorState message={tc('not_found')} onRetry={() => queryClient.invalidateQueries({ queryKey: ['grn', id] })} />;
+ }
 
  if (!canPost) {
  return (
- <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+ <div className="min-w-0 items-center flex-1 gap-6 justify-center gap-4 flex-col flex h-[60vh] w-full">
  <AlertCircle className="w-12 h-12 text-destructive opacity-50" />
  <p className="text-body-md font-bold uppercase text-muted-foreground">{tc('permission_denied')}</p>
  </div>
@@ -146,7 +146,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  }
 
  return (
- <div className="flex flex-col gap-10 pb-20">
+ <div className="flex flex-col gap-10 pb-20 min-w-0">
  <PageHeader
  title={`#${grn.documentNumber}`}
  description={t('fx_capture_title')}
@@ -157,25 +157,25 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <Button variant="ghost" onClick={() => router.back()} className="rounded-2xl">
  {tc('cancel')}
  </Button>
-          <PostConfirmDialog
-            open={isPostDialogOpen}
-            onOpenChange={setIsPostDialogOpen}
-            title={t('post_confirm_title')}
-            description={t('post_confirm_desc')}
-            warningText={t('post_irreversible')}
-            requiresTextConfirmation={true}
-            onConfirm={handlePost}
-            isLoading={postMutation.isPending}
-            confirmKeyword={t('confirm_keyword') || 'POST'}
-          >
-            <Button 
-              disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0 || !baseCurrency}
-              className="h-14 px-12 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 rounded-2xl transition-all border-none"
-            >
-              <Send className="w-5 h-5 me-3" />
-              {t('post_grn')}
-            </Button>
-          </PostConfirmDialog>
+     <PostConfirmDialog
+      open={isPostDialogOpen}
+      onOpenChange={setIsPostDialogOpen}
+      title={t('post_confirm_title')}
+      description={t('post_confirm_desc')}
+      warningText={t('post_irreversible')}
+      requiresTextConfirmation={true}
+      onConfirm={handlePost}
+      isLoading={postMutation.isPending}
+      confirmKeyword={t('confirm_keyword') || 'POST'}
+     >
+      <Button 
+       disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0 || !baseCurrency}
+       className="h-14 px-12 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 rounded-2xl transition-all border-none"
+      >
+       <Send className="w-5 h-5 me-3" />
+       {t('post_grn')}
+      </Button>
+     </PostConfirmDialog>
  </div>
  }
  />
@@ -183,7 +183,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  {/* FX Panel (PART 2) */}
  <div className="lg:col-span-2 space-y-8">
- <div className="bg-surface-container-low p-10 rounded-[32px] border border-white/5 shadow-2xl relative overflow-hidden group">
+ <div className="bg-card border border-border shadow-sm p-10 rounded-[32px] border border-white/5 shadow-2xl relative overflow-hidden group">
  <div className="absolute top-0 end-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-all duration-700">
  <TrendingUp className="w-40 h-40" />
  </div>
@@ -214,20 +214,20 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="space-y-4">
  <Label className="text-label-xs font-semibold uppercase text-primary/80">{t('fx_capture_title')}</Label>
  <div className="relative group">
-                <Input 
-                  type="number"
-                  step="0.0001"
-                  dir="ltr"
-                  className="h-16 bg-surface-container-highest rounded-2xl border-white/10 focus:border-primary/50 text-headline-lg font-mono font-semibold"
-                  {...form.register('fx_rate', { valueAsNumber: true })}
-                />
+        <Input 
+         type="number"
+         step="0.0001"
+         dir="ltr"
+         className="h-16 bg-surface-container-highest rounded-2xl border-white/10 focus:border-primary/50 text-headline-lg font-mono font-semibold"
+         {...form.register('fx_rate', { valueAsNumber: true })}
+        />
  <div className="absolute inset-y-0 end-4 flex items-center">
  <TrendingUp className="w-5 h-5 text-primary/40 group-focus-within:text-primary transition-colors" />
  </div>
  </div>
  </div>
 
- <div className="flex flex-col justify-end pb-2">
+ <div className="flex flex-col justify-end pb-2 min-w-0">
  <div className="flex items-center gap-2">
  <div className={cn(
  "w-2 h-2 rounded-full animate-pulse",
@@ -262,12 +262,12 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('supplier')}</p>
  <h2 className="text-title-lg font-bold">{grn.supplier?.name || t('mock_supplier_1')}</h2>
  </div>
- <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center">
+ <div className="w-12 h-12 bg-card/5 rounded-2xl flex items-center justify-center">
  <Wallet className="w-6 h-6 text-muted-foreground/40" />
  </div>
  </div>
 
- <div className="h-px bg-white/5" />
+ <div className="h-px bg-card/5" />
 
  <div className="space-y-6">
  <div className="flex justify-between items-center">
@@ -293,7 +293,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
 
  <div className="flex justify-between items-center bg-primary/5 p-6 rounded-2xl border border-primary/10 relative overflow-hidden group">
  <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
- <div className="relative z-10 flex flex-col gap-1">
+ <div className="relative z-10 flex flex-col gap-1 min-w-0">
  <p className="text-label-xs font-semibold uppercase text-primary/60">{tc('base_currency')}</p>
  <p dir="ltr" className="font-mono font-semibold text-headline-lg text-primary">{formatCurrency(totalBase, baseCurrency, locale)}</p>
  </div>

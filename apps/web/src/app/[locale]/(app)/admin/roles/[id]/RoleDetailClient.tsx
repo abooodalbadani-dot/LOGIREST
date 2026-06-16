@@ -9,9 +9,43 @@ import { ShieldCheck, Lock, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
-import { ROLE_CAPABILITIES, ROLE_METADATA, type UserRole } from '@logirest/shared-types';
+import { ROLE_CAPABILITIES, ROLE_METADATA, canRolePerformAction, type DocumentType, type UserRole, type CapabilityAction } from '@logirest/shared-types';
+import { PERMISSION_MATRIX, type ResourceType, type ActionType } from '@/types/rbac';
 
 const ACTION_KEYS: RoleAction[] = ['view', 'create', 'edit', 'approve', 'post'];
+
+const ALL_MODULES = ['Admin', 'Operations', 'Procurement', 'Inventory', 'Communications', 'Reports'];
+
+const isResourceInModule = (resource: string, moduleKey: string): boolean => {
+  const res = resource.toLowerCase();
+  const mod = moduleKey.toLowerCase();
+  
+  if (res === mod || res.startsWith(mod + '_')) {
+    return true;
+  }
+  
+  if (mod === 'procurement') {
+    return ['pr', 'po', 'grn'].includes(res);
+  }
+  
+  if (mod === 'operations') {
+    return ['issue', 'transfer', 'adjustment', 'stocktake', 'kitchen_request', 'kitchen_requests', 'internal_transfers'].includes(res);
+  }
+  
+  if (mod === 'inventory') {
+    return ['inventory', 'barcode_mapping', 'zones'].includes(res);
+  }
+  
+  if (mod === 'admin') {
+    return res.startsWith('master_data') || ['audit_log', 'user'].includes(res);
+  }
+  
+  if (mod === 'communications') {
+    return ['email_settings'].includes(res);
+  }
+  
+  return false;
+};
 
 interface Props {
   locale: string;
@@ -25,19 +59,58 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
   const { data: role, isLoading } = useAdminRole(id);
   const { playSound } = useAudioFeedback();
 
-  const basePermissions = useMemo(() => role?.permissions ?? [], [role]);
   const [edits, setEdits] = useState<Record<string, Partial<Record<RoleAction, boolean>>>>({});
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const isAdmin = id === 'ADMIN';
+  const isAdmin = id?.toUpperCase() === 'ADMIN';
   const isAuditor = true; // All roles are immutable and managed by system manifest
 
   const localPermissions = useMemo(() => {
-    return basePermissions.map(p => ({
-      ...p,
-      actions: { ...p.actions, ...edits[p.module] },
-    }));
-  }, [basePermissions, edits]);
+    const roleId = (id?.toUpperCase() as UserRole) || 'VIEWER';
+    
+    return ALL_MODULES.map(moduleName => {
+      let overrideActions = { view: false, create: false, edit: false, approve: false, post: false };
+      
+      if (roleId === 'ADMIN') {
+        overrideActions = { view: true, create: true, edit: true, approve: true, post: true };
+      } else {
+        const moduleKey = moduleName.toLowerCase();
+        const pm = PERMISSION_MATRIX[roleId] || {};
+        
+        // Map document capabilities and standard RBAC
+        const checkAction = (act: ActionType | CapabilityAction) => {
+          // Check PERMISSION_MATRIX
+          const hasInMatrix = Object.entries(pm).some(([res, actions]) => 
+            isResourceInModule(res, moduleKey) && (actions as string[]).includes(act)
+          );
+          
+          if (hasInMatrix) return true;
+
+          // Check ROLE_CAPABILITIES (for document types)
+          const docTypes = Object.keys(ROLE_CAPABILITIES) as DocumentType[];
+          return docTypes.some(doc => {
+            if (isResourceInModule(doc, moduleKey)) {
+              return canRolePerformAction(doc, act as CapabilityAction, roleId);
+            }
+            return false;
+          });
+        };
+
+        overrideActions = {
+          view: checkAction('view'),
+          create: checkAction('create'),
+          edit: checkAction('edit'),
+          approve: checkAction('approve'),
+          post: checkAction('post'),
+        };
+      }
+
+      return {
+        module: moduleName,
+        actions: { ...overrideActions, ...(edits[moduleName] || {}) },
+      };
+    });
+  }, [id, edits]);
 
   const handleToggle = (module: string, action: RoleAction, checked: boolean) => {
     if (isAuditor) return;
@@ -72,121 +145,121 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <Skeleton className="h-12 w-64 bg-outline-low" />
-        <Skeleton className="h-[500px] w-full bg-outline-low" />
-      </div>
+      <MasterDataFormLayout
+        title={t('roles_title') || 'Role Details'}
+        backHref="/admin/roles"
+        isSaving={false}
+        resource="admin"
+        saveAction="edit"
+        hideSave={isAuditor}
+      >
+        <div className="w-full min-w-0 col-span-12 gap-6 flex-1 space-y-8 flex-col flex animate-pulse">
+          <Skeleton className="h-12 w-64 bg-surface-container-highest/40" />
+          <Skeleton className="h-[500px] w-full bg-surface-container-highest/40 rounded-xl" />
+        </div>
+      </MasterDataFormLayout>
     );
   }
 
+  const roleDisplayName = (id && ROLE_METADATA[id.toUpperCase() as UserRole]?.displayName) || role?.name || t('roles_title');
+  const roleDescription = (id && ROLE_METADATA[id.toUpperCase() as UserRole]?.description) || role?.description;
+
   return (
     <MasterDataFormLayout
-      title={(id && ROLE_METADATA[id as UserRole]?.displayName) || role?.name || t('roles_title')}
+      title={roleDisplayName}
       backHref="/admin/roles"
       isSaving={false}
-      onSubmit={() => {}}
+      onSubmit={() => { }}
       resource="admin"
       saveAction="edit"
       hideSave={isAuditor}
       saveDisabled={!hasChanges || !isValid}
     >
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex flex-col gap-1">
+      <div className="w-full min-w-0 col-span-12 flex flex-col gap-8 p-6 bg-background animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-full min-w-0 flex flex-col items-start text-start gap-2 border-b border-border pb-6">
           <div className="flex items-center gap-4">
-             {isAdmin ? <Lock className="w-8 h-8 text-rose-500" /> : <ShieldCheck className="w-8 h-8 text-cyan-500" />}
-             <h1 className="text-headline-lg font-semibold uppercase text-foreground">{(id && ROLE_METADATA[id as UserRole]?.displayName) || role?.name}</h1>
+            {isAdmin ? <Lock className="w-8 h-8 text-rose-500" /> : <ShieldCheck className="w-8 h-8 text-cyan-500" />}
+            <h1 className="text-3xl font-bold text-foreground uppercase tracking-wider">
+              {roleDisplayName}
+            </h1>
           </div>
-          <p className="text-label-sm text-muted-foreground/60 uppercase font-bold max-w-xl">
-            {(id && ROLE_METADATA[id as UserRole]?.description) || role?.description}
+          <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed" dir="auto">
+            {roleDescription}
           </p>
         </div>
 
         {isAdmin && (
-          <div className="p-6 bg-rose-500/5 border border-rose-500/10 rounded-sm flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
-              <Lock className="w-5 h-5 text-rose-500" />
+          <div className="w-full min-w-0 flex flex-row items-center gap-4 bg-destructive/10 border border-destructive/20 p-4 rounded-xl text-start">
+            <div className="text-destructive flex-shrink-0">
+              <Lock className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-label-sm font-semibold uppercase text-rose-500">{t('admin_role_locked')}</h3>
-              <p className="text-label-xs text-rose-500/60 font-bold uppercase">{t('admin_policy_note')}</p>
+            <div className="flex flex-col gap-1">
+              <h4 className="text-sm font-bold text-destructive">{t('admin_role_locked')}</h4>
+              <p className="text-xs text-destructive/80">{t('admin_policy_note')}</p>
             </div>
           </div>
         )}
 
         {isAuditor && !isAdmin && (
-           <div className="p-6 bg-cyan-500/5 border border-cyan-500/10 rounded-sm flex items-center gap-4">
-             <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-               <ShieldCheck className="w-5 h-5 text-cyan-500" />
-             </div>
-             <div>
-               <h3 className="text-label-sm font-semibold uppercase text-cyan-500">{t('read_only_mode')}</h3>
-               <p className="text-label-xs text-cyan-500/60 font-bold uppercase">{t('read_only_desc')}</p>
-             </div>
-           </div>
+          <div className="w-full min-w-0 flex flex-row items-center gap-4 bg-cyan-500/5 border border-cyan-500/10 p-4 rounded-xl text-start">
+            <div className="text-cyan-500 flex-shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h4 className="text-sm font-bold text-cyan-500">{t('read_only_mode')}</h4>
+              <p className="text-xs text-cyan-500/80">{t('read_only_desc')}</p>
+            </div>
+          </div>
         )}
 
         {!isValid && !isAdmin && !isReadOnly && (
-          <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-sm flex items-center gap-3">
-            <AlertCircle className="w-4 h-4 text-amber-500" />
-            <span className="text-label-xs font-semibold uppercase text-amber-500">{t('at_least_one_view')}</span>
+          <div className="w-full min-w-0 flex flex-row items-center gap-4 bg-amber-500/5 border border-amber-500/10 p-4 rounded-xl text-start">
+            <div className="text-amber-500 flex-shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h4 className="text-sm font-bold text-amber-500">{t('at_least_one_view')}</h4>
+            </div>
           </div>
         )}
 
-        <div className="bg-surface-container-low border border-outline-low rounded-sm overflow-hidden shadow-2xl shadow-black/60">
-          <div className="overflow-x-auto">
-            <table className="w-full text-start border-collapse">
-              <thead>
-                <tr className="bg-surface-container-highest/30 border-b border-outline-low">
-                  <th className="py-6 px-8 text-label-xs font-semibold uppercase text-muted-foreground w-1/3 text-start">
-                    {t('module')}
-                  </th>
-                  {ACTION_KEYS.map(action => (
-                    <th key={action} className="py-6 px-8 text-label-xs font-semibold uppercase text-muted-foreground text-center">
-                      {t(action)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-low/40">
-                {localPermissions.map((perm) => (
-                  <tr key={perm.module} className="hover:bg-surface-container-highest/5 transition-colors group">
-                    <td className="py-8 px-8">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-body-md font-semibold uppercase text-foreground group-hover:text-cyan-500 transition-colors">
-                          {perm.module}
-                        </span>
-                        <span className="text-label-xxs text-muted-foreground/30 font-bold uppercase">
-                          {t('namespace_label')}: system.{perm.module.toLowerCase()}
-                        </span>
+        <div className="w-full min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          {localPermissions.map((perm) => (
+            <div key={perm.module} className="w-full min-w-0 p-4 bg-card border border-border rounded-lg flex flex-col items-start text-start gap-1 hover:border-brand-gold/50 transition-colors group">
+              <span className="font-bold text-foreground text-lg transition-colors">
+                {perm.module}
+              </span>
+              <span className="text-[10px] text-muted-foreground/40 font-bold uppercase mb-2">
+                {t('namespace_label')}: system.{perm.module.toLowerCase()}
+              </span>
+
+              <div className="w-full flex flex-col gap-2 mt-2 border-t border-border/50 pt-4">
+                {ACTION_KEYS.map(action => {
+                  const isChecked = perm.actions[action];
+                  const isDisabled = isAuditor || (action !== 'view' && !perm.actions.view);
+
+                  return (
+                    <div key={action} className="flex items-center justify-between w-full">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase">{t(action)}</span>
+                      <div className={`relative flex items-center justify-center w-8 h-8 rounded-sm border transition-all ${
+                        isChecked 
+                          ? 'bg-operational-cyan/10 border-operational-cyan/30 text-operational-cyan' 
+                          : 'bg-muted/50 border-border text-muted-foreground/30'
+                      } ${isDisabled ? 'cursor-not-allowed opacity-90' : 'hover:border-operational-cyan/80'}`}>
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={(checked) => handleToggle(perm.module, action, !!checked)}
+                          disabled={isDisabled}
+                          className="w-4 h-4 border-none shadow-none rounded-none bg-transparent data-checked:bg-transparent data-checked:text-operational-cyan data-checked:opacity-100 disabled:opacity-100"
+                        />
                       </div>
-                    </td>
-                    {ACTION_KEYS.map(action => {
-                      const isChecked = perm.actions[action];
-                      const isDisabled = isAuditor || (action !== 'view' && !perm.actions.view);
-                      
-                      return (
-                        <td key={action} className="py-8 px-8 text-center">
-                          <div className="flex justify-center">
-                            <div className={`relative flex items-center justify-center w-10 h-10 rounded-sm border transition-all ${ isChecked ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 'bg-surface-container-highest/10 border-outline-low' } ${isDisabled ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:border-cyan-500/80'}`}>
-                              <Checkbox
-                                checked={isChecked}
-                                onCheckedChange={(checked) => handleToggle(perm.module, action, !!checked)}
-                                disabled={isDisabled}
-                                className={`w-6 h-6 border-none shadow-none rounded-none data-[state=checked]:bg-transparent data-[state=checked]:text-cyan-500`}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-
-
       </div>
     </MasterDataFormLayout>
   );

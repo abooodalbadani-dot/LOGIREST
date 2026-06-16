@@ -130,7 +130,7 @@ async function bootstrapTestDb() {
       await prisma.category.upsert({
         where: { name },
         update: {},
-        create: { name },
+        create: { name, code: name.toUpperCase().replace(/\s+/g, '-') },
       });
     }
 

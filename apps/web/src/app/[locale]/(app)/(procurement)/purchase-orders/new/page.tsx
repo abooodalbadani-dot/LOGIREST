@@ -4,12 +4,12 @@ import { PurchaseOrderForm } from "@/features/purchasing/components/purchase-ord
 import { useTranslations } from "next-intl";
 
 export default function NewPurchaseOrderPage() {
-  const t = useTranslations('procurement.po');
-  const tCommon = useTranslations('common');
-  const tDashboard = useTranslations('dashboard');
+ const t = useTranslations('procurement.po');
+ const tCommon = useTranslations('common');
+ const tDashboard = useTranslations('dashboard');
 
-  return (
- <div className="flex-1 space-y-4 p-8 pt-6">
+ return (
+ <div className="space-y-4 min-w-0 gap-6 flex-1 p-8 pt-6 flex flex-col w-full">
  <Breadcrumb 
  items={[
  { label: tDashboard('title'), href: "/" },

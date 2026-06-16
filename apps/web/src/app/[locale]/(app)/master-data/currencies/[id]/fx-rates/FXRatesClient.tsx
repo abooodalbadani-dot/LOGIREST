@@ -38,79 +38,79 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  // Fetch all currencies for the "To" selector
  const { data: currencies } = useMasterDataList('currencies', CurrencySchema);
 
-  const create = useMasterDataCreate('currencies/fx-rates', FXRateSchema);
-  const { playSound } = useAudioFeedback();
+ const create = useMasterDataCreate('currencies/fx-rates', FXRateSchema);
+ const { playSound } = useAudioFeedback();
 
-   const toCurrencyItems = useMemo(() => {
-    const list = currencies?.data
-      ?.filter((c) => c.id !== currencyId)
-      .map((c) => ({
-        id: c.id,
-        name_en: `${c.code} — ${c.name}`,
-        name_ar: `${c.code} — ${c.name}`,
-      })) || [];
-    return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
-  }, [currencies?.data, currencyId]);
+  const toCurrencyItems = useMemo(() => {
+  const list = currencies?.data
+   ?.filter((c) => c.id !== currencyId)
+   .map((c) => ({
+    id: c.id,
+    name_en: `${c.code} — ${c.name}`,
+    name_ar: `${c.code} — ${c.name}`,
+   })) || [];
+  return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
+ }, [currencies?.data, currencyId]);
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FXRateFormValues>({
-    resolver: zodResolver(FXRateFormSchema),
-    defaultValues: {
-      fromCurrencyId: currencyId,
-      toCurrencyId: '',
-      rate: 0,
-      effectiveDate: new Date().toISOString().substring(0, 10),
-    },
-  });
+ const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FXRateFormValues>({
+  resolver: zodResolver(FXRateFormSchema),
+  defaultValues: {
+   fromCurrencyId: currencyId,
+   toCurrencyId: '',
+   rate: 0,
+   effectiveDate: new Date().toISOString().substring(0, 10),
+  },
+ });
 
  const onSubmit = handleSubmit(async (values) => {
-     await create.mutateAsync({ body: values });
+   await create.mutateAsync({ body: values });
  reset({ fromCurrencyId: currencyId, toCurrencyId: '', rate: 0, effectiveDate: new Date().toISOString().substring(0, 10) });
  });
 
-  const columns: ColumnDef<FXRate>[] = [
-   { 
-   accessorKey: 'toCurrencyId', 
-   header: () => <span className="text-label-xs font-semibold uppercase">{t('to_currency')}</span>,
-   cell: ({ row }) => {
-     const currency = currencies?.data?.find(c => c.id === row.original.toCurrencyId);
-     return (
-       <div className="flex items-center gap-2">
-         <div className="w-12 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low shrink-0">
-           <span className="text-label-xs font-mono font-bold text-cyan-500 uppercase">{currency?.code || row.original.toCurrencyId}</span>
-         </div>
-         <span className="text-body-md font-medium">
-           {currency?.name || row.original.toCurrencyId}
-         </span>
-       </div>
-     );
-   }
-   },
-  {
-  accessorKey: 'rate',
-  header: () => <span className="text-label-xs font-semibold uppercase">{t('rate')}</span>,
-  cell: ({ row }) => (
-  <div className="flex items-center gap-2">
-  <TrendingUp className="w-3.5 h-3.5 text-cyan-500/50" />
-  <span dir="ltr" className="font-mono font-semibold text-body-md text-foreground tabular-nums">
-  {formatRate(row.original.rate, locale, 4)}
-  </span>
-  </div>
-  ),
+ const columns: ColumnDef<FXRate>[] = [
+  { 
+  accessorKey: 'toCurrencyId', 
+  header: () => <span className="text-label-xs font-semibold uppercase">{t('to_currency')}</span>,
+  cell: ({ row }) => {
+   const currency = currencies?.data?.find(c => c.id === row.original.toCurrencyId);
+   return (
+    <div className="gap-2 min-w-0 items-center flex-1 gap-6 flex-col flex w-full">
+     <div className="w-12 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low shrink-0">
+      <span className="text-label-xs font-mono font-bold text-cyan-500 uppercase">{currency?.code || row.original.toCurrencyId}</span>
+     </div>
+     <span className="text-body-md font-medium">
+      {currency?.name || row.original.toCurrencyId}
+     </span>
+    </div>
+   );
+  }
   },
-   {
-     accessorKey: 'effectiveDate',
-     header: () => <span className="text-label-xs font-semibold uppercase">{t('effective_date')}</span>,
-     cell: ({ row }) => (
-       <div className="flex items-center gap-2 text-muted-foreground/60">
-         <History className="w-3.5 h-3.5 opacity-40" />
-         <ClientOnlyTime 
-           date={row.original.effectiveDate} 
-           mode="date" 
-           className="text-label-sm font-bold uppercase"
-         />
-       </div>
-     ),
-   },
+ {
+ accessorKey: 'rate',
+ header: () => <span className="text-label-xs font-semibold uppercase">{t('rate')}</span>,
+ cell: ({ row }) => (
+ <div className="flex items-center gap-2">
+ <TrendingUp className="w-3.5 h-3.5 text-cyan-500/50" />
+ <span dir="ltr" className="font-mono font-semibold text-body-md text-foreground tabular-nums">
+ {formatRate(row.original.rate, locale, 4)}
+ </span>
+ </div>
+ ),
+ },
+  {
+   accessorKey: 'effectiveDate',
+   header: () => <span className="text-label-xs font-semibold uppercase">{t('effective_date')}</span>,
+   cell: ({ row }) => (
+    <div className="flex items-center gap-2 text-muted-foreground/60">
+     <History className="w-3.5 h-3.5 opacity-40" />
+     <ClientOnlyTime 
+      date={row.original.effectiveDate} 
+      mode="date" 
+      className="text-label-sm font-bold uppercase"
+     />
+    </div>
+   ),
+  },
  {
  id: 'lock',
  header: '',
@@ -171,26 +171,26 @@ export function FXRatesClient({ currencyId, locale }: Props) {
 
  <Card className="bg-surface-container-highest/10 border-outline-low rounded-sm shadow-none">
  <CardContent className="p-6 space-y-6">
-  {/* To currency */}
-  <div className="space-y-2">
-  <Label className="text-label-xs font-semibold uppercase text-text-muted">
-  {t('to_currency')}
-  </Label>
-  <Controller
-    name="toCurrencyId"
-    control={control}
-    render={({ field }) => (
-       <SmartCombobox
-         value={field.value}
-         onSelect={(item) => field.onChange(item.id)}
-         items={toCurrencyItems}
-         placeholder="—"
-         className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
-       />
-    )}
-  />
-  {errors.toCurrencyId && <p className="text-label-xs font-bold text-red-500 uppercase">{tv(errors.toCurrencyId.message as never)}</p>}
-  </div>
+ {/* To currency */}
+ <div className="space-y-2">
+ <Label className="text-label-xs font-semibold uppercase text-text-muted">
+ {t('to_currency')}
+ </Label>
+ <Controller
+  name="toCurrencyId"
+  control={control}
+  render={({ field }) => (
+    <SmartCombobox
+     value={field.value}
+     onSelect={(item) => field.onChange(item.id)}
+     items={toCurrencyItems}
+     placeholder="—"
+     className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+    />
+  )}
+ />
+ {errors.toCurrencyId && <p className="text-label-xs font-bold text-red-500 uppercase">{tv(errors.toCurrencyId.message as never)}</p>}
+ </div>
 
  {/* Rate */}
  <div className="space-y-2">
@@ -226,7 +226,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  </CardContent>
  </Card>
 
- <div className="p-4 rounded-sm bg-surface-container-low border border-outline-low flex items-center justify-between">
+ <div className="p-4 rounded-sm bg-card border border-border shadow-sm border border-outline-low flex items-center justify-between">
  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60">{t('auto_update_policy')}</span>
  <div className="w-2 h-2 rounded-full bg-outline-low" />
  </div>

@@ -8,13 +8,13 @@ export { CurrencySchema };
 export type { Currency };
 
 export function useCurrencies() {
-  return useQuery({
-    queryKey: ['currencies'],
-    queryFn: ({ signal }) =>
-      apiClient
-        .get('/currencies', z.object({ data: z.array(CurrencySchema) }), { signal })
-        .then((res) => res.data),
-    staleTime: Infinity,
-  });
+ return useQuery({
+  queryKey: ['currencies'],
+  queryFn: ({ signal }) =>
+   apiClient
+    .get('/currencies', z.object({ data: z.array(CurrencySchema) }), { signal })
+    .then((res) => res.data),
+  staleTime: Infinity,
+ });
 }
 

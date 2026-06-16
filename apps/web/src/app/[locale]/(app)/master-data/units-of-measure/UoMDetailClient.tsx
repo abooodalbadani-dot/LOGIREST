@@ -11,7 +11,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useRouter } from '@/i18n/navigation';
 
 interface Props {
-  id: string;
+ id: string;
 }
 
 export function UoMDetailClient({ id }: Props) {
@@ -22,31 +22,31 @@ export function UoMDetailClient({ id }: Props) {
 
  // 1. Loading State
  if (isLoading) {
-   return <PageSkeleton variant="detail" />;
+  return <PageSkeleton variant="detail" />;
  }
 
  // 2. Error State
  if (isError) {
-   return (
-     <div className="p-8">
-       <ErrorState 
-         type="server_error"
-         onRetry={() => refetch()}
-       />
-     </div>
-   );
+  return (
+   <div className="min-w-0 gap-6 flex-1 p-8 flex-col flex w-full">
+    <ErrorState 
+     type="server_error"
+     onRetry={() => refetch()}
+    />
+   </div>
+  );
  }
 
  // 3. Not Found State
  if (!data) {
-   return (
-     <div className="p-8">
-       <ErrorState 
-         type="not_found"
-         onBack={() => router.push('/master-data/units-of-measure')}
-       />
-     </div>
-   );
+  return (
+   <div className="p-8">
+    <ErrorState 
+     type="not_found"
+     onBack={() => router.push('/master-data/units-of-measure')}
+    />
+   </div>
+  );
  }
 
  return (
@@ -57,7 +57,7 @@ export function UoMDetailClient({ id }: Props) {
  >
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  <div className="lg:col-span-2 space-y-8">
- <Card className="bg-surface-container-low border-none overflow-hidden">
+ <Card className="bg-card border border-border shadow-sm border-none overflow-hidden">
  <CardContent className="p-8 space-y-8">
  <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
@@ -80,7 +80,7 @@ export function UoMDetailClient({ id }: Props) {
  </div>
 
  <div className="space-y-1">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('fields.name') || tc('name')}</p>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('name')}</p>
  <p className="text-body-md font-semibold text-foreground dir-ltr">{data.name}</p>
  </div>
  </div>
@@ -105,18 +105,18 @@ export function UoMDetailClient({ id }: Props) {
  </Card>
  </div>
 
-  <div className="space-y-8">
-  <Card className="bg-surface-container-low border-none overflow-hidden">
-  <CardContent className="p-8 space-y-6">
-  <div className="p-4 bg-status-active/5 rounded-md border border-status-active/10 border-dashed">
-  <h3 className="text-label-xs font-semibold uppercase text-status-active mb-1">{t('precision')}</h3>
-  <p className="text-label-xs text-muted-foreground/60 uppercase font-medium leading-relaxed">
-  {t('precision_description')}
-  </p>
-  </div>
-  </CardContent>
-  </Card>
-  </div>
+ <div className="space-y-8">
+ <Card className="bg-card border border-border shadow-sm border-none overflow-hidden">
+ <CardContent className="p-8 space-y-6">
+ <div className="p-4 bg-status-active/5 rounded-md border border-status-active/10 border-dashed">
+ <h3 className="text-label-xs font-semibold uppercase text-status-active mb-1">{t('precision')}</h3>
+ <p className="text-label-xs text-muted-foreground/60 uppercase font-medium leading-relaxed">
+ {t('precision_description')}
+ </p>
+ </div>
+ </CardContent>
+ </Card>
+ </div>
  </div>
  </MasterDataDetailLayout>
  );

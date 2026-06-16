@@ -18,25 +18,25 @@ export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
 const statusBadgeVariants = cva(
  "inline-flex items-center rounded-full px-2.5 py-0.5 text-label-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 uppercase whitespace-nowrap",
  {
-  variants: {
-  variant: {
-  default:
-  "bg-surface-container-high text-muted-foreground hover:bg-surface-container-highest",
-  brand:
-  "bg-primary/15 text-primary hover:bg-primary/25",
-  warning:
-  "bg-status-warning/15 text-status-warning hover:bg-status-warning/25",
-  error:
-  "bg-status-error/15 text-status-error hover:bg-status-error/25",
-  success:
-  "bg-status-success/15 text-status-success hover:bg-status-success/25",
-  outline: "text-foreground bg-surface-container border",
-  info: "bg-status-info/15 text-status-info hover:bg-status-info/25",
-  },
-  },
-  defaultVariants: {
-  variant: "default",
-  },
+ variants: {
+ variant: {
+ default:
+ "bg-surface-container-high text-muted-foreground hover:bg-surface-container-highest",
+ brand:
+ "bg-primary/15 text-primary hover:bg-primary/25",
+ warning:
+ "bg-status-warning/15 text-status-warning hover:bg-status-warning/25",
+ error:
+ "bg-status-error/15 text-status-error hover:bg-status-error/25",
+ success:
+ "bg-status-success/15 text-status-success hover:bg-status-success/25",
+ outline: "text-foreground bg-surface-container border",
+ info: "bg-status-info/15 text-status-info hover:bg-status-info/25",
+ },
+ },
+ defaultVariants: {
+ variant: "default",
+ },
  }
 )
 
@@ -50,17 +50,17 @@ export interface StatusBadgeProps
 }
 
 export function StatusBadge({ className, variant, status, configMap, children, ...props }: StatusBadgeProps) {
-  const t = useTranslations('common.statuses');
-  
-  const config = React.useMemo(() => {
-    if (!status) return null;
-    return getStatusConfig(status.toUpperCase(), configMap);
-  }, [status, configMap]);
+ const t = useTranslations('common.statuses');
+ 
+ const config = React.useMemo(() => {
+  if (!status) return null;
+  return getStatusConfig(status.toUpperCase(), configMap);
+ }, [status, configMap]);
 
-  const mappedVariant = (variant || config?.variant || "default") as BadgeVariant;
+ const mappedVariant = (variant || config?.variant || "default") as BadgeVariant;
 
-  // Handle translation if status is provided and no children
-  const content = children || (status ? t(config?.labelKey.split('.').pop() || status.toLowerCase()) : null);
+ // Handle translation if status is provided and no children
+ const content = children || (status ? t(config?.labelKey.split('.').pop() || status.toLowerCase()) : null);
 
  return (
  <div className={cn(statusBadgeVariants({ variant: mappedVariant }), className)} {...props}>

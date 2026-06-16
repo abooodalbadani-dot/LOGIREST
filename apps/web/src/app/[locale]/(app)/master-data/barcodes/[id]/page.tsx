@@ -10,7 +10,7 @@ export default async function BarcodeDetailPage(props: { params: Promise<{ local
  id={params.id === 'new' ? null : params.id}
  createTitle={t('create_title')}
  editTitle={t('edit_title')}
-  viewTitle={t('view_title')}
+ viewTitle={t('view_title')}
  locale={params.locale}
  />
  );

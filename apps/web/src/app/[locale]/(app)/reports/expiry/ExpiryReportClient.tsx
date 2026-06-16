@@ -76,7 +76,7 @@ export default function ExpiryReportClient() {
  ];
 
  return (
- <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <div className="min-w-0 gap-6 flex-1 fade-in space-y-8 slide-in-from-bottom-4 animate-in flex-col flex duration-700 w-full">
  <PageHeader 
  title={t('expiry')}
  subtitle={t('expiry_desc')}
@@ -88,14 +88,14 @@ export default function ExpiryReportClient() {
  columns={columns}
  isLoading={isLoading}
  exportComponent={
-  <ReportExportMenu 
-  columns={exportColumns}
-  data={data || []}
-  filename="Expiry_Report"
-  title={t('expiry')}
-  exportRoute="/reports/expiry/export"
-  countCheckParams={{ type: 'expiry' }}
-  />
+ <ReportExportMenu 
+ columns={exportColumns}
+ data={data || []}
+ filename="Expiry_Report"
+ title={t('expiry')}
+ exportRoute="/reports/expiry/export"
+ countCheckParams={{ type: 'expiry' }}
+ />
  }
  collectionName="reports"
  />

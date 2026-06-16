@@ -32,10 +32,10 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from '@/hooks/useFormError';
 import { generateNextCode } from '@/lib/code-generator';
 
-interface Props { 
-  id: string | null; 
-  createTitle: string; 
-  editTitle: string; 
+interface Props {
+  id: string | null;
+  createTitle: string;
+  editTitle: string;
   viewTitle: string;
   isReadOnly?: boolean;
 }
@@ -61,11 +61,11 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
     defaultValues: { code: '', name: '', version: undefined },
     disabled: isReadOnly,
   });
-  
+
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const codeValue = useWatch({ control, name: 'code' });
-  
+
   useEffect(() => {
     if (data) reset({ code: data.code, name: data.name, version: data.version });
   }, [data, reset]);
@@ -87,7 +87,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   // 2. Error State (Server/Network Error)
   if (id && isError) {
     return (
-      <ErrorState 
+      <ErrorState
         type="server_error"
         onRetry={() => refetch()}
       />
@@ -97,7 +97,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   // 3. Not Found State (Smart 404)
   if (id && isFetched && !data) {
     return (
-      <ErrorState 
+      <ErrorState
         type="not_found"
         onBack={() => guardedRouter.push('/master-data/categories', { skipGuard: true })}
       />
@@ -106,7 +106,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   const onValid = (values: CategoryFormValues) => {
     if (isReadOnly || data?.isReferenced) return;
-    
+
     if (id) {
       // Only send editable fields (omit readonly category code, nameAr, and nameEn if referenced)
       const updateValues: Partial<CategoryFormValues> = {
@@ -116,10 +116,10 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
         updateValues.name = values.name;
       }
       update.mutate(
-        { 
-          id, 
-          values: updateValues as CategoryFormValues, 
-          signal: abortController.signal 
+        {
+          id,
+          values: updateValues as CategoryFormValues,
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -133,12 +133,12 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
       );
     } else {
       create.mutate(
-        { 
+        {
           values: {
             code: values.code || undefined,
             name: values.name,
-          }, 
-          signal: abortController.signal 
+          },
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -178,78 +178,70 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   return (
     <>
-    <MasterDataFormLayout
-      title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
-      backHref='/master-data/categories'
-      isSaving={create.isPending || update.isPending}
-      onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/categories')}
-      hideSave={isReadOnly || data?.isReferenced === true}
-      resource="master_data"
-      saveAction={id ? 'edit' : 'create'}
-      isDirty={isDirty}
-      isValid={isValid}
-      headerActions={
-        id && (
-          <div className="flex gap-4">
-            <PermissionGate action="delete" resource="master_data">
-              <Button 
-                variant="ghost"
-                onClick={() => setDeleteConfirmOpen(true)}
-                disabled={data?.isReferenced === true}
-                className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                title={data?.isReferenced ? tc('errors.delete_linked_items') : t('actions.delete')}
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            </PermissionGate>
-
-            {isReadOnly && (
-              <PermissionGate action="edit" resource="master_data">
-                <Button 
-                  onClick={() => guardedRouter.push(`/master-data/categories/${id}/edit`)}
-                  className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-operational-cyan/20"
+      <MasterDataFormLayout
+        title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
+        backHref='/master-data/categories'
+        isSaving={create.isPending || update.isPending}
+        onSubmit={onSubmit}
+        onCancel={() => guardedRouter.push('/master-data/categories')}
+        hideSave={isReadOnly || data?.isReferenced === true}
+        resource="master_data"
+        saveAction={id ? 'edit' : 'create'}
+        isDirty={isDirty}
+        isValid={isValid}
+        headerActions={
+          id && (
+            <div className="flex gap-4">
+              <PermissionGate action="delete" resource="master_data">
+                <Button
+                  variant="ghost"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  disabled={data?.isReferenced === true}
+                  className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={data?.isReferenced ? tc('errors.delete_linked_items') : t('actions.delete')}
                 >
-                  <Edit3 className="w-4 h-4" />
-                  {t('edit')}
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               </PermissionGate>
-            )}
-          </div>
-        )
-      }
-    >
-      <div className="space-y-8">
-        {data?.isReferenced && (
-          <div className="p-4 rounded-xl bg-status-error/5 border border-status-error/10 flex items-start gap-3 transition-all">
-            <AlertTriangle className="w-5 h-5 text-status-error shrink-0 mt-0.5" />
-            <div>
-              <p className="text-body-sm font-semibold text-status-error">
-                {tc('warnings.referenced_protection')}
-              </p>
-            </div>
-          </div>
-        )}
 
-        <Card className="bg-surface-container-low border-none overflow-hidden">
-          <CardContent className="p-8 space-y-8">
-            {/* Section Header */}
-            <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-              <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                <Layers className="w-5 h-5 text-tertiary" />
-              </div>
-              <div>
-                <h3 className="text-body-md font-semibold text-foreground uppercase">{tc('title')}</h3>
-                <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">
-                  {tc('description')}
+              {isReadOnly && (
+                <PermissionGate action="edit" resource="master_data">
+                  <Button
+                    onClick={() => guardedRouter.push(`/master-data/categories/${id}/edit`)}
+                    className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-operational-cyan/20"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    {t('edit')}
+                  </Button>
+                </PermissionGate>
+              )}
+            </div>
+          )
+        }
+      >
+        <div className="col-span-12 w-full max-w-3xl mx-auto flex flex-col gap-8 p-6 bg-card border border-border rounded-xl mt-6">
+          {data?.isReferenced && (
+            <div className="p-4 rounded-xl bg-status-error/5 border border-status-error/10 flex items-start gap-3 transition-all">
+              <AlertTriangle className="w-5 h-5 text-status-error shrink-0 mt-0.5" />
+              <div className="text-start">
+                <p className="text-body-sm font-semibold text-status-error">
+                  {tc('warnings.referenced_protection')}
                 </p>
               </div>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Basic Info Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Layers className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{tc('title')}</h3>
+            </div>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Category Code */}
-              <div className="space-y-2 md:col-span-2 max-w-md">
-                <Label htmlFor="cat-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="cat-code" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
                   {tc('fields.code')}
                 </Label>
                 <Input
@@ -257,19 +249,19 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                   dir="ltr"
                   {...register('code')}
                   disabled={isReadOnly || data?.isReferenced === true}
-                  className="font-mono font-semibold uppercase text-status-active"
+                  className="font-mono font-semibold uppercase text-status-active w-full h-10"
                   placeholder={tc('placeholders.code') || 'CAT-001'}
                 />
                 {errors.code && (
-                  <p className="text-label-xs font-semibold text-status-error uppercase">
+                  <p className="text-xs text-red-500 mt-1">
                     {errors.code.message}
                   </p>
                 )}
               </div>
 
               {/* Name Field */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="cat-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="cat-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
                   {tc('fields.name') || 'Name'}
                 </Label>
                 <Input
@@ -280,29 +272,28 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                   placeholder={tc('placeholders.name') || 'Name'}
                 />
                 {errors.name && (
-                  <p className="text-label-xs font-semibold text-status-error uppercase">
+                  <p className="text-xs text-red-500 mt-1">
                     {errors.name.message}
                   </p>
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </MasterDataFormLayout>
-    <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
-    
-    <PostConfirmDialog
-      open={deleteConfirmOpen}
-      onOpenChange={setDeleteConfirmOpen}
-      onConfirm={handleDelete}
-      isLoading={deleteMutation.isPending}
-      title={tc('delete_confirm_title')}
-      description={tc('delete_confirm_desc')}
-      confirmText={t('actions.delete')}
-      variant="destructive"
-      icon="delete"
-    />
+          </div>
+        </div>
+      </MasterDataFormLayout>
+      <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+
+      <PostConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={handleDelete}
+        isLoading={deleteMutation.isPending}
+        title={tc('delete_confirm_title')}
+        description={tc('delete_confirm_desc')}
+        confirmText={t('actions.delete')}
+        variant="destructive"
+        icon="delete"
+      />
     </>
   );
 }

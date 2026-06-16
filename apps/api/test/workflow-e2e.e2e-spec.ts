@@ -77,7 +77,7 @@ describe('End-to-End Workflow Integration', () => {
     currencyId = currency.id;
 
     const category = await prisma.category.create({
-      data: { name: `Category ${suffix}` },
+      data: { name: `Category ${suffix}`, code: `CAT-${suffix}` },
     });
     categoryId = category.id;
 

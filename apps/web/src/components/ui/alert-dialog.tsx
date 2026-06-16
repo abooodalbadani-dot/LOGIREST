@@ -30,7 +30,7 @@ function AlertDialogOverlay({
  <AlertDialogPrimitive.Backdrop
  data-slot="alert-dialog-overlay"
  className={cn(
- "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+ "fixed inset-0 isolate z-50 bg-black/40 duration-100 backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
  className
  )}
  {...props}
@@ -53,7 +53,7 @@ function AlertDialogContent({
  data-slot="alert-dialog-content"
  data-size={size}
  className={cn(
- "pointer-events-auto group/alert-dialog-content grid w-full gap-4 rounded-[var(--radius)] bg-surface-container-lowest p-4 text-foreground ambient-shadow duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 will-change-[transform,opacity]",
+ "pointer-events-auto group/alert-dialog-content grid w-full gap-4 rounded-xl bg-card border border-border shadow-xl p-6 text-foreground ambient-shadow duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 will-change-[transform,opacity]",
  className
  )}
  {...props}
@@ -71,7 +71,7 @@ function AlertDialogHeader({
  <div
  data-slot="alert-dialog-header"
  className={cn(
- "grid grid-rows-[auto_1fr] place-items-center gap-1.5 text-center has-data-[slot=alert-dialog-media]:grid-rows-[auto_auto_1fr] has-data-[slot=alert-dialog-media]:gap-x-4 sm:group-data-[size=default]/alert-dialog-content:place-items-start sm:group-data-[size=default]/alert-dialog-content:text-left sm:group-data-[size=default]/alert-dialog-content:has-data-[slot=alert-dialog-media]:grid-rows-[auto_1fr]",
+ "flex flex-col gap-1.5 text-start",
  className
  )}
  {...props}
@@ -87,7 +87,7 @@ function AlertDialogFooter({
  <div
  data-slot="alert-dialog-footer"
  className={cn(
- "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-[var(--radius)] bg-surface-container-low p-4 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end",
+ "flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-2 mt-6 pt-4 border-t border-gray-100 ",
  className
  )}
  {...props}

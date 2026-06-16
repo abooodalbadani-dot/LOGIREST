@@ -80,7 +80,7 @@ describe.skip('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
 
     console.log('[E2E Setup] Creating Category...');
     const category = await prisma.category.create({
-      data: { name: `Category ${suffix}` },
+      data: { name: `Category ${suffix}`, code: `CAT-${suffix}` },
     });
     categoryId = category.id;
     console.log(`[E2E Setup] Category created: ${categoryId}`);

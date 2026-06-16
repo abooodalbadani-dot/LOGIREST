@@ -17,7 +17,7 @@ export default async function GoodsReceivedScanPage(props: { params: Promise<{ l
  setRequestLocale(params.locale);
 
  if (process.env.NODE_ENV !== 'development') {
-  return null;
+ return null;
  }
 
  return (

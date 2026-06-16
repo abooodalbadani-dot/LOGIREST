@@ -21,26 +21,26 @@ export const PaginatedAvailableInventorySchema = z.object({
 });
 
 export const StockMovementBackendItemSchema = z.object({
+ id: z.string(),
+ postedAt: z.string(),
+ warehouseId: z.string(),
+ itemId: z.string(),
+ lotId: z.string().nullable().optional(),
+ quantity: z.number().or(z.string()).transform((val) => Number(val)),
+ documentId: z.string(),
+ documentType: z.string(),
+ item: z.object({
   id: z.string(),
-  postedAt: z.string(),
-  warehouseId: z.string(),
-  itemId: z.string(),
-  lotId: z.string().nullable().optional(),
-  quantity: z.number().or(z.string()).transform((val) => Number(val)),
-  documentId: z.string(),
-  documentType: z.string(),
-  item: z.object({
-    id: z.string(),
-    name: z.string(),
-    sku: z.string(),
-  }),
+  name: z.string(),
+  sku: z.string(),
+ }),
 });
 
 export const PaginatedStockMovementsSchema = z.object({
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  data: z.array(StockMovementBackendItemSchema),
+ total: z.number(),
+ page: z.number(),
+ limit: z.number(),
+ data: z.array(StockMovementBackendItemSchema),
 });
 
 export const StockMovementsReportSchema = z.object({
@@ -99,83 +99,83 @@ export type CurrencySummaryReport = z.infer<typeof CurrencySummaryReportSchema>;
 // --- WAC History ---
 
 export const WacHistoryReportSchema = z.object({
-  id: z.string(),
-  date: z.string(),
-  documentType: z.string(),
-  documentNumber: z.string(),
-  documentId: z.string(),
-  item: z.string(),
-  quantity: z.number(),
-  unitCost: z.number(),
-  newWac: z.number(),
+ id: z.string(),
+ date: z.string(),
+ documentType: z.string(),
+ documentNumber: z.string(),
+ documentId: z.string(),
+ item: z.string(),
+ quantity: z.number(),
+ unitCost: z.number(),
+ newWac: z.number(),
 });
 
 export type WacHistoryReport = z.infer<typeof WacHistoryReportSchema>;
 
 export function useWacHistoryReport() {
-  return useQuery({
-    queryKey: ['reports', 'wac-history'],
-    queryFn: ({ signal }) => apiClient.get('/reports/wac-history', z.array(WacHistoryReportSchema), { signal }),
-    staleTime: 5 * 60 * 1000,
-  });
+ return useQuery({
+  queryKey: ['reports', 'wac-history'],
+  queryFn: ({ signal }) => apiClient.get('/reports/wac-history', z.array(WacHistoryReportSchema), { signal }),
+  staleTime: 5 * 60 * 1000,
+ });
 }
 
 // --- Lot Trace ---
 
 export const LotTraceReportSchema = z.object({
-  id: z.string(),
-  lotNumber: z.string(),
-  item: z.string(),
-  receivedDate: z.string(),
-  expiryDate: z.string(),
-  quantity: z.number(),
-  sourceDocument: z.string(),
-  sourceDocumentType: z.string(),
-  sourceDocumentId: z.string(),
+ id: z.string(),
+ lotNumber: z.string(),
+ item: z.string(),
+ receivedDate: z.string(),
+ expiryDate: z.string(),
+ quantity: z.number(),
+ sourceDocument: z.string(),
+ sourceDocumentType: z.string(),
+ sourceDocumentId: z.string(),
 });
 
 export type LotTraceReport = z.infer<typeof LotTraceReportSchema>;
 
 export function useLotTraceReport() {
-  return useQuery({
-    queryKey: ['reports', 'lot-trace'],
-    queryFn: ({ signal }) => apiClient.get('/reports/lot-trace', z.array(LotTraceReportSchema), { signal }),
-    staleTime: 5 * 60 * 1000,
-  });
+ return useQuery({
+  queryKey: ['reports', 'lot-trace'],
+  queryFn: ({ signal }) => apiClient.get('/reports/lot-trace', z.array(LotTraceReportSchema), { signal }),
+  staleTime: 5 * 60 * 1000,
+ });
 }
 
 // --- Hooks ---
 
 export function useAvailableInventoryReport(page = 1, limit = 100, search?: string) {
  const queryParams = new URLSearchParams({
-   page: page.toString(),
-   limit: limit.toString(),
-   ...(search ? { search } : {}),
+  page: page.toString(),
+  limit: limit.toString(),
+  ...(search ? { search } : {}),
  }).toString();
  return useQuery({
-   queryKey: ['reports', 'available-inventory', page, limit, search],
-   queryFn: ({ signal }) => apiClient.get(`/reports/available-inventory?${queryParams}`, PaginatedAvailableInventorySchema, { signal }),
-   staleTime: 5 * 60 * 1000,
+  queryKey: ['reports', 'available-inventory', page, limit, search],
+  queryFn: ({ signal }) => apiClient.get(`/reports/available-inventory?${queryParams}`, PaginatedAvailableInventorySchema, { signal }),
+  staleTime: 5 * 60 * 1000,
  });
 }
 
 export function useStockMovementsReport() {
  return useQuery({
-   queryKey: ['reports', 'movements'],
-   queryFn: async ({ signal }) => {
-     const response = await apiClient.get('/reports/movements', PaginatedStockMovementsSchema, { signal });
-     return response.data.map((m) => ({
-       date: m.postedAt,
-       reference: m.documentId,
-       type: m.documentType,
-       from: '-',
-       to: '-',
-       item: `${m.item.sku} - ${m.item.name}`,
-       qty: m.quantity,
-       user: '-',
-     }));
-   },
-   staleTime: 5 * 60 * 1000,
+  queryKey: ['reports', 'movements'],
+  queryFn: async ({ signal }) => {
+   const response = await apiClient.get('/reports/movements', PaginatedStockMovementsSchema, { signal });
+   return response.data.map((m) => ({
+    date: m.postedAt,
+    reference: m.documentId,
+    type: m.documentType,
+    from: '-',
+    to: '-',
+    item: `${m.item.sku} - ${m.item.name}`,
+    qty: m.quantity,
+    user: '-',
+   }));
+  },
+  staleTime: 5 * 60 * 1000,
  });
 }
 
@@ -188,12 +188,12 @@ export function useExpiryReport() {
 }
 
 export function useStocktakeVarianceReport(sessionId?: string | null) {
-  return useQuery({
-    queryKey: ['reports', 'stocktake-variance', sessionId],
-    queryFn: ({ signal }) => apiClient.get(`/reports/stocktake-variance?sessionId=${sessionId || ''}`, z.array(StocktakeVarianceReportSchema), { signal }),
-    enabled: !!sessionId,
-    staleTime: 5 * 60 * 1000,
-  });
+ return useQuery({
+  queryKey: ['reports', 'stocktake-variance', sessionId],
+  queryFn: ({ signal }) => apiClient.get(`/reports/stocktake-variance?sessionId=${sessionId || ''}`, z.array(StocktakeVarianceReportSchema), { signal }),
+  enabled: !!sessionId,
+  staleTime: 5 * 60 * 1000,
+ });
 }
 
 export function useProcurementStatusReport() {

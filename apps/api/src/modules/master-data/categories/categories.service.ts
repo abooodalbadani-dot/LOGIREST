@@ -8,6 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { Prisma } from '@prisma/client';
 
 interface CategoryDto {
+  code?: string;
   name?: string;
   name_en?: string;
   name_ar?: string;
@@ -23,7 +24,7 @@ export class CategoriesService {
   ) {
     return {
       id: category.id,
-      code: category.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+      code: category.code,
       name: category.name,
       name_ar: category.name,
       name_en: category.name,
@@ -71,9 +72,15 @@ export class CategoriesService {
       );
     }
 
+    if (!body.code) {
+      throw new BadRequestException('code is required');
+    }
+    const code = body.code;
+
     const created = await this.prisma.$transaction(async (tx) => {
       const newCat = await tx.category.create({
         data: {
+          code,
           name,
           version: 1,
         },
@@ -120,6 +127,7 @@ export class CategoriesService {
       const res = await tx.category.update({
         where: { id },
         data: {
+          code: body.code || existing.code,
           name,
           version: existing.version + 1,
         },

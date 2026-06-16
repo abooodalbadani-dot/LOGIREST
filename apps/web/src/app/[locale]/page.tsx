@@ -6,9 +6,9 @@ export default async function LocaleRootPage({ params }: { params: Promise<{ loc
  const cookieStore = await cookies();
  const token = cookieStore.get('logirest_token')?.value;
 
-  if (token) {
-    redirect({ href: '/dashboard', locale });
-  }
-  
-  redirect({ href: '/login', locale });
+ if (token) {
+  redirect({ href: '/dashboard', locale });
+ }
+ 
+ redirect({ href: '/login', locale });
 }

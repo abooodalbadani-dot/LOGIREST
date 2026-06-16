@@ -9,24 +9,24 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 export function PRDetailClient({ id }: { id: string | null }) {
-  const _t = useTranslations('procurement.pr');
-  const { data: pr, isLoading } = usePR(id);
-  const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('purchase-request', id || '');
+ const _t = useTranslations('procurement.pr');
+ const { data: pr, isLoading } = usePR(id);
+ const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('purchase-request', id || '');
 
-  if (isLoading) return <PageSkeleton variant="detail" />;
+ if (isLoading) return <PageSkeleton variant="detail" />;
 
-  if (!pr) return null;
+ if (!pr) return null;
 
-  return (
-    <>
-      <PurchaseRequestForm initialData={pr} onConflict={triggerConflict} />
-      <ConflictDialog 
-        open={open}
-        onReload={handleReload}
-        onClose={handleClose}
-      />
-    </>
-  );
+ return (
+  <>
+   <PurchaseRequestForm initialData={pr} onConflict={triggerConflict} />
+   <ConflictDialog 
+    open={open}
+    onReload={handleReload}
+    onClose={handleClose}
+   />
+  </>
+ );
 }
 
 

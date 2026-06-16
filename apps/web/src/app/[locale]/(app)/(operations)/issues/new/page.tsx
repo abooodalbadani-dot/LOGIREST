@@ -8,7 +8,7 @@ export default async function CreateIssuePage(props: { params: Promise<{ locale:
  setRequestLocale(locale);
  
  return (
- <div className="flex-1 space-y-4 p-8 pt-6">
+ <div className="space-y-4 min-w-0 gap-6 flex-1 p-8 pt-6 flex flex-col w-full">
  <IssueForm />
  </div>
  );

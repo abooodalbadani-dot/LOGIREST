@@ -33,8 +33,8 @@ export function PageHeader({
 }: PageHeaderProps) {
  return (
  <div data-slot="page-header" className={cn("flex flex-col gap-6 pb-8 relative", className)}>
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
- <div className="space-y-1.5">
+ <div className="w-full flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+ <div className="w-full flex flex-col items-start text-right space-y-1.5">
  <div className="flex items-center gap-4">
  {backHref && (
  <Link 
@@ -46,21 +46,21 @@ export function PageHeader({
  )}
  {icon && <div className="flex-shrink-0">{icon}</div>}
   <h1 className="text-headline-lg md:text-headline-lg font-semibold text-foreground leading-normal">
-  {title}
-  </h1>
-  {showStatus && status && (
-  <StatusBadge status={status as BadgeStatus} />
-  )}
-  </div>
-  {(subtitle || description) && (
-   <p className="text-muted-foreground/60 font-medium text-label-xs whitespace-nowrap">
-   {subtitle || description}
-   </p>
-  )}
+ {title}
+ </h1>
+ {showStatus && status && (
+ <StatusBadge status={status as BadgeStatus} />
+ )}
+ </div>
+ {(subtitle || description) && (
+  <p className="text-muted-foreground/60 font-medium text-label-xs whitespace-nowrap">
+  {subtitle || description}
+  </p>
+ )}
  </div>
 
  {actions && (
- <div className="flex items-center gap-3">
+ <div className="w-full sm:w-auto flex items-center gap-3 [&>*]:w-full [&>*]:sm:w-auto">
  {actions}
  </div>
  )}

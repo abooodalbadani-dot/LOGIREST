@@ -42,12 +42,12 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  let warehouses = warehousesData?.data || [];
 
  if (user?.role !== 'ADMIN' && user?.scopes) {
-   const allowedWarehouseIds = user.scopes
-     .filter((s: { branchId: string | null; warehouseId: string | null }) => s.branchId === selectedBranchId && s.warehouseId)
-     .map((s: { warehouseId: string | null }) => s.warehouseId as string);
-   if (allowedWarehouseIds.length > 0 || user?.role === 'STORE_MGR') {
-     warehouses = warehouses.filter((w: MasterDataItem) => allowedWarehouseIds.includes(w.id));
-   }
+  const allowedWarehouseIds = user.scopes
+   .filter((s: { branchId: string | null; warehouseId: string | null }) => s.branchId === selectedBranchId && s.warehouseId)
+   .map((s: { warehouseId: string | null }) => s.warehouseId as string);
+  if (allowedWarehouseIds.length > 0 || user?.role === 'STORE_MGR') {
+   warehouses = warehouses.filter((w: MasterDataItem) => allowedWarehouseIds.includes(w.id));
+  }
  }
 
  // Fetch departments for the selected branch
@@ -58,10 +58,10 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  let departments = departmentsData?.data || [];
 
  if (user?.role === 'KITCHEN_CHIEF' && user?.scopes) {
-   const allowedDeptIds = user.scopes
-     .filter((s: { branchId: string | null; departmentId: string | null }) => s.branchId === selectedBranchId && s.departmentId)
-     .map((s: { departmentId: string | null }) => s.departmentId as string);
-   departments = departments.filter((d: MasterDataItem) => allowedDeptIds.includes(d.id));
+  const allowedDeptIds = user.scopes
+   .filter((s: { branchId: string | null; departmentId: string | null }) => s.branchId === selectedBranchId && s.departmentId)
+   .map((s: { departmentId: string | null }) => s.departmentId as string);
+  departments = departments.filter((d: MasterDataItem) => allowedDeptIds.includes(d.id));
  }
 
  // Update local state when activeScope changes (e.g. on mount or when changed externally)
@@ -103,15 +103,15 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
 
  let isConfirmDisabled = !selectedBranchId;
  if (user?.role === 'KITCHEN_CHIEF') {
-   isConfirmDisabled = !selectedBranchId || !selectedDepartmentId;
+  isConfirmDisabled = !selectedBranchId || !selectedDepartmentId;
  } else if (user?.role === 'STORE_MGR') {
-   isConfirmDisabled = !selectedBranchId || !selectedWarehouseId;
+  isConfirmDisabled = !selectedBranchId || !selectedWarehouseId;
  }
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-md animate-in fade-in duration-300">
  <div 
- className="bg-surface-container-lowest rounded-2xl border border-outline-low w-full max-w-4xl overflow-hidden relative animate-in zoom-in-95 duration-200"
+ className="bg-card border border-border shadow-sm rounded-2xl border border-outline-low w-full max-w-4xl overflow-hidden relative animate-in zoom-in-95 duration-200"
  >
  {/* Nocturne Ghost Border / Glow */}
  <div className="absolute top-0 start-0 w-full h-[2px] bg-gradient-to-r from-transparent via-operational-cyan/50 to-transparent" />
@@ -149,11 +149,11 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  setSelectedWarehouseId('');
  setSelectedDepartmentId('');
  }}
- className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer hover:bg-surface-container-high"
+ className="w-full bg-card border border-border shadow-sm border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer hover:bg-surface-container-high"
  >
- <option value="" className="bg-surface-container-lowest">{t('branch_placeholder')}</option>
+ <option value="" className="bg-card border border-border shadow-sm">{t('branch_placeholder')}</option>
  {branches.map((b: { id: string; name?: string; code?: string }) => (
- <option key={b.id} value={b.id} className="bg-surface-container-lowest">
+ <option key={b.id} value={b.id} className="bg-card border border-border shadow-sm">
  {b.name || b.code}
  </option>
  ))}
@@ -174,11 +174,11 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  value={selectedWarehouseId}
  onChange={(e) => setSelectedWarehouseId(e.target.value)}
  disabled={!selectedBranchId}
- className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
+ className="w-full bg-card border border-border shadow-sm border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
  >
- <option value="" className="bg-surface-container-lowest">{t('warehouse_placeholder')}</option>
+ <option value="" className="bg-card border border-border shadow-sm">{t('warehouse_placeholder')}</option>
  {warehouses.map((w: { id: string; name?: string; code?: string }) => (
- <option key={w.id} value={w.id} className="bg-surface-container-lowest">
+ <option key={w.id} value={w.id} className="bg-card border border-border shadow-sm">
  {w.name || w.code}
  </option>
  ))}
@@ -195,11 +195,11 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  value={selectedDepartmentId}
  onChange={(e) => setSelectedDepartmentId(e.target.value)}
  disabled={!selectedBranchId}
- className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
+ className="w-full bg-card border border-border shadow-sm border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
  >
- <option value="" className="bg-surface-container-lowest">{t('department_placeholder')}</option>
+ <option value="" className="bg-card border border-border shadow-sm">{t('department_placeholder')}</option>
  {departments.map((d: { id: string; name?: string; code?: string }) => (
- <option key={d.id} value={d.id} className="bg-surface-container-lowest">
+ <option key={d.id} value={d.id} className="bg-card border border-border shadow-sm">
  {d.name || d.code}
  </option>
  ))}

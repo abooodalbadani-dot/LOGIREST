@@ -11,19 +11,19 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function EditSupplierPage(props: { params: Promise<{ locale: string; id: string }> }) {
-  const params = await props.params;
-  setRequestLocale(params.locale);
-  const t = await getTranslations({ locale: params.locale, namespace: 'master_data.suppliers' });
+ const params = await props.params;
+ setRequestLocale(params.locale);
+ const t = await getTranslations({ locale: params.locale, namespace: 'master_data.suppliers' });
 
-  return (
-    <ProtectedRoute requiredAction="edit" requiredResource="master_data_suppliers">
-      <SupplierFormClient 
-        id={params.id} 
-        createTitle={t('create_title')} 
-        editTitle={t('edit_title')} 
-        viewTitle={t('view_title')}
-        isReadOnly={false}
-      />
-    </ProtectedRoute>
-  );
+ return (
+  <ProtectedRoute requiredAction="edit" requiredResource="master_data_suppliers">
+   <SupplierFormClient 
+    id={params.id} 
+    createTitle={t('create_title')} 
+    editTitle={t('edit_title')} 
+    viewTitle={t('view_title')}
+    isReadOnly={false}
+   />
+  </ProtectedRoute>
+ );
 }

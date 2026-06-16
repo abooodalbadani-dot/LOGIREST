@@ -113,24 +113,24 @@ export function AuditLogsClient() {
  cell: ({ row }) => (
  <div className="flex justify-end">
 <Button
-  variant="ghost"
-  size="sm"
-  aria-label={`${tc('view')} ${t('changes')}`}
-  className={`h-7 px-2 transition-all ${expandedId === row.original.id ? 'bg-cyan-500/20 text-cyan-500' : 'text-muted-foreground/40 hover:text-cyan-500 hover:bg-cyan-500/10'}`}
-  onClick={(e: React.MouseEvent) => { 
-  e.stopPropagation(); 
-  setExpandedId(expandedId === row.original.id ? null : row.original.id); 
-  }}
-  >
-  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-500 ${expandedId === row.original.id ? 'rotate-180' : ''}`} />
-  </Button>
+ variant="ghost"
+ size="sm"
+ aria-label={`${tc('view')} ${t('changes')}`}
+ className={`h-7 px-2 transition-all ${expandedId === row.original.id ? 'bg-cyan-500/20 text-cyan-500' : 'text-muted-foreground/40 hover:text-cyan-500 hover:bg-cyan-500/10'}`}
+ onClick={(e: React.MouseEvent) => { 
+ e.stopPropagation(); 
+ setExpandedId(expandedId === row.original.id ? null : row.original.id); 
+ }}
+ >
+ <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-500 ${expandedId === row.original.id ? 'rotate-180' : ''}`} />
+ </Button>
  </div>
  ),
  },
  ], [t, tc, locale, expandedId]);
 
  return (
- <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+ <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
  <PageHeader 
  title={t('audit_logs.title')} description={t('audit_logs.client_description')}
  actions={
@@ -192,7 +192,7 @@ export function AuditLogsClient() {
  const entry = data.data.find((e) => e.id === expandedId);
  if (!entry) return null;
  return (
- <div className="p-8 rounded-sm border border-white/5 bg-surface-container-low animate-in slide-in-from-top-4 duration-500 shadow-2xl">
+ <div className="p-8 rounded-sm border border-white/5 bg-card border border-border shadow-sm animate-in slide-in-from-top-4 duration-500 shadow-2xl">
  <div className="flex items-center gap-3 mb-6 text-cyan-500 font-semibold text-label-xs uppercase">
  <History className="w-4 h-4" />
  {t('changes')}

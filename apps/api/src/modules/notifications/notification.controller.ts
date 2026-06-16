@@ -15,6 +15,7 @@ import {
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { NotificationService } from './notification.service';
@@ -28,7 +29,7 @@ import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
 
 @Controller('notifications')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class NotificationController {
   constructor(
@@ -97,48 +98,18 @@ export class NotificationController {
   // --- Templates CRUD & Reference Data Endpoints ---
 
   @Get('outbox')
+  @Roles(Role.ADMIN)
   async getOutbox(
     @Query('status') status: string | undefined,
     @Query('page') page: string | undefined,
-    @CurrentUser('role') role: Role,
-    @CurrentUser('id') userId: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
-    let allowedWarehouseIds: string[] | undefined = undefined;
-    if (role !== Role.ADMIN) {
-      const scopes = await this.prisma.userWarehouseScope.findMany({
-        where: { userId },
-        select: { warehouseId: true },
-      });
-      allowedWarehouseIds = scopes.map((s) => s.warehouseId);
-    }
-    return this.templateService.getOutbox(status, pageNum, allowedWarehouseIds);
+    return this.templateService.getOutbox(status, pageNum, undefined);
   }
 
   @Post('outbox/:id/retry')
-  async retryOutboxEvent(
-    @Param('id') id: string,
-    @CurrentUser('role') role: Role,
-    @CurrentUser('id') userId: string,
-  ) {
-    if (role !== Role.ADMIN) {
-      const event = await this.prisma.outboxEvent.findUnique({
-        where: { id },
-      });
-      if (!event) {
-        throw new NotFoundException(`Outbox event with ID ${id} not found`);
-      }
-      const payload = (event.payload || {}) as Record<string, unknown>;
-      const warehouseId =
-        typeof payload.warehouseId === 'string' ? payload.warehouseId : null;
-      if (warehouseId) {
-        await this.scopeValidationService.validateWarehouse(
-          userId,
-          role,
-          warehouseId,
-        );
-      }
-    }
+  @Roles(Role.ADMIN)
+  async retryOutboxEvent(@Param('id') id: string) {
     return this.templateService.retryOutboxEvent(id);
   }
 

@@ -27,10 +27,10 @@ import { MasterDataFormLayout } from '@/features/master-data/components/MasterDa
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import {
- useDepartment,
- useCreateDepartment,
- useUpdateDepartment,
- useDeleteDepartment,
+  useDepartment,
+  useCreateDepartment,
+  useUpdateDepartment,
+  useDeleteDepartment,
 } from '@/features/departments/hooks/useDepartments';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import { DepartmentFormSchema, type DepartmentFormValues } from '@/types/master-data';
@@ -50,7 +50,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
   const locale = useLocale();
   const abortController = useAbortController();
   const { branchId: activeBranchId } = useOperationalScope();
-  
+
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
@@ -61,7 +61,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     },
     disabled: isReadOnly,
   });
- 
+
   const { data, isLoading, isError, refetch } = useDepartment(id);
   const { data: branchesData, isLoading: branchesLoading, isError: branchesError, refetch: refetchBranches } = useBranches();
 
@@ -102,7 +102,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
 
   const onValid = (values: DepartmentFormValues) => {
     if (isReadOnly) return;
-    
+
     const payload = {
       branchId: values.branchId,
       name: values.name,
@@ -111,13 +111,13 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
 
     if (id) {
       update.mutate(
-        { 
-          id, 
+        {
+          id,
           values: {
             ...payload,
             version: values.version || undefined,
           },
-          signal: abortController.signal 
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -132,9 +132,9 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
       );
     } else {
       create.mutate(
-        { 
-          ...payload, 
-          signal: abortController.signal 
+        {
+          ...payload,
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -184,8 +184,8 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
 
   if (isError || branchesError) {
     return (
-      <ErrorState 
-        error={500} 
+      <ErrorState
+        error={500}
         onRetry={() => {
           refetch();
           refetchBranches();
@@ -199,132 +199,113 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
   }
 
   // Determine the display title
-  const displayTitle = id 
+  const displayTitle = id
     ? (isReadOnly ? (viewTitle || td('view_title')) : editTitle)
     : createTitle;
 
- return (
+  return (
     <>
-    <MasterDataFormLayout
-      title={displayTitle}
-      backHref='/master-data/departments'
-      isSaving={isSaving} saveDisabled={conflict.saveDisabled}
-      onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/departments', { skipGuard: true })}
-      hideSave={isReadOnly}
-      isDirty={isDirty}
-      isValid={isValid}
-      resource="master_data_departments"
-      saveAction={id ? 'edit' : 'create'}
-      headerActions={
-        id && !isReadOnly && (
-          <PermissionGate action="delete" resource="master_data_departments">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isSaving}
-            >
-              <Trash2 className="w-5 h-5" />
-            </Button>
-          </PermissionGate>
-        )
-      }
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Section: Basic Info */}
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <Briefcase className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{td('title')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{td('description')}</p>
-                </div>
-              </div>
+      <MasterDataFormLayout
+        title={displayTitle}
+        backHref='/master-data/departments'
+        isSaving={isSaving} saveDisabled={conflict.saveDisabled}
+        onSubmit={onSubmit}
+        onCancel={() => guardedRouter.push('/master-data/departments', { skipGuard: true })}
+        hideSave={isReadOnly}
+        isDirty={isDirty}
+        isValid={isValid}
+        resource="master_data_departments"
+        saveAction={id ? 'edit' : 'create'}
+        headerActions={
+          id && !isReadOnly && (
+            <PermissionGate action="delete" resource="master_data_departments">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isSaving}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </PermissionGate>
+          )
+        }
+      >
+        <div className="col-span-12 w-full max-w-3xl mx-auto flex flex-col gap-8 p-6 bg-card border border-border rounded-xl mt-6">
+          {/* Basic Info Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Briefcase className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{td('title')}</h3>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Branch Select */}
-                <div className="space-y-2">
-                  <Label htmlFor="dept-branch" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.branch')}</Label>
-                  <Controller
-                    name="branchId"
-                    control={control}
-                    render={({ field }) => (
-                      <SmartCombobox
-                        disabled={isReadOnly}
-                        value={field.value ?? ''}
-                        onSelect={(item) => field.onChange(item.id)}
-                        items={branchItems}
-                        placeholder={t('null_select')}
-                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-                      />
-                    )}
-                  />
-                  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.branchId.message as never)}</p>}
-                </div>
-
-                {/* Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="dept-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.name')}</Label>
-                  <Input 
-                    id="dept-name" 
-                    dir="ltr" 
-                    {...register('name')} 
-                    disabled={isReadOnly}
-                    className="font-semibold" 
-                  />
-                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-8">
- <Card className="bg-surface-container-low border-none overflow-hidden">
- <CardContent className="p-8 space-y-6">
- <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
- <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
- <ShieldCheck className="w-5 h-5 text-tertiary" />
- </div>
- <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">{t('status')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('operational_status')}</p>
- </div>
- </div>
-
- <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
- <div className="space-y-1">
- <Label htmlFor="dept-is-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{td('fields.is_active')}</Label>
- <p className={`text-label-sm font-semibold uppercase ${(isActive ?? true) ? 'text-status-active' : 'text-status-error'}`}>{ (isActive ?? true) ? t('active') : t('inactive')}</p>
- </div>
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Branch Select */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="dept-branch" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{td('fields.branch')}</Label>
                 <Controller
+                  name="branchId"
                   control={control}
-                  name="isActive"
                   render={({ field }) => (
-                    <Switch
-                      id="dept-is-active"
-                      checked={field.value ?? true}
-                      onCheckedChange={field.onChange}
+                    <SmartCombobox
                       disabled={isReadOnly}
-                      className="data-[state=checked]:bg-status-active"
+                      value={field.value ?? ''}
+                      onSelect={(item) => field.onChange(item.id)}
+                      items={branchItems}
+                      placeholder={t('null_select')}
+                      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
                     />
                   )}
                 />
- </div>
- </CardContent>
- </Card>
- </div>
- </div>
-</MasterDataFormLayout>
+                {errors.branchId && <p className="text-xs text-red-500 mt-1">{tv(errors.branchId.message as never)}</p>}
+              </div>
+
+              {/* Name */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="dept-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{td('fields.name')}</Label>
+                <Input
+                  id="dept-name"
+                  dir="ltr"
+                  {...register('name')}
+                  disabled={isReadOnly}
+                  className="font-semibold w-full h-10"
+                />
+                {errors.name && <p className="text-xs text-red-500 mt-1">{tv(errors.name.message as never)}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Status Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <ShieldCheck className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{t('status')}</h3>
+            </div>
+
+            <div className="flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors hover:bg-muted/30">
+              <div className="flex flex-col space-y-1 text-start min-w-0">
+                <span className="text-sm font-medium text-text-main dark:text-white">{td('fields.is_active')}</span>
+                <span className="text-xs text-muted-foreground dark:text-gray-400">{(isActive ?? true) ? t('active') : t('inactive')}</span>
+              </div>
+              <Controller
+                control={control}
+                name="isActive"
+                render={({ field }) => (
+                  <Switch
+                    id="dept-is-active"
+                    checked={field.value ?? true}
+                    onCheckedChange={field.onChange}
+                    disabled={isReadOnly}
+                    activeClassName="bg-status-active"
+                  />
+                )}
+              />
+            </div>
+          </div>
+        </div>
+      </MasterDataFormLayout>
 
       <ConflictDialog
         open={conflict.open}

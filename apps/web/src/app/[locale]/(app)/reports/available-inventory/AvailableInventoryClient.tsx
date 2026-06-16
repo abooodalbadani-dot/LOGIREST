@@ -11,8 +11,8 @@ import { formatQuantity } from '@/lib/utils';
 export default function AvailableInventoryClient() {
  const t = useTranslations('reports');
  const locale = useLocale() as 'ar' | 'en';
-  const { data: paginatedData, isLoading } = useAvailableInventoryReport();
-  const data = paginatedData?.data;
+ const { data: paginatedData, isLoading } = useAvailableInventoryReport();
+ const data = paginatedData?.data;
 
  const columns: ColumnDef<AvailableInventoryReport>[] = [
  {
@@ -69,7 +69,7 @@ export default function AvailableInventoryClient() {
  ];
 
  return (
- <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <div className="min-w-0 gap-6 flex-1 fade-in space-y-8 slide-in-from-bottom-4 animate-in flex-col flex duration-700 w-full">
  <PageHeader 
  title={t('available_inventory')}
  subtitle={t('available_inventory_desc')}
@@ -81,14 +81,14 @@ export default function AvailableInventoryClient() {
  columns={columns}
  isLoading={isLoading}
  exportComponent={
-  <ReportExportMenu 
-  columns={exportColumns}
-  data={data || []}
-  filename="Available_Inventory_Report"
-  title={t('available_inventory')}
-  exportRoute="/reports/available-inventory/export"
-  countCheckParams={{ type: 'available-inventory' }}
-  />
+ <ReportExportMenu 
+ columns={exportColumns}
+ data={data || []}
+ filename="Available_Inventory_Report"
+ title={t('available_inventory')}
+ exportRoute="/reports/available-inventory/export"
+ countCheckParams={{ type: 'available-inventory' }}
+ />
  }
  collectionName="reports"
  />

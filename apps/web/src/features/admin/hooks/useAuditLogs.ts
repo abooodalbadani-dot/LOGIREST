@@ -12,7 +12,7 @@ export function useAuditLogs(filters: { page?: number } = {}) {
  params.set('page', String(filters.page ?? 1));
  return useQuery({
  queryKey: ['admin/audit-logs', filters],
-  queryFn: ({ signal }) => apiClient.get(`/admin/audit-logs?${params.toString()}`, paginatedSchema(AuditLogEntrySchema), { signal }),
+ queryFn: ({ signal }) => apiClient.get(`/admin/audit-logs?${params.toString()}`, paginatedSchema(AuditLogEntrySchema), { signal }),
  staleTime: 60_000,
  });
 }

@@ -76,7 +76,7 @@ export interface EntityField {
 
 @Injectable()
 export class NotificationTemplateService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private async resolveRecipientEmails(
     eventType: string,

@@ -40,68 +40,67 @@ import { type DocumentStatus } from "@logirest/shared-types";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface StocktakeStartClientProps {
-  id: string;
-  locale: 'ar' | 'en';
+ id: string;
 }
 
-export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) {
-  const t = useTranslations("operations.stocktake");
-  const common = useTranslations("common");
-  const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
-  const session = rawSession ? mapToSessionVM(rawSession) : null;
-  
-  const { user } = useAuth();
-  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
-  const { data: lockState, isLoading: lockLoading, error: errorLock, guardedRouter: router } = useWarehouseLock(session?.warehouseId ?? null);
-  const startStocktake = useStartStocktake();
-  const beginCounting = useBeginCounting();
-  const { playSound } = useAudioFeedback();
-  
-  const [confirmOpen, setConfirmOpen] = useState(false);
+export function StocktakeStartClient({ id }: StocktakeStartClientProps) {
+ const t = useTranslations("operations.stocktake");
+ const common = useTranslations("common");
+ const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
+ const session = rawSession ? mapToSessionVM(rawSession) : null;
+ 
+ const { user } = useAuth();
+ const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
+ const { data: lockState, isLoading: lockLoading, error: errorLock, guardedRouter: router } = useWarehouseLock(session?.warehouseId ?? null);
+ const startStocktake = useStartStocktake();
+ const beginCounting = useBeginCounting();
+ const { playSound } = useAudioFeedback();
+ 
+ const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Redirect if already started
-  useEffect(() => {
-    if (session && !canStartStocktake(session.status)) {
-      router.replace(`/stocktake/${id}`);
-    }
-  }, [session, id, locale, router]);
+ // Redirect if already started
+ useEffect(() => {
+  if (session && !canStartStocktake(session.status)) {
+   router.replace(`/stocktake/${id}`);
+  }
+ }, [session, id, router]);
 
-  if (sessionLoading || isLoadingWarehouses || lockLoading) return <PageSkeleton variant="detail" />;
-  if (sessionError || errorWarehouses || errorLock || !session) return <ErrorState onRetry={() => window.location.reload()} />;
+ if (sessionLoading || isLoadingWarehouses || lockLoading) return <PageSkeleton variant="detail" />;
+ if (sessionError || errorWarehouses || errorLock || !session) return <ErrorState onRetry={() => window.location.reload()} />;
 
-  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
-  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
+ const warehouse = warehouses?.find(w => w.id === session.warehouseId);
+ const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
 
  const isAlreadyLocked = !lockLoading && lockState?.isLocked && lockState.sessionId !== id;
 
-  const handleStart = () => {
-    startStocktake.mutate({ id }, {
-      onSuccess: () => {
-        beginCounting.mutate({ id }, {
-          onSuccess: () => {
-            playSound('success');
-            router.push(`/stocktake/${id}/count`, { skipGuard: true });
-          },
-          onError: () => {
-            playSound('error');
-            toast.error(t('errors.failed_to_begin_counting'));
-          }
-        });
-      },
-      onError: (error: unknown) => {
-        playSound('error');
-        const err = error as { code?: string; message?: string };
-        if (err?.code === 'PENDING_DOCUMENTS') {
-          toast.error(t('errors.pending_documents_error'));
-        }
-      }
+ const handleStart = () => {
+  startStocktake.mutate({ id }, {
+   onSuccess: () => {
+    beginCounting.mutate({ id }, {
+     onSuccess: () => {
+      playSound('success');
+      router.push(`/stocktake/${id}/count`, { skipGuard: true });
+     },
+     onError: () => {
+      playSound('error');
+      toast.error(t('errors.failed_to_begin_counting'));
+     }
     });
-  };
+   },
+   onError: (error: unknown) => {
+    playSound('error');
+    const err = error as { code?: string; message?: string };
+    if (err?.code === 'PENDING_DOCUMENTS') {
+     toast.error(t('errors.pending_documents_error'));
+    }
+   }
+  });
+ };
 
-  return (
-    <ScopeGuard warehouseId={session?.warehouseId}>
-      <PermissionGate resource="operations_stocktake" action="edit">
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
+ return (
+  <ScopeGuard warehouseId={session?.warehouseId}>
+   <PermissionGate resource="operations_stocktake" action="edit">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
  <PageHeader 
  title={t('start_session_title')}
  description={t('start_session_subtitle')}
@@ -112,7 +111,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  onClick={() => router.back()}
  className="text-label-xs font-semibold uppercase text-muted-foreground/60 hover:text-foreground h-10 px-4 rounded-xl"
  >
- <ArrowLeft className={cn("w-4 h-4", locale === 'ar' ? 'rotate-180 ml-2' : 'mr-2')} />
+ <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
  {common('back')}
  </Button>
  }
@@ -121,9 +120,9 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  {isAlreadyLocked && <LockBanner lockState={lockState} />}
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <Card className="md:col-span-2 bg-surface-container-low border-none shadow-none rounded-[2.5rem] overflow-hidden">
+ <Card className="md:col-span-2 bg-card border border-border shadow-sm border-none shadow-none rounded-[2.5rem] overflow-hidden">
  <CardContent className="p-10 space-y-10">
- <div className="flex items-center gap-6 pb-8 bg-white/[0.01]">
+ <div className="flex items-center gap-6 pb-8 bg-card/[0.01]">
  <div className="p-4 rounded-[1.5rem] bg-amber-500/10 text-amber-500 border-none shadow-[0_0_40px_rgba(245,158,11,0.05)]">
  <ShieldAlert className="w-8 h-8" />
  </div>
@@ -206,30 +205,30 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  </CardContent>
  </Card>
 
-          <ActionGuard 
-            documentType="STOCKTAKE" 
-            status={session.status as DocumentStatus} 
-            action="START" 
-            role={user?.role || ''}
-          >
-            <Button
-              onClick={() => setConfirmOpen(true)}
-              disabled={startStocktake.isPending || beginCounting.isPending || lockLoading}
-              className="w-full h-20 rounded-[1.5rem] text-white bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)] transition-all group overflow-hidden relative"
-            >
-              <div className="relative z-10 flex items-center justify-center gap-4">
-                {startStocktake.isPending || beginCounting.isPending ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                ) : (
-                  <>
-                    <Play className="w-6 h-6 fill-current" />
-                    <span className="text-body-md font-semibold uppercase">{t('start_session')}</span>
-                  </>
-                )}
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            </Button>
-          </ActionGuard>
+     <ActionGuard 
+      documentType="STOCKTAKE" 
+      status={session.status as DocumentStatus} 
+      action="START" 
+      role={user?.role || ''}
+     >
+      <Button
+       onClick={() => setConfirmOpen(true)}
+       disabled={startStocktake.isPending || beginCounting.isPending || lockLoading}
+       className="w-full h-20 rounded-[1.5rem] text-white bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)] transition-all group overflow-hidden relative"
+      >
+       <div className="relative z-10 flex items-center justify-center gap-4">
+        {startStocktake.isPending || beginCounting.isPending ? (
+         <Loader2 className="w-6 h-6 animate-spin" />
+        ) : (
+         <>
+          <Play className="w-6 h-6 fill-current" />
+          <span className="text-body-md font-semibold uppercase">{t('start_session')}</span>
+         </>
+        )}
+       </div>
+       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+      </Button>
+     </ActionGuard>
  </div>
  </div>
  </div>
@@ -246,7 +245,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  description={t('start_confirm_desc')}
  confirmText={t('start_action_confirm')}
  />
-      </PermissionGate>
-    </ScopeGuard>
-  );
+   </PermissionGate>
+  </ScopeGuard>
+ );
 }

@@ -19,6 +19,8 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import type {
   InventoryBalanceQuery,
   InventoryLotsQuery,
@@ -26,7 +28,7 @@ import type {
 } from '@logirest/shared-types';
 
 @Controller('inventory')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
@@ -62,21 +64,15 @@ export class InventoryController {
   }
 
   @Patch(':id/unfreeze')
+  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   async unfreeze(
     @Param('id') itemId: string,
     @ActiveScope('warehouseId') warehouseId: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Body('reason') reason: string,
     @Ip() ipAddress?: string,
   ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to unfreeze inventory items.',
-      );
-    }
-
     if (!reason || reason.trim() === '') {
       throw new BadRequestException('An unfreeze reason is required.');
     }

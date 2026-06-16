@@ -27,6 +27,7 @@ import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import type { Request } from 'express';
 
 function mapKitchenRequestDetail(
@@ -81,7 +82,7 @@ function mapKitchenRequestDetail(
 }
 
 @Controller('operations/kitchen-requests')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class KitchenRequestsController {
   constructor(
@@ -91,6 +92,14 @@ export class KitchenRequestsController {
   ) {}
 
   @Post()
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.WH_KEEPER,
+    Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
+  )
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -211,6 +220,7 @@ export class KitchenRequestsController {
   }
 
   @Post(':id/submit')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.KITCHEN_CHIEF, Role.STORE_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'kitchen_request',
@@ -240,6 +250,13 @@ export class KitchenRequestsController {
   }
 
   @Post(':id/fulfill')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'kitchen_request',
@@ -274,6 +291,13 @@ export class KitchenRequestsController {
   }
 
   @Post(':id/cancel')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.KITCHEN_CHIEF,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'kitchen_request',

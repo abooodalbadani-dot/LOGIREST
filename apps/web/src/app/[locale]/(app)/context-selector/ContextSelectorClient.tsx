@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLocale } from '@/hooks/useLocale';
 import { useBranches } from '@/features/branches/hooks/useBranches';
@@ -21,8 +22,10 @@ import { useState } from 'react';
 export function ContextSelectorClient({ locale }: { locale: string }) {
  const t = useTranslations('context_selector');
  const router = useRouter();
+ const searchParams = useSearchParams();
+ const redirectUrl = searchParams.get('redirect');
  const { gradientClass } = useLocale();
-  const { user: _user, activeScope, setActiveScope } = useAuth();
+ const { user: _user, activeScope, setActiveScope } = useAuth();
  
  const { data: branchesData } = useBranches();
  const { data: warehousesData } = useWarehouses();
@@ -39,13 +42,17 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  warehouseId: selectedWarehouseId,
  departmentId: activeScope.departmentId // Preserve department if any
  });
- router.push('/dashboard');
+ if (redirectUrl) {
+  router.push(redirectUrl);
+ } else {
+  router.push('/dashboard');
+ }
  };
 
  const filteredWarehouses = warehouses?.filter(wh => wh.branchId === selectedBranchId) || [];
 
  return (
- <div className="min-h-[80vh] flex flex-col items-center justify-center py-12 px-6">
+ <div className="py-12 min-w-0 items-center px-6 flex-1 gap-6 justify-center min-h-[80vh] flex-col flex w-full">
  <div className="w-full max-w-5xl space-y-12">
  {/* Header Section */}
  <div className="text-center space-y-4">
@@ -81,7 +88,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  "relative p-6 rounded-[2rem] text-start transition-all duration-500 group overflow-hidden border border-white/5",
  selectedBranchId === branch.id 
  ? "bg-operational-cyan shadow-[0_20px_40px_rgba(var(--operational-cyan-rgb),0.2)]" 
- : "bg-surface-container-low hover:bg-surface-container-high"
+ : "bg-card border border-border shadow-sm hover:bg-surface-container-high"
  )}
  >
  <div className="relative z-10 flex items-center justify-between">
@@ -100,7 +107,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  </p>
  </div>
  {selectedBranchId === branch.id && (
- <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-in zoom-in-50 duration-500">
+ <div className="w-10 h-10 rounded-full bg-card/20 flex items-center justify-center animate-in zoom-in-50 duration-500">
  <CheckCircle2 className="w-6 h-6 text-white" />
  </div>
  )}
@@ -108,7 +115,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  {/* Decorative element */}
  <div className={cn(
  "absolute -bottom-6 -right-6 w-24 h-24 rounded-full blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-20",
- selectedBranchId === branch.id ? "bg-white" : "bg-operational-cyan"
+ selectedBranchId === branch.id ? "bg-card" : "bg-operational-cyan"
  )} />
  </button>
  ))}
@@ -124,8 +131,8 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  
  <div className="grid gap-4">
  {!selectedBranchId ? (
- <div className="h-[300px] flex flex-col items-center justify-center rounded-[2rem] bg-surface-container-low/30 border border-dashed border-white/5 space-y-4">
- <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+ <div className="h-[300px] flex flex-col items-center justify-center rounded-[2rem] bg-card border border-border shadow-sm/30 border border-dashed border-white/5 space-y-4 min-w-0">
+ <div className="w-12 h-12 rounded-full bg-card/5 flex items-center justify-center">
  <Settings2 className="w-6 h-6 text-muted-foreground/20" />
  </div>
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/30 text-center px-12">
@@ -141,7 +148,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  "relative p-6 rounded-[2rem] text-start transition-all duration-500 group overflow-hidden border border-white/5",
  selectedWarehouseId === wh.id 
  ? "bg-operational-cyan shadow-[0_20px_40px_rgba(var(--operational-cyan-rgb),0.2)]" 
- : "bg-surface-container-low hover:bg-surface-container-high"
+ : "bg-card border border-border shadow-sm hover:bg-surface-container-high"
  )}
  >
  <div className="relative z-10 flex items-center justify-between">
@@ -160,7 +167,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  </p>
  </div>
  {selectedWarehouseId === wh.id && (
- <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-in zoom-in-50 duration-500">
+ <div className="w-10 h-10 rounded-full bg-card/20 flex items-center justify-center animate-in zoom-in-50 duration-500">
  <CheckCircle2 className="w-6 h-6 text-white" />
  </div>
  )}
@@ -168,7 +175,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  </button>
  ))
  ) : (
- <div className="h-[200px] flex flex-col items-center justify-center rounded-[2rem] bg-surface-container-low/30 border border-dashed border-white/5 space-y-4">
+ <div className="h-[200px] flex flex-col items-center justify-center rounded-[2rem] bg-card border border-border shadow-sm/30 border border-dashed border-white/5 space-y-4 min-w-0">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/30">{t('no_warehouses')}</p>
  </div>
  )}

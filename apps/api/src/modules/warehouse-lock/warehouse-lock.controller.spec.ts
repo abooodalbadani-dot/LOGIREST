@@ -31,28 +31,12 @@ describe('WarehouseLockController', () => {
   };
 
   describe('forceUnlock', () => {
-    it('should throw ForbiddenException if user role is not admin', async () => {
-      const req = mockRequest();
-      await expect(
-        controller.forceUnlock(
-          'lock-1',
-          'user-1',
-          'PROC_OFFICER',
-          { reasonNotes: 'Some long enough reason notes' },
-          req,
-        ),
-      ).rejects.toThrow(new ForbiddenException('Forbidden resource'));
-
-      expect(mockWarehouseLockService.forceUnlock).not.toHaveBeenCalled();
-    });
-
     it('should throw BadRequestException if reasonNotes is missing', async () => {
       const req = mockRequest();
       await expect(
         controller.forceUnlock(
           'lock-1',
           'admin-1',
-          'ADMIN',
           undefined as unknown as { reasonNotes: string },
           req,
         ),
@@ -65,7 +49,6 @@ describe('WarehouseLockController', () => {
         controller.forceUnlock(
           'lock-1',
           'admin-1',
-          'ADMIN',
           { reasonNotes: 'short' },
           req,
         ),
@@ -84,7 +67,6 @@ describe('WarehouseLockController', () => {
       const result = await controller.forceUnlock(
         'lock-1',
         'admin-1',
-        'ADMIN',
         { reasonNotes: 'This is a long enough note' },
         req,
       );
@@ -100,13 +82,6 @@ describe('WarehouseLockController', () => {
   });
 
   describe('manualUnlock', () => {
-    it('should throw ForbiddenException if role is not ADMIN or INV_MGR', async () => {
-      const req = mockRequest();
-      await expect(
-        controller.manualUnlock('lock-1', 'user-1', 'WH_KEEPER', req),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
     it('should unlock successfully when role is ADMIN', async () => {
       const req = mockRequest('127.0.0.1');
       const mockUpdated = {
@@ -116,12 +91,7 @@ describe('WarehouseLockController', () => {
       };
       mockWarehouseLockService.manualUnlock.mockResolvedValue(mockUpdated);
 
-      const result = await controller.manualUnlock(
-        'lock-1',
-        'admin-1',
-        'ADMIN',
-        req,
-      );
+      const result = await controller.manualUnlock('lock-1', 'admin-1', req);
 
       expect(result).toEqual({
         success: true,
@@ -144,12 +114,7 @@ describe('WarehouseLockController', () => {
       };
       mockWarehouseLockService.manualUnlock.mockResolvedValue(mockUpdated);
 
-      const result = await controller.manualUnlock(
-        'lock-1',
-        'mgr-1',
-        'INV_MGR',
-        req,
-      );
+      const result = await controller.manualUnlock('lock-1', 'mgr-1', req);
 
       expect(result).toEqual({
         success: true,

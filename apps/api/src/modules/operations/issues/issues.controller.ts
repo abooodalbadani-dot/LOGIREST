@@ -25,6 +25,9 @@ import {
 } from '../../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
 function mapIssueDetail(issue: Record<string, unknown>) {
@@ -175,6 +178,7 @@ function mapIssueSummary(issue: Record<string, unknown>) {
 }
 
 @Controller('operations/issues')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class IssuesController {
   constructor(
@@ -185,6 +189,14 @@ export class IssuesController {
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Post()
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
+  )
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -254,6 +266,13 @@ export class IssuesController {
   }
 
   @Post(':id/submit')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'issue',
@@ -283,6 +302,13 @@ export class IssuesController {
   }
 
   @Post(':id/cancel')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'issue',
@@ -313,6 +339,7 @@ export class IssuesController {
 
   @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/post')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'issue',

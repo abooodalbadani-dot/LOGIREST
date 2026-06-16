@@ -46,7 +46,7 @@ export function ConflictDialog({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl border-none shadow-2xl bg-surface-container-lowest overflow-hidden">
+      <DialogContent className="sm:max-w-[425px] rounded-2xl border-none shadow-2xl bg-white dark:bg-card-dark border border-gray-200 dark:border-neutral-800 shadow-sm overflow-hidden">
         <DialogHeader className="space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-status-warning/10 flex items-center justify-center animate-bounce-subtle">
             <AlertTriangle className="w-8 h-8 text-status-warning" />
@@ -97,7 +97,7 @@ export function ConflictDialog({
           <Button
             onClick={onReload}
             disabled={isRetrying}
-            className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs bg-status-warning hover:bg-status-warning/90 text-white shadow-lg shadow-status-warning/20 transition-all active:scale-95"
+            className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs bg-status-warning hover:bg-status-warning/90 text-white shadow-sm shadow-status-warning/20 transition-all active:scale-95"
           >
             <RefreshCcw className="w-4 h-4 me-2" />
             {tc('conflict.reload')}

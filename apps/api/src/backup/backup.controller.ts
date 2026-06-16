@@ -1,28 +1,20 @@
-import {
-  Controller,
-  Post,
-  UseGuards,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Controller, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { BackupService } from './backup.service';
 import { Role } from '@prisma/client';
 import { ApiSecureController } from '../decorators/swagger-docs.decorator';
 
 @Controller('backup')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class BackupController {
   constructor(private readonly backupService: BackupService) {}
 
   @Post('run')
-  async runManualBackup(@CurrentUser('role') role: Role) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to manually trigger database backups.',
-      );
-    }
+  @Roles(Role.ADMIN)
+  async runManualBackup() {
     const result = await this.backupService.runBackup();
     return {
       success: true,

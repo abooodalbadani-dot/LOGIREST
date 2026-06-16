@@ -13,12 +13,12 @@ export function useStartStocktake(options?: { onConflict?: () => void }) {
  apiClient.post('/stocktake/sessions', StocktakeSessionSchema, body, { signal }),
  onSuccess: (data) => {
 qc.invalidateQueries({ queryKey: ['stocktakes'] });
-  qc.invalidateQueries({ queryKey: ['stocktakes', 'summary'] });
+ qc.invalidateQueries({ queryKey: ['stocktakes', 'summary'] });
 qc.invalidateQueries({ queryKey: ['warehouse-lock', data.warehouseId] });
-   },
-  onError: (error: unknown) => {
-    const message = error instanceof Error ? error.message : 'Operation failed';
-    toast.error(message);
   },
-  });
+ onError: (error: unknown) => {
+  const message = error instanceof Error ? error.message : 'Operation failed';
+  toast.error(message);
+ },
+ });
 }

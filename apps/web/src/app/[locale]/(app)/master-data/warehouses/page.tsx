@@ -15,7 +15,7 @@ export default async function WarehousesPage(props: { params: Promise<{ locale: 
  const params = await props.params;
 setRequestLocale(params.locale);
 
-  return (
+ return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">
  <WarehouseListClient locale={params.locale} />
  </ProtectedRoute>

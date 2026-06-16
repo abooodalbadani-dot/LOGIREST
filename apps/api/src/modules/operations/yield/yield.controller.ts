@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { YieldService } from './yield.service';
 import type { CreateYieldBatchDto } from './yield.service';
 
 @Controller('operations/yield')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class YieldController {
   constructor(private readonly yieldService: YieldService) {}

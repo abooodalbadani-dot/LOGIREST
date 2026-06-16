@@ -51,6 +51,7 @@ export class ItemsService {
       category: item.category
         ? {
             id: item.category.id,
+            code: item.category.code,
             name: item.category.name,
             version: item.category.version,
           }

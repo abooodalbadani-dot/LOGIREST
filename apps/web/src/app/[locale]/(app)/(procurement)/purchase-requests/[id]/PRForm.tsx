@@ -51,31 +51,31 @@ const formSchema = z.object({
 type PurchaseRequestFormValues = z.infer<typeof formSchema>;
 
 interface PurchaseRequestFormProps {
-   initialData?: PRDetail;
-   onConflict?: () => void;
+  initialData?: PRDetail;
+  onConflict?: () => void;
 }
 
 export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequestFormProps) {
-  const locale = useLocale();
+ const locale = useLocale();
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
  const router = useRouter();
  const [isSubmitting, setIsSubmitting] = React.useState(false);
  const [submitConfirmOpen, setSubmitConfirmOpen] = React.useState(false);
-  const [pendingValues, setPendingValues] = React.useState<PurchaseRequestFormValues | null>(null);
-  const { playSound } = useAudioFeedback();
-  const [idempotencyKey] = React.useState(() => crypto.randomUUID());
+ const [pendingValues, setPendingValues] = React.useState<PurchaseRequestFormValues | null>(null);
+ const { playSound } = useAudioFeedback();
+ const [idempotencyKey] = React.useState(() => crypto.randomUUID());
 
-  const status = initialData?.status as DocumentStatus;
-  const isLocked = isDocumentLocked('PR', status);
+ const status = initialData?.status as DocumentStatus;
+ const isLocked = isDocumentLocked('PR', status);
 
-  // Mocks/Hooks for data selection
+ // Mocks/Hooks for data selection
  const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
  const { data: itemsData } = useMasterDataList('items', ItemSchema);
 
-  const createPR = useCreatePR();
-  const updatePR = useUpdatePR({ onConflict });
-  const submitPR = useSubmitPR({ onConflict });
+ const createPR = useCreatePR();
+ const updatePR = useUpdatePR({ onConflict });
+ const submitPR = useSubmitPR({ onConflict });
 
  const form = useForm<PurchaseRequestFormValues>({
  resolver: zodResolver(formSchema),
@@ -114,64 +114,64 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  req_qty: 1,
  uom_id: item.primaryUom?.id || 'EA',
  });
-  playSound('success');
-  toast.success(tc('items') + ': ' + item.name);
-  } else {
-    playSound('error');
-    toast.error(tc('not_found'));
-  }
+ playSound('success');
+ toast.success(tc('items') + ': ' + item.name);
+ } else {
+  playSound('error');
+  toast.error(tc('not_found'));
+ }
  };
 
-  const onSave = async (values: PurchaseRequestFormValues, submitAfterSave = false) => {
-    setIsSubmitting(true);
-    try {
-      let prId = initialData?.id;
-      
-      const selectedWh = warehouses?.data?.find((w: Warehouse) => w.id === values.department_id);
-      const branchId = selectedWh?.branchId || '';
+ const onSave = async (values: PurchaseRequestFormValues, submitAfterSave = false) => {
+  setIsSubmitting(true);
+  try {
+   let prId = initialData?.id;
+   
+   const selectedWh = warehouses?.data?.find((w: Warehouse) => w.id === values.department_id);
+   const branchId = selectedWh?.branchId || '';
 
-      const payload = {
-        branchId,
-        warehouseId: values.department_id,
-        notes: values.notes || '',
-        lines: values.lines.map(l => ({
-          id: l.id,
-          itemId: l.item_id,
-          quantity: l.req_qty,
-        }))
-      };
+   const payload = {
+    branchId,
+    warehouseId: values.department_id,
+    notes: values.notes || '',
+    lines: values.lines.map(l => ({
+     id: l.id,
+     itemId: l.item_id,
+     quantity: l.req_qty,
+    }))
+   };
 
-      if (prId) {
-        await updatePR.mutateAsync({ 
-          id: prId, 
-          payload: { ...payload, version: initialData?.version ?? 0 } 
-        });
-      } else {
-        const res = await createPR.mutateAsync({
-          payload,
-          headers: { 'X-Idempotency-Key': idempotencyKey }
-        });
-        prId = res.id;
-      }
+   if (prId) {
+    await updatePR.mutateAsync({ 
+     id: prId, 
+     payload: { ...payload, version: initialData?.version ?? 0 } 
+    });
+   } else {
+    const res = await createPR.mutateAsync({
+     payload,
+     headers: { 'X-Idempotency-Key': idempotencyKey }
+    });
+    prId = res.id;
+   }
 
-  if (submitAfterSave && prId) {
-  const currentVersion = initialData ? ((initialData.version ?? 0) + 1) : 1;
-  await submitPR.mutateAsync({ id: prId, version: currentVersion });
+ if (submitAfterSave && prId) {
+ const currentVersion = initialData ? ((initialData.version ?? 0) + 1) : 1;
+ await submitPR.mutateAsync({ id: prId, version: currentVersion });
+ playSound('success');
+ toast.success(t('submit_success'));
+ } else {
   playSound('success');
-  toast.success(t('submit_success'));
-  } else {
-    playSound('success');
-    toast.success(tc('save') + ' ' + tc('completed'));
-  }
+  toast.success(tc('save') + ' ' + tc('completed'));
+ }
 
  router.push('/purchase-requests');
-  } catch (error) {
-  console.error(error);
-  playSound('error');
-  toast.error(tc('error'));
+ } catch (error) {
+ console.error(error);
+ playSound('error');
+ toast.error(tc('error'));
  } finally {
-  setIsSubmitting(false);
-  setSubmitConfirmOpen(false);
+ setIsSubmitting(false);
+ setSubmitConfirmOpen(false);
  }
  };
 
@@ -182,7 +182,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  return (
  <Form {...form}>
- <form onSubmit={form.handleSubmit((v) => onSave(v, false), onFormError)} className="space-y-10 w-full bg-surface-container-lowest p-8 rounded-[2rem] relative pb-20">
+ <form onSubmit={form.handleSubmit((v) => onSave(v, false), onFormError)} className="w-full flex flex-col">
  <div className="flex items-center justify-between">
  <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">{t('detail_title')}</h3>
  {initialData?.documentNumber && (
@@ -193,7 +193,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  </div>
  
  {/* Step 1: Request Header */}
- <div className="bg-surface-container-low p-8 rounded-[2rem] relative">
+ <div className="bg-card border border-border shadow-sm p-8 rounded-[2rem] relative">
  <div className="flex items-center gap-4 mb-8 pb-6 border-none">
  <div className="p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan">
  <Building2 className="w-5 h-5" />
@@ -204,66 +204,66 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  </div>
  </div>
  
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+ 
  <FormField<PurchaseRequestFormValues, 'department_id'>
  control={form.control}
  name="department_id"
  render={({ field }) => (
- <FormItem>
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 flex items-center gap-2 ps-1">
+ <FormItem className="col-span-1 md:col-span-4 w-full">
+ <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-2 ps-1">
  <Package className="w-3 h-3" />
  {t('department')}
  </FormLabel>
  <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
- <SelectTrigger className="bg-surface-container-lowest border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30">
+ <SelectTrigger className={form.formState.errors.department_id ? "border-red-500 focus:ring-red-500" : ""}>
  <SelectValue placeholder={tc('select_warehouse')} />
  </SelectTrigger>
  </FormControl>
- <SelectContent className="bg-surface-container-low border-none rounded-2xl">
+ <SelectContent>
  {warehouses?.data?.map((w: Warehouse) => (
- <SelectItem key={w.id} value={w.id} className="text-label-xs font-bold">
+ <SelectItem key={w.id} value={w.id}>
  {w.name}
  </SelectItem>
  ))}
  </SelectContent>
  </Select>
- <FormMessage className="text-label-xxs font-semibold uppercase" />
+ <FormMessage className="text-xs text-red-500 mt-1" />
  </FormItem>
  )}
  />
 
-  <FormField<PurchaseRequestFormValues, 'expected_date'>
-  control={form.control}
-  name="expected_date"
-  render={({ field }) => (
-  <FormItem>
-  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 flex items-center gap-2 ps-1">
-  <Calendar className="w-3 h-3" />
-  {t('expected_date')}
-  </FormLabel>
-  <FormControl>
-  <Input type="date" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
-  </FormControl>
-  <FormMessage className="text-label-xxs font-semibold uppercase" />
-  </FormItem>
-  )}
-  />
+ <FormField<PurchaseRequestFormValues, 'expected_date'>
+ control={form.control}
+ name="expected_date"
+ render={({ field }) => (
+ <FormItem className="col-span-1 md:col-span-4 w-full">
+ <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-2 ps-1">
+ <Calendar className="w-3 h-3" />
+ {t('expected_date')}
+ </FormLabel>
+ <FormControl>
+ <Input type="date" className={form.formState.errors.expected_date ? "border-red-500 focus:ring-red-500" : ""} {...field} disabled={isLocked} />
+ </FormControl>
+ <FormMessage className="text-xs text-red-500 mt-1" />
+ </FormItem>
+ )}
+ />
 
-  <FormField<PurchaseRequestFormValues, 'notes'>
-  control={form.control}
-  name="notes"
-  render={({ field }) => (
-  <FormItem className="lg:col-span-3">
-  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
-  <FormControl>
-  <Input placeholder={tc('notes')} className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
-  </FormControl>
-  <FormMessage className="text-label-xxs font-semibold uppercase" />
-  </FormItem>
-  )}
-  />
- </div>
+ <FormField<PurchaseRequestFormValues, 'notes'>
+ control={form.control}
+ name="notes"
+ render={({ field }) => (
+ <FormItem className="col-span-1 md:col-span-4 w-full">
+ <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 ps-1 block">{tc('notes')}</FormLabel>
+ <FormControl>
+ <Input placeholder={tc('notes')} className={form.formState.errors.notes ? "border-red-500 focus:ring-red-500" : ""} {...field} disabled={isLocked} />
+ </FormControl>
+ <FormMessage className="text-xs text-red-500 mt-1" />
+ </FormItem>
+ )}
+ />
+ 
  </div>
 
  {/* Step 2: Line Items */}
@@ -301,13 +301,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  <div className="grid grid-cols-1 gap-4">
  {fields.map((field, index) => (
- <div key={field.id} className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_auto] gap-6 items-end bg-surface-container-low/50 p-6 rounded-2xl group hover:bg-surface-container transition-all">
+ <div key={field.id} className="grid grid-cols-12 gap-6 items-end bg-card border border-border shadow-sm p-6 rounded-md group hover:bg-muted dark:hover:bg-neutral-900 transition-all">
  <FormField<PurchaseRequestFormValues, `lines.${number}.item_id`>
  control={form.control}
  name={`lines.${index}.item_id`}
  render={({ field: inputField }) => (
- <FormItem>
- <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-2">{tc('item')}</FormLabel>
+ <FormItem className="col-span-1 md:col-span-5 w-full">
+ <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{tc('item')}</FormLabel>
  <Select 
  onValueChange={(val) => {
  const item = itemsData?.data?.find((i: Item) => i.id === val);
@@ -319,19 +319,19 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  value={inputField.value}
  >
  <FormControl>
- <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30">
+ <SelectTrigger className={form.formState.errors.lines?.[index]?.item_id ? "border-red-500 focus:ring-red-500" : ""}>
  <SelectValue placeholder={tc('select_item')} />
  </SelectTrigger>
  </FormControl>
- <SelectContent className="bg-surface-container-low border-none rounded-2xl max-h-[300px]">
+ <SelectContent className="max-h-[300px]">
  {itemsData?.data?.map((i: Item) => (
- <SelectItem key={i.id} value={i.id} className="text-label-xs font-bold">
+ <SelectItem key={i.id} value={i.id}>
  {i.code} - {i.name}
  </SelectItem>
  ))}
  </SelectContent>
  </Select>
- <FormMessage className="text-label-xxs font-semibold" />
+ <FormMessage className="text-xs text-red-500 mt-1" />
  </FormItem>
  )}
  />
@@ -340,19 +340,19 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  control={form.control}
  name={`lines.${index}.req_qty`}
  render={({ field: inputField }) => (
- <FormItem>
- <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-2">{t('requested_qty')}</FormLabel>
+ <FormItem className="col-span-1 md:col-span-3 w-full">
+ <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{t('requested_qty')}</FormLabel>
  <FormControl>
  <Input 
  type="number" 
  step="0.01"
- className="bg-surface-container-low border-none h-11 rounded-xl font-mono font-semibold text-label-xs focus-visible:ring-operational-cyan/30" 
+ className={form.formState.errors.lines?.[index]?.req_qty ? "border-red-500 focus:ring-red-500" : ""}
  dir="ltr"
  {...inputField} 
  onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
  />
  </FormControl>
- <FormMessage />
+ <FormMessage className="text-xs text-red-500 mt-1" />
  </FormItem>
  )}
  />
@@ -361,25 +361,27 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  control={form.control}
  name={`lines.${index}.uom_id`}
  render={({ field: inputField }) => (
- <FormItem>
- <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-2">{tc('uom')}</FormLabel>
+ <FormItem className="col-span-1 md:col-span-3 w-full">
+ <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{tc('uom')}</FormLabel>
  <FormControl>
- <Input disabled className="bg-surface-container-high/10 border-none h-11 rounded-xl font-semibold text-label-xs uppercase opacity-50" {...inputField} />
+ <Input disabled className="opacity-50 cursor-not-allowed w-full h-10" {...inputField} />
  </FormControl>
- <FormMessage />
+ <FormMessage className="text-xs text-red-500 mt-1" />
  </FormItem>
  )}
  />
 
+ <div className="col-span-12 md:col-span-1 flex justify-end pb-1">
  <Button 
  type="button" 
  variant="ghost" 
  size="icon" 
- className="w-10 h-10 rounded-xl text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 transition-all border-none"
+ className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
  onClick={() => remove(index)}
  >
  <Trash2 className="h-4 w-4" />
  </Button>
+ </div>
  </div>
  ))}
  {fields.length === 0 && (
@@ -390,7 +392,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  </div>
  
  {/* Summary */}
- <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-8 bg-surface-container-low rounded-[2rem]">
+ <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-8 bg-card border border-border shadow-sm rounded-[2rem]">
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 rounded-2xl bg-operational-cyan/10 flex items-center justify-center">
  <Package className="w-6 h-6 text-operational-cyan" />
@@ -404,38 +406,35 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  </div>
 
  {/* Footer Actions */}
- <div className="flex flex-col md:flex-row items-center justify-end gap-6 pt-12 mt-12 border-none">
-  <Button
-    variant="ghost"
-    type="button"
-    onClick={() => router.back()}
-    disabled={isSubmitting}
-    className="text-label-xs font-black uppercase tracking-widest text-muted-foreground/40 hover:text-foreground hover:bg-surface-container-high/50 h-14 px-10 rounded-2xl transition-all"
-  >
-    <ArrowLeft className="w-5 h-5 me-3" />
-    {tc('cancel')}
-  </Button>
+ <div className="w-full flex items-center justify-end gap-4 mt-8 pt-4 border-t border-border">
+ <Button
+  variant="ghost"
+  type="button"
+  onClick={() => router.back()}
+  disabled={isSubmitting}
+  className="h-10 px-8 text-label-xs font-semibold uppercase rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all text-muted-foreground"
+ >
+  {tc('cancel')}
+ </Button>
  
-  <div className="flex items-center gap-4 w-full md:w-auto">
-   <Button
-     type="submit"
-     isLoading={isSubmitting || createPR.isPending || updatePR.isPending}
-     variant="outline"
-     className="flex-1 md:flex-none h-14 px-10 border-none bg-surface-container-low text-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
-   >
-     <Save className="w-5 h-5 me-3" />
-     {tc('save')}
-   </Button>
-   <Button
-     type="button"
-     isLoading={isSubmitting || submitPR.isPending}
-     onClick={form.handleSubmit(handleSubmitClick, onFormError)}
-     className="flex-1 md:flex-none h-14 px-12 bg-operational-cyan hover:brightness-110 text-primary-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95 shadow-2xl shadow-operational-cyan/30"
-   >
-     <Send className="w-5 h-5 me-3" />
-     {t('submit')}
-   </Button>
-  </div>
+  <Button
+   type="submit"
+   isLoading={isSubmitting || createPR.isPending || updatePR.isPending}
+   variant="outline"
+   className="h-10 px-8 bg-transparent border border-border text-foreground text-label-xs font-semibold uppercase rounded-md hover:bg-muted dark:hover:bg-neutral-900 transition-all shadow-sm"
+  >
+   <Save className="w-4 h-4 me-2" />
+   {tc('save')}
+  </Button>
+  <Button
+   type="button"
+   isLoading={isSubmitting || submitPR.isPending}
+   onClick={form.handleSubmit(handleSubmitClick, onFormError)}
+   className="h-10 px-8 bg-brand-gold hover:bg-brand-gold-hover text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm focus-visible:ring-1 focus-visible:ring-brand-gold"
+  >
+   <Send className="w-4 h-4 me-2" />
+   {t('submit')}
+  </Button>
  </div>
  </form>
  <PostConfirmDialog

@@ -15,15 +15,15 @@ export default async function EditWarehousePage(props: { params: Promise<{ local
  setRequestLocale(params.locale);
  const t = await getTranslations({ locale: params.locale, namespace: 'master_data.warehouses' });
 
-  return (
-    <ProtectedRoute requiredAction="edit" requiredResource="master_data_warehouses">
-      <WarehouseFormClient 
-        id={params.id} 
-        createTitle={t('create_title')} 
-        editTitle={t('edit_title')} 
-        viewTitle={t('view_title')}
-        isReadOnly={false}
-      />
-    </ProtectedRoute>
-  );
+ return (
+  <ProtectedRoute requiredAction="edit" requiredResource="master_data_warehouses">
+   <WarehouseFormClient 
+    id={params.id} 
+    createTitle={t('create_title')} 
+    editTitle={t('edit_title')} 
+    viewTitle={t('view_title')}
+    isReadOnly={false}
+   />
+  </ProtectedRoute>
+ );
 }

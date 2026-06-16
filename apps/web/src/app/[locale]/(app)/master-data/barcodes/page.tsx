@@ -19,7 +19,7 @@ export default async function BarcodesPage(props: { params: Promise<{ locale: st
  
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">
- <div className="flex flex-col gap-6">
+ <div className="flex flex-col gap-6 min-w-0">
  <PageHeader 
  title={t('title')} 
  description={t('description')}

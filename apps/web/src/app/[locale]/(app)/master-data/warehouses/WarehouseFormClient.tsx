@@ -74,7 +74,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
       disabled: isReadOnly,
       defaultValues: { branchId: '', code: '', name: '', isActive: true, version: undefined },
     });
-  
+
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'isActive' });
@@ -111,9 +111,9 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   // 2. Not Found State (Smart 404)
   if (id && isFetched && !data) {
     return (
-      <ErrorState 
-        type="not_found" 
-        onRetry={() => guardedRouter.push('/master-data/warehouses', { skipGuard: true })} 
+      <ErrorState
+        type="not_found"
+        onRetry={() => guardedRouter.push('/master-data/warehouses', { skipGuard: true })}
       />
     );
   }
@@ -121,16 +121,16 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   // 3. Server Error State
   if (isError || isErrorBranches) {
     return (
-      <ErrorState 
-        type="server_error" 
-        onRetry={() => refetch()} 
+      <ErrorState
+        type="server_error"
+        onRetry={() => refetch()}
       />
     );
   }
 
   const onValid = (values: WarehouseFormValues) => {
     if (isReadOnly) return;
-    
+
     const payload = {
       branchId: values.branchId,
       code: values.code || undefined,
@@ -140,13 +140,13 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
 
     if (id) {
       update.mutate(
-        { 
-          id, 
+        {
+          id,
           values: {
             ...payload,
             version: values.version || undefined,
           },
-          signal: abortController.signal 
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -161,9 +161,9 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
       );
     } else {
       create.mutate(
-        { 
-          ...payload, 
-          signal: abortController.signal 
+        {
+          ...payload,
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -206,162 +206,141 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const isSaving = create.isPending || update.isPending || archiveWarehouse.isPending;
 
   // Determine the display title
-  const displayTitle = id 
+  const displayTitle = id
     ? (isReadOnly ? (viewTitle || tw('view_title')) : editTitle)
     : createTitle;
 
   return (
     <>
-    <MasterDataFormLayout 
-      title={displayTitle} 
-      backHref='/master-data/warehouses' 
-      isSaving={isSaving} 
-      saveDisabled={conflict.saveDisabled}
-      onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/warehouses', { skipGuard: true })}
-      hideSave={isReadOnly}
-      isDirty={isDirty}
-      isValid={isValid}
-      headerActions={
-        id && !isReadOnly && (
-          <PermissionGate action="delete" resource="master_data_warehouses">
-            <div className="flex items-center gap-2">
-              {(data as { has_stock?: boolean } | null)?.has_stock && (
-                <span className="text-[10px] uppercase font-bold text-status-warning bg-status-warning/10 px-2 py-1 rounded">
-                  {tw('contains_stock_warning', { defaultValue: 'Contains Stock' })}
-                </span>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isSaving || (data as { has_stock?: boolean } | null)?.has_stock}
-                title={(data as { has_stock?: boolean } | null)?.has_stock ? 'Cannot archive: warehouse contains active stock' : 'Archive warehouse'}
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
+      <MasterDataFormLayout
+        title={displayTitle}
+        backHref='/master-data/warehouses'
+        isSaving={isSaving}
+        saveDisabled={conflict.saveDisabled}
+        onSubmit={onSubmit}
+        onCancel={() => guardedRouter.push('/master-data/warehouses', { skipGuard: true })}
+        hideSave={isReadOnly}
+        isDirty={isDirty}
+        isValid={isValid}
+        headerActions={
+          id && !isReadOnly && (
+            <PermissionGate action="delete" resource="master_data_warehouses">
+              <div className="flex items-center gap-2">
+                {(data as { has_stock?: boolean } | null)?.has_stock && (
+                  <span className="text-[10px] uppercase font-bold text-status-warning bg-status-warning/10 px-2 py-1 rounded">
+                    {tw('contains_stock_warning', { defaultValue: 'Contains Stock' })}
+                  </span>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isSaving || (data as { has_stock?: boolean } | null)?.has_stock}
+                  title={(data as { has_stock?: boolean } | null)?.has_stock ? 'Cannot archive: warehouse contains active stock' : 'Archive warehouse'}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </div>
+            </PermissionGate>
+          )
+        }
+      >
+        <div className="col-span-12 w-full max-w-3xl mx-auto flex flex-col gap-8 p-6 bg-card border border-border rounded-xl mt-6">
+          {/* Details Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Warehouse className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{tw('title')}</h3>
             </div>
-          </PermissionGate>
-        )
-      }
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <Warehouse className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{tw('title')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">
-                    {tw('description')}
-                  </p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label htmlFor="wh-branch" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                    {tw('fields.branch')}
-                  </Label>
-                  <Controller
-                    name="branchId"
-                    control={control}
-                    render={({ field }) => (
-                      <SmartCombobox
-                        disabled={isReadOnly}
-                        value={field.value}
-                        onSelect={(item) => field.onChange(item.id)}
-                        items={branchItems}
-                        placeholder={t('null_select')}
-                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-                      />
-                    )}
-                  />
-                  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.branchId.message as never)}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="wh-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                    {tw('fields.code')}
-                  </Label>
-                  <Input 
-                    id="wh-code" 
-                    dir="ltr" 
-                    {...register('code')} 
-                    disabled={isReadOnly}
-                    className="font-mono font-semibold uppercase text-status-active"
-                    placeholder={tw('code_placeholder')}
-                  />
-                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="wh-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                    {tw('fields.name_en')} {/* Use generic name translation if available, else keep name_en/name_ar fallback or create a new one */}
-                  </Label>
-                  <Input 
-                    id="wh-name" 
-                    {...register('name')} 
-                    disabled={isReadOnly}
-                    className="font-semibold" 
-                  />
-                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-
-        </div>
-
-        <div className="space-y-8">
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('status')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">
-                    {t('operational_status')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
-                <div className="space-y-1">
-                  <Label htmlFor="wh-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tw('fields.is_active')}</Label>
-                  <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>
-                    {isActive ? t('active') : t('inactive')}
-                  </p>
-                </div>
+            <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6">
+              {/* Branch */}
+              <div className="col-span-1 md:col-span-6 w-full text-start">
+                <Label htmlFor="wh-branch" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+                  {tw('fields.branch')}
+                </Label>
                 <Controller
+                  name="branchId"
                   control={control}
-                  name="isActive"
                   render={({ field }) => (
-                    <Switch 
-                      id="wh-active" 
-                      checked={field.value ?? true} 
-                      onCheckedChange={(v: boolean) => !isReadOnly && field.onChange(v)} 
+                    <SmartCombobox
                       disabled={isReadOnly}
-                      className="data-[state=checked]:bg-status-active"
+                      value={field.value}
+                      onSelect={(item) => field.onChange(item.id)}
+                      items={branchItems}
+                      placeholder={t('null_select')}
+                      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
                     />
                   )}
                 />
+                {errors.branchId && <p className="text-xs text-red-500 mt-1">{tv(errors.branchId.message as never)}</p>}
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Code */}
+              <div className="col-span-1 md:col-span-6 w-full text-start">
+                <Label htmlFor="wh-code" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+                  {tw('fields.code')}
+                </Label>
+                <Input
+                  id="wh-code"
+                  dir="ltr"
+                  {...register('code')}
+                  disabled={isReadOnly}
+                  className="font-mono font-semibold uppercase text-status-active w-full h-10"
+                  placeholder={tw('code_placeholder')}
+                />
+                {errors.code && <p className="text-xs text-red-500 mt-1">{tv(errors.code.message as never)}</p>}
+              </div>
+
+              {/* Name */}
+              <div className="col-span-1 md:col-span-12 w-full text-start">
+                <Label htmlFor="wh-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+                  {tw('fields.name_en')}
+                </Label>
+                <Input
+                  id="wh-name"
+                  {...register('name')}
+                  disabled={isReadOnly}
+                  className="font-semibold w-full h-10"
+                />
+                {errors.name && <p className="text-xs text-red-500 mt-1">{tv(errors.name.message as never)}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Status Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Activity className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{t('status')}</h3>
+            </div>
+
+            <div className="flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors hover:bg-muted/30">
+              <div className="flex flex-col space-y-1 text-start min-w-0">
+                <span className="text-sm font-medium text-text-main dark:text-white">{tw('fields.is_active')}</span>
+                <span className="text-xs text-muted-foreground dark:text-gray-400">
+                  {isActive ? t('active') : t('inactive')}
+                </span>
+              </div>
+              <Controller
+                control={control}
+                name="isActive"
+                render={({ field }) => (
+                  <Switch
+                    id="wh-active"
+                    checked={field.value ?? true}
+                    onCheckedChange={(v: boolean) => !isReadOnly && field.onChange(v)}
+                    disabled={isReadOnly}
+                    activeClassName="bg-status-active"
+                  />
+                )}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </MasterDataFormLayout>
+      </MasterDataFormLayout>
 
       <ConflictDialog
         open={conflict.open}

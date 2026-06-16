@@ -28,7 +28,7 @@ export default async function EditBarcodePage({ params }: Props) {
  id={id}
  createTitle={t('create_title')}
  editTitle={t('edit_title')}
-  viewTitle={t('view_title')}
+ viewTitle={t('view_title')}
  locale={locale}
  />
  </ProtectedRoute>

@@ -12,22 +12,21 @@ import { ImportWizardState, ValidationError } from '../types';
 
 interface Step2ValidateProps {
  wizard: ImportWizardState;
- locale: string;
 }
 
-export function Step2Validate({ wizard, locale }: Step2ValidateProps) {
+export function Step2Validate({ wizard }: Step2ValidateProps) {
  const t = useTranslations('master_data.import');
  const tc = useTranslations('common');
 
  useEffect(() => {
-  // Trigger validation once
-  if (wizard.data.length > 0 && !wizard.isValidating && wizard.errors.length === 0) {
-   const results = validateImportData(wizard.importType, wizard.data);
-   // Wait a bit to show the animation (for UX)
-   setTimeout(() => {
-    wizard.setValidationResults(results.errors);
-   }, 1500);
-  }
+ // Trigger validation once
+ if (wizard.data.length > 0 && !wizard.isValidating && wizard.errors.length === 0) {
+  const results = validateImportData(wizard.importType, wizard.data);
+  // Wait a bit to show the animation (for UX)
+  setTimeout(() => {
+  wizard.setValidationResults(results.errors);
+  }, 1500);
+ }
  }, []);
 
 
@@ -107,12 +106,12 @@ export function Step2Validate({ wizard, locale }: Step2ValidateProps) {
  className="flex-1 h-14 rounded-2xl border-muted-foreground/10 hover:bg-muted-foreground/5"
  onClick={wizard.reset}
  >
- <ArrowLeft className={cn("w-4 h-4", locale === 'ar' ? "ml-2" : "mr-2")} />
+ <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
  {tc('cancel')}
  </Button>
  <Button 
  className={cn(
- "flex-1 h-14 rounded-2xl font-semibold uppercase text-label-xs shadow-lg transition-all active:scale-95",
+ "flex-1 h-14 rounded-2xl font-semibold uppercase text-label-xs shadow-sm transition-all active:scale-95",
  errorCount > 0 
  ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" 
  : "bg-cyan-500 hover:bg-cyan-600 shadow-cyan-500/20 text-white"
@@ -120,7 +119,7 @@ export function Step2Validate({ wizard, locale }: Step2ValidateProps) {
  onClick={wizard.nextStep}
  >
  {errorCount > 0 ? t('error_step') : t('commit_step')}
- <ArrowRight className={cn("w-4 h-4", locale === 'ar' ? "mr-2 rotate-180" : "ml-2")} />
+ <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
  </Button>
  </div>
  </Card>

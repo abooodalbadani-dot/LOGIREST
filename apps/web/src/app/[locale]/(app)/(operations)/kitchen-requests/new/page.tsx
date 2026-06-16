@@ -3,14 +3,14 @@ import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { KitchenRequestFormClient } from './KitchenRequestFormClient';
 
 export default async function NewKitchenRequestPage({
-  params,
+ params,
 }: {
-  params: Promise<{ locale: string }>;
+ params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  return (
-    <ProtectedRoute requiredAction="create" requiredResource="issue">
-      <KitchenRequestFormClient locale={locale as 'ar' | 'en'} />
-    </ProtectedRoute>
-  );
+ const { locale } = await params;
+ return (
+  <ProtectedRoute requiredAction="create" requiredResource="issue">
+   <KitchenRequestFormClient locale={locale as 'ar' | 'en'} />
+  </ProtectedRoute>
+ );
 }

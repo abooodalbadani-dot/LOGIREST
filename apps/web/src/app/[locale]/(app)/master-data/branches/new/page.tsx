@@ -15,16 +15,16 @@ export default async function NewBranchPage(props: { params: Promise<{ locale: s
  setRequestLocale(params.locale);
  const t = await getTranslations({ locale: params.locale, namespace: 'master_data.branches' });
 
-  return (
-    <ProtectedRoute requiredAction="create" requiredResource="master_data_branches">
-      <BranchFormClient 
-        id={null} 
-        locale={params.locale} 
-        createTitle={t('create_title')} 
-        editTitle={t('edit_title')} 
-        viewTitle={t('view_title')}
-        isReadOnly={false}
-      />
-    </ProtectedRoute>
-  );
+ return (
+  <ProtectedRoute requiredAction="create" requiredResource="master_data_branches">
+   <BranchFormClient 
+    id={null} 
+    locale={params.locale} 
+    createTitle={t('create_title')} 
+    editTitle={t('edit_title')} 
+    viewTitle={t('view_title')}
+    isReadOnly={false}
+   />
+  </ProtectedRoute>
+ );
 }

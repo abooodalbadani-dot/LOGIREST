@@ -68,30 +68,30 @@ export default function StockMovementsClient() {
  { header: t('table.user'), key: 'user', width: 20 },
  ];
 
-  return (
-  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-  <PageHeader 
-  title={t('movements')}
-  subtitle={t('movements_desc')}
-  backHref="/reports"
-  />
+ return (
+ <div className="min-w-0 gap-6 flex-1 fade-in space-y-8 slide-in-from-bottom-4 animate-in flex-col flex duration-700 w-full">
+ <PageHeader 
+ title={t('movements')}
+ subtitle={t('movements_desc')}
+ backHref="/reports"
+ />
 
-  <DataTable
-  data={data || []}
-  columns={columns}
-  isLoading={isLoading}
-  exportComponent={
-  <ReportExportMenu 
-  columns={exportColumns}
-  data={data || []}
-  filename="Stock_Movements_Report"
-  title={t('movements')}
-  exportRoute="/reports/movements/export"
-  countCheckParams={{ type: 'movements' }}
-  />
-  }
-  collectionName="reports"
-  />
-  </div>
+ <DataTable
+ data={data || []}
+ columns={columns}
+ isLoading={isLoading}
+ exportComponent={
+ <ReportExportMenu 
+ columns={exportColumns}
+ data={data || []}
+ filename="Stock_Movements_Report"
+ title={t('movements')}
+ exportRoute="/reports/movements/export"
+ countCheckParams={{ type: 'movements' }}
+ />
+ }
+ collectionName="reports"
+ />
+ </div>
  );
 }

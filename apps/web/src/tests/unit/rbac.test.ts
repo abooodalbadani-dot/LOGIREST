@@ -11,6 +11,9 @@ describe('PERMISSION_MATRIX', () => {
   
   it('WH_KEEPER can count stocktake', () => expect(PERMISSION_MATRIX.WH_KEEPER?.stocktake ?? []).toContain('count'));
   it('WH_KEEPER cannot approve stocktake', () => expect(PERMISSION_MATRIX.WH_KEEPER?.stocktake ?? []).not.toContain('approve'));
+  it('WH_KEEPER can view inventory_lots', () => expect(PERMISSION_MATRIX.WH_KEEPER?.inventory_lots ?? []).toContain('view'));
+  it('WH_KEEPER can view inventory_movements', () => expect(PERMISSION_MATRIX.WH_KEEPER?.inventory_movements ?? []).toContain('view'));
+  it('WH_KEEPER can create procurement_grn', () => expect(PERMISSION_MATRIX.WH_KEEPER?.procurement_grn ?? []).toContain('create'));
   it('INV_MGR can review_variance stocktake', () => expect(PERMISSION_MATRIX.INV_MGR?.stocktake ?? []).toContain('review_variance'));
   it('ADMIN can close stocktake', () => expect(PERMISSION_MATRIX.ADMIN?.stocktake ?? []).toContain('close'));
 });

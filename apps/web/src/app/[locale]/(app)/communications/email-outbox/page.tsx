@@ -19,7 +19,7 @@ export default async function EmailOutboxPage(props: { params: Promise<{ locale:
 
  return (
  <ProtectedRoute requiredAction="view" requiredResource="admin">
- <div className="flex flex-col gap-6">
+ <div className="flex flex-col gap-6 min-w-0">
  <PageHeader 
  title={t('outbox')} 
  description={t('outbox_page_desc')}

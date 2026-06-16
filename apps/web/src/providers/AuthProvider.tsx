@@ -4,7 +4,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { apiClient, normalizeKeysToCamelCase } from '@/lib/api/client';
-import { getTokenCookie, setTokenCookie, deleteTokenCookie } from '@/lib/api/cookies';
+import { getTokenCookie, setTokenCookie, deleteTokenCookie, getLoggedInCookie } from '@/lib/api/cookies';
 import { AuthUserSchema } from '@/types/auth';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import type { ApiError } from '@/types/api';
@@ -130,11 +130,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const storedToken = getTokenCookie();
     const storedScope = localStorage.getItem('logirest_active_scope');
 
     const verifyTokenAndLoad = async () => {
-      if (!storedToken) {
+      const storedToken = getTokenCookie();
+      const hasLoginFlag = getLoggedInCookie();
+      if (!storedToken && !hasLoginFlag) {
         setIsLoading(false);
         return;
       }
@@ -161,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           document.cookie = `theme=${finalUser.themePreferences}; path=/; max-age=31536000; SameSite=Lax`;
         }
         setUser(finalUser);
-        setToken(storedToken);
+        setToken(storedToken || 'present');
 
         if (storedScope) {
           try {

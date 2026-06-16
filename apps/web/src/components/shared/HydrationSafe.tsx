@@ -10,19 +10,19 @@ import * as React from 'react';
  * or non-deterministic data (e.g., random IDs, dates generated on render).
  */
 export function HydrationSafe({ children, fallback = null }: { 
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+ children: React.ReactNode;
+ fallback?: React.ReactNode;
 }) {
-  const [isMounted, setIsMounted] = React.useState(false);
+ const [isMounted, setIsMounted] = React.useState(false);
 
-  React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-  }, []);
+ React.useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setIsMounted(true);
+ }, []);
 
-  if (!isMounted) {
-    return <>{fallback}</>;
-  }
+ if (!isMounted) {
+  return <>{fallback}</>;
+ }
 
-  return <>{children}</>;
+ return <>{children}</>;
 }

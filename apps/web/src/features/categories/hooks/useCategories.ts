@@ -12,87 +12,87 @@ import { z } from 'zod';
 const QUERY_KEY = ['categories'];
 
 export function useCategories(filters?: { search?: string }) {
-  return useQuery({
-    queryKey: [...QUERY_KEY, filters],
-    placeholderData: { data: [], meta: { total: 0, page: 1, pageSize: 50, totalPages: 0 } },
-    queryFn: ({ signal }) => {
-      const params = new URLSearchParams();
-      if (filters?.search) params.append('search', filters.search);
+ return useQuery({
+  queryKey: [...QUERY_KEY, filters],
+  placeholderData: { data: [], meta: { total: 0, page: 1, pageSize: 50, totalPages: 0 } },
+  queryFn: ({ signal }) => {
+   const params = new URLSearchParams();
+   if (filters?.search) params.append('search', filters.search);
 
-      return apiClient.get(`/categories${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(CategorySchema), { signal });
-    },
-    staleTime: 60_000,
-  });
+   return apiClient.get(`/categories${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(CategorySchema), { signal });
+  },
+  staleTime: 60_000,
+ });
 }
 
 export function useCategory(id: string | null) {
-  return useQuery({
-    queryKey: [...QUERY_KEY, id],
-    queryFn: ({ signal }) => {
-      if (!id) return null;
-      return apiClient.get(`/categories/${id}`, CategorySchema, { signal });
-    },
-    enabled: !!id && id !== 'undefined' && id !== 'null',
-  });
+ return useQuery({
+  queryKey: [...QUERY_KEY, id],
+  queryFn: ({ signal }) => {
+   if (!id) return null;
+   return apiClient.get(`/categories/${id}`, CategorySchema, { signal });
+  },
+  enabled: !!id && id !== 'undefined' && id !== 'null',
+ });
 }
 
 export function useCreateCategory() {
-  const queryClient = useQueryClient();
-  const t = useTranslations('master_data.categories');
+ const queryClient = useQueryClient();
+ const t = useTranslations('master_data.categories');
 
-  return useMutation({
-    mutationFn: ({ values, signal }: { values: CategoryFormValues; signal?: AbortSignal }) => {
-      return apiClient.post('/categories', CategorySchema, values, { signal });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success(t('created_success'));
-    },
-    onError: (error: unknown) => {
-      if (error instanceof Error && error.name === 'AbortError') return;
-      toast.error(t('errors.create_failed'));
-    }
-  });
+ return useMutation({
+  mutationFn: ({ values, signal }: { values: CategoryFormValues; signal?: AbortSignal }) => {
+   return apiClient.post('/categories', CategorySchema, values, { signal });
+  },
+  onSuccess: () => {
+   queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+   toast.success(t('created_success'));
+  },
+  onError: (error: unknown) => {
+   if (error instanceof Error && error.name === 'AbortError') return;
+   toast.error(t('errors.create_failed'));
+  }
+ });
 }
 
 export function useUpdateCategory(options?: { onConflict?: () => void }) {
-  const queryClient = useQueryClient();
-  const t = useTranslations('master_data.categories');
+ const queryClient = useQueryClient();
+ const t = useTranslations('master_data.categories');
 
-  return useSafeMutation({
-    onConflict: options?.onConflict,
-    meta: { suppressGlobalConflict: true },
-    mutationFn: ({ id, values, signal }: { id: string; values: CategoryFormValues; signal?: AbortSignal }) => {
-      return apiClient.put(`/categories/${id}`, CategorySchema, values, { signal });
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      queryClient.setQueryData([...QUERY_KEY, data.id], data);
-      toast.success(t('updated_success'));
-    },
-    onError: (error: unknown) => {
-      if (error instanceof Error && error.name === 'AbortError') return;
-      toast.error(t('errors.update_failed'));
-    }
-  });
+ return useSafeMutation({
+  onConflict: options?.onConflict,
+  meta: { suppressGlobalConflict: true },
+  mutationFn: ({ id, values, signal }: { id: string; values: CategoryFormValues; signal?: AbortSignal }) => {
+   return apiClient.put(`/categories/${id}`, CategorySchema, values, { signal });
+  },
+  onSuccess: (data) => {
+   queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+   queryClient.setQueryData([...QUERY_KEY, data.id], data);
+   toast.success(t('updated_success'));
+  },
+  onError: (error: unknown) => {
+   if (error instanceof Error && error.name === 'AbortError') return;
+   toast.error(t('errors.update_failed'));
+  }
+ });
 }
 
 export function useDeleteCategory() {
-  const queryClient = useQueryClient();
-  const t = useTranslations('master_data.categories');
+ const queryClient = useQueryClient();
+ const t = useTranslations('master_data.categories');
 
-  return useMutation({
-    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
-      const url = version != null ? `/categories/${id}?version=${version}` : `/categories/${id}`;
-      return apiClient.del(url, z.unknown(), { signal });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success(t('deleted_success'));
-    },
-    onError: (error: unknown) => {
-      if (error instanceof Error && error.name === 'AbortError') return;
-      toast.error(t('errors.delete_failed'));
-    }
-  });
+ return useMutation({
+  mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+   const url = version != null ? `/categories/${id}?version=${version}` : `/categories/${id}`;
+   return apiClient.del(url, z.unknown(), { signal });
+  },
+  onSuccess: () => {
+   queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+   toast.success(t('deleted_success'));
+  },
+  onError: (error: unknown) => {
+   if (error instanceof Error && error.name === 'AbortError') return;
+   toast.error(t('errors.delete_failed'));
+  }
+ });
 }

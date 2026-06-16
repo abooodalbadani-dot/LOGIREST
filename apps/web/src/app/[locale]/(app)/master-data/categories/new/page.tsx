@@ -19,9 +19,9 @@ export default async function NewCategoryPage(props: { params: Promise<{ locale:
  <ProtectedRoute requiredAction="create" requiredResource="master_data_categories">
  <CategoryFormClient 
 id={null} 
-  createTitle={t('create_title')}
+ createTitle={t('create_title')}
  editTitle={t('edit_title')}
-  viewTitle={t('view_title')} 
+ viewTitle={t('view_title')} 
  />
  </ProtectedRoute>
  );

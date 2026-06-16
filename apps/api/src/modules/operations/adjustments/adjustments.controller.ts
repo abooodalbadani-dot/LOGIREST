@@ -27,6 +27,8 @@ import { AdjustmentDirection, AdjustmentReason, Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import type { Request } from 'express';
 
 function mapAdjustmentDetail(adj: Record<string, unknown>) {
@@ -107,6 +109,7 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
 }
 
 @Controller('operations/adjustments')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class AdjustmentsController {
   constructor(
@@ -118,6 +121,7 @@ export class AdjustmentsController {
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Post()
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -240,6 +244,7 @@ export class AdjustmentsController {
   }
 
   @Post(':id/edit')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
   @HttpCode(HttpStatus.OK)
   async edit(
     @Param('id') id: string,
@@ -275,6 +280,7 @@ export class AdjustmentsController {
   }
 
   @Post(':id/submit')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -304,6 +310,7 @@ export class AdjustmentsController {
   }
 
   @Post(':id/approve')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -333,6 +340,7 @@ export class AdjustmentsController {
   }
 
   @Post(':id/reject')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -391,6 +399,7 @@ export class AdjustmentsController {
   }
 
   @Post(':id/post')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',

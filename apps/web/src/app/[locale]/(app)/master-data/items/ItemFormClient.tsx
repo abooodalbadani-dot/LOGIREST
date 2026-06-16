@@ -30,12 +30,12 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from '@/hooks/useFormError';
 import { generateNextCode } from '@/lib/code-generator';
 
-interface Props { 
-  id: string | null; 
-  createTitle: string; 
-  editTitle: string; 
+interface Props {
+  id: string | null;
+  createTitle: string;
+  editTitle: string;
   viewTitle: string;
-  locale: string; 
+  locale: string;
   isReadOnly?: boolean;
 }
 
@@ -49,7 +49,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const { data, isLoading, isError, isFetched, refetch } = useItem(id);
   const { data: categories, isLoading: isLoadingCats, isError: isErrorCats } = useCategories();
   const { data: uoms, isLoading: isLoadingUoms, isError: isErrorUoms } = useMasterDataList('units-of-measure', UoMSchema);
-  
+
   const { data: itemsData } = useItems();
   const create = useCreateItem();
   const conflict = useConflictHandler('item', id ?? '');
@@ -70,7 +70,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         version: undefined,
       },
     });
-  
+
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({ control, name: 'uomConversions' });
@@ -79,10 +79,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     if (data) {
       reset({
         code: data.code, barcode: data.barcode, name: data.name,
-        categoryId: data.categoryId, primaryUomId: data.primaryUom.id,
+        categoryId: data.categoryId || '', primaryUomId: data.primaryUom?.id || '',
         trackLots: data.trackLots, minStockLevel: data.minStockLevel,
         reorderPoint: data.reorderPoint,
-        uomConversions: data.uomConversions.map((c: UoMConversion) => ({
+        uomConversions: (data.uomConversions || []).map((c: UoMConversion) => ({
           fromUomId: c.fromUomId, toUomId: c.toUomId, factor: c.factor,
         })),
         isActive: data.isActive,
@@ -131,7 +131,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
   const onValid = (values: ItemFormValues) => {
     if (isReadOnly) return;
-    
+
     const payload = {
       code: values.code || undefined,
       barcode: values.barcode,
@@ -151,11 +151,11 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
     if (id) {
       update.mutate(
-        { 
-          id, 
-          values: payload, 
-          version: values.version || undefined, 
-          signal: abortController.signal 
+        {
+          id,
+          values: payload,
+          version: values.version || undefined,
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -169,9 +169,9 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       );
     } else {
       create.mutate(
-        { 
-          ...payload, 
-          signal: abortController.signal 
+        {
+          ...payload,
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -221,9 +221,9 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   // 2. Not Found State (Smart 404)
   if (id && isFetched && !data) {
     return (
-      <ErrorState 
-        type="not_found" 
-        onRetry={() => guardedRouter.push('/master-data/items', { skipGuard: true })} 
+      <ErrorState
+        type="not_found"
+        onRetry={() => guardedRouter.push('/master-data/items', { skipGuard: true })}
       />
     );
   }
@@ -231,20 +231,20 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   // 3. Server Error State
   if (isError || isErrorCats || isErrorUoms) {
     return (
-      <ErrorState 
-        type="server_error" 
-        onRetry={() => refetch()} 
+      <ErrorState
+        type="server_error"
+        onRetry={() => refetch()}
       />
     );
   }
 
   return (
     <>
-      <MasterDataFormLayout 
-        title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)} 
-        backHref='/master-data/items' 
+      <MasterDataFormLayout
+        title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
+        backHref='/master-data/items'
         onCancel={() => guardedRouter.push('/master-data/items', { skipGuard: true })}
-        isSaving={isSaving} saveDisabled={conflict.saveDisabled} 
+        isSaving={isSaving} saveDisabled={conflict.saveDisabled}
         onSubmit={onSubmit}
         hideSave={isReadOnly}
         resource="master_data"
@@ -255,7 +255,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
           id && (
             <div className="flex gap-4">
               <PermissionGate action="delete" resource="master_data">
-                <Button 
+                <Button
                   variant="ghost"
                   onClick={() => setDeleteConfirmOpen(true)}
                   className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all"
@@ -264,12 +264,12 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <Trash2 className="w-5 h-5" />
                 </Button>
               </PermissionGate>
-  
+
               {isReadOnly && (
                 <PermissionGate action="edit" resource="master_data">
-                  <Button 
+                  <Button
                     onClick={() => guardedRouter.push(`/master-data/items/${id}/edit`)}
-                    className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-operational-cyan/20"
+                    className="h-12 px-6 bg-brand-gold text-white hover:bg-brand-gold/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-brand-gold/20"
                   >
                     <Edit3 className="w-4 h-4" />
                     {t('actions.edit')}
@@ -280,303 +280,276 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
           )
         }
       >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            {/* Main Identity Section */}
-            <Card className="bg-surface-container-low border-none overflow-hidden">
-              <CardContent className="p-8 space-y-8">
-                <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-tertiary" />
-                  </div>
-                  <div>
-                    <h3 className="text-body-md font-semibold text-foreground uppercase">{ti('sections.identity')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{ti('sections.identity_desc')}</p>
-                  </div>
-                </div>
+        <div dir={locale === 'ar' ? 'rtl' : 'ltr'} className="col-span-12 w-full max-w-5xl mx-auto flex flex-col gap-8 p-6 bg-card border border-border rounded-xl mt-6">
+          {/* Main Identity Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Package className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{ti('sections.identity')}</h3>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="item-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('code')}</Label>
-                    <Input 
-                      id="item-code" 
-                      dir="ltr" 
-                      {...register('code')} 
-                      disabled={isReadOnly}
-                      className="font-mono font-semibold uppercase text-status-active" 
-                      placeholder={ti('fields.sku_placeholder')} 
-                    />
-                    {errors.code?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
-                  </div>
-                  <div className="hidden md:block" /> {/* Spacer for consistent grid alignment */}
-                </div>
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="item-code" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{tm('code')}</Label>
+                <Input
+                  id="item-code"
+                  dir="ltr"
+                  {...register('code')}
+                  disabled={isReadOnly}
+                  className="font-mono font-semibold uppercase text-status-active w-full h-10"
+                  placeholder={ti('fields.sku_placeholder')}
+                />
+                {errors.code?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.code.message as never)}</p>}
+              </div>
 
-                <div className="space-y-2">
-                  <Label className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.barcode')}</Label>
-                  <Controller
-                    name="barcode"
-                    control={control}
-                    render={({ field }) => (
-                      <ScanInput
-                        value={field.value}
-                        onChange={field.onChange}
-                        onScan={(barcode) => { if (!isReadOnly) setValue('barcode', barcode, { shouldValidate: true }); }}
-                        placeholder={ti('fields.barcode')}
-                        clearOnScan={false}
-                        disabled={isReadOnly}
-                        size="md"
-                      />
-                    )}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.barcode')}</Label>
+                <div className="relative w-full min-w-0" dir="ltr">
+                  <Input
+                    id="item-barcode"
+                    dir="ltr"
+                    {...register('barcode')}
+                    disabled={isReadOnly}
+                    className="w-full text-start pl-[85px] h-10"
+                    placeholder={ti('fields.barcode')}
                   />
-                  {errors.barcode?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as never)}</p>}
-                </div>
-
-                <div className="space-y-2 max-w-md">
-                  <Label htmlFor="item-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name') || tm('name') || 'Name'}</Label>
-                  <Input id="item-name" {...register('name')} disabled={isReadOnly} className="font-semibold" />
-                  {errors.name?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Logistics Configuration Section */}
-            <Card className="bg-surface-container-low border-none overflow-hidden">
-              <CardContent className="p-8 space-y-8">
-                <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                    <Boxes className="w-5 h-5 text-tertiary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{ti('sections.categorization')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words line-clamp-2">{ti('sections.categorization_desc')}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="item-category" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.category')}</Label>
-                    <Controller
-                      name="categoryId"
-                      control={control}
-                      render={({ field }) => (
-                         <SmartCombobox
-                           disabled={isReadOnly}
-                           value={field.value ?? ''}
-                           onSelect={(item) => field.onChange(item.id)}
-                           items={categoryItems}
-                           placeholder={tm('select_none')}
-                           className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-                         />
-                      )}
-                    />
-                    {errors.categoryId?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.categoryId.message as never)}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="primary-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.base_unit')}</Label>
-                    <Controller
-                      name="primaryUomId"
-                      control={control}
-                      render={({ field }) => (
-                         <SmartCombobox
-                           disabled={isReadOnly}
-                           value={field.value ?? ''}
-                           onSelect={(item) => field.onChange(item.id)}
-                           items={uomItems}
-                           placeholder={tm('select_none')}
-                           className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-                         />
-                      )}
-                    />
-                    {errors.primaryUomId?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primaryUomId.message as never)}</p>}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Unit Conversion Protocol */}
-            <Card className="bg-surface-container-low border-none overflow-hidden">
-              <CardContent className="p-8 space-y-8">
-                <div className="flex items-center justify-between border-b border-surface-variant/10 pb-4 gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center shrink-0">
-                      <Scale className="w-5 h-5 text-tertiary" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{ti('uom_conversions')}</h3>
-                      <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words">{tm('relational_unit_transformation')}</p>
-                    </div>
-                  </div>
                   {!isReadOnly && (
-                    <Button type="button" variant="outline" size="sm"
-                      className="h-10 px-4 text-label-xs font-semibold uppercase border-status-secondary/20 hover:bg-status-secondary/5 text-status-secondary transition-all shrink-0"
-                      onClick={() => append({ fromUomId: '', toUomId: '', factor: 1 })}>
-                      <Plus className="w-3.5 h-3.5 me-2" />{ti('add_conversion')}
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        const generated = 'BAR' + Math.floor(10000000 + Math.random() * 90000000);
+                        setValue('barcode', generated, { shouldDirty: true, shouldValidate: true });
+                      }}
+                      className="absolute left-1.5 top-1/2 -translate-y-1/2 z-10 h-7 px-3 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold"
+                    >
+                      {locale === 'ar' ? 'توليد' : 'Generate'}
                     </Button>
                   )}
                 </div>
+                {errors.barcode?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.barcode.message as never)}</p>}
+              </div>
 
-                <div className="space-y-4">
-                  {fields.length === 0 ? (
-                    <div className="py-12 text-center border-2 border-dashed border-surface-variant/10 rounded-lg bg-surface-container-highest/5 flex flex-col items-center gap-4 opacity-30">
-                      <Scale className="w-8 h-8 text-muted-foreground/60" />
-                      <p className="text-label-xs font-semibold uppercase text-muted-foreground/60">{ti('no_conversions_defined')}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {fields.map((field, idx) => (
-                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.5fr_auto] gap-4 items-end p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 transition-all hover:bg-surface-container-highest/30">
-                          <div className="space-y-2">
-                            <Label htmlFor={`uom-from-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('from_uom')}</Label>
-                            <Controller
-                              name={`uomConversions.${idx}.fromUomId`}
-                              control={control}
-                              render={({ field }) => (
-                                 <SmartCombobox
-                                   disabled={isReadOnly}
-                                   value={field.value ?? ''}
-                                   onSelect={(item) => field.onChange(item.id)}
-                                   items={uomShortItems}
-                                   placeholder={tm('select_none')}
-                                   className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
-                                 />
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`uom-to-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('to_uom')}</Label>
-                            <Controller
-                              name={`uomConversions.${idx}.toUomId`}
-                              control={control}
-                              render={({ field }) => (
-                                 <SmartCombobox
-                                   disabled={isReadOnly}
-                                   value={field.value ?? ''}
-                                   onSelect={(item) => field.onChange(item.id)}
-                                   items={uomShortItems}
-                                   placeholder={tm('select_none')}
-                                   className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
-                                 />
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`uom-factor-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('factor')}</Label>
-                            <Input id={`uom-factor-${idx}`} type="number" dir="ltr" min={0} step="any" 
-                              disabled={isReadOnly}
-                              className="font-mono font-semibold text-status-secondary"
-                              {...register(`uomConversions.${idx}.factor`, { valueAsNumber: true })} />
-                          </div>
-                          {!isReadOnly && (
-                            <Button type="button" variant="ghost" size="icon" className="h-12 w-12 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
-                              onClick={() => remove(idx)}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start col-span-1 md:col-span-2">
+                <Label htmlFor="item-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.name') || tm('name') || 'Name'}</Label>
+                <Input id="item-name" {...register('name')} disabled={isReadOnly} className="font-semibold w-full h-10" />
+                {errors.name?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.name.message as never)}</p>}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-8">
-            <Card className="bg-surface-container-low border-none overflow-hidden">
-              <CardContent className="p-8 space-y-8">
-                <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-tertiary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{tm('status_label')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words">{tm('operational_availability')}</p>
-                  </div>
-                </div>
+          {/* Logistics Configuration Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Boxes className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{ti('sections.categorization')}</h3>
+            </div>
 
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="item-category" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.category')}</Label>
+                <Controller
+                  name="categoryId"
+                  control={control}
+                  render={({ field }) => (
+                    <SmartCombobox
+                      disabled={isReadOnly}
+                      value={field.value ?? ''}
+                      onSelect={(item) => field.onChange(item.id)}
+                      items={categoryItems}
+                      placeholder={tm('select_none')}
+                      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                    />
+                  )}
+                />
+                {errors.categoryId?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.categoryId.message as never)}</p>}
+              </div>
+
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="primary-uom" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.base_unit')}</Label>
+                <Controller
+                  name="primaryUomId"
+                  control={control}
+                  render={({ field }) => (
+                    <SmartCombobox
+                      disabled={isReadOnly}
+                      value={field.value ?? ''}
+                      onSelect={(item) => field.onChange(item.id)}
+                      items={uomItems}
+                      placeholder={tm('select_none')}
+                      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                    />
+                  )}
+                />
+                {errors.primaryUomId?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.primaryUomId.message as never)}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Unit Conversion Protocol */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center justify-between border-b border-border pb-3 mb-4 gap-4">
+              <div className="flex items-center gap-2">
+                <Scale className="text-muted-foreground w-5 h-5" />
+                <h3 className="text-base font-bold text-foreground">{ti('uom_conversions')}</h3>
+              </div>
+              {!isReadOnly && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-2 border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground font-bold w-fit shadow-sm"
+                  onClick={() => append({ fromUomId: '', toUomId: '', factor: 1 })}
+                >
+                  <Plus className="w-4 h-4" /> {locale === 'ar' ? 'إضافة تحويل' : (ti('add_conversion') || 'Add Conversion')}
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {fields.length === 0 ? (
+                <div className="w-full flex flex-col items-center justify-center p-8 bg-muted/20 border border-dashed border-border rounded-xl gap-3 my-2">
+                  <Scale className="w-8 h-8 text-muted-foreground" />
+                  <p className="text-sm font-medium text-muted-foreground">{ti('no_conversions_defined') || (locale === 'ar' ? 'لا توجد تحويلات معرفة' : 'No conversions defined')}</p>
+                </div>
+              ) : (
                 <div className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
-                    <div className="space-y-1">
-                      <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('status_label')}</Label>
-                      <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>
-                    </div>
-                    <Controller
-                      control={control}
-                      name="isActive"
-                      render={({ field }) => (
-                        <Switch 
-                          checked={field.value ?? true} 
-                          onCheckedChange={(v) => !isReadOnly && field.onChange(v)} 
+                  {fields.map((field, idx) => (
+                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.5fr_auto] gap-4 items-end p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 transition-all hover:bg-surface-container-highest/30">
+                      <div className="col-span-1 w-full min-w-0 flex flex-col gap-1.5 text-start">
+                        <Label htmlFor={`uom-from-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('from_uom')}</Label>
+                        <Controller
+                          name={`uomConversions.${idx}.fromUomId`}
+                          control={control}
+                          render={({ field }) => (
+                            <SmartCombobox
+                              disabled={isReadOnly}
+                              value={field.value ?? ''}
+                              onSelect={(item) => field.onChange(item.id)}
+                              items={uomShortItems}
+                              placeholder={tm('select_none')}
+                              className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="col-span-1 w-full min-w-0 flex flex-col gap-1.5 text-start">
+                        <Label htmlFor={`uom-to-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('to_uom')}</Label>
+                        <Controller
+                          name={`uomConversions.${idx}.toUomId`}
+                          control={control}
+                          render={({ field }) => (
+                            <SmartCombobox
+                              disabled={isReadOnly}
+                              value={field.value ?? ''}
+                              onSelect={(item) => field.onChange(item.id)}
+                              items={uomShortItems}
+                              placeholder={tm('select_none')}
+                              className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="col-span-1 w-full min-w-0 flex flex-col gap-1.5 text-start">
+                        <Label htmlFor={`uom-factor-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('factor')}</Label>
+                        <Input id={`uom-factor-${idx}`} type="number" dir="ltr" min={0} step="any"
                           disabled={isReadOnly}
-                          className="data-[state=checked]:bg-status-active" 
-                        />
-                      )}
-                    />
-                  </div>
-                  <div
-                    className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30"
-                    title={!!(data as { has_transactions?: boolean } | null)?.has_transactions ? 'Cannot change lot tracking after transactions exist.' : undefined}
-                  >
-                    <div className="space-y-1">
-                      <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{ti('track_lots')}</Label>
-                      <p className={`text-label-sm font-semibold uppercase ${trackLots ? 'text-status-active' : 'text-muted-foreground/40'}`}>{trackLots ? tm('yes') : tm('no')}</p>
-                      {!!(data as { has_transactions?: boolean } | null)?.has_transactions && (
-                        <p className="text-[10px] text-status-warning uppercase font-bold mt-1">
-                          {ti('lot_tracking_locked') || 'Tracking locked: transactions exist'}
-                        </p>
+                          className="font-mono font-semibold text-status-secondary w-full h-10"
+                          {...register(`uomConversions.${idx}.factor`, { valueAsNumber: true })} />
+                      </div>
+                      {!isReadOnly && (
+                        <Button type="button" variant="ghost" size="icon" className="h-12 w-12 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all mb-[1px]"
+                          onClick={() => remove(idx)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       )}
                     </div>
-                    <Controller
-                      control={control}
-                      name="trackLots"
-                      render={({ field }) => (
-                        <Switch 
-                          checked={field.value ?? false} 
-                          onCheckedChange={(v) => {
-                            const d = data as { has_transactions?: boolean } | null;
-                            if (!isReadOnly && !d?.has_transactions) field.onChange(v);
-                          }} 
-                          disabled={isReadOnly || !!(data as { has_transactions?: boolean } | null)?.has_transactions}
-                          className="data-[state=checked]:bg-status-active" 
-                        />
-                      )}
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Status & Availability Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 text-start border-b border-border pb-3 mb-4">
+              <ShieldCheck className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{tm('status_label')}</h3>
+            </div>
+
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="w-full flex items-center justify-between p-4 bg-card border border-border rounded-xl shadow-sm">
+                <div className="flex flex-col space-y-1 text-start min-w-0">
+                  <span className="text-sm font-medium text-foreground">{tm('status_label')}</span>
+                  <span className="text-xs text-muted-foreground">{isActive ? tm('active') : tm('inactive')}</span>
+                </div>
+                <Controller
+                  control={control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value ?? true}
+                      onCheckedChange={(v) => !isReadOnly && field.onChange(v)}
+                      disabled={isReadOnly}
                     />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  )}
+                />
+              </div>
 
-            <Card className="bg-surface-container-low border-none overflow-hidden">
-              <CardContent className="p-8 space-y-8">
-                <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                    <Settings2 className="w-5 h-5 text-tertiary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{ti('sections.inventory_rules')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words">{ti('sections.inventory_rules_desc')}</p>
-                  </div>
+              <div
+                className="w-full flex items-center justify-between p-4 bg-card border border-border rounded-xl shadow-sm"
+                title={!!(data as { has_transactions?: boolean } | null)?.has_transactions ? 'Cannot change lot tracking after transactions exist.' : undefined}
+              >
+                <div className="flex flex-col space-y-1 text-start min-w-0">
+                  <span className="text-sm font-medium text-foreground">{ti('track_lots')}</span>
+                  <span className="text-xs text-muted-foreground">{trackLots ? tm('yes') : tm('no')}</span>
+                  {!!(data as { has_transactions?: boolean } | null)?.has_transactions && (
+                    <span className="text-[10px] text-status-warning uppercase font-bold mt-1">
+                      {ti('lot_tracking_locked') || 'Tracking locked: transactions exist'}
+                    </span>
+                  )}
                 </div>
+                <Controller
+                  control={control}
+                  name="trackLots"
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value ?? false}
+                      onCheckedChange={(v) => {
+                        const d = data as { has_transactions?: boolean } | null;
+                        if (!isReadOnly && !d?.has_transactions) field.onChange(v);
+                      }}
+                      disabled={isReadOnly || !!(data as { has_transactions?: boolean } | null)?.has_transactions}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="min-stock" className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('fields.min_stock')}</Label>
-                    <Input id="min-stock" type="number" dir="ltr" min={0} 
-                      disabled={isReadOnly}
-                      className="font-mono font-semibold text-status-secondary"
-                      {...register('minStockLevel', { valueAsNumber: true })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reorder-point" className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('fields.reorder_point')}</Label>
-                    <Input id="reorder-point" type="number" dir="ltr" min={0} 
-                      disabled={isReadOnly}
-                      className="font-mono font-semibold text-status-secondary"
-                      {...register('reorderPoint', { valueAsNumber: true })} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Inventory Rules Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 text-start border-b border-border pb-3 mb-4">
+              <Settings2 className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{ti('sections.inventory_rules')}</h3>
+            </div>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="min-stock" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.min_stock')}</Label>
+                <Input id="min-stock" type="number" dir="ltr" min={0}
+                  disabled={isReadOnly}
+                  className="font-mono font-semibold text-status-secondary w-full h-10"
+                  {...register('minStockLevel', { valueAsNumber: true })} />
+              </div>
+
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="reorder-point" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.reorder_point')}</Label>
+                <Input id="reorder-point" type="number" dir="ltr" min={0}
+                  disabled={isReadOnly}
+                  className="font-mono font-semibold text-status-secondary w-full h-10"
+                  {...register('reorderPoint', { valueAsNumber: true })} />
+              </div>
+            </div>
           </div>
         </div>
       </MasterDataFormLayout>

@@ -7,31 +7,31 @@ import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 const PRSummarySchema = z.object({ 
-  id: z.string(), 
-  documentNumber: z.string(), 
-  status: BadgeStatusSchema, 
-  departmentId: z.string().optional(), 
-  warehouseId: z.string().optional(), 
-  warehouseName: z.string().optional().nullable(),
-  branchName: z.string().optional().nullable(),
-  expectedDate: z.string().optional(), 
-  createdAt: z.string().optional(), 
-  createdBy: z.string().optional(),
+ id: z.string(), 
+ documentNumber: z.string(), 
+ status: BadgeStatusSchema, 
+ departmentId: z.string().optional(), 
+ warehouseId: z.string().optional(), 
+ warehouseName: z.string().optional().nullable(),
+ branchName: z.string().optional().nullable(),
+ expectedDate: z.string().optional(), 
+ createdAt: z.string().optional(), 
+ createdBy: z.string().optional(),
 });
 
 export type PRSummary = z.infer<typeof PRSummarySchema>;
 
 export function usePRList(filters: { status?: string; departmentId?: string; search?: string; page?: number } = {}) {
-  const params = new URLSearchParams();
-  if (filters.status) params.set('status', filters.status);
-  if (filters.departmentId) params.set('departmentId', filters.departmentId);
-  if (filters.search) params.set('search', filters.search);
-  params.set('page', String(filters.page ?? 1));
+ const params = new URLSearchParams();
+ if (filters.status) params.set('status', filters.status);
+ if (filters.departmentId) params.set('departmentId', filters.departmentId);
+ if (filters.search) params.set('search', filters.search);
+ params.set('page', String(filters.page ?? 1));
 
-  return useQuery({
-    queryKey: ['purchase-requests', filters],
-    queryFn: ({ signal }) => apiClient.get<PaginatedResponse<PRSummary>>(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema), { signal }),
-    staleTime: 60_000,
-    placeholderData: keepPreviousData,
-  });
+ return useQuery({
+  queryKey: ['purchase-requests', filters],
+  queryFn: ({ signal }) => apiClient.get<PaginatedResponse<PRSummary>>(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema), { signal }),
+  staleTime: 60_000,
+  placeholderData: keepPreviousData,
+ });
 }

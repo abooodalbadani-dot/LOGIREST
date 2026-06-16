@@ -51,7 +51,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  const isValid = numericRate > 0;
 
  return (
- <div className="bg-surface-container-lowest border border-transparent rounded-2xl p-6">
+ <div className="bg-card border border-border shadow-sm border border-transparent rounded-2xl p-6">
  <h3 className="text-title-sm font-bold text-foreground mb-4 flex items-center gap-2">
  <div className="w-1.5 h-6 bg-operational-cyan rounded-full" />
  {t('fx_capture_title')}
@@ -59,7 +59,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  
  <div className="flex flex-col gap-5">
  <div className="flex items-center gap-3">
- <span className="font-mono text-muted-foreground bg-surface-container-lowest px-4 py-3 rounded-xl border border-outline-low text-body-md">
+ <span className="font-mono text-muted-foreground bg-card border border-border shadow-sm px-4 py-3 rounded-xl border border-outline-low text-body-md">
  1 {fromCurrencyCode} =
  </span>
  <input 
@@ -74,9 +74,9 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  }}
  disabled={isLoading}
  aria-label="Exchange Rate"
- className="flex-1 bg-surface-container-lowest border border-outline-low text-foreground rounded-xl px-4 py-3 focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 outline-none font-mono text-title-sm shadow-inner transition-all"
+ className="flex-1 bg-card border border-border shadow-sm border border-outline-low text-foreground rounded-xl px-4 py-3 focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 outline-none font-mono text-title-sm shadow-inner transition-all"
  />
- <span className="font-mono text-muted-foreground bg-surface-container-lowest px-4 py-3 rounded-xl border border-outline-low text-body-md">
+ <span className="font-mono text-muted-foreground bg-card border border-border shadow-sm px-4 py-3 rounded-xl border border-outline-low text-body-md">
  {toCurrencyCode}
  </span>
  </div>

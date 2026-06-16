@@ -12,27 +12,25 @@ import type { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
 import { WarehouseLockService } from './warehouse-lock.service';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 
 @Controller('warehouse-locks')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class WarehouseLockController {
   constructor(private readonly warehouseLockService: WarehouseLockService) {}
 
   @Post(':id/force-unlock')
+  @Roles(Role.ADMIN)
   async forceUnlock(
     @Param('id') id: string,
     @CurrentUser('id') adminId: string,
-    @CurrentUser('role') role: Role,
     @Body() body: { reasonNotes: string },
     @Req() req: Request,
   ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException('Forbidden resource');
-    }
-
     const reasonNotes = body?.reasonNotes;
 
     if (
@@ -56,18 +54,12 @@ export class WarehouseLockController {
   }
 
   @Post(':id/unlock')
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async manualUnlock(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== 'ADMIN' && role !== 'INV_MGR') {
-      throw new ForbiddenException(
-        'Only admins and managers are authorized to manually release warehouse locks.',
-      );
-    }
-
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const updatedLock = await this.warehouseLockService.manualUnlock(

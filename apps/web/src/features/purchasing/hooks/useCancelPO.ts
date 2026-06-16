@@ -7,23 +7,23 @@ import { PO_STATUS } from '@logirest/shared-types';
 import { PODetail } from './usePO';
 
 export function useCancelPO(options?: { onConflict?: () => void }) {
-  const queryClient = useQueryClient();
+ const queryClient = useQueryClient();
 
-  return useSafeMutation({
-    onConflict: options?.onConflict,
-    mutationFn: async ({ id, reason, version, signal }: { id: string; reason?: string; version: number; signal?: AbortSignal }) => {
-      return apiClient.post(`/procurement/purchase-orders/${id}/cancel`, successSchema, { reason, version }, { signal });
-    },
-    onSuccess: (_, { id }) => {
-      queryClient.setQueryData(['purchase-orders', id], (old: PODetail | undefined) => {
-        if (!old) return old;
-        return { ...old, status: PO_STATUS.CANCELLED };
-      });
-      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
-    },
-    onError: (error) => {
-      console.error('[useCancelPO] Failed to cancel PO:', error);
-    },
-  });
+ return useSafeMutation({
+  onConflict: options?.onConflict,
+  mutationFn: async ({ id, reason, version, signal }: { id: string; reason?: string; version: number; signal?: AbortSignal }) => {
+   return apiClient.post(`/procurement/purchase-orders/${id}/cancel`, successSchema, { reason, version }, { signal });
+  },
+  onSuccess: (_, { id }) => {
+   queryClient.setQueryData(['purchase-orders', id], (old: PODetail | undefined) => {
+    if (!old) return old;
+    return { ...old, status: PO_STATUS.CANCELLED };
+   });
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
+  },
+  onError: (error) => {
+   console.error('[useCancelPO] Failed to cancel PO:', error);
+  },
+ });
 }

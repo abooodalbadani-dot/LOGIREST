@@ -9,8 +9,8 @@ interface DiffEntry {
 }
 
 export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
-  const t = useTranslations('common.audit.diff');
-  if (!changes || changes.length === 0) return null;
+ const t = useTranslations('common.audit.diff');
+ if (!changes || changes.length === 0) return null;
 
  const renderValue = (val: unknown) => {
  if (val === null || val === undefined) return '—';
@@ -24,7 +24,7 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
  };
 
  return (
- <div className="overflow-x-auto rounded-2xl bg-surface-container-low shadow-sm">
+ <div className="overflow-x-auto rounded-2xl bg-card border border-border shadow-sm shadow-sm">
  <table className="w-full text-start border-collapse">
  <thead className="bg-surface-container-high/50 text-muted-foreground">
  <tr>

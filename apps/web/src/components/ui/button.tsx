@@ -6,23 +6,23 @@ import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
- "group/button inline-flex shrink-0 items-center justify-center rounded-[var(--radius)] border-none bg-clip-padding text-body-md font-bold whitespace-nowrap transition-all duration-[140ms] ease-industrial outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ "group/button inline-flex shrink-0 items-center justify-center rounded-md border-none bg-clip-padding text-sm font-bold whitespace-nowrap transition-colors duration-200 outline-none select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-gold focus-visible:border-brand-gold disabled:pointer-events-none disabled:opacity-40 aria-invalid:border-red-500 aria-invalid:ring-1 aria-invalid:ring-red-500 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
  {
  variants: {
  variant: {
  default: "bg-[linear-gradient(135deg,var(--primary),var(--primary-container))] !text-white shadow-md shadow-primary/10 hover:opacity-90 hover:scale-[0.99] active:scale-[0.97] border-none",
  outline:
- "bg-surface-container-high text-foreground hover:bg-surface-container-highest hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+ "bg-transparent border border-gray-300 dark:border-neutral-700 text-text-main dark:text-gray-200 hover:bg-muted dark:hover:bg-neutral-800 h-10 px-4 rounded-md transition-colors focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:border-neutral-700",
  secondary:
  "bg-secondary !text-white hover:bg-secondary/80 aria-expanded:bg-secondary active:scale-[0.98]",
  ghost:
  "hover:bg-muted text-foreground hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
  destructive:
- "bg-destructive !text-white hover:bg-destructive/90 active:scale-[0.98]",
+ "bg-red-600 hover:bg-red-700 !text-white font-medium h-10 px-4 rounded-md border-none hover:scale-[0.99] active:scale-[0.97]",
  link: "text-primary underline-offset-4 hover:underline",
  },
  size: {
- default: "h-9 md:h-10 px-5 md:px-6 text-label-sm font-bold uppercase tracking-wider",
+ default: "h-10 px-6 text-sm font-bold uppercase tracking-wider",
  xs: "h-7 px-2 text-[10px] font-bold",
  sm: "h-8 md:h-9 px-3 md:px-4 text-label-xs font-bold",
  lg: "h-11 md:h-12 px-8 text-title-sm font-bold",
@@ -57,14 +57,14 @@ function Button({
  disabled={disabled || isLoading}
  {...props}
  >
-   {isLoading ? (
-     <>
-       <Loader2 className="w-4 h-4 animate-spin mr-2 shrink-0" />
-       {children}
-     </>
-   ) : (
-     children
-   )}
+  {isLoading ? (
+   <>
+    <Loader2 className="w-4 h-4 animate-spin me-2 shrink-0" />
+    {children}
+   </>
+  ) : (
+   children
+  )}
  </Comp>
  )
 }

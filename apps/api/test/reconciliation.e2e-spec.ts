@@ -41,7 +41,7 @@ describe('Reconciliation Drift (e2e)', () => {
     warehouseId = warehouse.id;
 
     const category = await prisma.category.create({
-      data: { name: `Category ${suffix}` },
+      data: { name: `Category ${suffix}`, code: `CAT-${suffix}` },
     });
     categoryId = category.id;
 

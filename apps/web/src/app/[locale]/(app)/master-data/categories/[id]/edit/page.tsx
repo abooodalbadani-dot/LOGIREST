@@ -11,19 +11,19 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function EditCategoryPage(props: { params: Promise<{ locale: string, id: string }> }) {
-  const params = await props.params;
-  setRequestLocale(params.locale);
-  const t = await getTranslations({ locale: params.locale, namespace: 'master_data.categories' });
+ const params = await props.params;
+ setRequestLocale(params.locale);
+ const t = await getTranslations({ locale: params.locale, namespace: 'master_data.categories' });
 
-  return (
-    <ProtectedRoute requiredAction="edit" requiredResource="master_data_categories">
-      <CategoryFormClient 
-        id={params.id} 
-        createTitle={t('create_title')} 
-        editTitle={t('edit_title')} 
-        viewTitle={t('view_title')}
-        isReadOnly={false}
-      />
-    </ProtectedRoute>
-  );
+ return (
+  <ProtectedRoute requiredAction="edit" requiredResource="master_data_categories">
+   <CategoryFormClient 
+    id={params.id} 
+    createTitle={t('create_title')} 
+    editTitle={t('edit_title')} 
+    viewTitle={t('view_title')}
+    isReadOnly={false}
+   />
+  </ProtectedRoute>
+ );
 }

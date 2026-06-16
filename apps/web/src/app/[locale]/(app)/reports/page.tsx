@@ -19,7 +19,7 @@ export default async function ReportsPage(props: { params: Promise<{ locale: str
 
  return (
  <ProtectedRoute requiredAction="view" requiredResource="reports">
- <div className="flex flex-col gap-6">
+ <div className="flex flex-col gap-6 min-w-0">
  <PageHeader 
  title={t('title')} 
  description={t('description')} />

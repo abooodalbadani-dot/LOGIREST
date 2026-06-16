@@ -37,7 +37,7 @@ describe('Concurrency Safety & Optimistic Locking (US3)', () => {
     warehouseId = warehouse.id;
 
     const category = await prisma.category.create({
-      data: { name: `Conc Category ${Date.now()}` },
+      data: { name: `Conc Category ${Date.now()}`, code: `CC-${Date.now()}` },
     });
     categoryId = category.id;
 

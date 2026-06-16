@@ -31,7 +31,7 @@ describe('LedgerLockService E2E Concurrency Safety', () => {
     warehouseId = warehouse.id;
 
     const category = await prisma.category.create({
-      data: { name: `Lock E2E Cat ${Date.now()}` },
+      data: { name: `Lock E2E Cat ${Date.now()}`, code: `LC-${Date.now()}` },
     });
     categoryId = category.id;
 

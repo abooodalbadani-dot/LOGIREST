@@ -3,11 +3,11 @@ import { PRApprovalClient } from './PRApprovalClient';
 import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; id: string }> }) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'procurement.pr' });
-  return {
-    title: `${t('approval.approve_pr')} | Otantik مطاعم`,
-  };
+ const { locale } = await params;
+ const t = await getTranslations({ locale, namespace: 'procurement.pr' });
+ return {
+  title: `${t('approval.approve_pr')} | Otantik مطاعم`,
+ };
 }
 
 export default async function PRApprovalPage(props: { params: Promise<{ locale: string; id: string }> }) {

@@ -107,7 +107,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   const onValid = (values: SupplierFormValues) => {
     if (isReadOnly) return;
-    
+
     const payload = {
       code: values.code || undefined,
       name: values.name,
@@ -121,13 +121,13 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
     if (id) {
       update.mutate(
-        { 
-          id, 
+        {
+          id,
           values: {
             ...payload,
             version: values.version || undefined,
           },
-          signal: abortController.signal 
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -141,9 +141,9 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
       );
     } else {
       create.mutate(
-        { 
-          ...payload, 
-          signal: abortController.signal 
+        {
+          ...payload,
+          signal: abortController.signal
         },
         {
           onSuccess: () => {
@@ -186,252 +186,230 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
   if (id && isLoading) return <PageSkeleton variant="detail" />;
   if (id && isError) return <ErrorState onRetry={refetch} />;
   if (id && !data && !isLoading) return <ErrorState type="not_found" onRetry={() => guardedRouter.push('/master-data/suppliers')} />;
-  
+
   if (isCurrenciesLoading && !id) return <PageSkeleton variant="detail" />;
 
   return (
     <>
-    <MasterDataFormLayout
-      title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
-      backHref='/master-data/suppliers'
-      isSaving={isSaving}
-      saveDisabled={conflict.saveDisabled}
-      onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/suppliers', { skipGuard: true })}
-      hideSave={isReadOnly}
-      resource="master_data"
-      saveAction={id ? 'edit' : 'create'}
-      isDirty={isDirty}
-      isValid={isValid}
-      headerActions={
-        id && (
-          <div className="flex gap-4">
-            <PermissionGate action="delete" resource="master_data">
-              <Button 
-                variant="ghost"
-                onClick={() => setDeleteConfirmOpen(true)}
-                className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all"
-                title={t('actions.delete')}
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            </PermissionGate>
-
-            {isReadOnly && (
-              <PermissionGate action="edit" resource="master_data">
-                <Button 
-                  onClick={() => guardedRouter.push(`/master-data/suppliers/${id}/edit`)}
-                  className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-operational-cyan/20"
+      <MasterDataFormLayout
+        title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
+        backHref='/master-data/suppliers'
+        isSaving={isSaving}
+        saveDisabled={conflict.saveDisabled}
+        onSubmit={onSubmit}
+        onCancel={() => guardedRouter.push('/master-data/suppliers', { skipGuard: true })}
+        hideSave={isReadOnly}
+        resource="master_data"
+        saveAction={id ? 'edit' : 'create'}
+        isDirty={isDirty}
+        isValid={isValid}
+        headerActions={
+          id && (
+            <div className="flex gap-4">
+              <PermissionGate action="delete" resource="master_data">
+                <Button
+                  variant="ghost"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all"
+                  title={t('actions.delete')}
                 >
-                  <Edit3 className="w-4 h-4" />
-                  {t('actions.edit')}
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               </PermissionGate>
-            )}
+
+              {isReadOnly && (
+                <PermissionGate action="edit" resource="master_data">
+                  <Button
+                    onClick={() => guardedRouter.push(`/master-data/suppliers/${id}/edit`)}
+                    className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-operational-cyan/20"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    {t('actions.edit')}
+                  </Button>
+                </PermissionGate>
+              )}
+            </div>
+          )
+        }
+      >
+        <div className="col-span-12 w-full max-w-3xl mx-auto flex flex-col gap-8 p-6 bg-card border border-border rounded-xl mt-6">
+          {/* Partner Identity Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Truck className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{ts('partner_identity')}</h3>
+            </div>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Code */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="sup-code" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{tm('code')}</Label>
+                <Input
+                  id="sup-code"
+                  dir="ltr"
+                  {...register('code')}
+                  disabled={isReadOnly}
+                  className="font-mono font-semibold uppercase text-status-active w-full h-10"
+                  placeholder={ts('code_placeholder')}
+                />
+                {errors.code?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.code.message as never)}</p>}
+              </div>
+
+              {/* Name */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="sup-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{tm('name') || 'Name'}</Label>
+                <Input
+                  id="sup-name"
+                  {...register('name')}
+                  disabled={isReadOnly}
+                  className="font-semibold w-full h-10"
+                  placeholder={ts('name_placeholder') || 'Enter Supplier Name'}
+                />
+                {errors.name?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.name.message as never)}</p>}
+              </div>
+            </div>
           </div>
-        )
-      }
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{ts('partner_identity')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{ts('partner_identity_desc')}</p>
-                </div>
+
+          {/* Contact Info Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <Truck className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{ts('contact_info')}</h3>
+            </div>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Contact Person */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="sup-contact-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ts('contact_person')}</Label>
+                <Input
+                  id="sup-contact-name"
+                  {...register('contactName')}
+                  disabled={isReadOnly}
+                  className="font-semibold w-full h-10"
+                  placeholder={ts('contact_person_placeholder')}
+                />
               </div>
 
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="sup-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('code')}</Label>
-                    <Input 
-                      id="sup-code" 
-                      dir="ltr" 
-                      {...register('code')} 
-                      disabled={isReadOnly}
-                      className="font-mono font-semibold uppercase text-status-active" 
-                      placeholder={ts('code_placeholder')} 
-                    />
-                    {errors.code?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
-                  </div>
-                  <div className="hidden md:block" /> {/* Spacer for consistent grid alignment */}
-                </div>
-
-                <div className="space-y-2 max-w-md">
-                  <Label htmlFor="sup-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('name') || 'Name'}</Label>
-                  <Input 
-                    id="sup-name" 
-                    {...register('name')} 
-                    disabled={isReadOnly}
-                    className="font-semibold" 
-                    placeholder={ts('name_placeholder') || 'Enter Supplier Name'} 
-                  />
-                  {errors.name?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{ts('contact_info')}</h3>
-                </div>
+              {/* Email */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="sup-contact-email" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ts('email')}</Label>
+                <Input
+                  id="sup-contact-email"
+                  type="email"
+                  {...register('contactEmail')}
+                  disabled={isReadOnly}
+                  className="font-semibold w-full h-10"
+                  placeholder={ts('email_placeholder')}
+                />
+                {errors.contactEmail?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.contactEmail.message as never)}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label htmlFor="sup-contact-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('contact_person')}</Label>
-                  <Input 
-                    id="sup-contact-name" 
-                    {...register('contactName')} 
-                    disabled={isReadOnly}
-                    className="font-semibold" 
-                    placeholder={ts('contact_person_placeholder')} 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sup-contact-email" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('email')}</Label>
-                  <Input 
-                    id="sup-contact-email" 
-                    type="email"
-                    {...register('contactEmail')} 
-                    disabled={isReadOnly}
-                    className="font-semibold" 
-                    placeholder={ts('email_placeholder')} 
-                  />
-                  {errors.contactEmail?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.contactEmail.message as never)}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sup-contact-phone" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('phone')}</Label>
-                  <Input 
-                    id="sup-contact-phone" 
-                    {...register('contactPhone')} 
-                    disabled={isReadOnly}
-                    className="font-semibold" 
-                    placeholder={ts('phone_placeholder')} 
-                  />
-                </div>
+              {/* Phone */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start md:col-span-2">
+                <Label htmlFor="sup-contact-phone" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ts('phone')}</Label>
+                <Input
+                  id="sup-contact-phone"
+                  {...register('contactPhone')}
+                  disabled={isReadOnly}
+                  className="font-semibold w-full h-10"
+                  placeholder={ts('phone_placeholder')}
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{ts('financial_terms')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{ts('financial_terms_desc')}</p>
-                </div>
-              </div>
+          {/* Financial Terms Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <CreditCard className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{ts('financial_terms')}</h3>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label htmlFor="sup-currency" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('fields.currency')}</Label>
-                  <Controller
-                    name="currencyId"
-                    control={control}
-                    render={({ field }) => (
-                      <SmartCombobox
-                        disabled={isReadOnly}
-                        value={field.value ?? undefined}
-                        onSelect={(item) => field.onChange(item.id)}
-                        items={currencyItems}
-                        placeholder="—"
-                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-                      />
-                    )}
-                  />
-                  {errors.currencyId?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currencyId.message as never)}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sup-terms" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('fields.payment_terms')}</Label>
-                  <Textarea 
-                    id="sup-terms" 
-                    rows={4} 
-                    {...register('paymentTerms')} 
-                    disabled={isReadOnly}
-                    className="font-medium resize-none p-4" 
-                    placeholder={ts('terms_placeholder')} 
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-8">
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{tm('status_label')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tm('operational_availability')}</p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
-                <div className="space-y-1">
-                  <Label htmlFor="sup-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('is_active')}</Label>
-                  <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>
-                </div>
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Currency */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="sup-currency" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ts('fields.currency')}</Label>
                 <Controller
+                  name="currencyId"
                   control={control}
-                  name="isActive"
                   render={({ field }) => (
-                    <Switch
-                      id="sup-active"
-                      checked={field.value ?? true}
-                      onCheckedChange={(v) => !isReadOnly && field.onChange(v)}
+                    <SmartCombobox
                       disabled={isReadOnly}
-                      className="data-[state=checked]:bg-status-active"
+                      value={field.value ?? undefined}
+                      onSelect={(item) => field.onChange(item.id)}
+                      items={currencyItems}
+                      placeholder="—"
+                      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
                     />
                   )}
                 />
+                {errors.currencyId?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.currencyId.message as never)}</p>}
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Payment Terms */}
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
+                <Label htmlFor="sup-terms" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ts('fields.payment_terms')}</Label>
+                <Textarea
+                  id="sup-terms"
+                  rows={4}
+                  {...register('paymentTerms')}
+                  disabled={isReadOnly}
+                  className="font-medium resize-none p-4 w-full"
+                  placeholder={ts('terms_placeholder')}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status Section */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+              <ShieldCheck className="text-muted-foreground w-5 h-5" />
+              <h3 className="text-base font-bold text-foreground">{tm('status_label')}</h3>
+            </div>
+
+            <div className="flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors hover:bg-muted/30">
+              <div className="flex flex-col space-y-1 text-start min-w-0">
+                <span className="text-sm font-medium text-text-main dark:text-white">{tm('is_active')}</span>
+                <span className="text-xs text-muted-foreground dark:text-gray-400">{isActive ? tm('active') : tm('inactive')}</span>
+              </div>
+              <Controller
+                control={control}
+                name="isActive"
+                render={({ field }) => (
+                  <Switch
+                    id="sup-active"
+                    checked={field.value ?? true}
+                    onCheckedChange={(v) => !isReadOnly && field.onChange(v)}
+                    disabled={isReadOnly}
+                    activeClassName="bg-status-active"
+                  />
+                )}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </MasterDataFormLayout>
 
-    <ConflictDialog
-      open={conflict.open}
-      onReload={conflict.handleReload}
-      onClose={conflict.handleClose}
-      error={conflict.error}
-    />
+      </MasterDataFormLayout>
 
-    <PostConfirmDialog
-      open={deleteConfirmOpen}
-      onOpenChange={setDeleteConfirmOpen}
-      onConfirm={handleDelete}
-      isLoading={deleteMutation.isPending}
-      title={ts('delete_confirm_title')}
-      description={ts('delete_confirm_desc')}
-      confirmText={t('actions.delete')}
-      variant="destructive"
-      icon="delete"
-    />
+      <ConflictDialog
+        open={conflict.open}
+        onReload={conflict.handleReload}
+        onClose={conflict.handleClose}
+        error={conflict.error}
+      />
+
+      <PostConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={handleDelete}
+        isLoading={deleteMutation.isPending}
+        title={ts('delete_confirm_title')}
+        description={ts('delete_confirm_desc')}
+        confirmText={t('actions.delete')}
+        variant="destructive"
+        icon="delete"
+      />
     </>
   );
 }

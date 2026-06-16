@@ -11,7 +11,7 @@ export function DocumentReadOnlyOverlay({ isPosted, children }: { isPosted: bool
  return (
  <div className="relative">
  <div className="absolute top-0 end-0 z-10 m-2 pointer-events-auto">
- <span className="bg-operational-cyan/20 border border-operational-cyan/40 text-operational-cyan px-2 py-1 rounded-lg text-label-sm font-bold shadow-lg backdrop-blur-md">
+ <span className="bg-operational-cyan/20 border border-operational-cyan/40 text-operational-cyan px-2 py-1 rounded-lg text-label-sm font-bold shadow-sm backdrop-blur-md">
  {t('posted_read_only')}
  </span>
  </div>

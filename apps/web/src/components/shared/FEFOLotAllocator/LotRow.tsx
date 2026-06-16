@@ -23,8 +23,8 @@ export function LotRow({
 }) {
  const t = useTranslations('common.table_headers');
  const tc = useTranslations('operations.issue');
-  const locale = useLocale();
-  const bgClass = isExpired ? 'bg-status-error/10' : isNearExpiry ? 'bg-status-warning/10' : 'bg-surface-container';
+ const locale = useLocale();
+ const bgClass = isExpired ? 'bg-status-error/10' : isNearExpiry ? 'bg-status-warning/10' : 'bg-surface-container';
  
  const canOverride = ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'].includes(userRole || '');
  const inputDisabled = isExpired && !canOverride;
@@ -39,7 +39,7 @@ export function LotRow({
  </div>
  <div>
  <span className="text-label-sm text-muted-foreground block mb-1">{t('expiry')}</span>
-  <span dir="ltr" className="font-mono text-body-md text-foreground">{formatDate(lot.expiryDate, locale as 'ar' | 'en')}</span>
+ <span dir="ltr" className="font-mono text-body-md text-foreground">{formatDate(lot.expiryDate, locale as 'ar' | 'en')}</span>
  </div>
  <div>
  <span className="text-label-sm text-muted-foreground block mb-1">{t('available')}</span>

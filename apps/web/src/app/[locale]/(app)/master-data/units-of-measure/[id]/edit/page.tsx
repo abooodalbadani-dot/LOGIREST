@@ -21,7 +21,7 @@ export default async function EditUoMPage(props: { params: Promise<{ locale: str
  id={params.id}
  createTitle={t('create_title')}
 editTitle={t('edit_title')}
-  />
+ />
  </ProtectedRoute>
  );
 }

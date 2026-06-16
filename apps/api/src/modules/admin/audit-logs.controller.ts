@@ -33,6 +33,7 @@ export class AuditLogsController {
           user: {
             select: {
               role: true,
+              name: true,
             },
           },
         },
@@ -45,32 +46,77 @@ export class AuditLogsController {
     ]);
 
     const data = logs.map((log) => {
-      let beforeStateJson: unknown = null;
-      let afterStateJson: unknown = null;
+      let beforeState: Record<string, unknown> | null = null;
+      let afterState: Record<string, unknown> | null = null;
 
       try {
         if (log.beforeStateJson) {
-          beforeStateJson = JSON.parse(log.beforeStateJson);
+          beforeState = JSON.parse(log.beforeStateJson);
         }
       } catch (e) {
-        beforeStateJson = log.beforeStateJson;
+        // ignore parsing errors
       }
 
       try {
         if (log.afterStateJson) {
-          afterStateJson = JSON.parse(log.afterStateJson);
+          afterState = JSON.parse(log.afterStateJson);
         }
       } catch (e) {
-        afterStateJson = log.afterStateJson;
+        // ignore parsing errors
       }
+
+      const beforeObj =
+        beforeState && typeof beforeState === 'object' ? beforeState : {};
+      const afterObj =
+        afterState && typeof afterState === 'object' ? afterState : {};
+      const allKeys = new Set([
+        ...Object.keys(beforeObj),
+        ...Object.keys(afterObj),
+      ]);
+      const changesList: {
+        field: string;
+        oldValue: unknown;
+        newValue: unknown;
+      }[] = [];
+
+      for (const key of allKeys) {
+        if (key === 'passwordHash' || key === 'password') continue;
+        const oldVal = beforeObj[key];
+        const newVal = afterObj[key];
+
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+          changesList.push({
+            field: key,
+            oldValue: oldVal === undefined ? null : oldVal,
+            newValue: newVal === undefined ? null : newVal,
+          });
+        }
+      }
+
+      const rawAction = log.action.toUpperCase();
+      const actionMap: Record<
+        string,
+        'CREATE' | 'UPDATE' | 'DELETE' | 'POST' | 'APPROVE'
+      > = {
+        CREATE: 'CREATE',
+        UPDATE: 'UPDATE',
+        DELETE: 'DELETE',
+        POST: 'POST',
+        APPROVE: 'APPROVE',
+        PATCH: 'UPDATE',
+        PUT: 'UPDATE',
+      };
+      const action = actionMap[rawAction] || 'UPDATE';
 
       return {
         id: log.id,
+        entityType: log.targetTable,
+        entityId: log.targetId,
+        action,
+        userId: log.userId ?? 'system',
+        userName: log.user?.name ?? 'System',
+        changes: changesList,
         createdAt: log.createdAt,
-        performedByUserId: log.userId,
-        performedByRole: log.user?.role ?? null,
-        beforeStateJson,
-        afterStateJson,
       };
     });
 

@@ -19,11 +19,11 @@ export default async function AuditLogsPage(props: { params: Promise<{ locale: s
 
  return (
  <ProtectedRoute requiredAction="view" requiredResource="audit_log">
- <div className="flex flex-col gap-6">
-  <PageHeader 
-  title={t('audit_logs.title')} 
-  description={t('audit_logs.description')}
-  />
+ <div className="flex flex-col gap-6 min-w-0">
+ <PageHeader 
+ title={t('audit_logs.title')} 
+ description={t('audit_logs.description')}
+ />
  <AuditLogsClient />
  </div>
  </ProtectedRoute>

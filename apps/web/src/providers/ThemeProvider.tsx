@@ -8,12 +8,23 @@ import { useEffect, useState } from 'react';
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   const orig = console.error;
   console.error = (...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('Encountered a script tag')) {
-      return;
+    if (args.length === 0) return;
+    const firstArg = args[0];
+    if (firstArg === null || firstArg === undefined || firstArg === '') return;
+    if (typeof firstArg === 'string') {
+      if (
+        firstArg.includes('Encountered a script tag') ||
+        firstArg.includes('Extra attributes from the server') ||
+        firstArg.includes('did not match') ||
+        firstArg.includes('Hydration failed')
+      ) {
+        return;
+      }
     }
     orig(...args);
   };
 }
+
 
 /**
  * ThemeProvider wrapper using next-themes

@@ -264,6 +264,7 @@ model Department {
 
 model Category {
   id      String @id @default(uuid())
+  code    String @unique
   name    String @unique
   version Int    @default(1)
 

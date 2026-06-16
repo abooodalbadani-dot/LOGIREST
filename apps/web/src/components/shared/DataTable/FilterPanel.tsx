@@ -7,7 +7,7 @@ export function FilterPanel({ children, onReset }: { children: React.ReactNode; 
  const t = useTranslations('common');
 
  return (
- <div className="bg-surface-container-low rounded-sm mb-6 overflow-hidden">
+ <div className="bg-card border border-border shadow-sm rounded-sm mb-6 overflow-hidden">
  <button 
  onClick={() => setIsOpen(!isOpen)}
  className="w-full px-6 py-4 flex justify-between items-center text-foreground hover:bg-muted/30 transition-colors"

@@ -38,16 +38,16 @@ export interface KitchenRequest {
 }
 
 export const KitchenRequestItemSchema = z.object({
-  itemId: z.string().min(1, 'required'),
-  quantity: z.number().positive('must_be_positive'),
-  notes: z.string().optional().or(z.literal('')),
+ itemId: z.string().min(1, 'required'),
+ quantity: z.number().positive('must_be_positive'),
+ notes: z.string().optional().or(z.literal('')),
 });
 
 export const KitchenRequestSchema = z.object({
-  departmentId: z.string().min(1, 'required'),
-  warehouseId: z.string().min(1, 'required'),
-  notes: z.string().optional().or(z.literal('')),
-  items: z.array(KitchenRequestItemSchema).min(1, 'min_one_item'),
+ departmentId: z.string().min(1, 'required'),
+ warehouseId: z.string().min(1, 'required'),
+ notes: z.string().optional().or(z.literal('')),
+ items: z.array(KitchenRequestItemSchema).min(1, 'min_one_item'),
 });
 
 export type CreateKitchenRequestDTO = z.infer<typeof KitchenRequestSchema>;
@@ -61,13 +61,13 @@ export const KitchenRequestDetailSchema = z.object({
  warehouseName: z.string().optional(),
  status: z.enum(ALL_DOCUMENT_STATUSES),
  items: z.array(z.object({
-   id: z.string(),
-   itemId: z.string(),
-   itemName: z.string(),
-   uom: z.string(),
-   quantity: z.number(),
-   notes: z.string().optional(),
-   fulfilledQuantity: z.number().optional(),
+  id: z.string(),
+  itemId: z.string(),
+  itemName: z.string(),
+  uom: z.string(),
+  quantity: z.number(),
+  notes: z.string().optional(),
+  fulfilledQuantity: z.number().optional(),
  })),
  notes: z.string().optional(),
  requestedBy: z.string(),

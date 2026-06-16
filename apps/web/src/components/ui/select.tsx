@@ -42,7 +42,7 @@ function SelectTrigger({
  "data-slot": "select-trigger",
  "data-size": size,
  className: cn(
- "flex items-center justify-between gap-1.5 rounded-[var(--radius)] border-none bg-surface-container-highest px-4 py-2 text-body-md text-foreground whitespace-nowrap transition-all duration-[140ms] ease-out outline-none select-none focus-visible:bg-primary-fixed-dim/10 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:bg-destructive/10 data-placeholder:text-muted-foreground/50 data-[size=default]:h-12 data-[size=default]:w-full data-[size=sm]:h-8 data-[size=sm]:rounded-lg data-[size=sm]:px-2.5 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ "flex items-center justify-between gap-1.5 rounded-md bg-transparent dark:bg-[#121212] border border-border px-4 py-2 text-sm text-text-main dark:text-white shadow-sm whitespace-nowrap transition-colors duration-200 outline-none select-none focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500 data-placeholder:text-gray-400 dark:data-placeholder:text-muted-foreground data-[size=default]:h-10 data-[size=default]:w-full data-[size=sm]:h-8 data-[size=sm]:rounded-md data-[size=sm]:px-2.5 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
  className
  ),
  }
@@ -105,7 +105,7 @@ function SelectContent({
  <SelectPrimitive.Popup
  data-slot="select-content"
  data-align-trigger={alignItemWithTrigger}
- className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-surface-container-lowest text-foreground ambient-shadow duration-100 border-none data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+ className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-card border border-border shadow-sm text-foreground ambient-shadow duration-100 border-none data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
  {...props}
  >
  <SelectScrollUpButton />
@@ -179,7 +179,7 @@ function SelectScrollUpButton({
  <SelectPrimitive.ScrollUpArrow
  data-slot="select-scroll-up-button"
  className={cn(
- "top-0 z-10 flex w-full cursor-default items-center justify-center bg-surface-container-low py-1 [&_svg:not([class*='size-'])]:size-4",
+ "top-0 z-10 flex w-full cursor-default items-center justify-center bg-card border border-border shadow-sm py-1 [&_svg:not([class*='size-'])]:size-4",
  className
  )}
  {...props}
@@ -198,7 +198,7 @@ function SelectScrollDownButton({
  <SelectPrimitive.ScrollDownArrow
  data-slot="select-scroll-down-button"
  className={cn(
- "bottom-0 z-10 flex w-full cursor-default items-center justify-center bg-surface-container-low py-1 [&_svg:not([class*='size-'])]:size-4",
+ "bottom-0 z-10 flex w-full cursor-default items-center justify-center bg-card border border-border shadow-sm py-1 [&_svg:not([class*='size-'])]:size-4",
  className
  )}
  {...props}

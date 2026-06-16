@@ -35,28 +35,28 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  </div>
 
  <div className="space-y-4 w-full">
-  <h2 className="text-headline-lg font-semibold text-emerald-500">
-  {t('success_title')}
-  </h2>
+ <h2 className="text-headline-lg font-semibold text-emerald-500">
+ {t('success_title')}
+ </h2>
  <p className="text-muted-foreground text-body-md leading-relaxed font-medium">
  {t('success_description', { count: wizard.metadata?.recordCount ?? 0 })}
  </p>
  </div>
 
  <div className="flex flex-col sm:flex-row gap-4 w-full mt-6">
-  <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 space-y-1">
-  <p className="text-label-xs font-bold text-muted-foreground opacity-60">{t('imported_records')}</p>
-  <p className="text-headline-lg font-semibold font-mono dir-ltr text-emerald-500">{wizard.metadata?.recordCount || 0}</p>
-  </div>
-  <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 space-y-1 text-center">
-  <p className="text-label-xs font-bold text-muted-foreground opacity-60">{t('status')}</p>
-  <p className="text-body-md font-bold text-emerald-500 leading-9">{t('committed')}</p>
-  </div>
+ <div className="flex-1 p-6 rounded-2xl bg-card border border-border shadow-sm/50 space-y-1">
+ <p className="text-label-xs font-bold text-muted-foreground opacity-60">{t('imported_records')}</p>
+ <p className="text-headline-lg font-semibold font-mono dir-ltr text-emerald-500">{wizard.metadata?.recordCount || 0}</p>
+ </div>
+ <div className="flex-1 p-6 rounded-2xl bg-card border border-border shadow-sm/50 space-y-1 text-center">
+ <p className="text-label-xs font-bold text-muted-foreground opacity-60">{t('status')}</p>
+ <p className="text-body-md font-bold text-emerald-500 leading-9">{t('committed')}</p>
+ </div>
  </div>
 
-  <Button 
-  onClick={handleFinish}
-  className="px-16 h-16 rounded-2xl font-semibold text-body-md primary-gradient shadow-neon-sm group transition-all hover:scale-105 active:scale-95"
+ <Button 
+ onClick={handleFinish}
+ className="px-16 h-16 rounded-2xl font-semibold text-body-md bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors shadow-neon-sm group transition-all hover:scale-105 active:scale-95"
  >
  {t('view_records_cta')}
  {isRtl ? (
@@ -72,36 +72,36 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  return (
  <div className="flex flex-col gap-10 py-6 animate-in fade-in slide-in-from-bottom-4 duration-200">
  <div className="space-y-4 w-full">
-  <h2 className="text-headline-lg font-semibold text-foreground">
-  {t('commit_title')}
-  </h2>
+ <h2 className="text-headline-lg font-semibold text-foreground">
+ {t('commit_title')}
+ </h2>
  <p className="text-muted-foreground text-body-md leading-relaxed w-full">
  {t('commit_description')}
  </p>
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <div className="p-8 rounded-2xl bg-surface-container-low/50 space-y-4 relative overflow-hidden group">
+ <div className="p-8 rounded-2xl bg-card border border-border shadow-sm/50 space-y-4 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
  <Database className="w-20 h-20" />
  </div>
-  <p className="text-label-xs font-semibold text-muted-foreground/40">{t('entity_type')}</p>
-  <p className="text-headline-lg font-semibold text-cyan-500">{wizard.entity}</p>
-  </div>
+ <p className="text-label-xs font-semibold text-muted-foreground/40">{t('entity_type')}</p>
+ <p className="text-headline-lg font-semibold text-cyan-500">{wizard.entity}</p>
+ </div>
 
- <div className="p-8 rounded-2xl bg-surface-container-low/50 space-y-4 relative overflow-hidden group">
+ <div className="p-8 rounded-2xl bg-card border border-border shadow-sm/50 space-y-4 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
  <Save className="w-20 h-20" />
  </div>
-  <p className="text-label-xs font-semibold text-muted-foreground/40">{t('total_records')}</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/40">{t('total_records')}</p>
  <p className="text-headline-lg font-semibold font-mono dir-ltr">{wizard.metadata?.recordCount || 0}</p>
  </div>
 
- <div className="p-8 rounded-2xl bg-surface-container-low/50 space-y-4 relative overflow-hidden group">
+ <div className="p-8 rounded-2xl bg-card border border-border shadow-sm/50 space-y-4 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
  <AlertCircle className="w-20 h-20" />
  </div>
-  <p className="text-label-xs font-semibold text-muted-foreground/40">{t('idempotency_key')}</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/40">{t('idempotency_key')}</p>
  <p className="text-label-xs font-mono dir-ltr text-muted-foreground/60 break-all">{wizard.idempotencyKey}</p>
  </div>
  </div>
@@ -110,24 +110,24 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
  <AlertCircle className="w-6 h-6" />
  </div>
-  <p className="text-label-sm font-bold text-amber-500/80 leading-relaxed">
-  {t('commit_warning')}
-  </p>
+ <p className="text-label-sm font-bold text-amber-500/80 leading-relaxed">
+ {t('commit_warning')}
+ </p>
  </div>
 
-  <div className="flex flex-col sm:flex-row gap-4 items-center justify-end pt-4">
-  <Button 
-  variant="ghost" 
-  onClick={() => wizard.transitionTo('UPLOAD')}
-  className="w-full sm:w-auto px-10 h-14 rounded-xl font-bold text-label-sm transition-all active:scale-95"
-  >
-  {t('cancel')}
-  </Button>
-  
-  <Button 
-  disabled={wizard.isCommitting}
-  onClick={wizard.handleCommit}
-  className="w-full sm:w-auto px-16 h-14 rounded-xl font-semibold text-label-sm primary-gradient shadow-neon-sm transition-all active:scale-95"
+ <div className="flex flex-col sm:flex-row gap-4 items-center justify-end pt-4">
+ <Button 
+ variant="ghost" 
+ onClick={() => wizard.transitionTo('UPLOAD')}
+ className="w-full sm:w-auto px-10 h-14 rounded-xl font-bold text-label-sm transition-all active:scale-95"
+ >
+ {t('cancel')}
+ </Button>
+ 
+ <Button 
+ disabled={wizard.isCommitting}
+ onClick={wizard.handleCommit}
+ className="w-full sm:w-auto px-16 h-14 rounded-xl font-semibold text-label-sm bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors shadow-neon-sm transition-all active:scale-95"
  >
  {wizard.isCommitting ? (
  <>
