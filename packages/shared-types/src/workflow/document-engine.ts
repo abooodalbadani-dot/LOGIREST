@@ -28,7 +28,8 @@ export type DocumentAction =
   | 'SHIP'
   | 'RECEIVE'
   | 'CLOSE'
-  | 'RECOUNT';
+  | 'RECOUNT'
+  | 'DISPUTE';
 
 import { 
   PR_STATUS, 
@@ -175,6 +176,11 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
     },
     [TRANSFER_STATUS.IN_TRANSIT]: {
       'RECEIVE': { targetStatus: TRANSFER_STATUS.RECEIVED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'BRANCH_MGR'] },
+      'DISPUTE': { targetStatus: TRANSFER_STATUS.DISPUTED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'BRANCH_MGR'] },
+    },
+    [TRANSFER_STATUS.DISPUTED]: {
+      'RECEIVE': { targetStatus: TRANSFER_STATUS.RECEIVED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
+      'CANCEL': { targetStatus: TRANSFER_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
     }
   },
   'issue': {

@@ -15,6 +15,12 @@ export class ScopeValidationService {
     itemId: string,
     sku?: string,
   ): Promise<void> {
+    if (!warehouseId || warehouseId.trim() === '') {
+      throw new BadRequestException('Warehouse ID is required.');
+    }
+    if (!itemId || itemId.trim() === '') {
+      throw new BadRequestException('Item ID is required.');
+    }
     const whItem = await this.prisma.warehouseItem.findUnique({
       where: { warehouseId_itemId: { warehouseId, itemId } },
       select: { isFrozen: true },
@@ -32,6 +38,10 @@ export class ScopeValidationService {
     warehouseId: string,
   ): Promise<void> {
     if (role === Role.ADMIN || role === Role.GM) return;
+
+    if (!warehouseId || warehouseId.trim() === '') {
+      throw new BadRequestException('Warehouse ID is required.');
+    }
 
     if (role === Role.KITCHEN_CHIEF) {
       const wh = await this.prisma.warehouse.findUnique({
@@ -100,6 +110,10 @@ export class ScopeValidationService {
   ): Promise<void> {
     if (role === Role.ADMIN || role === Role.GM) return;
 
+    if (!departmentId || departmentId.trim() === '') {
+      throw new BadRequestException('Department ID is required.');
+    }
+
     const hasScope = await this.prisma.userDepartmentScope.findUnique({
       where: { userId_departmentId: { userId, departmentId } },
     });
@@ -116,6 +130,11 @@ export class ScopeValidationService {
     warehouseIds: string[],
   ): Promise<void> {
     if (role === Role.ADMIN || role === Role.GM) return;
+    if (!warehouseIds || warehouseIds.length === 0) {
+      throw new BadRequestException(
+        'At least one Warehouse ID must be provided.',
+      );
+    }
     const scopes = await this.prisma.userWarehouseScope.findMany({
       where: { userId, warehouseId: { in: warehouseIds } },
       select: { warehouseId: true },

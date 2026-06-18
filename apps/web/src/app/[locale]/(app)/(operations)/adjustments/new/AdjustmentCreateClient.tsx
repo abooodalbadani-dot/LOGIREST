@@ -37,7 +37,7 @@ function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen:
  const t = useTranslations('operations.adjustment');
  const tCommon = useTranslations('common');
  const [lotNumber, setLotNumber] = useState('');
- const [expiryDate, setExpiryDate] = useState('');
+ const [expiryDate, setExpiryDate] = useState(new Date().toISOString().split('T')[0]);
 
  const handleSave = () => {
   if (!lotNumber) {

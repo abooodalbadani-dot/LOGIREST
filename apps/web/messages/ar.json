@@ -542,6 +542,7 @@
       "sar_full": "ريال سعودي (SAR)"
     },
     "currency_id": "العملة",
+    "currency": "العملة",
     "dash": "—",
     "datatable": {
       "export_csv": "تصدير CSV",
@@ -3577,6 +3578,11 @@
       "approved": "الأوامر النشطة",
       "approved_qty": "الكمية المعتمدة",
       "convert_to_po": "تحويل إلى أمر شراء",
+      "convert_to_po_desc": "تحويل طلب الشراء المعتمد هذا إلى أمر شراء.",
+      "convert": "تحويل",
+      "cancel_request": "إلغاء الطلب",
+      "cancel_confirm": "هل أنت متأكد أنك تريد إلغاء هذا الطلب؟",
+      "cancel_success": "تم إلغاء طلب الشراء بنجاح.",
       "create_description": "إنشاء طلب داخلي جديد لأصناف المخزون",
       "create_new": "طلب جديد",
       "create_success": "تم إنشاء طلب الشراء بنجاح.",

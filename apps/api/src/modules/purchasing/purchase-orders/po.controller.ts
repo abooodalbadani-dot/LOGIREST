@@ -30,6 +30,7 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreatePoDto } from './dto/create-po.dto';
@@ -41,10 +42,7 @@ function mapPODetail(po: Record<string, unknown>) {
   const poLines = (po.lines as Record<string, unknown>[]) || [];
   const supplier = po.supplier as Record<string, unknown> | null;
   const purchaseRequest = po.purchaseRequest as Record<string, unknown> | null;
-  const warehouse = purchaseRequest?.warehouse as Record<
-    string,
-    unknown
-  > | null;
+  const warehouse = po.warehouse as Record<string, unknown> | null;
   const currency = po.currency as Record<string, unknown> | null;
 
   const lines = poLines.map((line: Record<string, unknown>) => {
@@ -105,7 +103,7 @@ function mapPODetail(po: Record<string, unknown>) {
     exchangeRate: 1.0,
     expectedDate: createdAtIso,
     expectedDeliveryDate: createdAtIso,
-    targetWarehouseId: (purchaseRequest?.warehouseId as string) || undefined,
+    targetWarehouseId: (po.warehouseId as string) || undefined,
     lines,
     supplierTotalAmount: supplierTotalAmount,
     baseTotalAmount: supplierTotalAmount,
@@ -122,11 +120,7 @@ function mapPOSummary(po: Record<string, unknown>) {
   const lines = (po.lines as Record<string, unknown>[]) || [];
   const supplier = po.supplier as Record<string, unknown> | null;
   const currency = po.currency as Record<string, unknown> | null;
-  const purchaseRequest = po.purchaseRequest as Record<string, unknown> | null;
-  const warehouse = purchaseRequest?.warehouse as Record<
-    string,
-    unknown
-  > | null;
+  const warehouse = po.warehouse as Record<string, unknown> | null;
 
   const supplierTotalAmount = lines.reduce(
     (sum: number, line: Record<string, unknown>) =>
@@ -233,6 +227,7 @@ export class PurchaseOrderController {
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query()
     query: {
@@ -260,17 +255,18 @@ export class PurchaseOrderController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
     const po = await this.poService.findOne(id);
-    if (po.purchaseRequest?.warehouseId) {
+    if (po.warehouseId) {
       await this.scopeValidationService.validateWarehouse(
         userId,
         role,
-        po.purchaseRequest.warehouseId,
+        po.warehouseId,
       );
     } else if (
       role !== Role.ADMIN &&
@@ -392,6 +388,13 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/submit')
+  @Roles(
+    Role.ADMIN,
+    Role.PROC_OFFICER,
+    Role.INV_MGR,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -421,6 +424,14 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/approve')
+  @Roles(
+    Role.ADMIN,
+    Role.APPROVER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -450,6 +461,14 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/reject')
+  @Roles(
+    Role.ADMIN,
+    Role.APPROVER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -479,6 +498,13 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/cancel')
+  @Roles(
+    Role.ADMIN,
+    Role.PROC_OFFICER,
+    Role.INV_MGR,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',

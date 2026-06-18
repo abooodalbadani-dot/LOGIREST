@@ -128,23 +128,26 @@ function mapIssueDetail(issue: Record<string, unknown>) {
     destinationDepartmentId: issue.departmentId as string,
     destinationDepartmentName: (department?.name as string) || '',
     departmentName: (department?.name as string) || '',
-    requestedBy: 'System',
+    requestedBy:
+      ((issue.createdBy as Record<string, unknown>)?.name as string) ||
+      'System',
     warehouseId: issue.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     branchId:
       ((issue.warehouse as Record<string, unknown> | undefined)
         ?.branchId as string) || '',
     notes: (issue.notes as string) || '',
-    createdBy: 'System',
+    createdBy:
+      ((issue.createdBy as Record<string, unknown>)?.name as string) ||
+      'System',
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
-    postedAt:
-      issue.status === 'POSTED' && createdAtVal
-        ? (createdAtVal instanceof Date
-            ? createdAtVal
-            : new Date(createdAtVal)
-          ).toISOString()
-        : null,
+    postedAt: issue.postedAt
+      ? (issue.postedAt instanceof Date
+          ? issue.postedAt
+          : new Date(issue.postedAt as string | number)
+        ).toISOString()
+      : null,
     postedBy: null,
     version: issue.version as number,
     lines,
@@ -173,7 +176,12 @@ function mapIssueSummary(issue: Record<string, unknown>) {
     warehouseId: issue.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     createdAt: createdAtIso,
-    postedAt: issue.status === 'POSTED' ? createdAtIso : null,
+    postedAt: issue.postedAt
+      ? (issue.postedAt instanceof Date
+          ? issue.postedAt
+          : new Date(issue.postedAt as string | number)
+        ).toISOString()
+      : null,
   };
 }
 
@@ -271,7 +279,7 @@ export class IssuesController {
     Role.INV_MGR,
     Role.WH_KEEPER,
     Role.STORE_MGR,
-    Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
   )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
@@ -307,7 +315,7 @@ export class IssuesController {
     Role.INV_MGR,
     Role.WH_KEEPER,
     Role.STORE_MGR,
-    Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
   )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
@@ -339,7 +347,7 @@ export class IssuesController {
 
   @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/post')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'issue',

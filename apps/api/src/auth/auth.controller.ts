@@ -22,6 +22,7 @@ import { RtrService } from './rtr.service';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Public } from './decorators/public.decorator';
+import { AllRoles } from './decorators/all-roles.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
@@ -85,11 +86,13 @@ export class AuthController {
     return { success: true };
   }
 
+  @AllRoles()
   @Get('me')
   async getProfile(@CurrentUser('id') userId: string) {
     return this.authService.getProfile(userId);
   }
 
+  @AllRoles()
   @Put('profile')
   async updateProfile(
     @CurrentUser('id') userId: string,
@@ -98,6 +101,7 @@ export class AuthController {
     return this.authService.updateProfile(userId, body);
   }
 
+  @AllRoles()
   @Post('profile/avatar')
   @UseInterceptors(FileInterceptor('avatar'))
   async uploadAvatar(
@@ -107,6 +111,7 @@ export class AuthController {
     return this.authService.uploadAvatar(userId, file);
   }
 
+  @AllRoles()
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
   async changePassword(

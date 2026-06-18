@@ -256,4 +256,48 @@ export class TransfersService {
       body.ipAddress,
     );
   }
+
+  async dispute(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: {
+      comments: string;
+      version?: number;
+      ipAddress?: string;
+      disputedLines: Array<{ lineId: string; receivedQty: number }>;
+    },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const transfer = await tx.transfer.findUnique({
+        where: { id },
+        include: { lines: true },
+      });
+      if (!transfer) {
+        throw new NotFoundException(`Transfer ${id} not found`);
+      }
+
+      for (const line of body.disputedLines) {
+        await tx.transferLine.update({
+          where: { id: line.lineId },
+          data: {
+            quantityReceived: line.receivedQty,
+            varianceReason: body.comments,
+          },
+        });
+      }
+
+      return this.workflowService.executeTransition(
+        id,
+        'transfer',
+        'DISPUTE',
+        userId,
+        userRole,
+        body.comments,
+        body.version,
+        body.ipAddress,
+        tx,
+      );
+    });
+  }
 }

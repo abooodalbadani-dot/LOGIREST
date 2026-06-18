@@ -8,8 +8,9 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
-import { ArrowLeft, Scale, CheckCircle, AlertTriangle, Info, UploadCloud, File as FileIcon, X } from 'lucide-react';
+import { ArrowLeft, Scale, CheckCircle, AlertTriangle, Info, UploadCloud, File as FileIcon, X, Loader2 } from 'lucide-react';
 import { TransferLine, type TransferDetail } from '@/features/operations/hooks/useTransfer';
+import { useDisputeTransfer } from '@/features/operations/hooks/useDisputeTransfer';
 
 interface TransferDisputeClientProps {
  transfer: TransferDetail;
@@ -21,7 +22,9 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
  const tCommon = useTranslations('common');
  const router = useRouter();
  
+ const { mutate: disputeTransfer, isPending: isDisputing } = useDisputeTransfer();
  const [evidenceFiles, setEvidenceFiles] = React.useState<File[]>([]);
+ const [comments, setComments] = React.useState('');
 
  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
   e.preventDefault();
@@ -82,17 +85,34 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
      </div>
     }
     actions={
-     <div className="flex gap-4">
-      <Button variant="outline" className="h-11 px-6 font-semibold uppercase text-label-xs rounded-sm">
-       {t('request_recount') || 'Request Recount'}
-      </Button>
-      <Button className="h-11 px-8 bg-operational-cyan text-white hover:bg-operational-cyan/90 transition-all font-semibold uppercase text-label-xs rounded-sm shadow-sm shadow-operational-cyan/20">
-       <CheckCircle className="w-4 h-4 me-2" />
-       {t('finalize_resolution') || 'Finalize Resolution'}
-      </Button>
-     </div>
-    }
-   />
+      <div className="flex gap-4">
+       <Button variant="outline" className="h-11 px-6 font-semibold uppercase text-label-xs rounded-sm" disabled={isDisputing}>
+        {t('request_recount') || 'Request Recount'}
+       </Button>
+       <Button 
+        disabled={isDisputing}
+        onClick={() => {
+          disputeTransfer(
+            { 
+              id: transfer.id, 
+              body: { 
+                version: transfer.version, 
+                comments: comments || 'Discrepancy resolved via mediation', 
+                disputedLines: discrepantLines.map(l => ({ lineId: l.id, receivedQty: l.receivedQty ?? 0 })) 
+              } 
+            },
+            {
+              onSuccess: () => router.push(`/transfers/${transfer.id}`)
+            }
+          );
+        }}
+        className="h-11 px-8 bg-operational-cyan text-white hover:bg-operational-cyan/90 transition-all font-semibold uppercase text-label-xs rounded-sm shadow-sm shadow-operational-cyan/20">
+        {isDisputing ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <CheckCircle className="w-4 h-4 me-2" />}
+        {t('finalize_resolution') || 'Finalize Resolution'}
+       </Button>
+      </div>
+     }
+    />
 
    {/* Mediation Summary Card */}
    <div className="p-8 bg-card border border-border shadow-sm rounded-lg border border-outline-low relative overflow-hidden">
@@ -213,24 +233,36 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
       </p>
      </div>
 
-     {evidenceFiles.length > 0 && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-       {evidenceFiles.map((f, i) => (
-        <div key={i} className="flex items-center gap-4 p-4 bg-card border border-border shadow-sm border border-outline-low rounded-lg shadow-sm">
-         <FileIcon className="w-6 h-6 text-operational-cyan/60 shrink-0" />
-         <div className="flex-1 min-w-0">
-          <p className="text-label-xs font-semibold truncate uppercase">{f.name}</p>
-          <p className="text-label-xxs text-muted-foreground font-mono mt-0.5">{(f.size / 1024).toFixed(1)} KB</p>
+      {evidenceFiles.length > 0 && (
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        {evidenceFiles.map((f, i) => (
+         <div key={i} className="flex items-center gap-4 p-4 bg-card border border-border shadow-sm border border-outline-low rounded-lg shadow-sm">
+          <FileIcon className="w-6 h-6 text-operational-cyan/60 shrink-0" />
+          <div className="flex-1 min-w-0">
+           <p className="text-label-xs font-semibold truncate uppercase">{f.name}</p>
+           <p className="text-label-xxs text-muted-foreground font-mono mt-0.5">{(f.size / 1024).toFixed(1)} KB</p>
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} className="p-1.5 hover:bg-rose-500/10 text-rose-500 rounded-md transition-colors">
+           <X className="w-4 h-4" />
+          </button>
          </div>
-         <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} className="p-1.5 hover:bg-rose-500/10 text-rose-500 rounded-md transition-colors">
-          <X className="w-4 h-4" />
-         </button>
-        </div>
-       ))}
+        ))}
+       </div>
+      )}
+      
+      <div className="mt-8 pt-6 border-t border-border">
+        <label className="text-label-sm font-bold uppercase text-foreground mb-3 block">
+          {t('dispute_comments') || 'Dispute Comments & Resolution Details'}
+        </label>
+        <textarea 
+          value={comments}
+          onChange={(e) => setComments(e.target.value)}
+          placeholder={t('dispute_comments_placeholder') || 'Describe why quantities do not match and what actions were taken...'}
+          className="w-full h-32 p-4 bg-card border border-border shadow-sm rounded-lg border border-outline-low focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan outline-none resize-none transition-all text-body-sm placeholder:text-muted-foreground/50"
+        />
       </div>
-     )}
+     </div>
     </div>
-   </div>
   </div>
  );
 }

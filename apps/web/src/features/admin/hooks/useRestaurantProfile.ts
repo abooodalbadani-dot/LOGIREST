@@ -8,10 +8,10 @@ import { useAdminSettings } from './useAdminSettings';
 import { apiClient } from '@/lib/api/client';
 
 export const RestaurantProfileSchema = z.object({
- name: z.string().min(1, 'Restaurant name is required'),
+ name: z.string().min(1, 'admin.restaurant_profile.validation.name_required'),
  address: z.string().optional().nullable(),
  phone: z.string().optional().nullable(),
- email: z.string().email('Invalid email address').optional().nullable().or(z.literal('')),
+ email: z.string().email('admin.restaurant_profile.validation.email_required').optional().nullable().or(z.literal('')),
  logo: z.string().optional().nullable(),
  logoUrl: z.string().optional().nullable(),
  taxNumber: z.string().optional().nullable(),

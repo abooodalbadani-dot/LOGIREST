@@ -13,7 +13,9 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CategoriesService } from './categories.service';
@@ -21,17 +23,19 @@ import type { Request } from 'express';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
 @Controller(['categories', 'master-data/categories'])
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
+  @AllRoles()
   async findAll() {
     return this.categoriesService.findAll();
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(@Param('id') id: string) {
     return this.categoriesService.findOne(id);
   }

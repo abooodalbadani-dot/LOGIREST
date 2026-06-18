@@ -177,7 +177,7 @@ describe('Document Number Concurrency (e2e)', () => {
         await prisma.unitOfMeasure.deleteMany({ where: { id: uomId } });
         await prisma.category.deleteMany({ where: { id: categoryId } });
         await prisma.warehouse.deleteMany({ where: { branchId } });
-        await prisma.documentCounter.deleteMany({ where: { branchCode } });
+
         await prisma.branch.deleteMany({ where: { id: branchId } });
       } catch (err) {
         console.error('Error during test cleanup:', err);
@@ -412,9 +412,6 @@ describe('Document Number Concurrency (e2e)', () => {
     expect(suffix1).toBe('00001');
     expect(suffix2).toBe('00001');
 
-    await prisma.documentCounter.deleteMany({
-      where: { branchCode: branch2.code },
-    });
     await prisma.branch.delete({ where: { id: branch2.id } });
   });
 });

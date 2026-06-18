@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType, Prisma, Role } from '@prisma/client';
+import { DocumentType, Prisma, Role, IssueStatus } from '@prisma/client';
 
 @Injectable()
 export class IssuesService {
@@ -84,7 +84,7 @@ export class IssuesService {
                 item: {
                   include: {
                     unitOfMeasure: true,
-                  category: true,
+                    category: true,
                   },
                 },
                 lotAllocations: {
@@ -118,7 +118,7 @@ export class IssuesService {
 
     const where: Prisma.InventoryIssueWhereInput = {};
     if (params.status) {
-      where.status = params.status;
+      where.status = params.status as IssueStatus;
     }
 
     const andConditions: Prisma.InventoryIssueWhereInput[] = [];
@@ -220,6 +220,9 @@ export class IssuesService {
         },
         department: true,
         warehouse: true,
+        createdBy: {
+          select: { name: true, email: true },
+        },
       },
     });
 
@@ -227,7 +230,13 @@ export class IssuesService {
       throw new NotFoundException(`Inventory Issue with ID ${id} not found`);
     }
 
-    return issue;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: { documentId: id },
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { ...issue, approvalEvents };
   }
 
   async submit(

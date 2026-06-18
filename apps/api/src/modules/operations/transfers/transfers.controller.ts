@@ -393,4 +393,46 @@ export class TransfersController {
     );
     return mapTransferDetail(transfer);
   }
+
+  @Post(':id/dispute')
+  @Roles(Role.ADMIN, Role.WH_KEEPER, Role.INV_MGR, Role.BRANCH_MGR)
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'transfer',
+    action: 'DISPUTE',
+    modelName: 'transfer',
+  })
+  @HttpCode(HttpStatus.OK)
+  async dispute(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body()
+    body: {
+      version?: number;
+      comments: string;
+      disputedLines: Array<{ lineId: string; receivedQty: number }>;
+    },
+    @Req() req: Request,
+  ) {
+    const t = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      t.toWarehouseId,
+    );
+
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const transfer = await this.transfersService.dispute(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+    return mapTransferDetail(transfer);
+  }
 }

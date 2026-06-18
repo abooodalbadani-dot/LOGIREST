@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Role, OutboxStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 
 export interface TemplateParameter {
@@ -536,14 +536,14 @@ export class NotificationTemplateService {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    let dbStatus: string | undefined = undefined;
+    let dbStatus: OutboxStatus | undefined = undefined;
     if (status === 'SENT') {
       dbStatus = 'SUCCEEDED';
     } else if (status) {
-      dbStatus = status;
+      dbStatus = status as OutboxStatus;
     }
 
-    const where: { status?: string } = {};
+    const where: { status?: OutboxStatus } = {};
     if (dbStatus) {
       where.status = dbStatus;
     }

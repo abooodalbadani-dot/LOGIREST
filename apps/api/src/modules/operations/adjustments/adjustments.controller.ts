@@ -89,17 +89,18 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
     warehouseId: adj.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     reason: mainReason,
-    notes: '',
+    notes: (adj.notes as string) || '',
+    createdBy:
+      ((adj.createdBy as Record<string, unknown>)?.name as string) || 'System',
     reject: null,
     movementId: null,
     approvedBy: null,
-    postedAt:
-      adj.status === 'POSTED' && createdAtVal
-        ? (createdAtVal instanceof Date
-            ? createdAtVal
-            : new Date(createdAtVal)
-          ).toISOString()
-        : null,
+    postedAt: adj.postedAt
+      ? (adj.postedAt instanceof Date
+          ? adj.postedAt
+          : new Date(adj.postedAt as string | number)
+        ).toISOString()
+      : null,
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
     version: adj.version as number,

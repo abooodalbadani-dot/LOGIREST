@@ -93,7 +93,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  })),
  } : {
  department_id: '',
- expected_date: '',
+ expected_date: new Date().toISOString().split('T')[0],
  notes: '',
  lines: [],
  },

@@ -16,6 +16,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { GrnService } from './grn.service';
 import { GrnPostService } from '../grn-post.service';
+import { GrnVoidService } from '../../operations/grn-void.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -81,8 +82,14 @@ function mapGRNDetail(grn: Record<string, unknown>) {
       qty: Number(line.quantityReceived),
       receivedQty: Number(line.quantityReceived),
       uomId: (item?.uomId as string) || '',
-      unitCostForeign: Number(line.unitPrice),
-      unitCostBase: Number(line.unitPrice),
+      unitCostForeign:
+        line.unitPriceForeign !== undefined && line.unitPriceForeign !== null
+          ? Number(line.unitPriceForeign)
+          : Number(line.unitPrice),
+      unitCostBase:
+        line.unitPriceBase !== undefined && line.unitPriceBase !== null
+          ? Number(line.unitPriceBase)
+          : Number(line.unitPrice),
     };
   });
 
@@ -114,13 +121,29 @@ function mapGRNDetail(grn: Record<string, unknown>) {
         ?.code as string) || '',
     warehouseId: grn.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
-    fxRate: 1.0,
-    fxRateCapturedAt: createdAtIso,
+    fxRate:
+      grn.fxRate !== undefined && grn.fxRate !== null
+        ? Number(grn.fxRate)
+        : 1.0,
+    fxRateCapturedAt: grn.fxRateCapturedAt
+      ? (grn.fxRateCapturedAt instanceof Date
+          ? grn.fxRateCapturedAt
+          : new Date(grn.fxRateCapturedAt as string)
+        ).toISOString()
+      : createdAtIso,
     version: grn.version as number,
-    notes: '',
+    notes: (grn.notes as string) || '',
     createdAt: createdAtIso,
-    createdBy: 'System',
+    createdBy:
+      ((grn.createdBy as Record<string, unknown> | null)?.name as string) ||
+      'System',
     updatedAt: createdAtIso,
+    postedAt: grn.postedAt
+      ? (grn.postedAt instanceof Date
+          ? grn.postedAt
+          : new Date(grn.postedAt as string)
+        ).toISOString()
+      : null,
     lines,
   };
 }
@@ -175,6 +198,7 @@ export class GrnController {
   constructor(
     private readonly grnService: GrnService,
     private readonly grnPostService: GrnPostService,
+    private readonly grnVoidService: GrnVoidService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
   ) {}
@@ -208,9 +232,14 @@ export class GrnController {
     const incomingLines = body.lineItems || body.lines || [];
     const lines = incomingLines.map((line) => {
       const itemId = line.itemId;
-      const lotId = line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
-      const lotNumber = line.lotNumber || (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
-      const expiryDate = line.expiryDate || (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
+      const lotId =
+        line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
+      const lotNumber =
+        line.lotNumber ||
+        (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
+      const expiryDate =
+        line.expiryDate ||
+        (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
       const quantity = Number(line.receivedQty);
       const unitPrice = Number(line.unitCostForeign);
       return {
@@ -314,9 +343,14 @@ export class GrnController {
     if (incomingLines) {
       lines = incomingLines.map((line) => {
         const itemId = line.itemId;
-        const lotId = line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
-        const lotNumber = line.lotNumber || (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
-        const expiryDate = line.expiryDate || (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
+        const lotId =
+          line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
+        const lotNumber =
+          line.lotNumber ||
+          (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
+        const expiryDate =
+          line.expiryDate ||
+          (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
         const quantity = Number(line.receivedQty);
         const unitPrice = Number(line.unitCostForeign);
         return {
@@ -400,14 +434,49 @@ export class GrnController {
       req.ip ||
       undefined;
 
-    const grn = await this.grnPostService.post(
+    const postedGrn = await this.grnPostService.post(
       id,
       userId,
       role,
       body.version,
       ipAddress,
     );
-    return { data: mapGRNDetail(grn) };
+    return {
+      data: mapGRNDetail(postedGrn),
+    };
+  }
+
+  @Post(':id/void')
+  @Roles(Role.ADMIN, Role.INV_MGR)
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'grn',
+    action: 'VOID',
+    modelName: 'goodsReceivedNote',
+  })
+  @HttpCode(HttpStatus.OK)
+  async void(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const grn = await this.grnVoidService.void(
+      id,
+      userId,
+      role,
+      body.version,
+      ipAddress,
+    );
+    return { data: mapGRNDetail(grn as Record<string, unknown>) };
   }
 
   @Post(':id/submit')

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GrnController } from './grn/grn.controller';
 import { GrnPostService } from './grn-post.service';
+import { GrnVoidService } from '../operations/grn-void.service';
 import { GrnService } from './grn/grn.service';
 import { PurchaseOrderController } from './purchase-orders/po.controller';
 import { PurchaseOrderService } from './purchase-orders/po.service';
@@ -17,6 +18,9 @@ describe('Purchasing Controllers', () => {
   };
   const mockGrnPostService = {
     post: jest.fn(),
+  };
+  const mockGrnVoidService = {
+    void: jest.fn(),
   };
 
   const mockGrnService = {};
@@ -47,6 +51,7 @@ describe('Purchasing Controllers', () => {
         providers: [
           { provide: GrnService, useValue: mockGrnService },
           { provide: GrnPostService, useValue: mockGrnPostService },
+          { provide: GrnVoidService, useValue: mockGrnVoidService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
           {

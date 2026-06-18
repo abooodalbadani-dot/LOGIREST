@@ -275,36 +275,27 @@ export class StocktakeService {
 
     return this.prisma.$transaction(async (tx) => {
       for (const cnt of counts) {
-        const countKey = {
-          sessionId: id,
-          itemId: cnt.itemId,
-          lotId: cnt.lotId || null,
-        };
-
-        const existingCount = await tx.stocktakeCount.findFirst({
-          where: countKey,
-        });
-
-        if (existingCount) {
-          await tx.stocktakeCount.update({
-            where: { id: existingCount.id },
-            data: {
-              qtyCounted: cnt.qtyCounted,
-              countedById: userId,
-              countedAt: new Date(),
-            },
-          });
-        } else {
-          await tx.stocktakeCount.create({
-            data: {
+        await tx.stocktakeCount.upsert({
+          where: {
+            sessionId_itemId_lotId: {
               sessionId: id,
               itemId: cnt.itemId,
-              lotId: cnt.lotId || null,
-              qtyCounted: cnt.qtyCounted,
-              countedById: userId,
+              lotId: (cnt.lotId || null) as unknown as string,
             },
-          });
-        }
+          },
+          update: {
+            qtyCounted: cnt.qtyCounted,
+            countedById: userId,
+            countedAt: new Date(),
+          },
+          create: {
+            sessionId: id,
+            itemId: cnt.itemId,
+            lotId: cnt.lotId || null,
+            qtyCounted: cnt.qtyCounted,
+            countedById: userId,
+          },
+        });
       }
 
       if (session.status === 'STARTED') {
@@ -335,36 +326,27 @@ export class StocktakeService {
         );
       }
 
-      const countKey = {
-        sessionId: stocktakeId,
-        itemId: snapshot.itemId,
-        lotId: snapshot.lotId,
-      };
-
-      const existingCount = await tx.stocktakeCount.findFirst({
-        where: countKey,
-      });
-
-      if (existingCount) {
-        await tx.stocktakeCount.update({
-          where: { id: existingCount.id },
-          data: {
-            qtyCounted: body.counted_qty,
-            countedById: userId,
-            countedAt: new Date(),
-          },
-        });
-      } else {
-        await tx.stocktakeCount.create({
-          data: {
+      await tx.stocktakeCount.upsert({
+        where: {
+          sessionId_itemId_lotId: {
             sessionId: stocktakeId,
             itemId: snapshot.itemId,
-            lotId: snapshot.lotId,
-            qtyCounted: body.counted_qty,
-            countedById: userId,
+            lotId: (snapshot.lotId || null) as unknown as string,
           },
-        });
-      }
+        },
+        update: {
+          qtyCounted: body.counted_qty,
+          countedById: userId,
+          countedAt: new Date(),
+        },
+        create: {
+          sessionId: stocktakeId,
+          itemId: snapshot.itemId,
+          lotId: snapshot.lotId || null,
+          qtyCounted: body.counted_qty,
+          countedById: userId,
+        },
+      });
 
       // Advance status to COUNTING if not already
       const session = await tx.stocktakeSession.findUnique({
@@ -449,13 +431,73 @@ export class StocktakeService {
         throw new NotFoundException(`StocktakeSession ${id} not found`);
       }
 
+      // 1. Clear existing counts
+      await tx.stocktakeCount.deleteMany({
+        where: { sessionId: id },
+      });
+
+      // 2. Clear existing snapshots
+      await tx.stocktakeSnapshot.deleteMany({
+        where: { sessionId: id },
+      });
+
+      // 3. Fetch current inventory positions to re-generate snapshots
+      const whItems = await tx.warehouseItem.findMany({
+        where: { warehouseId: session.warehouseId },
+        include: { item: true },
+      });
+
+      const whLots = await tx.warehouseItemLot.findMany({
+        where: { warehouseId: session.warehouseId },
+        include: { item: true },
+      });
+
+      const snapshotsToCreate: Array<{
+        sessionId: string;
+        itemId: string;
+        lotId: string | null;
+        qtySnapshot: number;
+        wacSnapshot: number;
+      }> = [];
+
+      // A. Batched / Expiry Lots
+      for (const lot of whLots) {
+        const parentItem = whItems.find((wi) => wi.itemId === lot.itemId);
+        snapshotsToCreate.push({
+          sessionId: id,
+          itemId: lot.itemId,
+          lotId: lot.lotId,
+          qtySnapshot: Number(lot.qtyOnHand),
+          wacSnapshot: parentItem ? Number(parentItem.wac) : 0,
+        });
+      }
+
+      // B. Unbatched Items
+      for (const item of whItems) {
+        if (!item.item.isBatched && !item.item.hasExpiry) {
+          snapshotsToCreate.push({
+            sessionId: id,
+            itemId: item.itemId,
+            lotId: null,
+            qtySnapshot: Number(item.qtyOnHand),
+            wacSnapshot: Number(item.wac),
+          });
+        }
+      }
+
+      if (snapshotsToCreate.length > 0) {
+        await tx.stocktakeSnapshot.createMany({
+          data: snapshotsToCreate,
+        });
+      }
+
       return this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'RECOUNT',
         userId,
         userRole,
-        `Partial recount requested for items: ${body.item_ids?.join(', ') || 'All'}`,
+        `Full recount requested. Snapshots re-generated.`,
         body.version,
         body.ipAddress,
         tx,

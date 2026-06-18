@@ -53,8 +53,8 @@ export function AdminDashboard() {
      <Badge className="bg-operational-cyan/10 text-operational-cyan border-none text-label-xs font-semibold uppercase mb-2">
       {tc('role.admin')}
      </Badge>
-     <h1 className="text-headline-lg font-semibold uppercase italic text-foreground">
-      {t('title')} <span className="text-operational-cyan">{t('kitchen.overview')}</span>
+     <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
+      {t('title')} <span className="text-brand-gold">{t('kitchen.overview')}</span>
      </h1>
     </div>
    </header>
@@ -109,7 +109,7 @@ export function AdminDashboard() {
          {t('system_health.optimal')}
         </Badge>
        </div>
-       <CardTitle className="text-headline-lg font-semibold uppercase italic">{stats.systemHealth}% {t('system_health.health_suffix')}</CardTitle>
+       <CardTitle className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{stats.systemHealth}% {t('system_health.health_suffix')}</CardTitle>
        <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">{t('system_health.node_description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-4">
@@ -179,7 +179,7 @@ export function AdminDashboard() {
       <CardHeader className="flex flex-row items-center justify-between pb-6">
        <div>
         <span className="text-label-xs font-semibold uppercase text-operational-cyan mb-1 block">{t('analytics.title')}</span>
-        <CardTitle className="text-headline-lg font-semibold uppercase italic">{t('analytics.velocity')}</CardTitle>
+        <CardTitle className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('analytics.velocity')}</CardTitle>
        </div>
        <PermissionGate action="view" resource="reports">
         <Link href="/reports">

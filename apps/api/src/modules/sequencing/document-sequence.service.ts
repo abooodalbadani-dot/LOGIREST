@@ -11,6 +11,7 @@ const PREFIX_MAP: Record<DocumentType, string> = {
   [DocumentType.ADJUSTMENT]: 'ADJ',
   [DocumentType.KITCHEN_REQUEST]: 'KR',
   [DocumentType.STOCKTAKE]: 'ST',
+  [DocumentType.YIELD_BATCH]: 'YB',
 };
 
 @Injectable()

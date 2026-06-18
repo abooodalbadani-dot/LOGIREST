@@ -33,15 +33,14 @@ export function ProcurementDashboard() {
 
  return (
   <main role="main" className="space-y-10 animate-in fade-in duration-200">
-   <h1 className="sr-only">{t('procurement.strategic')} {t('procurement.sourcing')}</h1>
-   
+
    {/* Procurement Header - Enterprise Style */}
    <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 ps-6">
     <div className="space-y-2">
      <span className="text-label-xs font-semibold uppercase text-operational-cyan block mb-2 opacity-80">{t('procurement.supply_chain')}</span>
-     <h2 className="text-headline-lg font-semibold uppercase italic text-foreground leading-none">
-      {t('procurement.strategic')} <span className="text-operational-cyan">{t('procurement.sourcing')}</span>
-     </h2>
+     <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight leading-none">
+       {t('procurement.strategic')} <span className="text-brand-gold">{t('procurement.sourcing')}</span>
+      </h1>
      <div className="flex items-center gap-3">
       <div className="h-[2px] w-12 bg-operational-cyan" />
       <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('procurement.central_procurement_unit')}</p>
@@ -109,8 +108,8 @@ export function ProcurementDashboard() {
       <div className="p-8 pb-4">
        <div className="flex items-center justify-between mb-8">
         <div>
-         <h3 id="procurement-pipeline-title" className="text-headline-lg font-semibold uppercase italic text-foreground leading-none">{t('procurement.active_pipeline')}</h3>
-         <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase mt-2">{t('procurement.real_time_tracking')}</p>
+          <h3 id="procurement-pipeline-title" className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('procurement.active_pipeline')}</h3>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-1">{t('procurement.real_time_tracking')}</p>
         </div>
         <div className="flex items-center gap-3">
          <Badge variant="outline" className="rounded-lg bg-surface-container-high/50 text-muted-foreground/60 border-none px-3 py-1 text-label-xxs uppercase">
@@ -163,7 +162,7 @@ export function ProcurementDashboard() {
        <span className="text-label-xs font-semibold uppercase text-operational-cyan flex items-center gap-2 mb-4">
         <ShieldCheck className="w-3.5 h-3.5 fill-current" /> {t('procurement.trusted_suppliers')}
        </span>
-       <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('procurement.top_vendors')}</h3>
+        <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('procurement.top_vendors')}</h3>
       </div>
       <div className="p-8 pt-2 space-y-6">
        {stats.topVendors.map((vendor, i) => (
@@ -190,7 +189,7 @@ export function ProcurementDashboard() {
        <span className="text-label-xs font-semibold uppercase text-muted-foreground/20 flex items-center gap-2 mb-4">
         <BarChart3 className="w-3.5 h-3.5" /> {t('procurement.efficiency')}
        </span>
-       <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('procurement.po_conversion_rate')}</h3>
+        <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('procurement.po_conversion_rate')}</h3>
       </div>
       <div className="h-44 flex flex-col items-center justify-center gap-6 bg-card border border-border shadow-sm/30 group-hover:bg-card border border-border shadow-sm/50 transition-all duration-140 ease-industrial">
        <div className="flex items-end gap-2 h-16">

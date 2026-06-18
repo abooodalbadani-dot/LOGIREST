@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { YieldService } from './yield.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 describe('YieldService', () => {
   let service: YieldService;
@@ -146,10 +147,10 @@ describe('YieldService', () => {
           category: 'produce',
           inputQty: 10.0,
           outputQty: 9.1,
-          wasteQty: 0.9,
-          yieldPct: 91.0,
+          wasteQty: new Prisma.Decimal('0.9'),
+          yieldPct: new Prisma.Decimal('91.0'),
           standardYield: 90.0,
-          efficiency: 101.11,
+          efficiency: new Prisma.Decimal('101.1111'),
           warehouseId: null,
         },
       });

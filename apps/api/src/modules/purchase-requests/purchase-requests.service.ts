@@ -8,7 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../sequencing/document-number.service';
-import { DocumentType, Prisma } from '@prisma/client';
+import { DocumentType, Prisma, PRStatus } from '@prisma/client';
 
 @Injectable()
 export class PurchaseRequestsService {
@@ -22,6 +22,7 @@ export class PurchaseRequestsService {
     body: {
       branchId: string;
       warehouseId: string;
+      departmentId?: string;
       lines: Array<{ itemId: string; quantity: number }>;
     },
     userId: string,
@@ -34,11 +35,19 @@ export class PurchaseRequestsService {
           body.branchId,
         );
 
+        const departmentId =
+          !body.departmentId ||
+          body.departmentId === '' ||
+          body.departmentId === body.warehouseId
+            ? null
+            : body.departmentId;
+
         return tx.purchaseRequest.create({
           data: {
             requestNumber,
             branchId: body.branchId,
             warehouseId: body.warehouseId,
+            departmentId,
             createdById: userId,
             status: 'DRAFT',
             lines: {
@@ -56,7 +65,7 @@ export class PurchaseRequestsService {
                 item: {
                   include: {
                     unitOfMeasure: true,
-                  category: true,
+                    category: true,
                   },
                 },
               },
@@ -86,7 +95,7 @@ export class PurchaseRequestsService {
 
     const where: Prisma.PurchaseRequestWhereInput = {};
     if (params.status) {
-      where.status = params.status;
+      where.status = params.status as PRStatus;
     }
     if (params.unconverted) {
       where.purchaseOrders = {
@@ -433,6 +442,7 @@ export class PurchaseRequestsService {
               prId: id,
               supplierId: body.supplierId,
               currencyId: body.currencyId,
+              warehouseId: pr.warehouseId,
               status: 'DRAFT',
               lines: {
                 create: pr.lines.map((prLine) => {

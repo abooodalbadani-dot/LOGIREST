@@ -21,6 +21,8 @@ export const LotAllocationSchema = z.object({
 
 export type LotAllocation = z.infer<typeof LotAllocationSchema>;
 
+const generateTempId = () => `new-${Date.now()}`;
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface LotAllocationDialogProps {
@@ -48,13 +50,13 @@ export function LotAllocationDialog({
   const tc = useTranslations('common');
 
   const [lotNumber, setLotNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState(new Date().toISOString().split('T')[0]);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     if (open) {
       setLotNumber(currentLot?.lotNumber ?? '');
-      setExpiryDate(currentLot?.expiryDate ?? '');
+      setExpiryDate(currentLot?.expiryDate ?? new Date().toISOString().split('T')[0]);
       setTouched(false);
     }
   }, [open, currentLot]);
@@ -71,7 +73,7 @@ export function LotAllocationDialog({
     setTouched(true);
     if (!isFormValid) return;
     onConfirm({
-      id: currentLot?.id ?? `new-${Date.now()}`,
+      id: currentLot?.id ?? generateTempId(),
       lotNumber: lotNumberTrimmed,
       expiryDate: expiryDate || null,
     });

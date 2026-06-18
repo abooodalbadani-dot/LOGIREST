@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GrnController } from './grn.controller';
 import { GrnService } from './grn.service';
 import { GrnPostService } from '../grn-post.service';
+import { GrnVoidService } from '../../operations/grn-void.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
@@ -30,6 +31,10 @@ describe('GrnController', () => {
     post: jest.fn(),
   };
 
+  const mockGrnVoidService = {
+    void: jest.fn(),
+  };
+
   const mockPrismaService = {
     goodsReceivedNote: {
       findUnique: jest.fn(),
@@ -48,6 +53,7 @@ describe('GrnController', () => {
       providers: [
         { provide: GrnService, useValue: mockGrnService },
         { provide: GrnPostService, useValue: mockGrnPostService },
+        { provide: GrnVoidService, useValue: mockGrnVoidService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: WorkflowService, useValue: mockWorkflowService },
         {

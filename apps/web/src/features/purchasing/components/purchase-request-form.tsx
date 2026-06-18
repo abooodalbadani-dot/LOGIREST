@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
  Trash2,
- Plus,
  Calendar,
  Package,
  Calculator,
@@ -18,7 +17,7 @@ import {
  ArrowRight,
  History
 } from 'lucide-react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { onFormError } from '@/hooks/useFormError';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -42,6 +41,7 @@ import { useSubmitPR } from '@/features/purchasing/hooks/useSubmitPR';
 import { useCancelPR } from '@/features/purchasing/hooks/useCancelPR';
 import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 import { PRDetail } from '@/features/purchasing/hooks/usePR';
+import { ConvertToPOModal } from '@/features/purchasing/components/ConvertToPOModal';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Item, Warehouse, ItemSchema, WarehouseSchema } from '@/types/master-data';
@@ -53,7 +53,6 @@ import { FormFooter } from '@/components/layouts/FormLayout';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useAuth } from '@/providers/AuthProvider';
-import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 const lineItemSchema = z.object({
@@ -76,7 +75,7 @@ const lineItemSchema = z.object({
 });
 
 const formSchema = z.object({
- department_id: z.string().min(1),
+ department_id: z.string().optional().nullable().or(z.literal('')),
  expected_date: z.string().min(1),
  notes: z.string().optional(),
  lines: z.array(lineItemSchema).min(1),
@@ -90,19 +89,18 @@ interface PurchaseRequestFormProps {
 }
 
 export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequestFormProps) {
- const locale = useLocale();
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
- const { user } = useAuth();
+ const { user, activeScope } = useAuth();
  const [isSubmitting, setIsSubmitting] = React.useState(false);
  const [submitConfirmOpen, setSubmitConfirmOpen] = React.useState(false);
+ const [convertToPOOpen, setConvertToPOOpen] = React.useState(false);
  const [pendingValues, setPendingValues] = React.useState<PurchaseRequestFormValues | null>(null);
  const [idempotencyKey] = React.useState(() => crypto.randomUUID());
 
  const status = initialData?.status as DocumentStatus;
  const isLocked = isDocumentLocked('PR', status);
  const isFormDisabled = initialData ? status !== 'DRAFT' : false;
- const isDraft = !initialData || status === 'DRAFT';
 
  // Mocks/Hooks for data selection
  const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
@@ -162,7 +160,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
    })),
   } : {
    department_id: '',
-   expected_date: '',
+   expected_date: new Date().toISOString().split('T')[0],
    notes: '',
    lines: [],
   },
@@ -214,25 +212,28 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   }
  };
 
- const onSave = async (values: PurchaseRequestFormValues, submitAfterSave = false) => {
-  setIsSubmitting(true);
-  try {
-   let prId = initialData?.id;
-
-   // Map back to API format
-   const selectedWh = warehouses?.data?.find((w: Warehouse) => w.id === values.department_id);
-   const branchId = selectedWh?.branchId || '';
-
-   const payload = {
-    branchId,
-    warehouseId: values.department_id,
-    notes: values.notes || '',
-    lines: values.lines.map(l => ({
-     id: l.id,
-     itemId: l.item_id,
-     quantity: l.req_qty,
-    }))
-   };
+  const onSave = async (values: PurchaseRequestFormValues, submitAfterSave = false) => {
+   setIsSubmitting(true);
+   try {
+    let prId = initialData?.id;
+ 
+    // Map back to API format
+    const selectedWh = warehouses?.data?.find((w: Warehouse) => w.id === values.department_id) ||
+                       warehouses?.data?.find((w: Warehouse) => w.id === activeScope.warehouseId);
+    const branchId = selectedWh?.branchId || activeScope.branchId || '';
+    const warehouseId = selectedWh?.id || activeScope.warehouseId || '';
+ 
+    const payload = {
+     branchId,
+     warehouseId,
+     departmentId: values.department_id ? values.department_id : undefined,
+     notes: values.notes || '',
+     lines: values.lines.map(l => ({
+      id: l.id,
+      itemId: l.item_id,
+      quantity: l.req_qty,
+     }))
+    };
 
    if (prId) {
     await updatePR.mutateAsync({
@@ -385,17 +386,17 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       </PermissionGate>
      </ActionGuard>
 
-     <ActionGuard documentType="PR" status={status} action="CONVERT_TO_PO" role={user?.role}>
-      <PermissionGate action="create" resource="po">
-       <Button
-        onClick={() => router.push(`/purchase-orders/new?pr_id=${initialData?.id}`)}
-        className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-12 px-10 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 border-none shadow-xl shadow-primary/20"
-       >
-        <ArrowRight className="w-4 h-4 me-2 rtl:rotate-180" />
-        {t('convert_to_po')}
-       </Button>
-      </PermissionGate>
-     </ActionGuard>
+      <ActionGuard documentType="PR" status={status} action="CONVERT_TO_PO" role={user?.role}>
+       <PermissionGate action="create" resource="po">
+        <Button
+         onClick={() => setConvertToPOOpen(true)}
+         className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-12 px-10 text-label-xs font-semibold uppercase rounded-xl active:scale-95 border-none shadow-xl shadow-primary/20"
+        >
+         <ArrowRight className="w-4 h-4 me-2 rtl:rotate-180" />
+         {t('convert_to_po')}
+        </Button>
+       </PermissionGate>
+      </ActionGuard>
     </>
    )}
   </div>
@@ -448,7 +449,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             <FormControl>
              <SmartCombobox
               items={departmentItems}
-              value={field.value}
+              value={field.value ?? undefined}
               onSelect={(item) => field.onChange(item.id)}
               placeholder={tc('select_warehouse')}
               className="bg-card border border-border shadow-sm border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30"
@@ -626,6 +627,14 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       description={t('approve_confirm_desc')}
       warningText={t('irreversible')}
      />
+
+     {initialData && (
+       <ConvertToPOModal 
+         pr={initialData} 
+         open={convertToPOOpen} 
+         onOpenChange={setConvertToPOOpen} 
+       />
+     )}
     </form>
    </Form>
   </div>

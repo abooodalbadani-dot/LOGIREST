@@ -26,8 +26,10 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
+import { CreatePurchaseRequestDto } from './dto/create-purchase-request.dto';
 import type { Request } from 'express';
 
 function mapPRDetail(pr: Record<string, unknown>) {
@@ -71,7 +73,7 @@ function mapPRDetail(pr: Record<string, unknown>) {
     id: pr.id as string,
     documentNumber: pr.requestNumber as string,
     status: pr.status as string,
-    departmentId: pr.warehouseId as string, // Fallback since no department_id is stored directly
+    departmentId: (pr.departmentId as string) || (pr.warehouseId as string), // Fallback since no department_id is stored directly
     warehouseId: pr.warehouseId as string,
     warehouseName: (warehouse?.name as string) || null,
     branchId: (pr.branchId as string) || null,
@@ -102,7 +104,7 @@ function mapPRSummary(pr: Record<string, unknown>) {
     id: pr.id as string,
     documentNumber: pr.requestNumber as string,
     status: pr.status as string,
-    departmentId: pr.warehouseId as string,
+    departmentId: (pr.departmentId as string) || (pr.warehouseId as string),
     warehouseId: pr.warehouseId as string,
     warehouseName: (warehouse?.name as string) || null,
     branchId: (pr.branchId as string) || null,
@@ -135,20 +137,13 @@ export class PurchaseRequestsController {
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
-    @Body()
-    body: {
-      branchId: string;
-      warehouseId: string;
-      lines: Array<{
-        itemId: string;
-        quantity: number;
-      }>;
-    },
+    @Body() body: CreatePurchaseRequestDto,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
     const branchId = body.branchId;
     const warehouseId = body.warehouseId;
+    const departmentId = body.departmentId;
     const lines = (body.lines || []).map((line) => ({
       itemId: line.itemId,
       quantity: Number(line.quantity),
@@ -160,13 +155,14 @@ export class PurchaseRequestsController {
       warehouseId,
     );
     const pr = await this.prService.create(
-      { branchId, warehouseId, lines },
+      { branchId, warehouseId, departmentId, lines },
       userId,
     );
     return { data: mapPRDetail(pr) };
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query()
     query: {
@@ -194,6 +190,7 @@ export class PurchaseRequestsController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -279,6 +276,14 @@ export class PurchaseRequestsController {
   }
 
   @Post(':id/submit')
+  @Roles(
+    Role.ADMIN,
+    Role.PROC_OFFICER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'pr',
@@ -307,6 +312,14 @@ export class PurchaseRequestsController {
   }
 
   @Post(':id/approve')
+  @Roles(
+    Role.ADMIN,
+    Role.APPROVER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'pr',
@@ -335,6 +348,14 @@ export class PurchaseRequestsController {
   }
 
   @Post(':id/reject')
+  @Roles(
+    Role.ADMIN,
+    Role.APPROVER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'pr',
@@ -363,6 +384,14 @@ export class PurchaseRequestsController {
   }
 
   @Post(':id/cancel')
+  @Roles(
+    Role.ADMIN,
+    Role.PROC_OFFICER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'pr',
@@ -391,6 +420,7 @@ export class PurchaseRequestsController {
   }
 
   @Post(':id/convert-to-po')
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'pr',

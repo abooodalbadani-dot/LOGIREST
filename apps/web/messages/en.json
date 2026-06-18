@@ -542,6 +542,7 @@
       "sar_full": "Saudi Riyal (SAR)"
     },
     "currency_id": "Currency",
+    "currency": "Currency",
     "dash": "—",
     "datatable": {
       "export_csv": "Export CSV",
@@ -3577,6 +3578,11 @@
       "approved": "Approved",
       "approved_qty": "Approved Qty",
       "convert_to_po": "Convert to PO",
+      "convert_to_po_desc": "Convert this approved purchase request into a purchase order.",
+      "convert": "Convert",
+      "cancel_request": "Cancel Request",
+      "cancel_confirm": "Are you sure you want to cancel this request?",
+      "cancel_success": "Purchase request cancelled successfully.",
       "create_description": "Create a new internal requisition for stock items",
       "create_new": "Create New PR",
       "create_success": "Purchase request created successfully.",

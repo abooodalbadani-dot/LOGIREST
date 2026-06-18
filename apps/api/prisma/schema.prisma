@@ -54,11 +54,70 @@ enum DocumentType {
   ADJUSTMENT
   KITCHEN_REQUEST
   STOCKTAKE
+  YIELD_BATCH
 }
 
 enum LockType {
   STOCKTAKE
   MANUAL
+}
+
+enum ActiveStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PRStatus {
+  DRAFT
+  SUBMITTED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  FULFILLED
+  CANCELLED
+}
+
+enum POStatus {
+  DRAFT
+  SUBMITTED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PARTIAL
+  PARTIALLY_RECEIVED
+  FULFILLED
+  CANCELLED
+}
+
+enum GRStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  POSTED
+  VOIDED
+  CANCELLED
+}
+
+enum IssueStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  POSTED
+  VOIDED
+  CANCELLED
+}
+
+enum AdjStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  POSTED
+  VOIDED
+  CANCELLED
 }
 
 enum LockStatus {
@@ -91,38 +150,47 @@ enum AllocationMethod {
   VOLUME
 }
 
+enum OutboxStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
 // ─── Tier 1: Master Data ───────────────────────────────────────────
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         Role
-  isActive     Boolean  @default(true)
-  avatarUrl    String?  @map("avatar_url")
-  failedLoginAttempts Int                  @default(0) @map("failed_login_attempts")
-  lockedUntil         DateTime?            @map("locked_until")
-  phone               String?
-  locale              String               @default("ar")
-  themePreferences    String               @default("light") @map("theme_preferences")
-  notificationPreferences Json?                @map("notification_preferences")
-  version             Int                  @default(1)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id                      String    @id @default(uuid())
+  email                   String    @unique
+  passwordHash            String
+  name                    String
+  role                    Role
+  isActive                Boolean   @default(true)
+  avatarUrl               String?   @map("avatar_url")
+  failedLoginAttempts     Int       @default(0) @map("failed_login_attempts")
+  lockedUntil             DateTime? @map("locked_until")
+  phone                   String?
+  locale                  String    @default("ar")
+  themePreferences        String    @default("light") @map("theme_preferences")
+  notificationPreferences Json?     @map("notification_preferences")
+  version                 Int       @default(1)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
-  warehouseScopes     UserWarehouseScope[]
-  branchScopes        UserBranchScope[]
-  departmentScopes    UserDepartmentScope[]
-  purchaseRequests    PurchaseRequest[]
-  approvalEvents      ApprovalEvent[]
-  warehouseLocks      WarehouseLock[]
-  stocktakeCounts     StocktakeCount[]
-  auditLogs           AuditLog[]
+  warehouseScopes           UserWarehouseScope[]
+  branchScopes              UserBranchScope[]
+  departmentScopes          UserDepartmentScope[]
+  purchaseRequests          PurchaseRequest[]
+  approvalEvents            ApprovalEvent[]
+  warehouseLocks            WarehouseLock[]
+  stocktakeCounts           StocktakeCount[]
+  auditLogs                 AuditLog[]
   refreshTokens             RefreshToken[]
   passwordResetTokens       PasswordResetToken[]
-  createdLandedCostVouchers LandedCostVoucher[] @relation("CreatedVouchers")
+  createdLandedCostVouchers LandedCostVoucher[]   @relation("CreatedVouchers")
+  grnCreated                GoodsReceivedNote[]   @relation("GRNCreatedBy")
   kitchenRequests           KitchenRequest[]
+  inventoryIssues           InventoryIssue[]
+  adjustments               Adjustment[]
 
   @@map("users")
 }
@@ -243,21 +311,23 @@ model Warehouse {
   warehouseLocks     WarehouseLock[]
   stocktakeSessions  StocktakeSession[]
   yieldBatches       YieldBatch[]
+  purchaseOrders     PurchaseOrder[]
 
   @@map("warehouses")
 }
 
 model Department {
-  id       String @id @default(uuid())
+  id       String  @id @default(uuid())
   branchId String
   name     String
   isActive Boolean @default(true)
-  version  Int    @default(1)
+  version  Int     @default(1)
 
-  branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  inventoryIssues InventoryIssue[]
-  kitchenRequests KitchenRequest[]
-  userScopes      UserDepartmentScope[]
+  branch           Branch                @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  inventoryIssues  InventoryIssue[]
+  kitchenRequests  KitchenRequest[]
+  userScopes       UserDepartmentScope[]
+  purchaseRequests PurchaseRequest[]
 
   @@map("departments")
 }
@@ -300,13 +370,13 @@ model Supplier {
 }
 
 model Currency {
-  id       String   @id @default(uuid())
-  code     String   @unique
+  id       String  @id @default(uuid())
+  code     String  @unique
   name     String
   symbol   String?
-  isBase   Boolean  @default(false)
-  isActive Boolean  @default(true)
-  version  Int      @default(1)
+  isBase   Boolean @default(false)
+  isActive Boolean @default(true)
+  version  Int     @default(1)
 
   purchaseOrders PurchaseOrder[]
   fxRatesFrom    FXRate[]        @relation("FXFrom")
@@ -331,16 +401,16 @@ model FXRate {
 }
 
 model Item {
-  id         String   @id @default(uuid())
-  categoryId String
-  uomId      String
-  name       String
-  sku        String   @unique
-  isBatched  Boolean  @default(false)
-  hasExpiry  Boolean  @default(false)
-  isActive   Boolean  @default(true)
-  version    Int      @default(1)
-  createdAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  categoryId   String
+  uomId        String
+  name         String
+  sku          String   @unique
+  isBatched    Boolean  @default(false)
+  hasExpiry    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
   reorderPoint Decimal? @db.Decimal(18, 4)
 
   category            Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
@@ -382,13 +452,15 @@ model PurchaseRequest {
   requestNumber String   @unique
   branchId      String
   warehouseId   String
-  status        String   @default("DRAFT")
+  departmentId  String?
+  status        PRStatus @default(DRAFT)
   createdById   String
   version       Int      @default(1)
   createdAt     DateTime @default(now())
 
   branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Restrict)
   warehouse      Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  department     Department?     @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   createdBy      User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
   lines          PRLine[]
   purchaseOrders PurchaseOrder[]
@@ -409,17 +481,19 @@ model PRLine {
 }
 
 model PurchaseOrder {
-  id         String   @id @default(uuid())
-  poNumber   String   @unique
-  prId       String?  @unique
-  supplierId String
-  status     String   @default("DRAFT")
-  currencyId String
-  version    Int      @default(1)
-  createdAt  DateTime @default(now())
+  id          String   @id @default(uuid())
+  poNumber    String   @unique
+  prId        String? // Task 1.5: removed @unique to allow 1 PR → N POs
+  supplierId  String
+  warehouseId String?
+  status      POStatus @default(DRAFT)
+  currencyId  String
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
 
   purchaseRequest    PurchaseRequest?    @relation(fields: [prId], references: [id], onDelete: SetNull)
   supplier           Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse          Warehouse?          @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   currency           Currency            @relation(fields: [currencyId], references: [id], onDelete: Restrict)
   lines              POLine[]
   goodsReceivedNotes GoodsReceivedNote[]
@@ -441,17 +515,25 @@ model POLine {
 }
 
 model GoodsReceivedNote {
-  id          String   @id @default(uuid())
-  grnNumber   String   @unique
-  poId        String
-  warehouseId String
-  status      String   @default("DRAFT")
-  version     Int      @default(1)
-  createdAt   DateTime @default(now())
+  id               String    @id @default(uuid())
+  grnNumber        String    @unique
+  poId             String
+  warehouseId      String
+  status           GRStatus  @default(DRAFT)
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now())
+  // ── Task 1.2: Audit & Financial fields ────────────────────────────
+  notes            String?
+  createdById      String?
+  postedAt         DateTime?
+  fxRate           Decimal?  @db.Decimal(18, 6) // FX rate snapshot at GRN creation (foreign → base)
+  fxRateCapturedAt DateTime? @map("fx_rate_captured_at") // When the rate was captured
+  // ──────────────────────────────────────────────────────────────────
 
-  purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Restrict)
-  warehouse     Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  lines              GRNLine[]
+  purchaseOrder       PurchaseOrder           @relation(fields: [poId], references: [id], onDelete: Restrict)
+  warehouse           Warehouse               @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  createdBy           User?                   @relation("GRNCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  lines               GRNLine[]
   landedCostRelations LandedCostGRNRelation[]
 
   @@index([status])
@@ -459,52 +541,54 @@ model GoodsReceivedNote {
 }
 
 model GRNLine {
-  id               String  @id @default(uuid())
+  id               String   @id @default(uuid())
   grnId            String
   itemId           String
-  quantityReceived Decimal @db.Decimal(18, 4)
-  unitPrice        Decimal @db.Decimal(18, 4)
+  quantityReceived Decimal  @db.Decimal(18, 4)
+  unitPrice        Decimal  @db.Decimal(18, 4) // kept for compatibility — stores foreign price
+  unitPriceForeign Decimal? @db.Decimal(18, 4) // explicit: price in PO's currency
+  unitPriceBase    Decimal? @db.Decimal(18, 4) // converted to base currency at time of GRN post
   lotId            String?
 
-  goodsReceivedNote    GoodsReceivedNote           @relation(fields: [grnId], references: [id], onDelete: Cascade)
-  item                 Item                        @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  lot                  Lot?                        @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  goodsReceivedNote     GoodsReceivedNote          @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  item                  Item                       @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  lot                   Lot?                       @relation(fields: [lotId], references: [id], onDelete: SetNull)
   landedCostAllocations LandedCostAllocationLine[]
 
   @@map("grn_lines")
 }
 
 model LandedCostVoucher {
-  id                  String             @id @default(uuid())
-  voucherNumber       String             @unique
-  allocationMethod    AllocationMethod
-  totalAllocatedCost  Decimal            @db.Decimal(18, 4)
-  status              LandedCostStatus   @default(DRAFT)
-  currencyId          String
-  exchangeRate        Decimal            @db.Decimal(18, 6) @default(1.0)
-  transactionDate     DateTime           @default(now())
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  version             Int                @default(1)
-  createdById         String
+  id                 String           @id @default(uuid())
+  voucherNumber      String           @unique
+  allocationMethod   AllocationMethod
+  totalAllocatedCost Decimal          @db.Decimal(18, 4)
+  status             LandedCostStatus @default(DRAFT)
+  currencyId         String
+  exchangeRate       Decimal          @default(1.0) @db.Decimal(18, 6)
+  transactionDate    DateTime         @default(now())
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  version            Int              @default(1)
+  createdById        String
 
-  createdBy           User                      @relation("CreatedVouchers", fields: [createdById], references: [id])
-  lines               LandedCostAllocationLine[]
-  grnRelations        LandedCostGRNRelation[]
+  createdBy    User                       @relation("CreatedVouchers", fields: [createdById], references: [id])
+  lines        LandedCostAllocationLine[]
+  grnRelations LandedCostGRNRelation[]
 
   @@map("landed_cost_vouchers")
 }
 
 model LandedCostAllocationLine {
-  id                  String   @id @default(uuid())
+  id                  String  @id @default(uuid())
   landedCostVoucherId String
   grnLineId           String
-  allocatedCost       Decimal  @db.Decimal(18, 4)
-  adjustedUnitCost    Decimal  @db.Decimal(18, 4)
-  version             Int      @default(1)
+  allocatedCost       Decimal @db.Decimal(18, 4)
+  adjustedUnitCost    Decimal @db.Decimal(18, 4)
+  version             Int     @default(1)
 
-  voucher  LandedCostVoucher @relation(fields: [landedCostVoucherId], references: [id], onDelete: Cascade)
-  grnLine  GRNLine           @relation(fields: [grnLineId], references: [id], onDelete: Restrict)
+  voucher LandedCostVoucher @relation(fields: [landedCostVoucherId], references: [id], onDelete: Cascade)
+  grnLine GRNLine           @relation(fields: [grnLineId], references: [id], onDelete: Restrict)
 
   @@map("landed_cost_allocation_lines")
 }
@@ -522,16 +606,20 @@ model LandedCostGRNRelation {
 }
 
 model InventoryIssue {
-  id           String   @id @default(uuid())
-  issueNumber  String   @unique
+  id           String      @id @default(uuid())
+  issueNumber  String      @unique
   warehouseId  String
   departmentId String
-  status       String   @default("DRAFT")
-  version      Int      @default(1)
-  createdAt    DateTime @default(now())
+  status       IssueStatus @default(DRAFT)
+  notes        String?
+  createdById  String?
+  postedAt     DateTime?
+  version      Int         @default(1)
+  createdAt    DateTime    @default(now())
 
   warehouse      Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   department     Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdBy      User?                @relation(fields: [createdById], references: [id], onDelete: Restrict)
   lines          InventoryIssueLine[]
   kitchenRequest KitchenRequest?
 
@@ -600,14 +688,18 @@ model TransferLine {
 }
 
 model Adjustment {
-  id               String   @id @default(uuid())
-  adjustmentNumber String   @unique
+  id               String    @id @default(uuid())
+  adjustmentNumber String    @unique
   warehouseId      String
-  status           String   @default("DRAFT")
-  version          Int      @default(1)
-  createdAt        DateTime @default(now())
+  status           AdjStatus @default(DRAFT)
+  notes            String?
+  createdById      String?
+  postedAt         DateTime?
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now())
 
   warehouse Warehouse        @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  createdBy User?            @relation(fields: [createdById], references: [id], onDelete: Restrict)
   lines     AdjustmentLine[]
 
   @@map("adjustments")
@@ -656,12 +748,13 @@ model YieldBatch {
   category      String
   warehouseId   String?    @map("warehouse_id")
   warehouse     Warehouse? @relation(fields: [warehouseId], references: [id])
-  inputQty      Float      @map("input_qty")
-  outputQty     Float      @map("output_qty")
-  wasteQty      Float      @map("waste_qty")
-  yieldPct      Float      @map("yield_pct")
-  standardYield Float      @map("standard_yield")
-  efficiency    Float
+  // Task 1.6: changed Float → Decimal(18,4) for precise financial calculations
+  inputQty      Decimal    @map("input_qty") @db.Decimal(18, 4)
+  outputQty     Decimal    @map("output_qty") @db.Decimal(18, 4)
+  wasteQty      Decimal    @map("waste_qty") @db.Decimal(18, 4)
+  yieldPct      Decimal    @map("yield_pct") @db.Decimal(10, 4)
+  standardYield Decimal    @map("standard_yield") @db.Decimal(10, 4)
+  efficiency    Decimal    @db.Decimal(10, 4)
   createdAt     DateTime   @default(now()) @map("created_at")
 
   @@index([warehouseId])
@@ -757,6 +850,7 @@ model WarehouseItemLot {
 
   @@id([warehouseId, itemId, lotId])
   @@index([warehouseId, itemId])
+  @@index([warehouseId, itemId, qtyOnHand])
   @@map("warehouse_item_lots")
 }
 
@@ -883,6 +977,7 @@ model StocktakeCount {
   lot       Lot?             @relation(fields: [lotId], references: [id], onDelete: Restrict)
   countedBy User             @relation(fields: [countedById], references: [id], onDelete: Restrict)
 
+  @@unique([sessionId, itemId, lotId])
   @@map("stocktake_counts")
 }
 
@@ -935,40 +1030,40 @@ model DocumentSequence {
 }
 
 model OutboxEvent {
-  id          String    @id @default(uuid())
-  eventType   String
-  payload     Json
-  status      String    @default("PENDING") // PENDING | SUCCEEDED | FAILED
-  attempts    Int       @default(0)
-  lastError   String?
-  processedAt DateTime?
-  createdAt   DateTime  @default(now())
-  expiresAt   DateTime
-  documentId  String?
-  eventHash   String?   @map("event_hash") @db.VarChar(64)
-  deadLettered Boolean   @default(false) @map("dead_lettered")
-  retryHistory Json?     @map("retry_history")
+  id           String       @id @default(uuid())
+  eventType    String
+  payload      Json
+  status       OutboxStatus @default(PENDING)
+  attempts     Int          @default(0)
+  lastError    String?
+  processedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  expiresAt    DateTime
+  documentId   String?
+  eventHash    String?      @map("event_hash") @db.VarChar(64)
+  deadLettered Boolean      @default(false) @map("dead_lettered")
+  retryHistory Json?        @map("retry_history")
 
-  @@index([status, createdAt])
+  @@index([deadLettered, status, createdAt])
   @@map("outbox_events")
 }
 
 model ReconciliationRun {
-  id                 String   @id @default(uuid())
-  ranAt              DateTime @default(now())
-  itemsChecked       Int
-  discrepanciesFound   Int
-  lotDiscrepanciesFound Int @default(0) @map("lot_discrepancies_found")
-  wacDriftCount      Int @default(0) @map("wac_drift_count")
-  frozenItems          String[]
-  durationMs         Int
+  id                    String   @id @default(uuid())
+  ranAt                 DateTime @default(now())
+  itemsChecked          Int
+  discrepanciesFound    Int
+  lotDiscrepanciesFound Int      @default(0) @map("lot_discrepancies_found")
+  wacDriftCount         Int      @default(0) @map("wac_drift_count")
+  frozenItems           String[]
+  durationMs            Int
 
   @@map("reconciliation_runs")
 }
 
 model SystemSetting {
   key       String   @id
-  value     String   // Encrypted configuration string
+  value     String // Encrypted configuration string
   version   Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -992,17 +1087,17 @@ model AuditLogArchive {
 }
 
 model StockLedgerArchive {
-  id             String       @id
-  postedAt       DateTime
-  warehouseId    String
-  itemId         String
-  lotId          String?
-  quantity       Decimal      @db.Decimal(18, 4)
-  documentId     String
-  documentType   DocumentType
-  idempotencyKey String?
-  integrityHash      String?      @map("integrity_hash") @db.VarChar(64)
-  costLedgerEntries  Json?        @map("cost_ledger_entries")
+  id                String       @id
+  postedAt          DateTime
+  warehouseId       String
+  itemId            String
+  lotId             String?
+  quantity          Decimal      @db.Decimal(18, 4)
+  documentId        String
+  documentType      DocumentType
+  idempotencyKey    String?
+  integrityHash     String?      @map("integrity_hash") @db.VarChar(64)
+  costLedgerEntries Json?        @map("cost_ledger_entries")
 
   @@map("stock_ledger_archive")
 }
@@ -1033,5 +1128,3 @@ model DocumentCounter {
   @@index([docType, branchCode, year])
   @@map("document_counters")
 }
-
-

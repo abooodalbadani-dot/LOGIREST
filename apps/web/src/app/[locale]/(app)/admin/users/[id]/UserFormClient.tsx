@@ -45,6 +45,7 @@ interface Props {
 
 export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly = false }: Props) {
  const t = useTranslations('admin.users');
+ const tv = useTranslations();
  const _router = useRouter();
  const { data, isLoading } = useAdminUser(id);
  const { user: currentUser } = useAuth();
@@ -204,7 +205,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
         />
         {errors.name?.message && (
          <p className="text-xs text-red-500 mt-1">
-          {t(errors.name.message as Parameters<typeof t>[0])}
+          {tv(('admin.users.' + errors.name.message) as never)}
          </p>
         )}
        </div>
@@ -221,7 +222,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
         />
         {errors.email?.message && (
          <p className="text-xs text-red-500 mt-1">
-          {t(errors.email.message as Parameters<typeof t>[0])}
+          {tv(('admin.users.' + errors.email.message) as never)}
          </p>
         )}
        </div>

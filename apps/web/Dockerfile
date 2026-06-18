@@ -18,6 +18,8 @@ RUN npm config set fetch-retries 5 \
     && npm cache clean --force \
     && npm ci --workspace=apps/web
 ENV EXPERIMENTAL_CPUS=1
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build --workspace=apps/web
 
 # Stage 2: Production Runner

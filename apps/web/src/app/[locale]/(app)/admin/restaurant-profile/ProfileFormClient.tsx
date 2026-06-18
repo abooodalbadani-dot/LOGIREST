@@ -34,6 +34,7 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 export function ProfileFormClient({ locale: _locale }: { locale: string }) {
  const t = useTranslations('admin.restaurant_profile');
  const tCommon = useTranslations('common');
+ const tv = useTranslations();
  const { data: profile, isLoading } = useRestaurantProfile();
  const { mutateAsync: updateProfile, isPending } = useUpdateRestaurantProfile();
  const { playSound } = useAudioFeedback();
@@ -201,7 +202,7 @@ export function ProfileFormClient({ locale: _locale }: { locale: string }) {
                 className={`w-full h-10 ps-4 pe-10 text-start bg-background border rounded-lg focus:ring-1 focus:ring-brand-gold outline-none transition-all ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-border'}`}
               />
             </div>
-            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+            {errors.name && <p className="text-xs text-red-500 mt-1">{tv(errors.name.message as never)}</p>}
           </div>
 
           <div className="w-full min-w-0 flex flex-col gap-1.5">
@@ -216,7 +217,7 @@ export function ProfileFormClient({ locale: _locale }: { locale: string }) {
                 className={`w-full text-start ps-4 pe-10 pt-3 resize-none min-h-[100px] bg-background border rounded-lg focus:ring-1 focus:ring-brand-gold outline-none transition-all ${errors.address ? 'border-red-500 focus:ring-red-500' : 'border-border'}`}
               />
             </div>
-            {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address.message}</p>}
+            {errors.address && <p className="text-xs text-red-500 mt-1">{tv(errors.address.message as never)}</p>}
           </div>
         </div>
       </div>
@@ -240,7 +241,7 @@ export function ProfileFormClient({ locale: _locale }: { locale: string }) {
                 className={`w-full h-10 ps-4 pe-10 text-start bg-background border rounded-lg focus:ring-1 focus:ring-brand-gold outline-none transition-all font-mono ${errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-border'}`}
               />
             </div>
-            {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>}
+            {errors.phone && <p className="text-xs text-red-500 mt-1">{tv(errors.phone.message as never)}</p>}
           </div>
 
           <div className="w-full min-w-0 flex flex-col gap-1.5">
@@ -255,7 +256,7 @@ export function ProfileFormClient({ locale: _locale }: { locale: string }) {
                 className={`w-full h-10 ps-4 pe-10 text-start bg-background border rounded-lg focus:ring-1 focus:ring-brand-gold outline-none transition-all ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-border'}`}
               />
             </div>
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+            {errors.email && <p className="text-xs text-red-500 mt-1">{tv(errors.email.message as never)}</p>}
           </div>
         </div>
       </div>

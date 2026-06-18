@@ -34,6 +34,7 @@ describe('GrnPostService', () => {
       findUnique: mockGrnFindUnique,
       update: mockGrnUpdate,
       updateMany: mockGrnUpdateMany,
+      findMany: jest.fn().mockResolvedValue([]),
     },
     warehouseItemLot: {
       upsert: mockWarehouseItemLotUpsert,
@@ -55,6 +56,13 @@ describe('GrnPostService', () => {
     },
     lot: {
       findUnique: jest.fn().mockResolvedValue({ itemId: 'item-1' }),
+    },
+    pOLine: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    purchaseOrder: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'po-1', status: 'APPROVED' }),
+      update: jest.fn().mockResolvedValue({}),
     },
   } as unknown as Prisma.TransactionClient;
 
@@ -95,6 +103,7 @@ describe('GrnPostService', () => {
       status: 'RECEIVED',
       version: 1,
       warehouseId: 'wh-1',
+      poId: 'po-1',
     });
     mockGrnUpdateMany.mockResolvedValue({ count: 1 });
     mockStockLedgerFindFirst.mockResolvedValue(null);
@@ -110,6 +119,7 @@ describe('GrnPostService', () => {
       warehouseId,
       status: 'RECEIVED',
       version: 1,
+      poId: 'po-1',
       lines: [
         {
           id: 'line-1',
@@ -157,7 +167,7 @@ describe('GrnPostService', () => {
     expect(mockStockLedgerCreate).toHaveBeenCalled();
     expect(mockGrnUpdateMany).toHaveBeenCalledWith({
       where: { id: grnId, version: 1 },
-      data: { status: 'POSTED', version: 2 },
+      data: { status: 'POSTED', version: 2, postedAt: expect.any(Date) },
     });
     expect(mockApprovalEventCreate).toHaveBeenCalled();
     expect(mockAuditLogCreate).toHaveBeenCalled();
@@ -212,6 +222,7 @@ describe('GrnPostService', () => {
       warehouseId,
       status: 'RECEIVED',
       version: 1,
+      poId: 'po-1',
       lines: [
         {
           id: 'line-1',

@@ -63,8 +63,8 @@ export function KitchenDashboard() {
      <Badge className="bg-status-warning/10 text-status-warning border-none text-label-xs font-semibold uppercase mb-2">
       {t('kitchen.operations')}
      </Badge>
-     <h1 className="text-headline-lg font-semibold uppercase italic text-foreground">
-      {tc('department')} <span className="text-status-warning">{t('kitchen.overview')}</span>
+     <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
+      {tc('department')} <span className="text-brand-gold">{t('kitchen.overview')}</span>
      </h1>
     </div>
     <PermissionGate action="create" resource="operations_kitchen_requests">
@@ -117,8 +117,8 @@ export function KitchenDashboard() {
       <div className="absolute top-0 end-0 w-64 h-64 bg-status-warning/5 blur-[100px] rounded-full -me-32 -mt-32" />
       <CardHeader className="flex flex-row items-center justify-between">
        <div>
-        <CardTitle id="supply-requests-title" className="text-title-lg font-semibold uppercase italic">{t('kitchen.supply_requests')}</CardTitle>
-        <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">{t('kitchen.tracking_flow')}</CardDescription>
+        <CardTitle id="supply-requests-title" className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('kitchen.supply_requests')}</CardTitle>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-1">{t('kitchen.tracking_flow')}</p>
        </div>
        <PermissionGate action="view" resource="operations_kitchen_requests">
         <Link href="/kitchen-requests">

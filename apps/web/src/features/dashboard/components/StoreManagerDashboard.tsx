@@ -50,18 +50,21 @@ export function StoreManagerDashboard() {
 
  return (
   <main role="main" className="space-y-10 animate-in fade-in duration-200">
-   <h1 className="sr-only">{t('store.operational')} {t('store.control')}</h1>
-   
+
    {/* Store Manager Header - Industrial/Brutalist Style */}
-   <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 ps-6">
+   <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 w-full border-b border-border/50 pb-6">
     <div className="space-y-2">
      <span className="text-label-xs font-semibold uppercase text-status-success block mb-2 opacity-80">{t('store.logistics')}</span>
-     <h2 className="text-headline-lg font-semibold uppercase italic text-foreground leading-none">
-      {t('store.operational')} <span className="text-status-success">{t('store.control')}</span>
-     </h2>
+     <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
+      {locale === 'ar' ? (
+       <>{t('store.control')} <span className="text-brand-gold">{t('store.operational')}</span></>
+      ) : (
+       <>{t('store.operational')} <span className="text-brand-gold">{t('store.control')}</span></>
+      )}
+     </h1>
      <div className="flex items-center gap-3">
       <div className="h-[2px] w-12 bg-status-success" />
-      <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('store.central_warehouse')}</p>
+      <p className="text-sm font-bold text-muted-foreground tracking-widest mt-2">{t('store.central_warehouse')}</p>
      </div>
     </div>
     <div className="flex gap-4">
@@ -127,8 +130,8 @@ export function StoreManagerDashboard() {
       <div className="p-8 pb-4">
        <div className="flex items-center justify-between mb-8">
         <div>
-         <h3 id="fulfillment-queue-title" className="text-headline-lg font-semibold uppercase italic text-foreground leading-none">{t('store.fulfillment_queue')}</h3>
-         <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase mt-2">{t('store.fefo_guided')}</p>
+         <h3 id="fulfillment-queue-title" className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.fulfillment_queue')}</h3>
+         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-1">{t('store.fefo_guided')}</p>
         </div>
         <div className="flex items-center gap-3">
          <div className="flex -space-x-2.5">
@@ -199,7 +202,7 @@ export function StoreManagerDashboard() {
        <span className="text-label-xs font-semibold uppercase text-status-success flex items-center gap-2 mb-4">
         <Zap className="w-3.5 h-3.5 fill-current" /> {t('store.fefo_boundary')}
        </span>
-       <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('store.expiring_stock')}</h3>
+       <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.expiring_stock')}</h3>
       </div>
       <div className="p-8 pt-2 space-y-6">
        {stats.expiringLots.map((item) => (
@@ -235,7 +238,7 @@ export function StoreManagerDashboard() {
        <span className="text-label-xs font-semibold uppercase text-muted-foreground/20 flex items-center gap-2 mb-4">
         <BarChart3 className="w-3.5 h-3.5" /> {t('store.efficiency')}
        </span>
-       <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('store.stock_velocity')}</h3>
+       <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.stock_velocity')}</h3>
       </div>
       <div className="h-44 flex flex-col items-center justify-center gap-6 bg-card border border-border shadow-sm/30 group-hover:bg-card border border-border shadow-sm/50 transition-all duration-140 ease-industrial">
        <div className="flex items-end gap-2 h-16 w-full justify-center">

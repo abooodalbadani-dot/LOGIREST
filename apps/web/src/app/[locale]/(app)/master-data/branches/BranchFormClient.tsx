@@ -48,6 +48,7 @@ interface Props {
 export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale: _locale, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tb = useTranslations('master_data.branches');
+  const tv = useTranslations();
   const abortController = useAbortController();
 
   const {
@@ -255,7 +256,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                     />
                   )}
                 />
-                {errors.code && <p className="text-xs text-red-500 mt-1">{t(errors.code.message as string)}</p>}
+                {errors.code && <p className="text-xs text-red-500 mt-1">{tv(('admin.' + errors.code.message) as never)}</p>}
               </div>
 
               {/* Name */}
@@ -275,7 +276,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                     />
                   )}
                 />
-                {errors.name && <p className="text-xs text-red-500 mt-1">{t(errors.name.message as string)}</p>}
+                {errors.name && <p className="text-xs text-red-500 mt-1">{tv(('admin.' + errors.name.message) as never)}</p>}
               </div>
             </div>
           </div>

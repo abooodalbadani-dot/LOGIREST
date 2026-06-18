@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { VoidButton } from '@/components/shared/VoidButton';
+import { useCancelIssue } from '@/features/operations/hooks/useCancelIssue';
+import { Trash2 } from 'lucide-react';
 
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -57,6 +59,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
  const postIssue = usePostIssue({ onConflict });
  const isPostPending = postIssue.isPending;
  const submitIssue = useSubmitIssue({ onConflict });
+ const cancelIssue = useCancelIssue({ onConflict });
  const { playSound } = useAudioFeedback();
 
  const { data: itemsData } = useItems(); const items = itemsData?.data || [];
@@ -324,6 +327,20 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
    const apiErr = err as { code?: string; name?: string };
    if (apiErr?.name === 'AbortError') return;
    toast.error(t('submit_error') || 'Failed to submit issue');
+  }
+ };
+
+ const handleCancelIssue = async () => {
+  if (!issue) return;
+  if (!window.confirm(t('confirm_cancel') || 'Are you sure you want to delete/cancel this draft?')) return;
+  try {
+   await cancelIssue.mutateAsync({ id, version: issue.version, signal: abortController.signal });
+   toast.success(t('cancel_success') || 'Issue cancelled successfully');
+   guardedRouter.push('/issues', { skipGuard: true });
+  } catch (err: unknown) {
+   const apiErr = err as { code?: string; name?: string };
+   if (apiErr?.name === 'AbortError') return;
+   toast.error(t('cancel_error') || 'Failed to cancel issue');
   }
  };
 
@@ -671,6 +688,22 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           <Send className="w-4 h-4 md:w-5 md:h-5" />
          )}
          <span>{submitIssue.isPending ? t('submitting') || 'Submitting...' : t('submit') || 'Submit'}</span>
+        </Button>
+       )}
+       {!effectiveIsLocked && !isNew && status === ISSUE_STATUS.DRAFT && (
+        <Button
+         type="button"
+         onClick={handleCancelIssue}
+         disabled={cancelIssue.isPending}
+         variant="destructive"
+         className="h-8 md:h-10 px-4 md:px-6 rounded-full transition-all text-[10px] md:text-label-sm font-black uppercase tracking-widest active:scale-95 flex items-center gap-2 shrink-0 border-none shadow-sm shadow-red-900/30"
+        >
+         {cancelIssue.isPending ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+         ) : (
+          <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+         )}
+         <span>{t('cancel') || 'Delete'}</span>
         </Button>
        )}
        {!effectiveIsLocked && !isNew && (

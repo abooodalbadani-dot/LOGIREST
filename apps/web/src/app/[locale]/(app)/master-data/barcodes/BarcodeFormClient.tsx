@@ -38,6 +38,7 @@ interface Props {
 export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const tc = useTranslations('common');
   const tb = useTranslations('master_data.barcodes');
+  const tv = useTranslations();
 
   const { data: barcode } = useBarcode(id);
   const { data: items } = useItems();
@@ -203,7 +204,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
                     />
                   )}
                 />
-                {errors.itemId && <p className="text-xs text-red-500 mt-1">{errors.itemId.message}</p>}
+                {errors.itemId && <p className="text-xs text-red-500 mt-1">{tv(errors.itemId.message as never)}</p>}
               </div>
             </div>
           </div>
@@ -227,7 +228,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
                   size="md"
                 />
                 <input type="hidden" {...register('code')} />
-                {errors.code && <p className="text-xs text-red-500 mt-1">{errors.code.message}</p>}
+                {errors.code && <p className="text-xs text-red-500 mt-1">{tv(errors.code.message as never)}</p>}
               </div>
             </div>
 

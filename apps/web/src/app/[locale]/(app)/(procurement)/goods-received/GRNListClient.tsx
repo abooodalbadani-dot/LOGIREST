@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
 
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -45,11 +46,14 @@ export function GRNListClient({
  const [sortField, setSortField] = useState<string>('');
  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
- const statusItems = useMemo(() => [
-  { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
-  { id: GRN_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
-  { id: GRN_STATUS.POSTED, name_en: tc('statuses.posted'), name_ar: tc('statuses.posted') },
- ], [tc]);
+  const statusItems = useMemo(() => [
+   { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
+   { id: GRN_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
+   { id: GRN_STATUS.RECEIVED, name_en: tc('statuses.received'), name_ar: tc('statuses.received') },
+   { id: GRN_STATUS.POSTED, name_en: tc('statuses.posted'), name_ar: tc('statuses.posted') },
+   { id: GRN_STATUS.CANCELLED, name_en: tc('statuses.cancelled'), name_ar: tc('statuses.cancelled') },
+   { id: GRN_STATUS.VOIDED, name_en: tc('statuses.voided'), name_ar: tc('statuses.voided') },
+  ], [tc]);
 
  // Debounce search input
  useEffect(() => {
@@ -57,7 +61,8 @@ export function GRNListClient({
  return () => clearTimeout(timer);
  }, [search]);
 
- const { data, isLoading } = useGRNList({ status, page, search: debouncedSearch, sortField, sortOrder });
+  const activeStatusQuery = status === 'ALL' || !status ? undefined : status;
+  const { data, isLoading } = useGRNList({ status: activeStatusQuery, page, search: debouncedSearch, sortField, sortOrder });
 
  const toggleSort = (field: string) => {
   setSortField(prev => {
@@ -242,6 +247,18 @@ export function GRNListClient({
       color="amber"
      />
     </div>
+
+     <div className="flex w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <Tabs value={status || 'ALL'} onValueChange={(val) => { setStatus(val); setPage(1); }} className="w-full">
+       <TabsList variant="line" className="w-full justify-start overflow-x-auto overflow-y-hidden hide-scrollbar border-b border-border/10 pb-0 gap-6">
+        {statusItems.map((tab) => (
+         <TabsTrigger key={tab.id} value={tab.id} className="pb-3 text-label-xs font-bold uppercase tracking-wider h-auto">
+          {locale === 'ar' ? tab.name_ar : tab.name_en}
+         </TabsTrigger>
+        ))}
+       </TabsList>
+      </Tabs>
+     </div>
 
     <div className="bg-card border border-border shadow-sm border border-surface-variant/5 rounded-lg p-1">
      <DataTable

@@ -15,6 +15,7 @@ import {
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { ItemsService } from './items.service';
@@ -29,6 +30,7 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query('search') search?: string,
     @Query('category_id') category_id?: string,
@@ -48,12 +50,13 @@ export class ItemsController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(@Param('id') id: string) {
     return this.itemsService.findOne(id);
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.STORE_MGR)
   async create(
     @Body() body: CreateItemDto,
     @CurrentUser('id') userId: string,
@@ -70,7 +73,7 @@ export class ItemsController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.STORE_MGR)
   async update(
     @Param('id') id: string,
     @Body() body: UpdateItemDto,

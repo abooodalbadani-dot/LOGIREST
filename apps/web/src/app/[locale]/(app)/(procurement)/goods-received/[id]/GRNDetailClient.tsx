@@ -9,15 +9,17 @@ import { useAuth } from '@/providers/AuthProvider';
 import { GRNForm } from '@/features/purchasing/components/grn-form';
 import { GRNViewer, type GRNViewerDocument } from './GRNViewer';
 import { Button } from '@/components/ui/button';
-import { VoidButton } from '@/components/shared/VoidButton';
-import { Send, Scan, Trash2, CheckCircle2 } from 'lucide-react';
+
+import { Send, Scan, Trash2, CheckCircle2, Ban } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { GRN_STATUS } from '@logirest/shared-types';
 import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
 import { useSubmitGRN } from '@/features/purchasing/hooks/useSubmitGRN';
+import { useVoidGRN } from '@/features/purchasing/hooks/useVoidGRN';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { canPerformActionV2 } from '@logirest/shared-types';
 import { toast } from 'sonner';
 
 interface GRNDetailClientProps {
@@ -40,6 +42,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
  const deleteGRN = useDeleteGRN();
  const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('goods-received', id);
  const submitGRN = useSubmitGRN({ onConflict: triggerConflict });
+ const voidGRN = useVoidGRN(id);
  
  const isNew = id === 'new';
  const { data: grn, isLoading, error } = useGRN(isNew ? null : id);
@@ -128,17 +131,29 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
     </PermissionGate>
 
     {/* POSTED / VOIDED: Void */}
-    <VoidButton
-     documentId={id}
-     documentType="GRN"
-     status={status}
-     version={grn?.version || 1}
-    />
+    {canPerformActionV2('GRN', status, 'VOID', user?.role) && (
+     <Button
+      variant="destructive"
+      size="sm"
+      disabled={voidGRN.isPending}
+      className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg transition-all flex items-center"
+      onClick={() => {
+       if (window.confirm(tCommon('void_warning_description') || 'Are you sure you want to void this document?')) {
+        voidGRN.mutate({ version: grn?.version ?? 1 });
+       }
+      }}
+     >
+      <Ban className="w-4 h-4 me-2" />
+      {voidGRN.isPending ? tCommon('saving') : tCommon('actions.void') || 'Void Document'}
+     </Button>
+    )}
    </div>
   );
 
- if (isLocked) {
-  if (!grn) return null;
+  const isLockedForView = ['POSTED', 'VOIDED', 'CANCELLED', 'RECEIVED'].includes(status);
+
+  if (isLocked || isLockedForView) {
+   if (!grn) return null;
   return (
    <>
     <GRNViewer 

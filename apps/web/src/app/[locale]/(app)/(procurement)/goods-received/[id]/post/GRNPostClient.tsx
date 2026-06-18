@@ -10,7 +10,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useGRN } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
-import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
+import { canPerformActionV2, type DocumentStatus, GRN_STATUS } from '@logirest/shared-types';
 
 import { useSettings } from '@/hooks/useSettings';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
@@ -94,19 +94,22 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  }, [grn, user]);
 
  useEffect(() => {
- if (grn && !isLoadingGRN) {
- // If already posted, redirect
- if (isDocumentLocked('GRN', grn.status as DocumentStatus)) {
-   router.replace(`/goods-received/${id}`);
- return;
- }
- 
- // Strict enforcement: only documents allowed by the engine can be posted
- if (!canPerformActionV2('GRN', grn.status as DocumentStatus, 'POST', user?.role)) {
-   router.replace(`/goods-received/${id}`);
+  if (grn && !isLoadingGRN) {
+    // Redirect away only if the GRN is in a terminal state that cannot be posted
+    // (POSTED, CANCELLED, VOIDED). Do NOT use isDocumentLocked here — RECEIVED is
+    // in the locked list to prevent form edits, but it is the required status for posting.
+    const terminalStatuses: string[] = [GRN_STATUS.POSTED, GRN_STATUS.CANCELLED, GRN_STATUS.VOIDED];
+    if (terminalStatuses.includes(grn.status)) {
+      router.replace(`/goods-received/${id}`);
+      return;
+    }
+
+    // Strict workflow + role enforcement
+    if (!canPerformActionV2('GRN', grn.status as DocumentStatus, 'POST', user?.role)) {
+      router.replace(`/goods-received/${id}`);
+    }
   }
- }
-}, [grn, isLoadingGRN, id, router, canPost, user]);
+ }, [grn, isLoadingGRN, id, router, canPost, user]);
 
  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
@@ -157,28 +160,31 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <Button variant="ghost" onClick={() => router.back()} className="rounded-2xl">
  {tc('cancel')}
  </Button>
-     <PostConfirmDialog
-      open={isPostDialogOpen}
-      onOpenChange={setIsPostDialogOpen}
-      title={t('post_confirm_title')}
-      description={t('post_confirm_desc')}
-      warningText={t('post_irreversible')}
-      requiresTextConfirmation={true}
-      onConfirm={handlePost}
-      isLoading={postMutation.isPending}
-      confirmKeyword={t('confirm_keyword') || 'POST'}
-     >
       <Button 
+       onClick={() => setIsPostDialogOpen(true)}
        disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0 || !baseCurrency}
        className="h-14 px-12 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 rounded-2xl transition-all border-none"
       >
        <Send className="w-5 h-5 me-3" />
        {t('post_grn')}
       </Button>
-     </PostConfirmDialog>
  </div>
  }
  />
+
+ {/* Controlled Post Confirm Dialog — rendered outside PageHeader so it's always mounted */}
+ <PostConfirmDialog
+  open={isPostDialogOpen}
+  onOpenChange={setIsPostDialogOpen}
+  title={t('post_confirm_title')}
+  description={t('post_confirm_desc')}
+  warningText={t('post_irreversible')}
+  requiresTextConfirmation={true}
+  onConfirm={handlePost}
+  isLoading={postMutation.isPending}
+  confirmKeyword={t('confirm_keyword') || 'POST'}
+ />
+
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  {/* FX Panel (PART 2) */}

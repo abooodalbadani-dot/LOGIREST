@@ -14,6 +14,7 @@ import {
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { UomService } from './uom.service';
@@ -28,11 +29,13 @@ export class UomController {
   constructor(private readonly uomService: UomService) {}
 
   @Get()
+  @AllRoles()
   async findAll() {
     return this.uomService.findAll();
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(@Param('id') id: string) {
     return this.uomService.findOne(id);
   }

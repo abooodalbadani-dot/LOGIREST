@@ -81,6 +81,9 @@ export class OperationsController {
     );
   }
 
+  /**
+   * @deprecated Use module-specific void endpoints instead
+   */
   @Post(':documentType/:id/void')
   @Roles(Role.ADMIN, Role.INV_MGR)
   @HttpCode(HttpStatus.OK)

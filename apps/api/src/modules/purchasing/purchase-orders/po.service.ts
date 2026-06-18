@@ -8,7 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType, Prisma } from '@prisma/client';
+import { DocumentType, Prisma, POStatus } from '@prisma/client';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -107,6 +107,7 @@ export class PurchaseOrderService {
           },
           supplier: true,
           currency: true,
+          warehouse: true,
           purchaseRequest: {
             include: {
               warehouse: true,
@@ -132,7 +133,7 @@ export class PurchaseOrderService {
 
     const where: Prisma.PurchaseOrderWhereInput = {};
     if (params.status) {
-      where.status = params.status;
+      where.status = params.status as POStatus;
     }
     if (params.supplierId) {
       where.supplierId = params.supplierId;
@@ -167,6 +168,7 @@ export class PurchaseOrderService {
           },
           supplier: true,
           currency: true,
+          warehouse: true,
           purchaseRequest: {
             include: {
               warehouse: true,
@@ -207,6 +209,7 @@ export class PurchaseOrderService {
         },
         supplier: true,
         currency: true,
+        warehouse: true,
         purchaseRequest: {
           include: {
             warehouse: true,
@@ -294,6 +297,7 @@ export class PurchaseOrderService {
           },
           supplier: true,
           currency: true,
+          warehouse: true,
           purchaseRequest: {
             include: {
               warehouse: true,

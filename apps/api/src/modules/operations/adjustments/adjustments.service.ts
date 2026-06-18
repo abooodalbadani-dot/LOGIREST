@@ -12,7 +12,7 @@ import {
   AdjustmentReason,
   DocumentType,
   Prisma,
-  $Enums,
+  AdjStatus,
 } from '@prisma/client';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 
@@ -128,7 +128,7 @@ export class AdjustmentsService {
 
     const where: Prisma.AdjustmentWhereInput = {};
     if (params.status) {
-      where.status = params.status;
+      where.status = params.status as AdjStatus;
     }
     if (warehouseId) {
       where.warehouseId = warehouseId;
@@ -213,6 +213,9 @@ export class AdjustmentsService {
           },
         },
         warehouse: true,
+        createdBy: {
+          select: { name: true, email: true },
+        },
       },
     });
 
@@ -222,7 +225,13 @@ export class AdjustmentsService {
       );
     }
 
-    return adjustment;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: { documentId: id },
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { ...adjustment, approvalEvents };
   }
 
   async update(

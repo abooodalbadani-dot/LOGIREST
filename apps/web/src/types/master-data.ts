@@ -220,7 +220,7 @@ export const UoMFormSchema = z.object({
 
 export const CategoryFormSchema = z.object({
   code: z.string().optional(),
-  name: z.string().min(1),
+  name: z.string().min(1, 'admin.validation.required'),
   isReferenced: z.boolean().optional(),
   version: z.number().optional()
 });

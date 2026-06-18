@@ -1,4 +1,4 @@
-import { PrismaClient, Role, LotStatus } from '@prisma/client';
+import { PrismaClient, Role, LotStatus, OutboxStatus } from '@prisma/client';
 
 // Initializing Prisma client for integrity E2E testing
 const prisma = new PrismaClient();
@@ -264,7 +264,7 @@ describe('Database Integrity Constraints (US2)', () => {
           data: {
             eventType: 'TEST',
             payload: {},
-            status: 'INVALID_STATUS',
+            status: 'INVALID_STATUS' as unknown as OutboxStatus,
             expiresAt: new Date(),
           },
         }),

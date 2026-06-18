@@ -22,6 +22,7 @@ describe('StocktakeService', () => {
   const mockStocktakeCountFindFirst = jest.fn();
   const mockStocktakeCountCreate = jest.fn();
   const mockStocktakeCountUpdate = jest.fn();
+  const mockStocktakeCountUpsert = jest.fn();
 
   const mockPrisma = {
     stocktakeSession: {
@@ -49,6 +50,7 @@ describe('StocktakeService', () => {
       findFirst: mockStocktakeCountFindFirst,
       create: mockStocktakeCountCreate,
       update: mockStocktakeCountUpdate,
+      upsert: mockStocktakeCountUpsert,
     },
     $transaction: jest.fn((callback) => callback(mockPrisma)),
   } as unknown as PrismaService;
@@ -171,7 +173,7 @@ describe('StocktakeService', () => {
         'user-1',
       );
       expect(result).toEqual({ success: true });
-      expect(mockStocktakeCountCreate).toHaveBeenCalled();
+      expect(mockStocktakeCountUpsert).toHaveBeenCalled();
       expect(mockStocktakeSessionUpdate).toHaveBeenCalledWith({
         where: { id: 's-1' },
         data: { status: 'COUNTING' },
