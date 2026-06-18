@@ -56,7 +56,7 @@ export class PurchaseRequestsService {
                 item: {
                   include: {
                     unitOfMeasure: true,
-                  category: true,
+                    category: true,
                   },
                 },
               },

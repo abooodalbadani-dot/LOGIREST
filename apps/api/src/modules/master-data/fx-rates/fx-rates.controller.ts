@@ -21,7 +21,7 @@ import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 import type { Request } from 'express';
 
 @Controller('currencies/fx-rates')
@@ -110,7 +110,7 @@ export class FXRatesController {
     Role.APPROVER,
   )
   async findAll(@Query() query?: { from?: string; to?: string }) {
-    const where: any = {};
+    const where: Prisma.FXRateWhereInput = {};
     if (query?.from && query?.to) {
       where.OR = [
         {

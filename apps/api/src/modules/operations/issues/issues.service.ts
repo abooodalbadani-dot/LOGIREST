@@ -84,7 +84,7 @@ export class IssuesService {
                 item: {
                   include: {
                     unitOfMeasure: true,
-                  category: true,
+                    category: true,
                   },
                 },
                 lotAllocations: {

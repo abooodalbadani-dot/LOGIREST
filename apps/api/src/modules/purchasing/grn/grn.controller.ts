@@ -208,9 +208,14 @@ export class GrnController {
     const incomingLines = body.lineItems || body.lines || [];
     const lines = incomingLines.map((line) => {
       const itemId = line.itemId;
-      const lotId = line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
-      const lotNumber = line.lotNumber || (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
-      const expiryDate = line.expiryDate || (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
+      const lotId =
+        line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
+      const lotNumber =
+        line.lotNumber ||
+        (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
+      const expiryDate =
+        line.expiryDate ||
+        (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
       const quantity = Number(line.receivedQty);
       const unitPrice = Number(line.unitCostForeign);
       return {
@@ -314,9 +319,14 @@ export class GrnController {
     if (incomingLines) {
       lines = incomingLines.map((line) => {
         const itemId = line.itemId;
-        const lotId = line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
-        const lotNumber = line.lotNumber || (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
-        const expiryDate = line.expiryDate || (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
+        const lotId =
+          line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
+        const lotNumber =
+          line.lotNumber ||
+          (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
+        const expiryDate =
+          line.expiryDate ||
+          (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
         const quantity = Number(line.receivedQty);
         const unitPrice = Number(line.unitCostForeign);
         return {

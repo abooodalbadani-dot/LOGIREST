@@ -71,6 +71,7 @@ export function LotAllocationDialog({
     setTouched(true);
     if (!isFormValid) return;
     onConfirm({
+      // eslint-disable-next-line react-hooks/purity
       id: currentLot?.id ?? `new-${Date.now()}`,
       lotNumber: lotNumberTrimmed,
       expiryDate: expiryDate || null,
