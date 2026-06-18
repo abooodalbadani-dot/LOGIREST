@@ -23,6 +23,7 @@ import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { RelationalName } from '@/components/shared/RelationalName';
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { formatCurrency } from '@/utils/currency';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -79,7 +80,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
    <StickyGlassHeader
     title={
      <div className="flex items-center gap-3">
-      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+      <div className="p-2 rounded-xl bg-muted/50 text-foreground">
        <Package className="w-4 h-4" />
       </div>
       {t('detail_title') || t('title')}
@@ -109,7 +110,9 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
      {/* Supplier Info */}
      <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group border border-surface-variant/5">
       <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</p>
-      <p className="font-bold text-title-sm mt-2 italic uppercase text-foreground">{document?.supplierName || 'Supply Co'}</p>
+      <p className="font-bold text-title-sm mt-2 italic uppercase text-foreground">
+       <RelationalName name={document?.supplierName} rawId={document?.supplierId} fallback="Supply Co" />
+      </p>
      </div>
 
      {/* Currency Info */}
@@ -118,7 +121,9 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
        <Wallet className="w-12 h-12" />
       </div>
       <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('order_currency')}</p>
-      <p className="font-mono font-semibold text-title-sm text-primary mt-2">{document?.currencyCode || document?.currencyId}</p>
+      <p className="font-mono font-semibold text-title-sm text-primary mt-2">
+       <RelationalName name={document?.currencyCode} rawId={document?.currencyId} />
+      </p>
      </div>
 
      {/* Linked PO */}
@@ -144,7 +149,9 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
        <Warehouse className="w-12 h-12" />
       </div>
       <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</p>
-      <p className="font-bold text-title-sm mt-2 uppercase italic text-foreground">{document?.warehouseId === 'wh-1' ? 'Main Warehouse' : 'Kitchen Store'}</p>
+      <p className="font-bold text-title-sm mt-2 uppercase italic text-foreground">
+       <RelationalName name={document?.warehouseName} rawId={document?.warehouseId} />
+      </p>
      </div>
 
      {/* Notes */}
@@ -195,17 +202,17 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
       <div className="flex items-center gap-2 text-amber-500">
        <TrendingUp className="w-3 h-3" />
        <p dir="ltr" className="text-label-sm font-mono font-semibold">
-        1 {document?.currencyCode || document?.currencyId} = {currentFxRate} {baseCurrency}
+        1 {document?.currencyCode || 'USD'} = {currentFxRate} {baseCurrency}
        </p>
       </div>
      </div>
 
      <Card className="bg-card border border-border shadow-sm p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-[340px] group border border-surface-variant/5">
-      <div className="absolute top-0 end-0 w-1 h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-all" />
+      <div className="absolute top-0 end-0 w-1 h-full bg-muted/50 group-hover:bg-emerald-500 transition-all" />
       <div className="space-y-6 relative z-10">
        <div className="flex justify-between items-baseline gap-10">
-        <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: document?.currencyCode || document?.currencyId })}</p>
-        <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, document?.currencyCode || document?.currencyId, locale)}</p>
+        <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: document?.currencyCode || 'USD' })}</p>
+        <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, document?.currencyCode || 'USD', locale)}</p>
        </div>
        <div className="h-px bg-surface-container-high/20 w-full" />
        <div className="flex justify-between items-center gap-10">

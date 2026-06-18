@@ -17,10 +17,10 @@ import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 const roleVariants: Record<string, string> = {
  ADMIN: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
- INV_MGR: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
- APPROVER: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+ INV_MGR: 'bg-muted/50 text-foreground border-cyan-500/20',
+ APPROVER: 'bg-muted/50 text-foreground border-emerald-500/20',
  WH_KEEPER: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
- PROC_OFFICER: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+ PROC_OFFICER: 'bg-muted/50 text-foreground border-blue-500/20',
  AUDITOR: 'bg-surface-container text-muted-foreground border-border-surface',
  VIEWER: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
 };
@@ -200,12 +200,12 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
      onPageChange: setPage
     } : undefined}
     filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
+      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <Input
          placeholder={t('search_placeholder')}
          value={search}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
         />
        </div>
      }

@@ -71,7 +71,7 @@ export function NotificationSettingsClient() {
      </Button>
     </div>
     {saveSuccess && (
-     <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-sm flex items-center gap-2 text-[10px] font-bold uppercase">
+     <div className="p-3 bg-muted/50 border border-emerald-500/20 text-foreground rounded-sm flex items-center gap-2 text-[10px] font-bold uppercase">
       <CheckCircle className="w-4 h-4" />
       Preferences saved successfully
      </div>

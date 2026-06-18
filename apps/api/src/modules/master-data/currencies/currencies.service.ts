@@ -7,6 +7,8 @@ interface CurrencyDto {
   name?: string;
   isBase?: boolean;
   version?: number;
+  symbol?: string;
+  isActive?: boolean;
 }
 
 @Injectable()
@@ -22,14 +24,9 @@ export class CurrenciesService {
       name: currency.name,
       nameEn: currency.name,
       nameAr: currency.name,
-      symbol:
-        currency.code === 'SAR'
-          ? 'ر.س'
-          : currency.code === 'USD'
-            ? '$'
-            : currency.code,
+      symbol: currency.symbol,
       isBase: currency.isBase,
-      isActive: true,
+      isActive: currency.isActive,
       createdAt: new Date().toISOString(),
       version: currency.version,
     };
@@ -74,6 +71,8 @@ export class CurrenciesService {
         code: data.code ?? '',
         name: data.name ?? '',
         isBase: data.isBase ?? false,
+        symbol: data.symbol,
+        isActive: data.isActive ?? true,
       },
     });
     return this.mapDbCurrencyToFrontend(currency);
@@ -93,6 +92,8 @@ export class CurrenciesService {
         code: data.code,
         name: data.name,
         isBase: data.isBase,
+        symbol: data.symbol,
+        isActive: data.isActive,
         version: data.version ? { increment: 1 } : undefined,
       },
     });

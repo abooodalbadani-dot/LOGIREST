@@ -63,6 +63,7 @@ export class StocktakeService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                   barcodeMappings: true,
                 },
               },
@@ -131,6 +132,7 @@ export class StocktakeService {
             item: {
               include: {
                 unitOfMeasure: true,
+                category: true,
                 barcodeMappings: true,
               },
             },

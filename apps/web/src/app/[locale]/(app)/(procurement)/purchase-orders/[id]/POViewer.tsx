@@ -16,6 +16,7 @@ import { useRouter } from '@/i18n/navigation';
 import { formatCurrency } from '@/utils/currency';
 import { type PODetail, type POLine, type AuditLog } from '@/features/purchasing/hooks/usePO';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 interface POViewerProps {
  document: PODetail;
@@ -124,9 +125,9 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
      {/* Header Stats */}
      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {[
-       { label: tCommon('supplier'), value: document?.supplierName || document?.supplierId, icon: User, color: 'text-primary' },
-       { label: tCommon('order_currency'), value: document?.currencyCode || document?.currencyId, icon: Wallet, color: 'text-operational-cyan' },
-       { label: t('target_warehouse'), value: document?.warehouseName || document?.targetWarehouseId, icon: Warehouse, color: 'text-emerald-500' },
+       { label: tCommon('supplier'), value: <RelationalName name={document?.supplierName} rawId={document?.supplierId} />, icon: User, color: 'text-primary' },
+       { label: tCommon('order_currency'), value: <RelationalName name={document?.currencyCode} rawId={document?.currencyId} />, icon: Wallet, color: 'text-operational-cyan' },
+       { label: t('target_warehouse'), value: <RelationalName name={document?.warehouseName} rawId={document?.targetWarehouseId} />, icon: Warehouse, color: 'text-foreground' },
        { label: t('expected_delivery_date'), value: document?.expectedDeliveryDate || '—', icon: Clock, color: 'text-amber-500' },
       ].map((item, idx) => (
        <Card key={idx} className="p-5 bg-card border border-border shadow-sm border-none shadow-sm flex flex-col gap-3 rounded-2xl relative overflow-hidden group">

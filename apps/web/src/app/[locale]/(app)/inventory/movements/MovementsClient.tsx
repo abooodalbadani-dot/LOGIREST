@@ -111,7 +111,7 @@ export default function MovementsClient() {
    cell: ({ row }) => (
     <div className="flex flex-col gap-0.5 min-w-0">
      <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase">
-      {row.original.itemCode || row.original.itemId}
+      {row.original.itemCode || '—'}
      </span>
      <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('system_id')}</span>
     </div>
@@ -122,7 +122,7 @@ export default function MovementsClient() {
    header: t('item_name'),
    cell: ({ row }) => (
     <div className="flex flex-col gap-0.5 max-w-[220px] min-w-0">
-     <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-cyan-400 transition-colors leading-tight">
+     <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-foreground transition-colors leading-tight">
       {row.original.itemName}
      </span>
      <span className="text-label-xxs font-bold text-muted-foreground/60 truncate uppercase">
@@ -261,7 +261,7 @@ export default function MovementsClient() {
        {t('ledger_query')}
       </span>
       <div className="relative group">
-       <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-cyan-500 transition-colors" />
+       <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-foreground transition-colors" />
        <input
         type="search"
         placeholder={t('search_placeholder')}

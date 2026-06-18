@@ -275,10 +275,10 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       <div className="lg:col-span-2">
        <div className="bg-card border border-border shadow-sm/30 rounded-3xl border border-white/5 overflow-hidden shadow-2xl h-full">
         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-card border border-border shadow-sm">
-         <h3 className="text-label-xs font-semibold uppercase text-cyan-500">{t('manifest_items')}</h3>
-         <div className="flex items-center gap-2 px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/20">
+         <h3 className="text-label-xs font-semibold uppercase text-foreground">{t('manifest_items')}</h3>
+         <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-full border border-cyan-500/20">
           <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", allScanned ? "bg-emerald-500" : "bg-cyan-500")} />
-          <span className={cn("text-label-xxs font-semibold uppercase tracking-normal", allScanned ? "text-emerald-500" : "text-cyan-500")}>
+          <span className={cn("text-label-xxs font-semibold uppercase tracking-normal", allScanned ? "text-foreground" : "text-foreground")}>
            {allScanned ? tCommon('statuses.completed') : t('verification_in_progress')}
           </span>
          </div>
@@ -308,9 +308,9 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
               <div className={cn(
                "px-3 py-1 rounded-lg text-label-xs font-semibold uppercase flex items-center gap-2",
                isFullyScanned 
-               ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+               ? "bg-muted/50 text-foreground border border-emerald-500/20" 
                : scanned > 0 
-               ? "bg-cyan-500/10 text-cyan-500 border border-cyan-500/20"
+               ? "bg-muted/50 text-foreground border border-cyan-500/20"
                : "bg-surface-container-highest text-muted-foreground/40 border border-white/5"
               )}>
                {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}

@@ -9,7 +9,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { usePRList, PRSummary } from '@/features/purchasing/hooks/usePRList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Trash2 } from 'lucide-react';
+import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Trash2, X } from 'lucide-react';
 import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
@@ -66,7 +66,7 @@ const [page, setPage] = useState(1);
  header: tc('warehouse'),
  cell: ({ row }) => (
  <div className="flex flex-col min-w-0">
- <span className="opacity-90 font-bold text-body-md text-start">{row.original.warehouseName || row.original.warehouseId}</span>
+ <span className="opacity-90 font-bold text-body-md text-start">{row.original.warehouseName || '—'}</span>
  <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold text-start">{tc('warehouse')}</span>
  </div>
  ),
@@ -223,15 +223,37 @@ const [page, setPage] = useState(1);
  onPageChange: setPage
  } : undefined}
  filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
-         placeholder={tc('statuses.all')}
-         value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
-        />
+       <div className="flex w-full gap-3 items-center flex-row">
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
+         <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+         <Input
+          placeholder={tc('search')}
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }} 
+          className="w-full h-11 ps-10 bg-background border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+         />
+        </div>
+        <div className="relative w-[180px] shrink-0 group">
+         <SmartCombobox
+          items={statusItems}
+          value={status || 'ALL'}
+          onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+          placeholder={tc('statuses.all')}
+          triggerClassName={status ? "h-11 bg-background border-border shadow-sm pr-8" : "h-11 bg-background border-border shadow-sm"}
+         />
+         {status && (
+           <Button
+             variant="ghost"
+             size="icon"
+             className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+             onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
+           >
+             <X className="h-4 w-4" />
+           </Button>
+         )}
+        </div>
        </div>
-     }
+      }
  />
  </div>
  </div>

@@ -126,7 +126,7 @@ const { data, isLoading } = useStocktakeList({
    meta: { sortBy: 'snapshot_at' },
    cell: ({ row }) => (
     <div className="flex flex-col min-w-0">
-     <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
+     <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground group-hover:text-foreground transition-colors">
       {row.original.sessionNumber}
      </span>
      <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">
@@ -148,7 +148,7 @@ const { data, isLoading } = useStocktakeList({
    accessorKey: 'warehouseId',
    header: tc('warehouse') || 'Warehouse',
    cell: ({ row }) => {
-    const display = warehouseMap.get(row.original.warehouseId) || row.original.warehouseId;
+    const display = warehouseMap.get(row.original.warehouseId) || '—';
     return (
      <div className="gap-2 min-w-0 items-center flex-1 gap-6 flex-col flex w-full">
       <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
@@ -196,7 +196,7 @@ const { data, isLoading } = useStocktakeList({
  <Button
  variant="ghost"
  size="sm"
- className="h-8 px-4 text-label-xxs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md group/btn transition-all"
+ className="text-xs font-bold tracking-wider text-muted-foreground hover:text-brand-gold uppercase transition-colors h-8 px-3 rounded-lg"
  onClick={(e) => {
  e.stopPropagation();
  router.push(`/stocktake/${row.original.id}`);
@@ -228,7 +228,7 @@ const postedCount = summaryData?.completed ?? 0;
  description={t('description') || 'Physical inventory verification and variance auditing'} actions={
  <div className="flex items-center gap-8">
  <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-8 hidden md:flex min-w-0">
- <div className="text-label-xs font-semibold uppercase text-cyan-500 flex items-center gap-2">
+ <div className="text-label-xs font-semibold uppercase text-foreground flex items-center gap-2">
  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_rgba(6,182,212,1)]" />
  {tc('statuses.live_updates')}
  </div>
@@ -282,7 +282,7 @@ const postedCount = summaryData?.completed ?? 0;
       <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-card border border-border shadow-sm rounded-lg border border-outline-low shadow-2xl">
        <div className="flex flex-col gap-3 min-w-[280px] flex-1 min-w-0">
         <div className="flex items-center gap-2 ms-1">
-         <Filter className="w-3 h-3 text-cyan-500/60" />
+         <Filter className="w-3 h-3 text-foreground/60" />
          <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
         </div>
         <SmartCombobox
@@ -296,7 +296,7 @@ const postedCount = summaryData?.completed ?? 0;
 
        <div className="flex flex-col gap-3 min-w-[340px] flex-[2] min-w-0">
         <div className="flex items-center gap-2 ms-1">
-         <Search className="w-3 h-3 text-cyan-500/60" />
+         <Search className="w-3 h-3 text-foreground/60" />
          <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
         </div>
         <div className="relative group">
@@ -377,7 +377,7 @@ const postedCount = summaryData?.completed ?? 0;
           <PermissionGate action="create" resource="stocktake">
            <Button 
             onClick={() => router.push(`/stocktake/new`)}
-            className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
+            className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
            >
             <Plus className="w-4 h-4 me-2" />
             {t('create_new')}

@@ -46,8 +46,8 @@ export function BarcodeListClient({ locale }: { locale: string }) {
    header: t('fields.code'), 
    cell: ({ row }) => (
     <div className="flex items-center gap-2">
-     <BarcodeIcon className="w-3.5 h-3.5 text-cyan-500/50" />
-     <span dir="ltr" className="font-mono text-cyan-500/90 font-bold uppercase bg-cyan-500/5 px-2 py-0.5 rounded-sm whitespace-nowrap inline-block min-w-max">
+     <BarcodeIcon className="w-3.5 h-3.5 text-foreground/50" />
+     <span dir="ltr" className="font-mono text-foreground/90 font-bold uppercase bg-muted/50 px-2 py-0.5 rounded-sm whitespace-nowrap inline-block min-w-max">
       {row.original.code}
      </span>
     </div>
@@ -73,7 +73,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
       <Button 
        variant="ghost" 
        size="sm" 
-       className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+       className="text-xs font-bold tracking-wider text-muted-foreground hover:text-brand-gold uppercase transition-colors h-8 px-3 rounded-lg"
        onClick={(e) => {
         e.stopPropagation();
         router.push(`/master-data/barcodes/${row.original.id}`);
@@ -86,7 +86,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
       <Button
        variant="ghost"
        size="sm"
-       className="text-label-xs font-semibold uppercase text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 h-7"
+       className="text-label-xs font-semibold uppercase text-foreground hover:text-foreground hover:bg-muted/50 h-7"
        onClick={(e) => {
         e.stopPropagation();
         router.push(`/master-data/barcodes/${row.original.id}/edit`);
@@ -118,7 +118,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
        <div className="flex gap-4">
         <Link href={`/master-data/barcodes/mapping`}>
          <Button variant="outline" className="h-11 px-6 border-white/5 bg-card border border-border shadow-sm hover:bg-surface-container-medium text-label-xs font-semibold uppercase rounded-sm">
-          <ScanLine className="w-3.5 h-3.5 me-2 text-cyan-500" />
+          <ScanLine className="w-3.5 h-3.5 me-2 text-foreground" />
           {useTranslations('master_data.barcode_mapping')('title')}
          </Button>
         </Link>
@@ -165,12 +165,12 @@ export function BarcodeListClient({ locale }: { locale: string }) {
      />
     }
     filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
+        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
         <Input
          placeholder={tc('search')}
          value={search}
-         onChange={(e) => { setSearch(e.target.value); }} className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         onChange={(e) => { setSearch(e.target.value); }} className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
        </div>
      }
@@ -179,11 +179,11 @@ export function BarcodeListClient({ locale }: { locale: string }) {
    {/* Quick Tips */}
    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60 hover:opacity-100 transition-opacity duration-500 pb-10 pt-4 border-t border-surface-variant/5">
     <div className="p-6 bg-card border border-border shadow-sm/50 rounded-sm border border-white/5 flex items-start gap-4">
-     <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
-      <BarcodeIcon className="w-5 h-5 text-cyan-500" />
+     <div className="w-10 h-10 rounded-sm bg-muted/50 flex items-center justify-center flex-shrink-0">
+      <BarcodeIcon className="w-5 h-5 text-foreground" />
      </div>
      <div className="space-y-1">
-      <h4 className="text-label-xs font-semibold uppercase text-cyan-500">{t('tips.multi_unit_title')}</h4>
+      <h4 className="text-label-xs font-semibold uppercase text-foreground">{t('tips.multi_unit_title')}</h4>
       <p className="text-label-xs text-muted-foreground font-semibold leading-relaxed uppercase">
        {t('tips.multi_unit_desc')}
       </p>

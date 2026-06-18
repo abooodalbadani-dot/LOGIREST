@@ -6,10 +6,11 @@ import { useTranslations, useLocale } from 'next-intl';
 import { formatDate } from '@/utils/currency';
 import type { LotAllocation } from '@/types/documents';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 export interface LineItem {
  id: string;
- item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom?: { code: string } | null };
+ item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom?: { code: string; name?: string } | null; category?: { id: string; name: string } | null };
  lot?: { lotNumber: string; expiryDate: string | null } | null;
  qty: number;
  uomId: string;
@@ -200,7 +201,7 @@ export function DocumentLineItemTable<T extends LineItem>({
            {renderUom ? (
             renderUom(line)
            ) : (
-            <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom?.code || line.uomId || ''}</span>
+            <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-label-xs font-black uppercase text-muted-foreground/30" />
            )}
           </td>
           {extraColumns.map((col, i) => (
@@ -277,7 +278,7 @@ export function DocumentLineItemTable<T extends LineItem>({
          {renderUom ? (
           renderUom(line)
          ) : (
-          <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom?.code || line.uomId || ''}</span>
+          <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-label-xs font-black uppercase text-muted-foreground/30" />
          )}
         </td>
         {extraColumns.map((col, i) => (

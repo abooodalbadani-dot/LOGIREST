@@ -101,6 +101,34 @@ export class TransfersService {
               mode: Prisma.QueryMode.insensitive,
             },
           },
+          {
+            fromWarehouse: {
+              name: {
+                contains: params.search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          },
+          {
+            toWarehouse: {
+              name: {
+                contains: params.search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          },
+          {
+            lines: {
+              some: {
+                item: {
+                  name: {
+                    contains: params.search,
+                    mode: Prisma.QueryMode.insensitive,
+                  },
+                },
+              },
+            },
+          },
         ],
       };
       if (where.AND) {
@@ -176,6 +204,7 @@ export class TransfersService {
             item: {
               include: {
                 unitOfMeasure: true,
+                category: true,
               },
             },
           },

@@ -150,6 +150,9 @@ export class ScopeInterceptor implements NestInterceptor {
       });
 
       if (!scope || scope.department.branchId !== branchId) {
+        if (isExempt) {
+          return next.handle();
+        }
         throw new ForbiddenException(
           'Access denied: Department scope not authorized',
         );
@@ -174,6 +177,9 @@ export class ScopeInterceptor implements NestInterceptor {
       });
 
       if (!scope) {
+        if (isExempt) {
+          return next.handle();
+        }
         throw new ForbiddenException(
           'Access denied: Branch scope not authorized',
         );

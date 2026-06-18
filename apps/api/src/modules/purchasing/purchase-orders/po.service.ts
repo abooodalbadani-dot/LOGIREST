@@ -32,11 +32,35 @@ export class PurchaseOrderService {
       if (body.prId) {
         const pr = await tx.purchaseRequest.findUnique({
           where: { id: body.prId },
-          select: { branchId: true },
+          select: { branchId: true, status: true },
         });
-        if (pr) {
-          branchId = pr.branchId;
+        if (!pr) {
+          throw new NotFoundException(
+            `Purchase Request with ID ${body.prId} not found`,
+          );
         }
+        if (pr.status !== 'APPROVED') {
+          throw new BadRequestException(
+            `Only APPROVED Purchase Requests can be converted to Purchase Orders. (Current status: ${pr.status})`,
+          );
+        }
+
+        const existingPo = await tx.purchaseOrder.findFirst({
+          where: { prId: body.prId },
+          select: { poNumber: true },
+        });
+        if (existingPo) {
+          throw new ConflictException(
+            `Purchase Request ${body.prId} has already been converted to Purchase Order ${existingPo.poNumber}.`,
+          );
+        }
+
+        branchId = pr.branchId;
+
+        await tx.purchaseRequest.update({
+          where: { id: body.prId },
+          data: { status: 'FULFILLED' },
+        });
       }
 
       if (!branchId) {
@@ -76,6 +100,7 @@ export class PurchaseOrderService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
             },
@@ -135,6 +160,7 @@ export class PurchaseOrderService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
             },
@@ -174,6 +200,7 @@ export class PurchaseOrderService {
             item: {
               include: {
                 unitOfMeasure: true,
+                category: true,
               },
             },
           },
@@ -260,6 +287,7 @@ export class PurchaseOrderService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
             },
@@ -282,7 +310,7 @@ export class PurchaseOrderService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'purchaseOrder',
       'SUBMIT',
@@ -292,6 +320,7 @@ export class PurchaseOrderService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async approve(
@@ -300,7 +329,7 @@ export class PurchaseOrderService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'purchaseOrder',
       'APPROVE',
@@ -310,6 +339,7 @@ export class PurchaseOrderService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async reject(
@@ -318,7 +348,7 @@ export class PurchaseOrderService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'purchaseOrder',
       'REJECT',
@@ -328,6 +358,7 @@ export class PurchaseOrderService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async cancel(
@@ -336,7 +367,7 @@ export class PurchaseOrderService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'purchaseOrder',
       'CANCEL',
@@ -346,6 +377,7 @@ export class PurchaseOrderService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async email(id: string, userId: string, recipientEmail?: string) {

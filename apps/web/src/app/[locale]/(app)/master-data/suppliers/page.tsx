@@ -1,7 +1,6 @@
 import { SupplierListClient } from './SupplierListClient';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { PageHeader } from '@/components/shared/PageHeader';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
@@ -19,9 +18,7 @@ export default async function SuppliersPage(props: { params: Promise<{ locale: s
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data_suppliers">
  <div className="flex flex-col gap-6 min-w-0">
- <PageHeader 
- title={t('title')} 
- description={t('description')} />
+ 
  <SupplierListClient locale={params.locale} />
  </div>
  </ProtectedRoute>

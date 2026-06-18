@@ -231,7 +231,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
   <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 relative">
    {/* Decorative background glows */}
    <div className="absolute top-0 end-1/4 w-96 h-96 bg-operational-cyan/5 rounded-full blur-[120px] pointer-events-none -z-10" />
-   <div className="absolute bottom-1/4 left-10 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[160px] pointer-events-none -z-10" />
+   <div className="absolute bottom-1/4 left-10 w-[400px] h-[400px] bg-muted/50 rounded-full blur-[160px] pointer-events-none -z-10" />
 
    {/* Breadcrumb return link & page headers */}
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 min-w-0">
@@ -497,7 +497,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
         <div className="flex items-center gap-1.5 shrink-0">
          <span className="w-3 h-3 rounded-full bg-status-error/30" />
          <span className="w-3 h-3 rounded-full bg-status-warning/30" />
-         <span className="w-3 h-3 rounded-full bg-emerald-500/30" />
+         <span className="w-3 h-3 rounded-full bg-muted/50" />
         </div>
         
         <div className="flex-1 max-w-xs bg-card border border-border shadow-sm/50 rounded-xl py-1 px-4 border border-outline-low text-[9px] font-mono text-muted-foreground/60 select-none overflow-hidden text-ellipsis whitespace-nowrap text-center">
@@ -511,7 +511,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
           disabled={liveResolve}
           className={`px-2.5 py-1 rounded text-[8px] font-bold uppercase transition-all flex items-center gap-1 ${
            livePreviewActive
-            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            ? 'bg-muted/50 text-foreground border border-emerald-500/30'
             : 'bg-card border border-border shadow-sm/50 border border-outline-low text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'
           }`}
          >

@@ -55,9 +55,9 @@ export function TransferHubClient() {
    header: t('route'),
    cell: ({ row }) => (
     <div className="flex items-center gap-3 text-sm font-medium">
-     <span className="text-muted-foreground">{row.original.fromWarehouseName || row.original.fromWarehouseId}</span>
+     <span className="text-muted-foreground">{row.original.fromWarehouseName || '—'}</span>
      <ArrowRight className="w-3 h-3 opacity-30" />
-     <span className="text-foreground">{row.original.toWarehouseName || row.original.toWarehouseId}</span>
+     <span className="text-foreground">{row.original.toWarehouseName || '—'}</span>
     </div>
    ),
   },
@@ -73,8 +73,8 @@ export function TransferHubClient() {
     const s = row.original.transferStatus;
     const colors = {
      PENDING: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-     IN_TRANSIT: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
-     COMPLETED: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+     IN_TRANSIT: 'bg-muted/50 text-foreground border-cyan-500/20',
+     COMPLETED: 'bg-muted/50 text-foreground border-emerald-500/20'
     };
     const colorClass = colors[s as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
     return (
@@ -104,7 +104,7 @@ export function TransferHubClient() {
       <Button 
        variant="ghost" 
        size="sm" 
-       className="h-8 w-8 p-0 hover:bg-emerald-500/10 hover:text-emerald-500"
+       className="h-8 w-8 p-0 hover:bg-muted/50 hover:text-foreground"
        onClick={(e) => {
         e.stopPropagation();
         const target = row.original.transferStatus === 'PENDING' ? 'ship' : 'receive';

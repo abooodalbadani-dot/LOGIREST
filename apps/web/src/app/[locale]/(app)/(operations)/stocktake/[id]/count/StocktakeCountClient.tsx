@@ -288,8 +288,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
      </div>
      )}
      {wasReconnecting && (
-      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-       <span className="text-emerald-500 font-bold uppercase tracking-wider text-sm">
+      <div className="bg-muted/50 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+       <span className="text-foreground font-bold uppercase tracking-wider text-sm">
         {t('reconnected_banner', { defaultValue: 'Reconnected \u2014 saving...' })}
        </span>
       </div>

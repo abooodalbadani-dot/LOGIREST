@@ -158,7 +158,7 @@ export function IssueForm() {
       <div className={cn(
        "h-10 px-4 rounded-xl flex items-center justify-between gap-3 transition-all duration-300 font-mono text-label-xs font-bold",
        isAllocated 
-        ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+        ? "bg-muted/50 text-foreground border border-emerald-500/20" 
         : "bg-surface-container-high/30 text-muted-foreground/60 border border-transparent"
       )}>
        <span>{line.qtyAllocated || 0} / {line.qty || 0}</span>
@@ -182,7 +182,7 @@ export function IssueForm() {
        className={cn(
         "h-10 px-4 rounded-xl text-label-xs font-semibold uppercase transition-all duration-300",
         isAllocated 
-         ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white" 
+         ? "border-emerald-500/30 text-foreground bg-muted/50 hover:bg-emerald-500 hover:text-white" 
          : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-500/10"
        )}
        onClick={() => handleOpenAllocator(line.index)}
@@ -279,7 +279,7 @@ export function IssueForm() {
  {/* Fulfillment Orchestration Header */}
  <div className="bg-card border border-border shadow-sm p-10 rounded-[2.5rem] border border-surface-container-high/20 shadow-2xl shadow-primary/5">
  <div className="flex items-center gap-6 mb-10 border-b border-surface-container-high/50 pb-8">
- <div className="p-4 rounded-[1.5rem] bg-cyan-600/10 text-cyan-500 border border-cyan-500/20 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
+ <div className="p-4 rounded-[1.5rem] bg-cyan-600/10 text-foreground border border-cyan-500/20 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
  <Settings2 className="w-8 h-8" />
  </div>
  <div>
@@ -429,8 +429,8 @@ export function IssueForm() {
  {/* Global Fulfillment Summary */}
  <div className="p-6 md:p-10 bg-card border border-border shadow-sm rounded-[3rem] border border-surface-container-high/20 shadow-inner flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
  <div className="flex items-center gap-6">
- <div className="w-16 h-16 rounded-[1.75rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-sm shadow-cyan-500/5">
- <PackageCheck className="w-8 h-8 text-cyan-500" />
+ <div className="w-16 h-16 rounded-[1.75rem] bg-muted/50 flex items-center justify-center border border-cyan-500/20 shadow-sm shadow-cyan-500/5">
+ <PackageCheck className="w-8 h-8 text-foreground" />
  </div>
  <div>
  <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>

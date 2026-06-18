@@ -85,7 +85,7 @@ export function YieldManagementClient() {
   {
    accessorKey: 'outputQty',
    header: t('output_qty'),
-   cell: ({ row }) => <span className="tabular-nums text-emerald-400 font-bold">{row.original.outputQty} kg</span>,
+   cell: ({ row }) => <span className="tabular-nums text-foreground font-bold">{row.original.outputQty} kg</span>,
   },
   {
    accessorKey: 'wasteQty',
@@ -101,7 +101,7 @@ export function YieldManagementClient() {
     const isLow = val < std;
     return (
      <div className="gap-2 min-w-0 items-center flex-1 gap-6 flex-col flex w-full">
-      <span className={`tabular-nums font-bold ${isLow ? 'text-amber-500' : 'text-emerald-500'}`}>
+      <span className={`tabular-nums font-bold ${isLow ? 'text-amber-500' : 'text-foreground'}`}>
        {val}%
       </span>
       <span className="text-[10px] text-muted-foreground/50">(Std: {std}%)</span>
@@ -193,17 +193,17 @@ export function YieldManagementClient() {
      {topPerformers.length > 0 && (
       <div className="p-6 rounded-sm bg-card border border-border shadow-sm border border-white/5 shadow-xl space-y-6">
        <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest flex items-center gap-2">
-        <TrendingUp className="w-4 h-4 text-emerald-500" />
+        <TrendingUp className="w-4 h-4 text-foreground" />
         {t('top_performers')}
        </h3>
        <div className="space-y-4">
         {topPerformers.map(item => (
-         <div key={item.id} className="flex items-center justify-between p-3 bg-emerald-500/5 rounded-sm border border-emerald-500/10">
+         <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-sm border border-emerald-500/10">
           <div className="flex flex-col min-w-0">
            <span className="text-sm font-semibold">{item.recipeName}</span>
-           <span className="text-[10px] text-emerald-400">{t('vs_standard', { value: `+${(item.efficiency - 100).toFixed(1)}%` })}</span>
+           <span className="text-[10px] text-foreground">{t('vs_standard', { value: `+${(item.efficiency - 100).toFixed(1)}%` })}</span>
           </div>
-          <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+          <ArrowUpRight className="w-4 h-4 text-foreground" />
          </div>
         ))}
        </div>

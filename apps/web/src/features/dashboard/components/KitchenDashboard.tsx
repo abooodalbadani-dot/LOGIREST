@@ -40,7 +40,11 @@ export function KitchenDashboard() {
  const { data: stats, isLoading, error } = useDashboardStats();
 
  if (!activeScope?.departmentId) {
-  return <EmptyScopeState context="department" />;
+  return (
+   <div className="flex-1 w-full min-w-0 flex flex-col items-center justify-center">
+    <EmptyScopeState context="department" />
+   </div>
+  );
  }
 
  if (isLoading) {

@@ -178,7 +178,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
       <div className="w-full min-w-0 col-span-12 flex flex-col gap-8 p-6 bg-background animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="w-full min-w-0 flex flex-col items-start text-start gap-2 border-b border-border pb-6">
           <div className="flex items-center gap-4">
-            {isAdmin ? <Lock className="w-8 h-8 text-rose-500" /> : <ShieldCheck className="w-8 h-8 text-cyan-500" />}
+            {isAdmin ? <Lock className="w-8 h-8 text-rose-500" /> : <ShieldCheck className="w-8 h-8 text-foreground" />}
             <h1 className="text-3xl font-bold text-foreground uppercase tracking-wider">
               {roleDisplayName}
             </h1>
@@ -201,13 +201,13 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
         )}
 
         {isAuditor && !isAdmin && (
-          <div className="w-full min-w-0 flex flex-row items-center gap-4 bg-cyan-500/5 border border-cyan-500/10 p-4 rounded-xl text-start">
-            <div className="text-cyan-500 flex-shrink-0">
+          <div className="w-full min-w-0 flex flex-row items-center gap-4 bg-muted/50 border border-cyan-500/10 p-4 rounded-xl text-start">
+            <div className="text-foreground flex-shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="flex flex-col gap-1">
-              <h4 className="text-sm font-bold text-cyan-500">{t('read_only_mode')}</h4>
-              <p className="text-xs text-cyan-500/80">{t('read_only_desc')}</p>
+              <h4 className="text-sm font-bold text-foreground">{t('read_only_mode')}</h4>
+              <p className="text-xs text-foreground/80">{t('read_only_desc')}</p>
             </div>
           </div>
         )}

@@ -22,6 +22,7 @@ import { dispatchPrintJob } from '@/lib/export/printDispatcher';
 import { ThermalReceipt } from '@/components/shared/ThermalReceipt';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { RelationalName } from '@/components/shared/RelationalName';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import type { LotAllocation, StockIssue } from '@/types/documents';
 
@@ -169,7 +170,12 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
            cell: (line) => (
             <div className="flex items-center gap-2 tabular-nums">
              <span className="text-body-md font-bold text-foreground">{line.qty}</span>
-             <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom?.code || line.uomId || ''}</span>
+             <RelationalName 
+              name={line.item.primaryUom?.code} 
+              rawId={line.uomId} 
+              fallback="N/A" 
+              className="text-label-xs font-semibold uppercase text-primary/20" 
+             />
             </div>
            )
           },
@@ -180,10 +186,10 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
             return (
              <div className="flex flex-wrap gap-1.5 max-w-[200px]">
               {lineAllocations.map((alloc: LotAllocation) => (
-               <div key={alloc.lotId} className="px-2.5 py-1 bg-emerald-500/10 rounded-lg flex items-center gap-1.5">
-                <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lotNumber}</span>
-                <div className="w-1 h-1 rounded-full bg-emerald-500/30" />
-                <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocatedQty}</span>
+               <div key={alloc.lotId} className="px-2.5 py-1 bg-muted/50 rounded-lg flex items-center gap-1.5">
+                <span className="text-label-xxs font-mono text-foreground/80">{alloc.lotNumber}</span>
+                <div className="w-1 h-1 rounded-full bg-muted/50" />
+                <span className="text-label-xxs font-semibold text-foreground">{alloc.allocatedQty}</span>
                </div>
               ))}
               {lineAllocations.length === 0 && (
@@ -235,8 +241,8 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       {/* Audit Info */}
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm space-y-6">
        <div className="flex items-center gap-4 border-b border-outline-variant/5 pb-4">
-        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-         <Info className="w-5 h-5 text-emerald-500" />
+        <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+         <Info className="w-5 h-5 text-foreground" />
         </div>
         <h4 className="text-label-xs font-semibold uppercase">{tCommon('audit_info')}</h4>
        </div>
@@ -292,7 +298,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
      notes={issue.notes || undefined}
      items={(issue.lines || []).map(line => ({
       code: line.item.code,
-      name: line.item.name,
+      name: line.item.name || '',
       qty: line.qty,
       uom: line.item.primaryUom?.code || line.uomId || '',
       notes: line.lot ? `${line.lot.lotNumber}` : undefined,

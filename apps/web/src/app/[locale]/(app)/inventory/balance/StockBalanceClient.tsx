@@ -9,7 +9,7 @@ import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBala
 import { generateExcel } from '@/utils/export';
 import type { StockBalanceItem } from '@/types/inventory';
 
-import { formatNumber, formatCurrency } from '@/utils/currency';
+import { formatNumber, formatCurrency, getCurrencyDisplayName } from '@/utils/currency';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -158,12 +158,12 @@ export default function StockBalanceClient() {
    cell: () => (
     <div className="flex items-center justify-end gap-2">
      <PermissionGate action="update" resource="inventory">
-      <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-operational-cyan/10 hover:text-operational-cyan text-muted-foreground/60 transition-all">
+      <Button variant="ghost" size="icon" aria-label={tc('edit')} className="w-8 h-8 rounded-lg hover:bg-operational-cyan/10 hover:text-operational-cyan text-muted-foreground/60 transition-all">
        <Edit2 className="w-3.5 h-3.5" />
       </Button>
      </PermissionGate>
      <PermissionGate action="delete" resource="inventory">
-      <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-status-error/10 hover:text-status-error text-muted-foreground/60 transition-all">
+      <Button variant="ghost" size="icon" aria-label={tc('delete')} className="w-8 h-8 rounded-lg hover:bg-status-error/10 hover:text-status-error text-muted-foreground/60 transition-all">
        <Trash2 className="w-3.5 h-3.5" />
       </Button>
      </PermissionGate>
@@ -204,7 +204,7 @@ export default function StockBalanceClient() {
  }, [data?.data]);
 
  return (
-  <div className=" text-foreground min-w-0 bg-card flex-1 gap-6 selection:bg-operational-cyan/30 border shadow-sm selection:text-operational-cyan flex-col flex min-h-screen border-border w-full dark:bg-card-dark">
+  <div className="text-foreground min-w-0 bg-card flex-1 gap-6 selection:bg-operational-cyan/30 border shadow-sm selection:text-operational-cyan flex-col flex min-h-screen border-border w-full">
    <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
     
     <ReportHeader />
@@ -220,8 +220,8 @@ export default function StockBalanceClient() {
       </p>
      </div>
 
-     <div className="flex items-center gap-4 w-full md:w-auto">
-      <div className="relative group flex-1 md:w-80">
+     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+      <div className="relative group w-full sm:w-80">
        <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-operational-cyan transition-colors z-10" />
        <Input 
         type="text"
@@ -231,22 +231,24 @@ export default function StockBalanceClient() {
         className="w-full h-12 ps-12 pe-4 bg-card border border-border shadow-sm/50 border-none rounded-2xl text-label-xs font-bold transition-all"
        />
       </div>
-      <PermissionGate action="create" resource="inventory">
-       <Link href="/master-data/items/new">
-        <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-sm shadow-primary/20">
-         <Plus className="w-4 h-4" />
-         <span className="text-label-xs font-semibold uppercase">{t('add_item')}</span>
-        </Button>
-       </Link>
-      </PermissionGate>
-      <Button 
-       variant="default" 
-       onClick={handleExport}
-       className="h-12 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl shadow-sm shadow-operational-cyan/20 transition-all border-none group"
-      >
-       <Download className="w-4 h-4 text-white me-3 transition-transform group-hover:-translate-y-0.5" />
-       <span className="text-label-xs font-semibold uppercase">{t('export')}</span>
-      </Button>
+      <div className="flex items-center gap-4 justify-end">
+       <PermissionGate action="create" resource="inventory">
+        <Link href="/master-data/items/new">
+         <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-sm shadow-primary/20">
+          <Plus className="w-4 h-4" />
+          <span className="text-label-xs font-semibold uppercase">{t('add_item')}</span>
+         </Button>
+        </Link>
+       </PermissionGate>
+       <Button 
+        variant="default" 
+        onClick={handleExport}
+        className="h-12 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl shadow-sm shadow-operational-cyan/20 transition-all border-none group"
+       >
+        <Download className="w-4 h-4 text-white me-3 transition-transform group-hover:-translate-y-0.5" />
+        <span className="text-label-xs font-semibold uppercase">{t('export')}</span>
+       </Button>
+      </div>
      </div>
     </div>
 
@@ -257,7 +259,7 @@ export default function StockBalanceClient() {
       value={formatCurrency(totalValue, baseCurrency, currentLocale as 'ar' | 'en')}
       icon={Wallet}
       color="emerald"
-      trend={tc('currencies.sar_full')}
+      trend={getCurrencyDisplayName(baseCurrency, currentLocale as 'ar' | 'en')}
      />
      <MetricCard
       label={t('near_expiry')}
@@ -279,7 +281,7 @@ export default function StockBalanceClient() {
     </div>
 
     {/* Table Filter Bar */}
-    <div className="flex flex-wrap items-center gap-6 bg-card border border-border shadow-sm/30 p-6 rounded-3xl border border-surface-variant/10 shadow-inner">
+    <div className="flex flex-wrap items-center gap-6 bg-card border border-border shadow-sm/30 p-6 rounded-3xl shadow-inner">
      <div className="flex items-center gap-3">
       <span className="text-label-xs font-semibold text-muted-foreground/60 uppercase">{t('filter_category')}</span>
       <Select value="all">
@@ -312,11 +314,11 @@ export default function StockBalanceClient() {
        variant="ghost" 
        size="icon" 
        onClick={() => setPage(p => Math.max(1, p - 1))}
-       className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm/50 border border-surface-variant/10"
+       className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm/50"
       >
        <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
       </Button>
-      <div className="text-label-xs font-semibold uppercase px-4 opacity-40">
+      <div className="text-label-xs font-semibold uppercase px-4 text-muted-foreground/80">
        {t('pagination_info', { 
         start: ((page - 1) * 15) + 1, 
         end: Math.min(page * 15, totalItems), 
@@ -327,7 +329,7 @@ export default function StockBalanceClient() {
        variant="ghost" 
        size="icon" 
        onClick={() => setPage(p => p + 1)}
-       className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm/50 border border-surface-variant/10"
+       className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm/50"
       >
        <ChevronRight className="w-4 h-4 rtl:rotate-180" />
       </Button>
@@ -335,7 +337,7 @@ export default function StockBalanceClient() {
     </div>
 
     {/* Data Table */}
-    <div className="bg-card border border-border shadow-sm/20 rounded-[2.5rem] border border-surface-variant/10 overflow-hidden shadow-2xl">
+    <div className="bg-card border border-border shadow-sm/20 rounded-[2.5rem] overflow-hidden shadow-2xl">
      <DataTable
       columns={columns}
       data={filteredItems}
@@ -354,8 +356,8 @@ export default function StockBalanceClient() {
 
     {/* Floating Quick Actions Bar */}
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-fit">
-     <div className="flex items-center gap-4 md:gap-8 bg-surface-ledger/95 backdrop-blur-2xl border border-white/15 px-6 md:px-10 h-14 md:h-16 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_20px_rgba(var(--primary-rgb),0.15)] transition-all animate-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center gap-3 border-e border-white/15 pe-6 md:pe-8 shrink-0">
+     <div className="flex items-center gap-4 md:gap-8 bg-surface-ledger/95 backdrop-blur-2xl border border-border/80 dark:border-white/15 px-6 md:px-10 h-14 md:h-16 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_20px_rgba(var(--primary-rgb),0.15)] transition-all animate-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center gap-3 border-e border-border/80 dark:border-white/15 pe-6 md:pe-8 shrink-0">
        <span className="text-[10px] md:text-label-xs font-black uppercase tracking-widest text-operational-cyan leading-none">{t('quick_actions')}</span>
       </div>
     
@@ -363,29 +365,29 @@ export default function StockBalanceClient() {
        <PermissionGate action="view" resource="inventory">
         <button 
          onClick={() => router.push('/inventory/scan-mode')}
-         className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-white hover:text-operational-cyan transition-all active:scale-95 group"
+         className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:text-operational-cyan transition-all active:scale-95 group"
         >
          <Scan className="w-4 h-4 md:w-5 md:h-5 text-operational-cyan transition-transform group-hover:scale-110" />
          <span className="hidden sm:inline">{t('barcode_scanner')}</span>
         </button>
        </PermissionGate>
        
-       <div className="w-px h-6 bg-card/15" />
+       <div className="w-px h-6 bg-border/80 dark:bg-card/15" />
        
        <button 
         onClick={() => window.print()}
-        className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-white hover:text-operational-cyan transition-all active:scale-95 group"
+        className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:text-operational-cyan transition-all active:scale-95 group"
        >
         <Printer className="w-4 h-4 md:w-5 md:h-5 text-operational-cyan transition-transform group-hover:scale-110" />
         <span className="hidden sm:inline">{t('print_labels')}</span>
        </button>
        
-       <div className="w-px h-6 bg-card/15" />
+       <div className="w-px h-6 bg-border/80 dark:bg-card/15" />
        
        <PermissionGate action="create" resource="adjustment">
         <button 
          onClick={() => router.push('/adjustments/new')}
-         className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-white hover:text-operational-cyan transition-all active:scale-95 group"
+         className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:text-operational-cyan transition-all active:scale-95 group"
         >
          <Scale className="w-4 h-4 md:w-5 md:h-5 text-operational-cyan transition-transform group-hover:scale-110" />
          <span className="hidden sm:inline">{t('reconciliation')}</span>

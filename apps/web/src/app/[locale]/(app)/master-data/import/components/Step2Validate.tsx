@@ -34,10 +34,10 @@ export function Step2Validate({ wizard }: Step2ValidateProps) {
  return (
  <div className="flex flex-col items-center justify-center py-24 gap-8">
  <div className="relative">
- <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full animate-pulse" />
+ <div className="absolute inset-0 bg-muted/50 blur-3xl rounded-full animate-pulse" />
  <div className="relative">
- <Loader2 className="w-24 h-24 text-cyan-500 animate-spin opacity-20" />
- <Database className="w-10 h-10 text-cyan-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-bounce" />
+ <Loader2 className="w-24 h-24 text-foreground animate-spin opacity-20" />
+ <Database className="w-10 h-10 text-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-bounce" />
  </div>
  </div>
  <div className="text-center">
@@ -59,12 +59,12 @@ export function Step2Validate({ wizard }: Step2ValidateProps) {
  <div className="max-w-2xl mx-auto flex flex-col gap-6 py-12">
  <Card className={cn(
  "p-10 rounded-[2.5rem] flex flex-col items-center gap-8 border-none shadow-2xl relative overflow-hidden transition-all duration-700",
- errorCount > 0 ? "bg-red-500/5 shadow-red-500/5" : "bg-emerald-500/5 shadow-emerald-500/5"
+ errorCount > 0 ? "bg-red-500/5 shadow-red-500/5" : "bg-muted/50 shadow-emerald-500/5"
  )}>
  {/* Status Icon */}
  <div className={cn(
  "w-24 h-24 rounded-full flex items-center justify-center relative",
- errorCount > 0 ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
+ errorCount > 0 ? "bg-red-500/10 text-red-500" : "bg-muted/50 text-foreground"
  )}>
  <div className="absolute inset-0 bg-current opacity-10 animate-ping rounded-full" />
  {errorCount > 0 ? <AlertCircle className="w-12 h-12 relative z-10" /> : <CheckCircle2 className="w-12 h-12 relative z-10" />}
@@ -88,7 +88,7 @@ export function Step2Validate({ wizard }: Step2ValidateProps) {
  </div>
  <div className="bg-background/40 backdrop-blur-sm p-5 rounded-[1.5rem] flex flex-col items-center border border-foreground/5">
  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">{t('errors')}</span>
- <span className={cn("text-headline-lg font-display font-bold", errorCount > 0 ? "text-red-500" : "text-emerald-500/40")}>
+ <span className={cn("text-headline-lg font-display font-bold", errorCount > 0 ? "text-red-500" : "text-foreground/40")}>
  {errorCount}
  </span>
  </div>

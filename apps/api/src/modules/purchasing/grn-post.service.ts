@@ -209,6 +209,26 @@ export class GrnPostService {
 
       const updatedGrn = await tx.goodsReceivedNote.findUnique({
         where: { id: grnId },
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                  category: true,
+                },
+              },
+              lot: true,
+            },
+          },
+          purchaseOrder: {
+            include: {
+              supplier: true,
+              currency: true,
+            },
+          },
+          warehouse: true,
+        },
       });
 
       if (!updatedGrn) {

@@ -10,17 +10,17 @@ const intlMiddleware = createMiddleware(routing);
  * This is a UX guard only. The API enforces the real boundary.
  */
 const ROUTE_ROLE_MAP: Record<string, string[]> = {
-  '/stocktake':     ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
-  '/adjustments':   ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
-  '/transfers':     ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
-  '/issues':        ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF', 'AUDITOR', 'GM'],
+  '/stocktake': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/adjustments': ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/transfers': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/issues': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF', 'AUDITOR', 'GM'],
   '/goods-received': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'PROC_OFFICER', 'PROC_MGR', 'APPROVER', 'AUDITOR', 'GM'],
-  '/inventory':     ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF', 'AUDITOR', 'GM', 'VIEWER'],
+  '/inventory': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF', 'AUDITOR', 'GM', 'VIEWER'],
   '/purchase-requests': ['ADMIN', 'INV_MGR', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR', 'STORE_MGR', 'APPROVER', 'AUDITOR', 'GM', 'VIEWER'],
-  '/purchase-orders':   ['ADMIN', 'PROC_MGR', 'PROC_OFFICER', 'BRANCH_MGR', 'INV_MGR', 'APPROVER', 'AUDITOR', 'GM', 'VIEWER'],
-  '/kitchen-requests':  ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF'],
-  '/admin':         ['ADMIN'],
-  '/reports':       ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'GM', 'AUDITOR', 'VIEWER', 'APPROVER'],
+  '/purchase-orders': ['ADMIN', 'PROC_MGR', 'PROC_OFFICER', 'BRANCH_MGR', 'INV_MGR', 'APPROVER', 'AUDITOR', 'GM', 'VIEWER'],
+  '/kitchen-requests': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF'],
+  '/admin': ['ADMIN'],
+  '/reports': ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'GM', 'AUDITOR', 'VIEWER', 'APPROVER'],
 };
 
 /** 
@@ -65,7 +65,7 @@ export function proxy(request: NextRequest) {
   const segments = pathname.split('/');
   const firstSegment = segments[1] || '';
   const hasLocalePrefix = supportedLocales.includes(firstSegment);
-  
+
   const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
   const preferredLocale = (cookieLocale && supportedLocales.includes(cookieLocale))
     ? cookieLocale
@@ -174,7 +174,7 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Match all paths except internal Next.js and static files
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    '/((?!api|_next/static|_next/image|favicon.svg|.*\\..*).*)',
   ],
 };
 

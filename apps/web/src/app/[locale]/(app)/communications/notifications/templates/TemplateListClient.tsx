@@ -165,11 +165,11 @@ export function TemplateListClient({ locale }: { locale: string }) {
        <span className="text-[10px] font-black text-muted-foreground/45 uppercase tracking-widest block mb-1">
         {t('stats_templates.active_templates')}
        </span>
-       <span className="text-3xl font-extrabold text-emerald-400">
+       <span className="text-3xl font-extrabold text-foreground">
         {data?.data?.filter(item => item.isActive).length ?? 0}
        </span>
       </div>
-      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] group-hover:scale-110 transition-transform duration-300">
+      <div className="w-12 h-12 rounded-2xl bg-muted/50 border border-emerald-500/20 flex items-center justify-center text-foreground shadow-[0_0_15px_rgba(16,185,129,0.15)] group-hover:scale-110 transition-transform duration-300">
        <CheckCircle2 className="w-5 h-5" />
       </div>
      </div>
@@ -232,8 +232,8 @@ export function TemplateListClient({ locale }: { locale: string }) {
             </>
            ) : isPush ? (
             <>
-             <Sparkles className="w-3 h-3 text-emerald-400 animate-pulse" />
-             <span className="text-[8px] font-bold text-emerald-400/90 uppercase tracking-widest">In-App Hub</span>
+             <Sparkles className="w-3 h-3 text-foreground animate-pulse" />
+             <span className="text-[8px] font-bold text-foreground/90 uppercase tracking-widest">In-App Hub</span>
             </>
            ) : (
             <>
@@ -261,7 +261,7 @@ export function TemplateListClient({ locale }: { locale: string }) {
            )}
            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${template.isActive ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]' : 'bg-card/10'}`}></span>
           </span>
-          <span className={`text-[9px] font-black uppercase tracking-widest ${template.isActive ? 'text-emerald-400' : 'text-muted-foreground/35'}`}>
+          <span className={`text-[9px] font-black uppercase tracking-widest ${template.isActive ? 'text-foreground' : 'text-muted-foreground/35'}`}>
            {template.isActive ? t('active') || 'Active' : t('inactive') || 'Inactive'}
           </span>
          </div>

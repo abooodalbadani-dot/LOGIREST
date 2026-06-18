@@ -10,12 +10,13 @@ import { GRNForm } from '@/features/purchasing/components/grn-form';
 import { GRNViewer, type GRNViewerDocument } from './GRNViewer';
 import { Button } from '@/components/ui/button';
 import { VoidButton } from '@/components/shared/VoidButton';
-import { Send, Scan, Trash2 } from 'lucide-react';
+import { Send, Scan, Trash2, CheckCircle2 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { GRN_STATUS } from '@logirest/shared-types';
 import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
+import { useSubmitGRN } from '@/features/purchasing/hooks/useSubmitGRN';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { toast } from 'sonner';
 
@@ -37,10 +38,11 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
  const router = useRouter();
  const { user } = useAuth();
  const deleteGRN = useDeleteGRN();
+ const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('goods-received', id);
+ const submitGRN = useSubmitGRN({ onConflict: triggerConflict });
  
  const isNew = id === 'new';
  const { data: grn, isLoading, error } = useGRN(isNew ? null : id);
- const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('goods-received', id);
 
  if (isLoading) return <PageSkeleton variant="detail" />;
  if (error || (!isNew && !grn)) return <ErrorState onRetry={() => window.location.reload()} />;
@@ -50,36 +52,45 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
 
   const actions = (
    <div className="flex gap-2 items-center">
-    {isLocked ? (
-     <Button
-      onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
-      variant="outline"
-      className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-status-warning/20 text-status-warning hover:bg-status-warning/5 transition-all"
-     >
-      <Scan className="w-4 h-4 me-2" />
-      {t('inspect_scan_registers')}
-     </Button>
-    ) : (
-     <Button
-      onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
-      variant="outline"
-      className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all"
-     >
-      <Scan className="w-4 h-4 me-2" />
-      {t('scan_mode')}
-     </Button>
-    )}
-    <PermissionGate action="post" resource="procurement_grn">
-     <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role}>
-      <Button 
-       onClick={() => router.push(`/goods-received/${id}/post`)}
-       className="h-10 px-8 bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors text-white text-label-xs font-semibold uppercase shadow-xl shadow-primary/20 transition-all rounded-lg"
-      >
-       <Send className="w-4 h-4 me-2" />
-       {t('post_grn')}
-      </Button>
+    {/* Scan Mode — always visible */}
+    <Button
+     onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
+     variant="outline"
+     className={`h-10 px-6 text-label-xs font-semibold uppercase rounded-lg transition-all flex items-center ${
+      isLocked
+       ? 'border-status-warning/20 text-status-warning hover:bg-status-warning/5'
+       : 'border-primary/20 text-primary hover:bg-primary/5'
+     }`}
+    >
+     <Scan className="w-4 h-4 me-2" />
+     {isLocked ? t('inspect_scan_registers') : t('scan_mode')}
+    </Button>
+
+    {/* DRAFT: Submit for Receipt */}
+    {status === GRN_STATUS.DRAFT && !isNew && (
+     <ActionGuard documentType="GRN" status={status} action="SUBMIT" role={user?.role}>
+      <PermissionGate action="submit" resource="grn">
+       <Button
+        onClick={async () => {
+         if (grn?.version === undefined) return;
+         try {
+          await submitGRN.mutateAsync({ id, version: grn.version });
+          toast.success(t('submit_success') || 'GRN submitted for receipt review');
+         } catch (err) {
+          console.error('[GRNDetailClient] Submit failed:', err);
+         }
+        }}
+        disabled={submitGRN.isPending}
+        className="h-10 px-6 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-lg shadow-md shadow-operational-cyan/20 transition-all disabled:opacity-50 flex items-center"
+       >
+        <CheckCircle2 className="w-4 h-4 me-2" />
+        {submitGRN.isPending ? tCommon('saving') : (t('submit_for_receipt') || 'Submit for Receipt')}
+       </Button>
+      </PermissionGate>
      </ActionGuard>
-    </PermissionGate>
+    )}
+
+    {/* DRAFT: Delete */}
     {status === GRN_STATUS.DRAFT && !isNew && (
      <PermissionGate action="delete" resource="grn">
       <Button
@@ -102,6 +113,21 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
       </Button>
      </PermissionGate>
     )}
+
+    {/* RECEIVED: Post GRN */}
+    <PermissionGate action="post" resource="procurement_grn">
+     <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role}>
+      <Button
+       onClick={() => router.push(`/goods-received/${id}/post`)}
+       className="h-10 px-8 bg-brand-gold hover:bg-brand-gold-hover text-white text-label-xs font-semibold uppercase shadow-xl shadow-primary/20 transition-all rounded-lg flex items-center"
+      >
+       <Send className="w-4 h-4 me-2" />
+       {t('post_grn')}
+      </Button>
+     </ActionGuard>
+    </PermissionGate>
+
+    {/* POSTED / VOIDED: Void */}
     <VoidButton
      documentId={id}
      documentType="GRN"
@@ -109,7 +135,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
      version={grn?.version || 1}
     />
    </div>
- );
+  );
 
  if (isLocked) {
   if (!grn) return null;
@@ -128,6 +154,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
       postedAt: null,
       postedBy: null,
       supplierName: grn.supplier?.name,
+      warehouseName: grn.warehouseName,
       poNumber: grn.poNumber ?? null,
       lines: grn.lines.map(l => ({
        id: l.id,

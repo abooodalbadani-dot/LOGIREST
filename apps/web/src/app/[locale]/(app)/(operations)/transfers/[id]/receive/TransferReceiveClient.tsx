@@ -310,8 +310,8 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
          <span className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('destination')}</span>
          <p className="text-title-lg font-semibold">{transfer.toWarehouseName}</p>
         </div>
-        <div className="bg-emerald-500/10 p-3 rounded-2xl">
-         <PackageCheck className="w-6 h-6 text-emerald-500" />
+        <div className="bg-muted/50 p-3 rounded-2xl">
+         <PackageCheck className="w-6 h-6 text-foreground" />
         </div>
        </div>
 
@@ -335,7 +335,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
          <span className={cn(
           "text-label-xxs font-bold px-2 py-0.5 rounded-full",
           varianceReason.trim().length >= 15 
-           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+           ? 'bg-muted/50 text-foreground border border-emerald-500/20' 
            : 'bg-status-error/10 text-status-error border border-status-error/20'
          )}>
           {varianceReason.trim().length}/15
@@ -367,7 +367,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
      <div className="bg-card border border-border shadow-sm/30 rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
       <div className="p-6 border-b border-white/5 flex items-center justify-between bg-card border border-border shadow-sm">
        <div className="flex items-center gap-4">
-        <h3 className="text-label-xs font-semibold uppercase text-emerald-500">{t('items_to_receive')}</h3>
+        <h3 className="text-label-xs font-semibold uppercase text-foreground">{t('items_to_receive')}</h3>
         <div className="h-4 w-px bg-card/10" />
         <span className="text-label-xs font-bold text-muted-foreground/60">{lines.length} {tCommon('items')}</span>
        </div>
@@ -378,15 +378,15 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
           variant="outline"
           size="sm"
           onClick={handleReceiveAll}
-          className="h-8 px-4 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400 font-semibold text-label-xs uppercase transition-all"
+          className="h-8 px-4 border-emerald-500/20 text-foreground hover:bg-muted/50 hover:text-foreground font-semibold text-label-xs uppercase transition-all"
          >
           <RefreshCw className="w-3.5 h-3.5 me-2" />
           {t('receive_all') || 'Receive All'}
          </Button>
         )}
-        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+        <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-full border border-emerald-500/20">
          <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-         <span className="text-label-xxs font-semibold uppercase text-emerald-500">{t('scan_mode')}</span>
+         <span className="text-label-xxs font-semibold uppercase text-foreground">{t('scan_mode')}</span>
         </div>
        </div>
       </div>
@@ -445,7 +445,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
               isMutationBlocked || hasLots ? 'opacity-40 cursor-not-allowed' : '',
               displayQty !== (line.shippedQty ?? line.qty) 
                ? 'text-status-warning border-status-warning/40 focus:ring-status-warning/30 shadow-[0_0_15px_rgba(255,152,0,0.1)]' 
-               : 'text-emerald-500 border-emerald-500/20 focus:ring-emerald-500/30'
+               : 'text-foreground border-emerald-500/20 focus:ring-emerald-500/30'
              )}
              value={displayQty}
              onChange={e => {
@@ -536,7 +536,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
          type="number"
          dir="ltr"
          disabled={isMutationBlocked}
-         className="w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all text-emerald-500 border-emerald-500/20 focus:ring-emerald-500/30"
+         className="w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all text-foreground border-emerald-500/20 focus:ring-emerald-500/30"
          value={lotModalLine._lotReceives?.[la.lotId] ?? la.allocatedQty}
          onChange={(e) => {
           const val = Number(e.target.value);

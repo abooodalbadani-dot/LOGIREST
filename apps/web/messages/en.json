@@ -752,8 +752,10 @@
     "registry_status": "Registry Status",
     "registry_sync": "Registry Sync",
     "relational_unit_transformation": "Relational Unit Transformation",
+    "optional": "Optional",
     "required": "Required",
     "reset": "Reset",
+    "retry": "Retry",
     "role": {
       "admin": "System Administrator",
       "kitchen_chief": "Kitchen Chief",
@@ -820,7 +822,7 @@
       "notifications": "Notifications",
       "operations": "Operations",
       "operators": "Operators",
-      "outbox": "Outbox Failures",
+      "outbox": "Outbox Events",
       "po": "Purchase Orders",
       "pr": "Purchase Requests",
       "report_available_inventory": "Available Inventory",
@@ -3328,7 +3330,14 @@
       "lot_entry_sub": "Define batch identity and expiry for received item",
       "lot_entry_title": "Traceability Definition",
       "lot_number": "Lot Number",
+      "lot_number_placeholder": "e.g. LOT-2024-001",
+      "lot_number_required": "Lot number is required",
       "lot_required": "Lot number is required",
+      "lot_allocation_title": "Lot Allocation",
+      "lot_allocation_summary": "{qty} unit(s) will be assigned to lot {lot}",
+      "received_qty_label": "Received Quantity",
+      "confirm_allocation": "Confirm Allocation",
+      "clear_lot": "Clear Lot",
       "market_index_ref": "Market Index Reference",
       "market_rate": "Market Rate",
       "mock_supplier_1": "Supply Co",
@@ -3361,6 +3370,8 @@
       "receiving_qty": "Receiving Qty",
       "receiving_warehouse": "Receiving Warehouse",
       "save_draft": "Save Draft",
+      "submit_for_receipt": "Submit for Receipt",
+      "submit_success": "GRN submitted successfully",
       "scan_log": "Operational Scan History",
       "scan_mode": "Scanning Protocol Active",
       "scan_mode_sub": "High-performance operational acquisition layer",
@@ -3393,15 +3404,21 @@
     "po": {
       "actions": {
         "approve": "Approve",
+        "approve_success": "Purchase Order approved successfully",
         "cancel": "Cancel Order",
         "convert_to_grn": "Convert to GRN",
         "go_to_approval": "Go to Approval",
         "post": "Post Order",
+        "receive_items": "Receive Items (GRN)",
+        "email_po": "Email PO",
         "reject": "Reject",
         "submit": "Submit Purchase Order",
+        "submit_for_approval": "Submit for Approval",
+        "submit_success": "Purchase Order submitted for approval",
         "submitting": "Submitting..."
       },
       "add_item": "Add Item",
+      "email_sent": "PO emailed to supplier successfully",
       "approval": {
         "approve_confirm_desc": "You are about to authorize this purchase order.",
         "approve_confirm_title": "Confirm Approval",
@@ -3431,7 +3448,7 @@
         "title": "Purchase Order Approval",
         "workflow": "Approval Workflow"
       },
-      "base_total": "Base Total (SAR)",
+      "base_total": "Base Total ({currency})",
       "breadcrumb": {
         "new_po": "New PO"
       },
@@ -3448,13 +3465,16 @@
       "edit_po": "Edit Order",
       "edit_success": "Purchase order updated successfully.",
       "errors": {
-        "no_currencies_available": "No currencies available. Please check system settings."
+        "no_currencies_available": "No currencies available. Please check system settings.",
+        "pr_load_failed": "Failed to load Purchase Request data.",
+        "pr_lines_import_failed": "Failed to import Purchase Request lines.",
+        "master_data_failed": "Failed to initialize required master data lookup lists."
       },
       "exchange_index": "Live Exchange Index",
       "exchange_rate": "Exchange Rate",
       "expected_date": "Expected Date",
       "expected_delivery_date": "Expected Delivery Date",
-      "fx_rate": "FX Rate (to SAR)",
+      "fx_rate": "FX Rate (to {currency})",
       "general_notes": "General Notes",
       "home": "Home",
       "independent_order": "Independent Order",
@@ -3684,7 +3704,7 @@
       "system_qty": "System Qty",
       "to": "To",
       "total": "Total Value",
-      "total_base": "Value (SAR)",
+      "total_base": "Value ({currency})",
       "type": "Type",
       "user": "User",
       "variance": "Variance"

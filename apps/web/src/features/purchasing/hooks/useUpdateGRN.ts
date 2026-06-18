@@ -15,6 +15,8 @@ const UpdateGRNPayloadSchema = z.object({
   id: z.string().optional(),
   itemId: z.string(),
   lotId: z.string().nullable().optional(),
+  lotNumber: z.string().nullable().optional(),
+  expiryDate: z.string().nullable().optional(),
   receivedQty: z.number().positive(),
   unitCostForeign: z.number().nonnegative(),
  }))
@@ -34,7 +36,10 @@ export function useUpdateGRN(options?: { onConflict?: () => void }) {
    queryClient.invalidateQueries({ queryKey: ['grn', id] });
   },
   onError: (error) => {
-   console.error('[useUpdateGRN] Failed to update GRN:', error);
+   const message = (error as { message?: string }).message;
+   const code = (error as { code?: string }).code;
+   const fieldErrors = (error as { fieldErrors?: unknown }).fieldErrors;
+   console.error('[useUpdateGRN] Failed to update GRN:', { code, message, fieldErrors, raw: error });
   }
  });
 }

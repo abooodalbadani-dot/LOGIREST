@@ -22,7 +22,7 @@ import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 interface AdjustmentViewerProps {
  document: AdjustmentDetail;
@@ -39,11 +39,6 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
  const locale = useLocale();
  const router = useRouter();
 
- const { data: warehousesData } = useWarehouses();
- const warehouses = warehousesData?.data || [];
- const warehouseName = document?.warehouseId
-  ? warehouses.find(w => w.id === document.warehouseId)
-  : null;
 
  const adjustmentStatus = document?.status ?? ADJUSTMENT_STATUS.DRAFT;
  
@@ -78,7 +73,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
    cell: (line: MappedAdjustmentLine) => (
     <div className={cn(
      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-xs font-semibold uppercase",
-     line.direction === 'INCREASE' ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
+     line.direction === 'INCREASE' ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
     )}>
      {line.direction === 'INCREASE' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
      {t(`direction_${line.direction.toLowerCase()}`)}
@@ -153,7 +148,9 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
        <div className="space-y-4">
         <div className="space-y-1.5">
          <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('warehouse')}</label>
-         <p className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase italic">{warehouseName ? warehouseName.name : document.warehouseId}</p>
+          <div className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase italic">
+           <RelationalName name={document.warehouseName} rawId={document.warehouseId} />
+          </div>
         </div>
 
         <div className="space-y-1.5">
@@ -186,7 +183,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
          headers={{ qty: t('qty_adjusted') }}
          renderQty={(line) => (
           <div className="flex flex-col items-center gap-0.5">
-           <span className={cn("text-body-md font-semibold", line.direction === 'INCREASE' ? "text-emerald-500" : "text-red-500")}>
+           <span className={cn("text-body-md font-semibold", line.direction === 'INCREASE' ? "text-foreground" : "text-red-500")}>
             {line.direction === 'INCREASE' ? '+' : '−'}{formatQuantity(line.qtyAdjusted, locale as 'ar' | 'en')}
            </span>
           </div>
@@ -223,8 +220,8 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
 
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5">
        <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-         <Info className="w-5 h-5 text-emerald-500" />
+        <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+         <Info className="w-5 h-5 text-foreground" />
         </div>
         <h4 className="text-label-xs font-semibold uppercase">{t('document_info')}</h4>
        </div>

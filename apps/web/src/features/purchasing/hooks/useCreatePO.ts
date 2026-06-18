@@ -34,7 +34,8 @@ export function useCreatePO(options?: { onConflict?: () => void, messages?: { su
 onSuccess: (data) => {
  // Seed the cache for the newly created PO
   queryClient.setQueryData(['purchase-orders', data.id], data);
-  queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+   queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
   toast.success(options?.messages?.successMessage || 'Purchase order created successfully');
   },
   onError: (error: unknown) => {

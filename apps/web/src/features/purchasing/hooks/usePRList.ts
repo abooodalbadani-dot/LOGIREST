@@ -21,11 +21,12 @@ const PRSummarySchema = z.object({
 
 export type PRSummary = z.infer<typeof PRSummarySchema>;
 
-export function usePRList(filters: { status?: string; departmentId?: string; search?: string; page?: number } = {}) {
+export function usePRList(filters: { status?: string; departmentId?: string; search?: string; page?: number; unconverted?: boolean } = {}) {
  const params = new URLSearchParams();
  if (filters.status) params.set('status', filters.status);
  if (filters.departmentId) params.set('departmentId', filters.departmentId);
  if (filters.search) params.set('search', filters.search);
+ if (filters.unconverted) params.set('unconverted', 'true');
  params.set('page', String(filters.page ?? 1));
 
  return useQuery({

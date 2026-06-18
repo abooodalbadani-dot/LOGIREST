@@ -46,16 +46,16 @@ export function ConflictDialog({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl border-none shadow-2xl bg-white dark:bg-card-dark border border-gray-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+      <DialogContent className="sm:max-w-[425px] rounded-2xl overflow-hidden bg-card text-card-foreground border-border shadow-lg">
         <DialogHeader className="space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-status-warning/10 flex items-center justify-center animate-bounce-subtle">
             <AlertTriangle className="w-8 h-8 text-status-warning" />
           </div>
           <div className="space-y-2 text-center">
-            <DialogTitle className="text-title-lg font-bold text-foreground">
+            <DialogTitle className="text-lg font-bold text-foreground text-start">
               {tc('conflict.title')}
             </DialogTitle>
-            <DialogDescription className="text-body-md text-muted-foreground">
+            <DialogDescription className="text-sm text-muted-foreground text-start text-balance mt-2">
               {tc('conflict.description')} {
                 error?.updatedBy && (
                   <span className="block mt-2 font-medium text-foreground">
@@ -72,35 +72,24 @@ export function ConflictDialog({
             }
           </p>
         </DialogHeader>
-        <DialogFooter className="mt-8 flex flex-col sm:flex-row gap-3">
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6 w-full">
           <Button
             variant="outline"
             onClick={onClose}
             disabled={isRetrying}
-            className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs hover:bg-surface-container-high transition-all"
+            className="w-full sm:w-auto shrink-0"
           >
             <X className="w-4 h-4 me-2" />
             {tc('conflict.stay')}
           </Button>
           
-          {retryCount < 1 && onRetry && (
-            <Button
-              onClick={onRetry}
-              disabled={isRetrying}
-              className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80 transition-all active:scale-95"
-            >
-              <RefreshCcw className={`w-4 h-4 me-2 ${isRetrying ? 'animate-spin' : ''}`} />
-              {tc('conflict.retry')}
-            </Button>
-          )}
-
           <Button
-            onClick={onReload}
+            onClick={onRetry || onReload}
             disabled={isRetrying}
-            className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs bg-status-warning hover:bg-status-warning/90 text-white shadow-sm shadow-status-warning/20 transition-all active:scale-95"
+            className="w-full sm:w-auto shrink-0 bg-brand-gold hover:bg-brand-gold-hover text-primary-foreground"
           >
-            <RefreshCcw className="w-4 h-4 me-2" />
-            {tc('conflict.reload')}
+            <RefreshCcw className={`w-4 h-4 me-2 ${isRetrying ? 'animate-spin' : ''}`} />
+            {onRetry ? tc('conflict.retry') : tc('conflict.reload')}
           </Button>
         </DialogFooter>
       </DialogContent>

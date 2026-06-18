@@ -326,7 +326,7 @@ export function SmartCombobox<T extends ComboboxItem>({
          )}
         </div>
        ) : (
-        <span className="text-muted-foreground/30 font-medium truncate w-full text-start">
+        <span className="text-muted-foreground font-medium truncate w-full text-start">
          {placeholder}
         </span>
        )}

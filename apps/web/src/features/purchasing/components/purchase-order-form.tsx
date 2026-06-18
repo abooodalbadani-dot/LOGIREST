@@ -5,10 +5,11 @@ import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesG
 
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown } from "lucide-react";
+import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { onFormError } from "@/hooks/useFormError";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -18,6 +19,7 @@ import { type ComboboxItem } from "@/components/shared/SmartCombobox";
 import { Item, ItemSchema } from "@/types/master-data";
 
 import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
+import { RelationalName } from "@/components/shared/RelationalName";
 import { Button } from "@/components/ui/button";
 import {
  Form,
@@ -100,18 +102,18 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
    prId: initialData?.prId || "",
    currencyId: initialData?.currencyId || "",
    exchangeRate: initialData?.exchangeRate || 1,
-   expectedDate: initialData?.expectedDate || "",
+   expectedDate: initialData?.expectedDate ? initialData.expectedDate.split("T")[0] : new Date().toISOString().split("T")[0],
    targetWarehouseId: initialData?.targetWarehouseId || "",
    notes: initialData?.notes || "",
-   lines: initialData?.lines.map(l => ({
+   lines: initialData?.lines ? initialData.lines.map(l => ({
     itemId: l.item?.id || "",
-    itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn),
+    itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || "",
     itemCode: l.item?.code || "",
     quantity: l.quantity || 1,
     unitPrice: l.unitPrice || 0,
-    uomId: l.uomId,
+    uomId: l.uomId || l.item?.primaryUom?.id || "PCS",
     notes: l.notes || ""
-   })) || [{ itemId: "", itemName: "", itemCode: "", quantity: 1, unitPrice: 0, uomId: "PCS", notes: "" }]
+   })) : []
   },
  });
 
@@ -124,7 +126,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
  const updateMutation = useUpdatePO({ onConflict });
  const { playSound } = useAudioFeedback();
 
- const { fields, append, prepend, remove, update } = useFieldArray({
+ const { fields, append, prepend, remove, update, replace } = useFieldArray({
   control: form.control,
   name: "lines",
  });
@@ -210,7 +212,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   }
  };
 
- const supplierTotalAmount = lines.reduce((sum, line) => sum + ((line.quantity || 0) * (line.unitPrice || 0)), 0);
+ const supplierTotalAmount = (lines || []).reduce((sum, line) => sum + (((line && line.quantity) || 0) * ((line && line.unitPrice) || 0)), 0);
  const baseTotalAmount = supplierTotalAmount * (rate || 1);
 
  // Workflow Integration
@@ -239,7 +241,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     router.push(`/purchase-orders/${result.id}`, { skipGuard: true });
    }
   } catch (error) {
-   console.error(error);
+   console.error('[PO Submit Error Details] ' + JSON.stringify(error));
    playSound('error');
    toast.error(tc("error_occurred"));
   }
@@ -247,38 +249,105 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
- const { data: suppliers, isLoading: loadingSuppliers } = useSuppliers();
- const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
- const { data: warehousesData, isLoading: loadingWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
+ const { data: suppliers, isLoading: loadingSuppliers, isError: suppliersError, error: suppliersErrorDetail } = useSuppliers();
+ const { data: currencies, isLoading: loadingCurrencies, isError: currenciesError, error: currenciesErrorDetail } = useCurrencies();
+ const { data: warehousesData, isLoading: loadingWarehouses, isError: warehousesError, error: warehousesErrorDetail } = useWarehouses(); const warehouses = warehousesData?.data || [];
+
+ React.useEffect(() => {
+  if (suppliersError && suppliersErrorDetail) {
+   console.error("[PO_FORM_MASTER_DATA_ERROR] Suppliers query failed:", suppliersErrorDetail);
+  }
+  if (currenciesError && currenciesErrorDetail) {
+   console.error("[PO_FORM_MASTER_DATA_ERROR] Currencies query failed:", currenciesErrorDetail);
+  }
+  if (warehousesError && warehousesErrorDetail) {
+   console.error("[PO_FORM_MASTER_DATA_ERROR] Warehouses query failed:", warehousesErrorDetail);
+  }
+ }, [suppliersError, suppliersErrorDetail, currenciesError, currenciesErrorDetail, warehousesError, warehousesErrorDetail]);
 
  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
- const [selectedPRId, setSelectedPRId] = React.useState<string | null>(null);
- const { data: approvedPRs, isLoading: loadingPRs } = usePRList({ status: 'APPROVED' });
- const { data: selectedPR } = usePR(selectedPRId);
+ const searchParams = useSearchParams();
+ const prIdFromUrl = searchParams.get('prId') || searchParams.get('pr_id');
+ const [selectedPRId, setSelectedPRId] = React.useState<string | null>(prIdFromUrl);
+ const { data: approvedPRs, isLoading: loadingPRs } = usePRList({ status: 'APPROVED', unconverted: true });
+ const { data: selectedPR, isLoading: loadingSelectedPR, isError: prError, error: prErrorDetail } = usePR(selectedPRId);
+ const hasAutoImported = React.useRef(false);
 
- const handleImportPR = React.useCallback(() => {
-  if (!selectedPR) return;
-  const prLines = selectedPR.lines.map(l => ({
-   itemId: l.item.id,
-   itemName: l.item.name || (locale === 'ar' ? l.item.nameAr : l.item.nameEn) || '',
-   itemCode: l.item.code,
-   quantity: l.reqQty,
-   unitPrice: 0,
-   uomId: l.uomId,
-   notes: '',
-  }));
-  form.setValue('lines', prLines);
-  form.setValue('prId', selectedPR.id);
-  setImportDialogOpen(false);
-  setSelectedPRId(null);
- }, [selectedPR, form, locale]);
+ React.useEffect(() => {
+  if (prError && prErrorDetail) {
+   console.error('[PO_FORM_HYDRATION_ERROR] Failed to fetch Purchase Request:', prErrorDetail);
+  }
+ }, [prError, prErrorDetail]);
+
+ // Sync query parameter to selected PR state once hydrated to resolve Next.js dynamic search parameter mismatch
+ React.useEffect(() => {
+   if (prIdFromUrl && !hasAutoImported.current) {
+     setSelectedPRId(prIdFromUrl);
+   }
+ }, [prIdFromUrl]);
+
+ React.useEffect(() => {
+  if (selectedPR && prIdFromUrl && !hasAutoImported.current && mode === "create") {
+   try {
+    const prLines = (selectedPR.lines || []).map(l => ({
+     itemId: l.item?.id || '',
+     itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || '',
+     itemCode: l.item?.code || '',
+     quantity: l.reqQty || 0,
+     unitPrice: 0,
+     uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+     notes: '',
+    }));
+    replace(prLines);
+    form.setValue('prId', selectedPR.id);
+    if (selectedPR.departmentId) {
+      form.setValue('targetWarehouseId', selectedPR.departmentId);
+    }
+    if (selectedPR.expectedDate) {
+      form.setValue('expectedDate', selectedPR.expectedDate.split("T")[0]);
+    }
+    hasAutoImported.current = true;
+   } catch (err) {
+    console.error('[PO_FORM_HYDRATION_ERROR] Failed during auto-import of PR lines:', err);
+    toast.error(t('errors.pr_lines_import_failed') || 'Failed to auto-import Purchase Request lines');
+   }
+  }
+ }, [selectedPR, prIdFromUrl, mode, form, locale, replace, t]);
+
+  const handleImportPR = React.useCallback(() => {
+   if (!selectedPR) return;
+   try {
+    const prLines = (selectedPR.lines || []).map(l => ({
+     itemId: l.item?.id || '',
+     itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || '',
+     itemCode: l.item?.code || '',
+     quantity: l.reqQty || 0,
+     unitPrice: 0,
+     uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+     notes: '',
+    }));
+    replace(prLines);
+    form.setValue('prId', selectedPR.id);
+    if (selectedPR.departmentId) {
+      form.setValue('targetWarehouseId', selectedPR.departmentId);
+    }
+    if (selectedPR.expectedDate) {
+      form.setValue('expectedDate', selectedPR.expectedDate.split("T")[0]);
+    }
+    setImportDialogOpen(false);
+    setSelectedPRId(null);
+   } catch (err) {
+    console.error('[PO_FORM_HYDRATION_ERROR] Failed during manual import of PR lines:', err);
+    toast.error(t('errors.pr_lines_import_failed') || 'Failed to import Purchase Request lines');
+   }
+  }, [selectedPR, form, locale, replace, t]);
 
  const selectedCurrencyCode = React.useMemo(() => {
   return currencies?.find(c => c.id === currencyId)?.code || '';
  }, [currencies, currencyId]);
 
- const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
- const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency || 'SAR');
+  const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
+  const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
 
  const supplierItems = React.useMemo(() => {
   return suppliers?.map(s => {
@@ -319,14 +388,52 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   }
  }, [fxRates, form, initialData]);
 
- if (loadingSuppliers || loadingCurrencies || loadingWarehouses || loadingSettings) {
-  return (
-   <div className="space-y-6 animate-pulse">
-    <div className="h-64 bg-card border border-border shadow-sm rounded-2xl" />
-    <div className="h-96 bg-card border border-border shadow-sm rounded-2xl" />
-   </div>
-  );
- }
+ React.useEffect(() => {
+  if (currencies && baseCurrency && !form.getValues('currencyId') && !initialData) {
+   const baseCurr = currencies.find(c => c.code === baseCurrency);
+   if (baseCurr) {
+    form.setValue('currencyId', baseCurr.id);
+    form.setValue('exchangeRate', 1);
+   }
+  }
+ }, [currencies, baseCurrency, form, initialData]);
+
+  const hasMasterDataError = !!(suppliersError || currenciesError || warehousesError);
+
+  if (hasMasterDataError) {
+   return (
+    <div className="px-8 pt-8">
+     <div className="bg-destructive/10 border border-destructive/20 text-destructive p-8 rounded-2xl shadow-xl flex items-start gap-4">
+      <AlertTriangle className="w-8 h-8 shrink-0 mt-0.5" />
+      <div>
+       <h3 className="text-title-md font-bold uppercase mb-2">
+        {t('errors.master_data_failed') || 'System Initialization Failed'}
+       </h3>
+       <p className="text-muted-foreground/80 text-body-sm font-medium">
+        {tc('error_occurred') || 'An error occurred while loading system configurations or lookup registries. Please check your network connection and reload the page.'}
+       </p>
+       <div className="mt-4 flex gap-4">
+        <Button onClick={() => window.location.reload()} variant="outline" className="border-destructive/20 text-destructive hover:bg-destructive/10">
+         {tc('retry') || 'Retry'}
+        </Button>
+        <Button onClick={() => router.push('/purchase-orders')} variant="ghost" className="text-muted-foreground">
+         {tc('back') || 'Go Back'}
+        </Button>
+       </div>
+      </div>
+     </div>
+    </div>
+   );
+  }
+
+  if (loadingSuppliers || loadingCurrencies || loadingWarehouses || loadingSettings || (prIdFromUrl && loadingSelectedPR)) {
+   return (
+    <div className="space-y-6 animate-pulse">
+     <div className="h-64 bg-card border border-border shadow-sm rounded-2xl" />
+     <div className="h-96 bg-card border border-border shadow-sm rounded-2xl" />
+    </div>
+   );
+  }
 
  return (
   <Form {...form}>
@@ -351,6 +458,15 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       </div>
 
       <DocumentLockWrapper isLocked={isLocked}>
+       {prError && (
+        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl flex items-start gap-3 text-label-xs font-semibold">
+         <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+         <div>
+          <p className="font-bold uppercase mb-1">{t('errors.pr_load_failed') || 'Failed to load Purchase Request'}</p>
+          <p className="text-muted-foreground/80 font-normal">{tc('error_occurred') || 'An error occurred while loading the linked Purchase Request details. You can proceed with creating a manual Purchase Order.'}</p>
+         </div>
+        </div>
+       )}
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <FormField
          control={form.control}
@@ -425,7 +541,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               <div className="flex items-center justify-between">
                <div>
                 <span className="font-mono font-bold text-label-sm text-foreground">{pr.documentNumber}</span>
-                <span className="text-label-xxs text-muted-foreground/60 ms-2">{pr.departmentId}</span>
+                 <RelationalName name={pr.warehouseName} rawId={pr.departmentId} className="text-label-xxs text-muted-foreground/60 ms-2" />
                </div>
                <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{pr.createdAt?.split('T')[0]}</span>
               </div>
@@ -443,7 +559,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
            </Button>
            <Button
             type="button"
-            disabled={!selectedPRId || loadingPRs}
+            disabled={!selectedPRId || loadingPRs || loadingSelectedPR}
             onClick={handleImportPR}
             className="bg-operational-cyan hover:brightness-110 text-white"
            >
@@ -515,7 +631,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
          name="exchangeRate"
          render={({ field }) => (
           <FormItem>
-           <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('fx_rate')}</FormLabel>
+           <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('fx_rate', { currency: baseCurrency })}</FormLabel>
            <div className="relative">
             <ArrowRightLeft className="absolute start-3 top-3.5 h-4 w-4 text-muted-foreground/40" />
             <FormControl>
@@ -599,9 +715,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
          </div>
          <div className="bg-operational-cyan/[0.03] px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px] backdrop-blur-sm relative overflow-hidden">
           <div className="absolute top-0 start-0 w-1 h-full bg-operational-cyan/20" />
-          <span className="text-label-xs uppercase font-semibold text-operational-cyan/60">{t('base_total')}</span>
+          <span className="text-label-xs uppercase font-semibold text-operational-cyan/60">{t('base_total', { currency: baseCurrency })}</span>
           <span className="text-headline-lg font-mono font-semibold text-operational-cyan" dir="ltr">
-           {formatCurrency(baseTotalAmount, baseCurrency || 'SAR', locale as 'ar' | 'en')}
+           {formatCurrency(baseTotalAmount, baseCurrency, locale as 'ar' | 'en')}
           </span>
          </div>
         </div>

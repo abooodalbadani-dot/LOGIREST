@@ -290,7 +290,7 @@ const t = useTranslations('operations.adjustment');
    header: tCommon('warehouse'),
    cell: ({ row }) => {
     const name = warehouseMap.get(row.original.warehouseId);
-    const display = name || row.original.warehouseId;
+    const display = name || '—';
     return <span className="opacity-80 font-medium">{display}</span>;
    },
   },
@@ -409,10 +409,10 @@ const t = useTranslations('operations.adjustment');
       {selectedIds.size} {tCommon('selected')}
      </span>
      <div className="flex items-center gap-2 ms-auto">
-      <Button size="sm" onClick={() => setBatchConfirmAction('approve')} disabled={isBatchLoading} className="h-9 px-5 text-label-xs font-bold uppercase bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20">
+      <Button size="sm" onClick={() => setBatchConfirmAction('approve')} disabled={isBatchLoading} className="h-9 px-5 text-label-xs font-bold uppercase bg-muted/50 hover:bg-muted/50 text-foreground border border-emerald-500/20">
        {isBatchLoading ? '...' : t('approve')}
       </Button>
-      <Button size="sm" onClick={() => setBatchConfirmAction('post')} disabled={isBatchLoading} className="h-9 px-5 text-label-xs font-bold uppercase bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20">
+      <Button size="sm" onClick={() => setBatchConfirmAction('post')} disabled={isBatchLoading} className="h-9 px-5 text-label-xs font-bold uppercase bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20">
        {isBatchLoading ? '...' : t('post')}
       </Button>
      </div>
@@ -434,7 +434,7 @@ const t = useTranslations('operations.adjustment');
        <PermissionGate action="create" resource="adjustment">
         <Button
          onClick={() => router.push('/adjustments/new')}
-         className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
+         className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
         >
          <Plus className="w-4 h-4 me-2" />
          {t('create_new')}
@@ -451,12 +451,12 @@ const t = useTranslations('operations.adjustment');
      onPageChange: setPage
     } : undefined}
     filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
+      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <Input
          placeholder={tCommon('statuses.all') || "All Statuses"}
          value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
         />
        </div>
      }

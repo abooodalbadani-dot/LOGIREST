@@ -64,7 +64,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  const postMutation = usePostGRN();
 
  const { baseCurrency, isLoading: loadingSettings } = useSettings();
- const supplierCurrency = grn?.currencyId;
+ const supplierCurrency = grn?.currencyCode || 'USD';
 
  // Live FX conversion logic for display
  const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
@@ -284,7 +284,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <p className="text-label-xxs font-bold uppercase">{t('rate_variance')}</p>
  <p dir="ltr" className={cn(
  "font-mono text-label-sm font-semibold",
- rateVariance > 0 ? "text-emerald-400" : rateVariance < 0 ? "text-destructive" : "text-muted-foreground"
+ rateVariance > 0 ? "text-foreground" : rateVariance < 0 ? "text-destructive" : "text-muted-foreground"
  )}>
  {rateVariance > 0 ? '+' : ''}{formatNumber(rateVariance, locale, 2)}%
  </p>

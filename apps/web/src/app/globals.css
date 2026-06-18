@@ -167,7 +167,7 @@
   --tertiary-fixed-dim: #bbc7e2;
 
   --muted: #E5E7EB;
-  --muted-foreground: #7f766a;
+  --muted-foreground: #2C2C2C; /* Darkened from #544C42 for high readability and contrast */
 
   --accent: #CAAE85;
   --accent-foreground: #ffffff;
@@ -188,7 +188,7 @@
   --surface-container-high: #eee7e2;
   --surface-container-highest: #e8e1dc;
   --surface-variant: #e8e1dc;
-  --on-surface-variant: #414443;
+  --on-surface-variant: #1A1A1A; /* Darkened from #2F3130 for clarity */
 
   /* No-Line Rule: Section borders are transparent/subtle in Light Mode */
   --border: #E5E7EB;
@@ -210,7 +210,7 @@
   --status-warning-rgb: 245, 158, 11;
   --status-error-rgb: 186, 26, 26;
   --on-surface-rgb: 30, 27, 24;
-  --foreground-ar-muted: #4d463c;
+  --foreground-ar-muted: #2C2C2C; /* Darkened from #4d463c for high readability and contrast */
   --radius: 0.25rem;
 }
 
@@ -316,6 +316,12 @@
   :lang(ar) {
     line-height: 1.7;
     font-size: 100%;
+  }
+
+  /* Fix Chromium date input character reversal/glitch in Arabic RTL locales */
+  :lang(ar) input[type="date"] {
+    direction: ltr;
+    text-align: right;
   }
 
   :lang(ar) h1,
@@ -484,4 +490,27 @@
 
 @utility ambient-shadow {
   box-shadow: 0 0 24px 0 rgba(var(--on-surface-rgb), 0.04);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 30%, transparent) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--primary) 60%, transparent);
 }

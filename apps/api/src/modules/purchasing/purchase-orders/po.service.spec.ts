@@ -15,9 +15,11 @@ describe('PurchaseOrderService', () => {
     purchaseOrder: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
     },
     purchaseRequest: {
       findUnique: jest.fn(),
+      update: jest.fn(),
     },
     branch: {
       findFirst: jest.fn(),
@@ -70,7 +72,9 @@ describe('PurchaseOrderService', () => {
 
       mockPrisma.purchaseRequest.findUnique.mockResolvedValue({
         branchId: 'branch-1',
+        status: 'APPROVED',
       });
+      mockPrisma.purchaseOrder.findFirst.mockResolvedValue(null);
 
       mockPrisma.purchaseOrder.create.mockResolvedValue({
         id: 'po-1',
@@ -79,6 +83,10 @@ describe('PurchaseOrderService', () => {
 
       const result = await service.create(body, 'user-1');
       expect(result).toHaveProperty('id');
+      expect(mockPrisma.purchaseRequest.update).toHaveBeenCalledWith({
+        where: { id: 'pr-1' },
+        data: { status: 'FULFILLED' },
+      });
       expect(mockPrisma.purchaseOrder.create).toHaveBeenCalled();
     });
   });
@@ -115,6 +123,10 @@ describe('PurchaseOrderService', () => {
         id: 'po-1',
         status: 'SUBMITTED',
       });
+      mockPrisma.purchaseOrder.findUnique.mockResolvedValue({
+        id: 'po-1',
+        status: 'SUBMITTED',
+      });
 
       const result = await service.submit('po-1', userId, role, body);
       expect(result).toEqual({ id: 'po-1', status: 'SUBMITTED' });
@@ -135,6 +147,10 @@ describe('PurchaseOrderService', () => {
         id: 'po-1',
         status: 'APPROVED',
       });
+      mockPrisma.purchaseOrder.findUnique.mockResolvedValue({
+        id: 'po-1',
+        status: 'APPROVED',
+      });
 
       const result = await service.approve('po-1', userId, role, body);
       expect(result).toEqual({ id: 'po-1', status: 'APPROVED' });
@@ -145,6 +161,10 @@ describe('PurchaseOrderService', () => {
         id: 'po-1',
         status: 'REJECTED',
       });
+      mockPrisma.purchaseOrder.findUnique.mockResolvedValue({
+        id: 'po-1',
+        status: 'REJECTED',
+      });
 
       const result = await service.reject('po-1', userId, role, body);
       expect(result).toEqual({ id: 'po-1', status: 'REJECTED' });
@@ -152,6 +172,10 @@ describe('PurchaseOrderService', () => {
 
     it('should call executeTransition for cancel', async () => {
       mockWorkflowService.executeTransition.mockResolvedValue({
+        id: 'po-1',
+        status: 'CANCELLED',
+      });
+      mockPrisma.purchaseOrder.findUnique.mockResolvedValue({
         id: 'po-1',
         status: 'CANCELLED',
       });

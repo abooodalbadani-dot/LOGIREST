@@ -29,7 +29,7 @@ export default function CurrencySummariesClient() {
  },
  {
  accessorKey: 'totalBase',
- header: t('table.total_base'),
+ header: t('table.total_base', { currency: baseCurrency }),
  meta: { numeric: true },
  cell: ({ row }) => formatCurrency(row.getValue('totalBase'), baseCurrency, locale as 'ar' | 'en'),
  },

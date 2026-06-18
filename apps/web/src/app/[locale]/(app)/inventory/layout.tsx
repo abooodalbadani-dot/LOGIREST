@@ -31,15 +31,13 @@ export default function InventoryLayout({
  // Ensure warehouse context is resolved before rendering inventory pages
  if (!activeScope?.warehouseId) {
  return (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 w-full">
-   <div className="w-full max-w-md">
-    <EmptyScopeState 
-     context="warehouse"
-     title="يرجى تحديد المستودع أولاً"
-     description="لعرض بيانات المخزون أو الأصناف، يجب عليك اختيار المستودع أو الفرع النشط من القائمة العلوية."
-     buttonText="اختيار المستودع الآن"
-    />
-   </div>
+  <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] py-12 w-full min-w-0 shrink-0">
+   <EmptyScopeState 
+    context="warehouse"
+    title="يرجى تحديد المستودع أولاً"
+    description="لعرض بيانات المخزون أو الأصناف، يجب عليك اختيار المستودع أو الفرع النشط من القائمة العلوية."
+    buttonText="اختيار المستودع الآن"
+   />
   </div>
  );
  }

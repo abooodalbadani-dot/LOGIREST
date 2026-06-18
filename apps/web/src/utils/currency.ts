@@ -14,11 +14,11 @@ export function convertToBase(foreignAmount: number | null | undefined, fxRate: 
  */
 export function formatCurrency(
   amount: number | null | undefined, 
-  currencyCode: string | undefined, 
+  currencyCode?: string | null, 
   locale: 'ar' | 'en' = 'en'
 ): string {
   const safeAmount = amount == null || isNaN(amount) ? 0 : amount;
-  const safeCurrency = currencyCode || 'USD'; 
+  const safeCode = (currencyCode && currencyCode.length === 3) ? currencyCode.toUpperCase() : 'USD';
   const safeLocale = locale || 'en';
   
   // Use 'ar-u-nu-latn' to force Western Arabic numerals (1, 2, 3...) in Arabic locale
@@ -27,13 +27,16 @@ export function formatCurrency(
   try {
     return new Intl.NumberFormat(formatterLocale, {
       style: 'currency',
-      currency: safeCurrency,
+      currency: safeCode,
       minimumFractionDigits: 2,
     }).format(safeAmount);
   } catch (e) {
-    console.error(`[formatCurrency] Error with currency: ${safeCurrency}`, e);
-    // Fallback display if formatting fails - ensure fixed decimals for safety
-    return `${safeCurrency} ${safeAmount.toFixed(2)}`;
+    console.error(`[formatCurrency] Error with currency: ${currencyCode}`, e);
+    // Ultimate safety net: format as standard number and append the raw string safely
+    const formattedNum = new Intl.NumberFormat(formatterLocale, {
+      minimumFractionDigits: 2,
+    }).format(safeAmount);
+    return `${formattedNum} ${currencyCode ? currencyCode.substring(0, 3) : ''}`;
   }
 }
 
@@ -127,3 +130,22 @@ export function formatTime(date: Date | null | undefined, locale: 'ar' | 'en' = 
     minute: '2-digit'
   });
 }
+
+/**
+ * Get dynamic localized display name for a currency code.
+ * @example getCurrencyDisplayName('SAR', 'en') → "Saudi Riyal (SAR)"
+ */
+export function getCurrencyDisplayName(
+  code: string | undefined | null,
+  locale: 'ar' | 'en' = 'en'
+): string {
+  if (!code) return '';
+  try {
+    const formatterLocale = locale === 'ar' ? 'ar' : 'en';
+    const name = new Intl.DisplayNames([formatterLocale], { type: 'currency' }).of(code);
+    return name ? `${name} (${code})` : code;
+  } catch (e) {
+    return code;
+  }
+}
+

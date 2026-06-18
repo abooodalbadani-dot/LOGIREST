@@ -19,7 +19,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2, type DocumentStatus, isDocumentLocked } from '@logirest/shared-types';
 import { 
  CheckCircle2, 
- XCircle, 
+ XCircle as XCircleIcon, 
  AlertCircle, 
  FileText, 
  ClipboardCheck, 
@@ -34,6 +34,7 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { DocumentLock } from '@/components/shared/DocumentLock';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 interface Props {
  id: string;
@@ -153,14 +154,23 @@ export function PRApprovalClient({ id }: Props) {
           <Building2 className="w-3.5 h-3.5 text-muted-foreground/40" />
           <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.department')}</p>
          </div>
-         <p className="font-bold text-title-sm">{pr.departmentId}</p>
+          <div className="font-bold text-title-sm">
+           <RelationalName
+            name={pr.warehouseName}
+            rawId={pr.departmentId}
+            fallback="Unknown Department"
+            className="font-mono text-xs bg-surface-container-high px-2 py-1 rounded-md border border-border-muted/50"
+           />
+          </div>
         </div>
         <div className="space-y-1.5">
          <div className="flex items-center gap-2 mb-1">
           <Calendar className="w-3.5 h-3.5 text-muted-foreground/40" />
           <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.expected_date')}</p>
          </div>
-         <p dir="ltr" className="font-mono font-bold text-title-sm">{pr.expectedDate || '—'}</p>
+         <p dir="ltr" className="font-semibold text-title-sm text-foreground">
+          {pr.expectedDate ? new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(pr.expectedDate)) : '—'}
+         </p>
         </div>
         <div className="md:col-span-2 space-y-1.5">
          <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('notes')}</p>
@@ -180,24 +190,26 @@ export function PRApprovalClient({ id }: Props) {
          <h3 className="text-body-md font-semibold uppercase text-operational-cyan">{tc('items')}</h3>
         </div>
         
-        <DocumentLineItemTable
-         lines={pr.lines.map(l => ({
-          id: l.id,
-          item: {
-           id: l.item.id,
-           code: l.item.code,
-           nameEn: l.item.nameEn,
-           nameAr: l.item.nameAr,
-           primaryUom: {
-            code: l.item.primaryUom.code
-           }
-          },
-          qty: l.reqQty,
-          uomId: l.uomId
-         }))}
-         locale={locale}
-         isReadOnly={true}
-        />
+        <div className="w-full overflow-x-auto pb-4">
+         <DocumentLineItemTable
+          lines={pr.lines.map(l => ({
+           id: l.id,
+           item: {
+            id: l.item.id,
+            code: l.item.code,
+            nameEn: l.item.nameEn,
+            nameAr: l.item.nameAr,
+            primaryUom: {
+             code: l.item.primaryUom.code
+            }
+           },
+           qty: l.reqQty,
+           uomId: l.uomId
+          }))}
+          locale={locale}
+          isReadOnly={true}
+         />
+        </div>
        </div>
       </DocumentLock>
      </div>
@@ -262,11 +274,12 @@ export function PRApprovalClient({ id }: Props) {
          !isRejecting ? (
           <Button
            variant="outline"
+           size="lg"
            onClick={() => setIsRejecting(true)}
-           className="w-full border-red-500/20 text-red-400 hover:bg-red-500/5 h-14 rounded-2xl font-black uppercase text-label-xs tracking-widest transition-all"
+           className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all"
           >
-           <XCircle className="w-5 h-5 me-3" />
-           {t('approval.reject_pr')}
+           <XCircleIcon className="w-4 h-4" />
+           <span>{t('approval.reject_pr') || 'REJECT REQUEST'}</span>
           </Button>
          ) : (
           <div className="space-y-4">
@@ -275,7 +288,7 @@ export function PRApprovalClient({ id }: Props) {
             disabled={!comment || comment.trim().length < 15 || rejectMutation.isPending}
             className="w-full bg-red-500 text-white hover:bg-red-600 h-14 rounded-2xl font-black uppercase text-label-xs tracking-widest transition-all shadow-[0_8px_20px_rgba(239,68,68,0.2)]"
            >
-            <XCircle className="w-5 h-5 me-3" />
+            <XCircleIcon className="w-5 h-5 me-3" />
             {t('approval.confirm_rejection')}
            </Button>
            <Button

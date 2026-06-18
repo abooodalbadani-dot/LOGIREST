@@ -14,6 +14,8 @@ const CreateGRNPayloadSchema = z.object({
  lines: z.array(z.object({
   itemId: z.string(),
   lotId: z.string().nullable().optional(),
+  lotNumber: z.string().nullable().optional(),
+  expiryDate: z.string().nullable().optional(),
   receivedQty: z.number().positive(),
   unitCostForeign: z.number().nonnegative(),
  }))

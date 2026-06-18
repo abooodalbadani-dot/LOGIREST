@@ -71,7 +71,7 @@ export function KitchenRequestsListClient({
     <div className="flex flex-col min-w-0">
      <Link 
       href={`/kitchen-requests/${row.original.id}`}
-      className="font-mono text-body-md font-semibold text-cyan-500 hover:text-cyan-400 transition-colors"
+      className="font-mono text-body-md font-semibold text-foreground hover:text-foreground transition-colors"
      >
       {row.original.requestNumber}
      </Link>
@@ -94,7 +94,7 @@ export function KitchenRequestsListClient({
     <div className="flex items-center gap-2">
      <ChefHat className="w-3.5 h-3.5 text-muted-foreground/60" />
      <span className="font-bold text-label-sm text-foreground/80">
-      {row.original.departmentName || row.original.departmentId}
+      {row.original.departmentName || '—'}
      </span>
     </div>
    ),
@@ -106,7 +106,7 @@ export function KitchenRequestsListClient({
     <div className="flex items-center gap-2">
      <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
      <span className="font-bold text-label-sm text-foreground/80">
-      {row.original.warehouseName || row.original.warehouseId}
+      {row.original.warehouseName || '—'}
      </span>
     </div>
    ),

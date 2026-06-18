@@ -1,6 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { TransferListClient } from './TransferListClient';
-import { PageHeader } from '@/components/shared/PageHeader';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -20,10 +19,7 @@ export default async function TransfersPage(props: { params: Promise<{ locale: s
  return (
  <ProtectedRoute requiredAction="view" requiredResource="transfer">
  <div className="flex flex-col gap-6 min-w-0">
- <PageHeader 
- title={t('title')} 
- description={t('description')}
- />
+ 
  <TransferListClient />
  </div>
  </ProtectedRoute>

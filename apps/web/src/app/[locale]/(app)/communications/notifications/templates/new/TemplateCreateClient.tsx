@@ -428,7 +428,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                  </div>
                  <div className="flex items-center gap-1.5 shrink-0">
                   <span className={`text-[7px] uppercase font-black tracking-widest px-1 py-0.5 rounded-none ${
-                   field.type === 'string' ? 'bg-emerald-500/10 text-emerald-500/70' :
+                   field.type === 'string' ? 'bg-muted/50 text-foreground/70' :
                    field.type === 'number' ? 'bg-amber-500/10 text-amber-500/70' :
                    field.type === 'date' ? 'bg-sky-500/10 text-sky-500/70' :
                    'bg-rose-500/10 text-rose-500/70'
@@ -436,7 +436,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                    {field.type}
                   </span>
                   {alreadyAdded ? (
-                   <Check className="w-3 h-3 text-emerald-500/50" />
+                   <Check className="w-3 h-3 text-foreground/50" />
                   ) : (
                    <Plus className="w-3 h-3 text-muted-foreground/40" />
                   )}

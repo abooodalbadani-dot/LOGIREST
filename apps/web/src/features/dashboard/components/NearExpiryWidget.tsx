@@ -28,9 +28,8 @@ export function NearExpiryWidget({
  const t = useTranslations('dashboard.near_expiry');
  const tc = useTranslations('common');
  
- // Map dynamic API data if available, otherwise fall back to mock data
- const items = data
-  ? data.map((lot) => ({
+ // Map dynamic API data if available, otherwise fall back to empty array
+ const items = (data || []).map((lot) => ({
     id: lot.id,
     itemId: lot.itemId || lot.id,
     name: lot.itemName,
@@ -41,16 +40,7 @@ export function NearExpiryWidget({
     qty: lot.qty,
     unit: lot.uom,
     priority: lot.daysLeft <= 7 ? 'high' : lot.daysLeft <= 15 ? 'medium' : 'low',
-    isApi: true,
-    nameKey: '',
-   }))
-  : [
-    { id: '1', itemId: '1', name: 'Milk / حليب', lot_number: 'L-MK9021', expiry_date: '2026-05-15', days_left: 5, warehouse: 'Main Store', qty: 150, unit: 'l', priority: 'medium', isApi: false, nameKey: 'milk' },
-    { id: '2', itemId: '2', name: 'Yogurt / زبادي', lot_number: 'L-YG4402', expiry_date: '2026-04-30', days_left: 2, warehouse: 'Main Store', qty: 85, unit: 'pcs', priority: 'high', isApi: false, nameKey: 'yogurt' },
-    { id: '3', itemId: '3', name: 'Chicken / دجاج', lot_number: 'L-CH9025', expiry_date: '2026-06-10', days_left: 25, warehouse: 'Main Store', qty: 240, unit: 'kg', priority: 'low', isApi: false, nameKey: 'chicken' },
-   ];
-
-
+   }));
  return (
   <section className="bg-card border border-border shadow-sm/50 rounded-2xl overflow-hidden backdrop-blur-sm" aria-labelledby="near-expiry-title">
    <div className="px-6 py-4 flex items-center justify-between">
@@ -65,6 +55,11 @@ export function NearExpiryWidget({
     </div>
    </div>
    <div className="flex flex-col">
+    {items.length === 0 && (
+     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+      <span className="text-label-xs font-semibold text-muted-foreground/30 uppercase my-auto">{tc('no_data', { defaultValue: 'No Data' })}</span>
+     </div>
+    )}
     {items.map((item) => (
      <div 
       key={item.id} 
@@ -72,7 +67,7 @@ export function NearExpiryWidget({
      >
       <div className="flex flex-col gap-1">
        <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors">
-        {item.isApi ? item.name : t(`mock.${item.nameKey}`)}
+        {item.name}
        </span>
        <div className="flex items-center gap-3">
         <span className={`text-label-xs flex items-center gap-1.5 font-bold ${ item.priority === 'high' ? 'text-status-error' : 'text-muted-foreground/60' }`}>
@@ -87,11 +82,9 @@ export function NearExpiryWidget({
         {item.priority === 'high' && (
          <span className="flex h-1.5 w-1.5 rounded-full bg-status-error animate-pulse" />
         )}
-        {item.isApi && (
-         <span className="text-label-xxs text-muted-foreground/40 font-semibold uppercase">
-          {item.lot_number} • {item.warehouse}
-         </span>
-        )}
+        <span className="text-label-xxs text-muted-foreground/40 font-semibold uppercase">
+         {item.lot_number} • {item.warehouse}
+        </span>
        </div>
       </div>
       <div className="flex items-center gap-4">
@@ -100,7 +93,7 @@ export function NearExpiryWidget({
          {item.qty}
         </span>
         <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold">
-         {item.isApi ? item.unit : tc(`units.${item.unit}`)}
+         {item.unit}
         </span>
        </div>
        <PermissionGate action="create" resource="operations_adjustments">

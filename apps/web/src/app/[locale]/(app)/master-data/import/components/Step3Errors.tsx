@@ -27,7 +27,7 @@ export function Step3Errors({ wizard }: Step3ErrorsProps) {
   {
    accessorKey: 'column',
    header: 'Field',
-   cell: ({ row }) => <span className="font-semibold uppercase text-label-xs text-cyan-500/70">{row.original.column}</span>,
+   cell: ({ row }) => <span className="font-semibold uppercase text-label-xs text-foreground/70">{row.original.column}</span>,
   },
   {
    accessorKey: 'severity',

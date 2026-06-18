@@ -93,7 +93,7 @@ export function GRNListClient({
  header: tc('doc_number'),
  cell: ({ row }) => (
  <div className="flex flex-col gap-0.5 min-w-0">
- <span dir="ltr" className="font-mono text-cyan-500 font-semibold text-body-md">{row.original.documentNumber}</span>
+ <span dir="ltr" className="font-mono text-foreground font-semibold text-body-md">{row.original.documentNumber}</span>
  <span className="text-label-xxs font-semibold uppercase opacity-30">{t('received_manifest_sub')}</span>
  </div>
  ),
@@ -104,7 +104,7 @@ export function GRNListClient({
    cell: ({ row }) => (
     <div className="flex flex-col min-w-0">
      <span className="text-label-xs font-semibold text-foreground/80 text-start">
-      {row.original.supplierName || row.original.supplierId}
+      {row.original.supplierName || '—'}
      </span>
      <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
     </div>
@@ -147,7 +147,7 @@ export function GRNListClient({
       <Button
        variant="ghost"
        size="sm"
-       className="text-label-xxs font-semibold uppercase text-cyan-500 hover:text-white hover:bg-cyan-500/20 h-8 px-4 rounded-md transition-all group"
+       className="text-xs font-bold tracking-wider text-muted-foreground hover:text-brand-gold uppercase transition-colors h-8 px-3 rounded-lg"
        onClick={(e) => {
         e.stopPropagation();
         router.push(`/goods-received/${row.original.id}`);
@@ -276,12 +276,12 @@ export function GRNListClient({
        onPageChange: setPage
       } : undefined}
       filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
+      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <Input
          placeholder={tc('statuses.all')}
          value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
         />
        </div>
      }

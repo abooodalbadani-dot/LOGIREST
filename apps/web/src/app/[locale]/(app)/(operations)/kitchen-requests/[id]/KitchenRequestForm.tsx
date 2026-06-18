@@ -124,7 +124,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     cell: (line: KitchenRequestLineItem) => (
      <span className={cn(
       "text-body-md font-semibold tabular-nums",
-      (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-emerald-500"
+      (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-foreground"
      )}>{line.fulfilledQty || 0}</span>
     )
    });
@@ -460,7 +460,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
          uom: tCommon('table_headers.uom'),
         }}
         renderQty={(line) => (
-         <span className="text-body-md font-semibold text-cyan-500 tabular-nums">
+         <span className="text-body-md font-semibold text-foreground tabular-nums">
           {line.qty}
          </span>
         )}
@@ -477,11 +477,11 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
        {/* Right Column: Timeline and Meta */}
        <div className="lg:col-span-4 space-y-8">
         <div className="bg-card border border-border shadow-sm p-8 rounded-lg border border-surface-container-high/20 relative overflow-hidden group">
-         <div className="absolute top-0 end-0 w-32 h-32 bg-cyan-500/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-cyan-500/10 transition-all duration-700" />
+         <div className="absolute top-0 end-0 w-32 h-32 bg-muted/50 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-muted/50 transition-all duration-700" />
          <div className="relative space-y-8">
           <div className="flex items-center gap-4">
-           <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-            <History className="w-5 h-5 text-cyan-500" />
+           <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+            <History className="w-5 h-5 text-foreground" />
            </div>
            <h4 className="text-label-xs font-semibold uppercase">{tCommon('history')}</h4>
           </div>

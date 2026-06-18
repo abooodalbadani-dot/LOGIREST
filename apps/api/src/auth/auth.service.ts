@@ -373,6 +373,7 @@ export class AuthService {
       where: { id: userId },
       data: {
         name: body.name || undefined,
+        email: body.email || undefined,
         phone: body.phone !== undefined ? body.phone : undefined,
         locale: targetLocale,
         themePreferences: body.themePreferences || undefined,

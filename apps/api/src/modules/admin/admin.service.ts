@@ -404,6 +404,38 @@ export class AdminService {
     return this.getSettings();
   }
 
+  async getAllOutboxEvents(
+    page: number = 1,
+    limit: number = 50,
+  ): Promise<{
+    data: OutboxEvent[];
+    meta: {
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    };
+  }> {
+    const skip = (page - 1) * limit;
+    const [total, events] = await Promise.all([
+      this.prisma.outboxEvent.count(),
+      this.prisma.outboxEvent.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+    return {
+      data: events,
+      meta: {
+        total,
+        page,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
   async getFailedOutboxEvents(
     page: number = 1,
     limit: number = 50,

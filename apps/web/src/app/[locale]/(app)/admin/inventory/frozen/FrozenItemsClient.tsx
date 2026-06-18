@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { 
  Lock, 
  Unlock, 
@@ -23,6 +23,8 @@ import { apiClient } from '@/lib/api/client';
 import { toast } from 'sonner';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { z } from 'zod';
+import { useCurrency } from '@/app/[locale]/providers/currency-provider';
+import { formatCurrency } from '@/utils/currency';
 
 const FrozenItemSchema = z.object({
  warehouseId: z.string(),
@@ -48,9 +50,11 @@ const FrozenItemsListSchema = z.array(FrozenItemSchema);
 
 type FrozenItem = z.infer<typeof FrozenItemSchema>;
 
-export function FrozenItemsClient() {
- const tCommon = useTranslations('common');
- const { playSound } = useAudioFeedback();
+ export function FrozenItemsClient() {
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
+  const { playSound } = useAudioFeedback();
+  const { currency } = useCurrency();
 
  const [isLoading, setIsLoading] = useState(true);
  const [isUnfreezingMap, setIsUnfreezingMap] = useState<Record<string, boolean>>({});
@@ -327,8 +331,8 @@ export function FrozenItemsClient() {
            <span className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-wider">
             Weighted Average Cost (WAC)
            </span>
-           <p className="text-xs font-bold text-foreground">
-            {Number(selectedItem.wac).toFixed(2)} SAR
+           <p className="text-xs font-bold text-foreground" dir="ltr">
+            {formatCurrency(Number(selectedItem.wac), currency, locale as 'ar' | 'en')}
            </p>
           </div>
 

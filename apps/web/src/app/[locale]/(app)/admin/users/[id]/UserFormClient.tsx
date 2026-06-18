@@ -348,7 +348,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
          type="button"
          disabled={isAuditor || isSelf || isLastAdmin}
          onClick={() => setValue('status', 'ACTIVE')}
-         className={`h-11 rounded-sm border text-label-xs font-semibold uppercase transition-all ${ selectedStatus === 'ACTIVE' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-muted border border-border text-muted-foreground/60 hover:bg-muted/85' }`}
+         className={`h-11 rounded-sm border text-label-xs font-semibold uppercase transition-all ${ selectedStatus === 'ACTIVE' ? 'bg-muted/50 border-emerald-500/50 text-foreground shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-muted border border-border text-muted-foreground/60 hover:bg-muted/85' }`}
         >
          {t('activate')}
         </button>

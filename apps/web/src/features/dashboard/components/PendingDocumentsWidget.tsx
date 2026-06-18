@@ -3,6 +3,7 @@ import { FileText, ChevronRight, Timer, ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
+import { EmptyScopeState } from '@/components/ui/EmptyScopeState';
 
 export interface PendingDocument {
  id: string;
@@ -30,37 +31,27 @@ export function PendingDocumentsWidget({
  const baseCurrency = propBaseCurrency ?? contextCurrency.currency;
  const loadingCurrency = propBaseCurrency ? false : contextCurrency.isLoading;
  
- // Map dynamic API data if available, otherwise fall back to mock data
- const docs = data
-  ? data.map((doc) => {
-    let path = 'purchase-requests';
-    if (doc.type === 'PO') path = 'purchase-orders';
-    else if (doc.type === 'ADJUSTMENT') path = 'adjustments';
-    else if (doc.type === 'ISSUE') path = 'kitchen-requests';
-    else if (doc.type === 'TRANSFER') path = 'internal-transfers';
+ // Map dynamic API data if available, otherwise fall back to empty array
+ const docs = (data || []).map((doc) => {
+   let path = 'purchase-requests';
+   if (doc.type === 'PO') path = 'purchase-orders';
+   else if (doc.type === 'ADJUSTMENT') path = 'adjustments';
+   else if (doc.type === 'ISSUE') path = 'kitchen-requests';
+   else if (doc.type === 'TRANSFER') path = 'internal-transfers';
 
-    let typeKey = doc.type.toLowerCase();
-    if (typeKey === 'adjustment') typeKey = 'adj';
+   let typeKey = doc.type.toLowerCase();
+   if (typeKey === 'adjustment') typeKey = 'adj';
 
-    return {
-     id: doc.id,
-     type: typeKey,
-     number: doc.documentNumber,
-     destination: doc.destination,
-     total: doc.totalValue,
-     date: doc.createdAt,
-     path,
-     isApi: true,
-     numberKey: '',
-     deptKey: '',
-     warehouseKey: '',
-    };
-   })
-  : [
-    { id: '1', type: 'pr', number: 'PR-9021', destination: 'kitchen', total: 4500.00, date: '2024-04-20', path: 'purchase-requests', isApi: false, numberKey: 'doc_1', deptKey: 'kitchen', warehouseKey: '' },
-    { id: '2', type: 'adj', number: 'ADJ-4402', destination: 'main_store', total: undefined, date: '2024-04-21', path: 'adjustments', isApi: false, numberKey: 'doc_2', deptKey: '', warehouseKey: 'main_store' },
-    { id: '3', type: 'pr', number: 'PR-9025', destination: 'bakery', total: 1200.50, date: '2024-04-22', path: 'purchase-requests', isApi: false, numberKey: 'doc_3', deptKey: 'bakery', warehouseKey: '' },
-   ];
+   return {
+    id: doc.id,
+    type: typeKey,
+    number: doc.documentNumber,
+    destination: doc.destination,
+    total: doc.totalValue,
+    date: doc.createdAt,
+    path,
+   };
+  });
 
  const isRtl = locale === 'ar';
 
@@ -78,51 +69,54 @@ export function PendingDocumentsWidget({
     </div>
    </div>
    <div className="flex flex-col flex-1">
-    {docs.map((doc) => (
-     <Link 
-      key={doc.id} 
-      href={`/${doc.path}/${doc.id}`}
-      className="px-6 py-4 transition-all duration-140 ease-industrial flex items-center justify-between group hover:bg-muted"
-     >
-      <div className="flex flex-col gap-1.5">
-       <div className="flex items-center gap-3">
-        <span className="text-label-xxs font-semibold px-2 py-0.5 rounded bg-surface-container-highest/50 text-on-surface uppercase">
-         {tc(`doc_types.${doc.type}`)}
-        </span>
-        <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors font-mono">
-         {doc.isApi ? doc.number : t(`mock.${doc.numberKey}`)}
-        </span>
-       </div>
-       <div className="flex items-center gap-3">
-        <span className="text-label-xs text-muted-foreground font-bold">
-         {doc.isApi 
-          ? doc.destination 
-          : (doc.deptKey ? tc(`departments.${doc.deptKey}`) : tc(`warehouses.${doc.warehouseKey}`))}
-        </span>
-        <div className="flex items-center gap-1.5 text-label-xxs font-bold text-muted-foreground uppercase ps-3">
-         <Timer className="w-3 h-3" />
-         {doc.date}
-        </div>
-       </div>
+     {docs.length === 0 && (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+       <span className="text-label-xs font-semibold text-muted-foreground/30 uppercase my-auto">{tc('no_data', { defaultValue: 'No Data' })}</span>
       </div>
-      <div className="flex items-center gap-4">
-       {doc.total !== undefined && (
-        <div className="flex flex-col items-end">
-         <span className="text-body-sm font-semibold text-foreground tabular-nums">
-          {doc.total.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+     )}
+     {docs.map((doc) => (
+      <Link 
+       key={doc.id} 
+       href={`/${doc.path}/${doc.id}`}
+       className="px-6 py-4 transition-all duration-140 ease-industrial flex items-center justify-between group hover:bg-muted"
+      >
+       <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-3">
+         <span className="text-label-xxs font-semibold px-2 py-0.5 rounded bg-surface-container-highest/50 text-on-surface uppercase">
+          {tc(`doc_types.${doc.type}`)}
          </span>
-         <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold">
-          {loadingCurrency ? '...' : baseCurrency}
+         <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors font-mono">
+          {doc.number}
          </span>
         </div>
-       )}
-       <div className="p-2 text-muted-foreground/20 group-hover:text-operational-cyan group-hover:bg-operational-cyan/10 rounded-xl transition-all border-none">
-        <ArrowUpRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRtl ? 'rotate-[-90deg] group-hover:rotate-[-45deg]' : ''}`} />
+        <div className="flex items-center gap-3">
+         <span className="text-label-xs text-muted-foreground font-bold">
+          {doc.destination}
+         </span>
+         <div className="flex items-center gap-1.5 text-label-xxs font-bold text-muted-foreground uppercase ps-3">
+          <Timer className="w-3 h-3" />
+          {doc.date}
+         </div>
+        </div>
        </div>
-      </div>
-     </Link>
-    ))}
-   </div>
+       <div className="flex items-center gap-4">
+        {doc.total !== undefined && (
+         <div className="flex flex-col items-end">
+          <span className="text-body-sm font-semibold text-foreground tabular-nums">
+           {doc.total.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+          <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold">
+           {loadingCurrency ? '...' : baseCurrency}
+          </span>
+         </div>
+        )}
+        <div className="p-2 text-muted-foreground/20 group-hover:text-operational-cyan group-hover:bg-operational-cyan/10 rounded-xl transition-all border-none">
+         <ArrowUpRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRtl ? 'rotate-[-90deg] group-hover:rotate-[-45deg]' : ''}`} />
+        </div>
+       </div>
+      </Link>
+     ))}
+    </div>
    <div className="p-4 bg-muted/30 border-t border-border text-center">
     <Link 
      href="/purchase-requests"

@@ -25,9 +25,9 @@ export function Step4Commit({ wizard }: Step4CommitProps) {
  if (wizard.successCount > 0) {
  return (
  <div className="max-w-2xl mx-auto flex flex-col items-center justify-center py-20 gap-8 animate-in zoom-in duration-500">
- <div className="w-32 h-32 rounded-full bg-emerald-500/10 flex items-center justify-center relative">
- <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full" />
- <CheckCircle2 className="w-16 h-16 text-emerald-500 relative z-10" />
+ <div className="w-32 h-32 rounded-full bg-muted/50 flex items-center justify-center relative">
+ <div className="absolute inset-0 bg-muted/50 blur-3xl rounded-full" />
+ <CheckCircle2 className="w-16 h-16 text-foreground relative z-10" />
  </div>
  
  <div className="text-center">
@@ -42,7 +42,7 @@ export function Step4Commit({ wizard }: Step4CommitProps) {
  <div className="flex gap-4 w-full max-w-md mt-4">
  <Button 
  variant="outline" 
- className="flex-1 h-16 rounded-2xl border-emerald-500/20 hover:bg-emerald-500/5 font-bold"
+ className="flex-1 h-16 rounded-2xl border-emerald-500/20 hover:bg-muted/50 font-bold"
  onClick={wizard.reset}
  >
  Import More
@@ -61,13 +61,13 @@ export function Step4Commit({ wizard }: Step4CommitProps) {
 
  return (
  <div className="max-w-2xl mx-auto flex flex-col gap-6 py-12">
- <Card className="p-10 rounded-[2.5rem] flex flex-col items-center gap-8 border-none shadow-2xl bg-cyan-500/5 relative overflow-hidden">
+ <Card className="p-10 rounded-[2.5rem] flex flex-col items-center gap-8 border-none shadow-2xl bg-muted/50 relative overflow-hidden">
  <div className="absolute top-0 right-0 p-8 opacity-5">
  <Database className="w-40 h-40" />
  </div>
 
- <div className="w-24 h-24 rounded-full bg-cyan-500/10 flex items-center justify-center">
- <Save className="w-10 h-10 text-cyan-500" />
+ <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center">
+ <Save className="w-10 h-10 text-foreground" />
  </div>
 
  <div className="text-center max-w-sm">
@@ -77,7 +77,7 @@ export function Step4Commit({ wizard }: Step4CommitProps) {
  </p>
  </div>
 
- <div className="w-full h-px bg-cyan-500/10" />
+ <div className="w-full h-px bg-muted/50" />
 
  <div className="flex gap-4 w-full">
  <Button 

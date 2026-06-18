@@ -1,7 +1,6 @@
 import { UoMListClient } from './UoMListClient';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { PageHeader } from '@/components/shared/PageHeader';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
@@ -20,10 +19,7 @@ export default async function UnitsOfMeasurePage(props: { params: Promise<{ loca
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">
  <div className="flex flex-col gap-6 min-w-0">
- <PageHeader 
- title={t('title')} 
- description={t('description')}
- />
+ 
  <UoMListClient locale={params.locale} />
  </div>
  </ProtectedRoute>

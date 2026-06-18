@@ -18,6 +18,14 @@ export class CreateCurrencyDto {
   @IsBoolean()
   @IsOptional()
   isBase?: boolean;
+
+  @IsString()
+  @IsOptional()
+  symbol?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
 
 export class UpdateCurrencyDto {
@@ -32,6 +40,14 @@ export class UpdateCurrencyDto {
   @IsBoolean()
   @IsOptional()
   isBase?: boolean;
+
+  @IsString()
+  @IsOptional()
+  symbol?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 
   @IsNumber()
   @IsOptional()

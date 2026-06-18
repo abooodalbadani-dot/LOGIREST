@@ -17,11 +17,11 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 const actionColors: Record<string, string> = {
- CREATE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+ CREATE: 'bg-muted/50 text-foreground border-emerald-500/20',
  UPDATE: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
  DELETE: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
- POST: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
- APPROVE: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+ POST: 'bg-muted/50 text-foreground border-cyan-500/20',
+ APPROVE: 'bg-muted/50 text-foreground border-blue-500/20',
 };
 
 export function AuditLogsClient() {
@@ -75,7 +75,7 @@ export function AuditLogsClient() {
  accessorKey: 'entityId',
  header: t('entity_id'),
  cell: ({ row }) => (
- <span dir="ltr" className="font-mono text-label-xs text-cyan-500 font-bold">
+ <span dir="ltr" className="font-mono text-label-xs text-foreground font-bold">
  {row.original.entityId}
  </span>
  ),
@@ -116,7 +116,7 @@ export function AuditLogsClient() {
  variant="ghost"
  size="sm"
  aria-label={`${tc('view')} ${t('changes')}`}
- className={`h-7 px-2 transition-all ${expandedId === row.original.id ? 'bg-cyan-500/20 text-cyan-500' : 'text-muted-foreground/40 hover:text-cyan-500 hover:bg-cyan-500/10'}`}
+ className={`h-7 px-2 transition-all ${expandedId === row.original.id ? 'bg-muted/50 text-foreground' : 'text-muted-foreground/40 hover:text-foreground hover:bg-muted/50'}`}
  onClick={(e: React.MouseEvent) => { 
  e.stopPropagation(); 
  setExpandedId(expandedId === row.original.id ? null : row.original.id); 
@@ -193,7 +193,7 @@ export function AuditLogsClient() {
  if (!entry) return null;
  return (
  <div className="p-8 rounded-sm border border-white/5 bg-card border border-border shadow-sm animate-in slide-in-from-top-4 duration-500 shadow-2xl">
- <div className="flex items-center gap-3 mb-6 text-cyan-500 font-semibold text-label-xs uppercase">
+ <div className="flex items-center gap-3 mb-6 text-foreground font-semibold text-label-xs uppercase">
  <History className="w-4 h-4" />
  {t('changes')}
  </div>

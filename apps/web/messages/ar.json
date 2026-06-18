@@ -752,8 +752,10 @@
     "registry_status": "حالة السجل",
     "registry_sync": "مزامنة السجل",
     "relational_unit_transformation": "تحويل الوحدات العلائقي",
+    "optional": "اختياري",
     "required": "هذا الحقل مطلوب",
     "reset": "إعادة تعيين",
+    "retry": "إعادة المحاولة",
     "role": {
       "admin": "مسؤول النظام",
       "kitchen_chief": "رئيس المطبخ",
@@ -820,7 +822,7 @@
       "notifications": "تنبيهات النظام",
       "operations": "العمليات",
       "operators": "المشغلين",
-      "outbox": "فشل البريد الصادر",
+      "outbox": "مراقبة الإشعارات",
       "po": "أوامر الشراء",
       "pr": "طلبات الشراء",
       "report_available_inventory": "المخزون المتاح",
@@ -2626,35 +2628,35 @@
       "title": "سجل أوامر الشراء"
     },
     "search": {
-      "execute": "تنفيذ البحث",
-      "identified_matches": "تم العثور على {count} مطابقة لـ \"{query}\"",
+      "execute": "تشغيل البحث",
+      "identified_matches": "تم العثور على {count} من المطابقات لـ \"{query}\"",
       "main_category": "الفئة الرئيسية",
-      "no_matches": "لا توجد مطابقة",
-      "no_matches_desc": "لم يتم العثور على أي مطابقة تشغيلية لـ \"{query}\" في المصفوفة الرئيسية.",
+      "no_matches": "لا توجد نتائج",
+      "no_matches_desc": "لم يتم العثور على أي نتائج مطابقة لـ \"{query}\" في المصفوفة الأساسية.",
       "operational_status": "الحالة التشغيلية",
-      "placeholder": "ابحث عن صنف، مورد، أو رقم فاتورة...",
+      "placeholder": "البحث عن صنف، مورد، أو رقم فاتورة...",
       "recent_searches": "عمليات البحث الأخيرة",
-      "records": "السجلات",
-      "refine": "تحسين النتائج",
-      "reset": "إعادة ضبط البروتوكول",
-      "search_hint": "البحث في الأصناف، الموردين، أو المستندات",
+      "records": "سجلات",
+      "refine": "تصفية النتائج",
+      "reset": "إعادة تعيين",
+      "search_hint": "البحث عبر الأصناف، الموردين، أو المستندات",
       "sections": {
         "products": "المنتجات",
-        "suppliers": "الموردون",
+        "suppliers": "الموردين",
         "transactions": "المعاملات",
         "warehouse": "المستودع"
       },
-      "shortcut_hint": "اضغط / للبحث السريع",
+      "shortcut_hint": "اضغط على / للبحث السريع",
       "syncing": "جاري مزامنة قواعد البيانات التشغيلية...",
       "tips": {
-        "sku": "تتبع SKU",
-        "sku_desc": "العثور على البيانات الأساسية عبر SKU أو أسماء الأصناف",
-        "suppliers": "الموردون",
-        "suppliers_desc": "تفاصيل الموردين وجهات الاتصال والأداء",
+        "sku": "تتبع رمز الصنف (SKU)",
+        "sku_desc": "البحث في البيانات الأساسية عبر رمز الصنف (SKU) أو أسماء الأصناف",
+        "suppliers": "الموردين",
+        "suppliers_desc": "تفاصيل المورد، جهات الاتصال والأداء",
         "transactions": "المعاملات",
-        "transactions_desc": "الوصول إلى أوامر الشراء والفواتير والتحويلات الداخلية"
+        "transactions_desc": "الوصول إلى أوامر الشراء، الفواتير والتحويلات الداخلية"
       },
-      "title": "البحث الشامل"
+      "title": "البحث العام"
     }
   },
   "operations": {
@@ -3328,7 +3330,14 @@
       "lot_entry_sub": "تحديد هوية الدفعة وتاريخ الانتهاء للصنف المستلم",
       "lot_entry_title": "تعريف التتبع",
       "lot_number": "رقم الدفعة",
+      "lot_number_placeholder": "مثال: LOT-2024-001",
+      "lot_number_required": "رقم الدفعة مطلوب",
       "lot_required": "رقم الدفعة مطلوب",
+      "lot_allocation_title": "تخصيص الدفعة",
+      "lot_allocation_summary": "تخصيص {qty} وحدة للدفعة {lot}",
+      "received_qty_label": "الكمية المستلمة",
+      "confirm_allocation": "تأكيد التخصيص",
+      "clear_lot": "مسح الدفعة",
       "market_index_ref": "مرجع مؤشر السوق",
       "market_rate": "سعر السوق",
       "mock_supplier_1": "شركة التوريد",
@@ -3361,6 +3370,8 @@
       "receiving_qty": "الكمية المستلمة",
       "receiving_warehouse": "مستودع الاستلام",
       "save_draft": "حفظ كمسودة",
+      "submit_for_receipt": "تقديم للاستلام",
+      "submit_success": "تم تقديم سند الاستلام بنجاح",
       "scan_log": "سجل المسح التشغيلي",
       "scan_mode": "بروتوكول المسح نشط",
       "scan_mode_sub": "طبقة الاستحواذ التشغيلي عالية الأداء",
@@ -3393,15 +3404,21 @@
     "po": {
       "actions": {
         "approve": "اعتماد",
+        "approve_success": "تم اعتماد أمر الشراء بنجاح",
         "cancel": "إلغاء",
         "convert_to_grn": "تحويل إلى استلام بضاعة",
         "go_to_approval": "الانتقال للاعتماد",
         "post": "ترحيل",
+        "receive_items": "استلام البضاعة (GRN)",
+        "email_po": "إرسال الأمر بريدياً",
         "reject": "رفض",
         "submit": "تقديم الطلب",
+        "submit_for_approval": "تقديم للاعتماد",
+        "submit_success": "تم تقديم أمر الشراء للاعتماد",
         "submitting": "جاري الإرسال..."
       },
       "add_item": "صنف جديد",
+      "email_sent": "تم إرسال أمر الشراء إلى المورد بنجاح",
       "approval": {
         "approve_confirm_desc": "أنت على وشك اعتماد أمر الشراء هذا.",
         "approve_confirm_title": "تأكيد الاعتماد",
@@ -3431,7 +3448,7 @@
         "title": "اعتماد أمر الشراء",
         "workflow": "سير عمل الاعتماد"
       },
-      "base_total": "الإجمالي بالعملة الأساسية (ريال)",
+      "base_total": "الإجمالي بالعملة الأساسية ({currency})",
       "breadcrumb": {
         "new_po": "أمر شراء جديد"
       },
@@ -3448,13 +3465,16 @@
       "edit_po": "تعديل الأمر",
       "edit_success": "تم تحديث أمر الشراء بنجاح.",
       "errors": {
-        "no_currencies_available": "لا توجد عملات متاحة. يرجى التحقق من إعدادات النظام."
+        "no_currencies_available": "لا توجد عملات متاحة. يرجى التحقق من إعدادات النظام.",
+        "pr_load_failed": "فشل في تحميل بيانات طلب الشراء.",
+        "pr_lines_import_failed": "فشل في استيراد بنود طلب الشراء.",
+        "master_data_failed": "فشل في تهيئة قوائم البحث المطلوبة للبيانات الرئيسية."
       },
       "exchange_index": "مؤشر الصرف المباشر",
       "exchange_rate": "سعر الصرف",
       "expected_date": "التاريخ المتوقع",
       "expected_delivery_date": "تاريخ التسليم المتوقع",
-      "fx_rate": "سعر الصرف (إلى ريال سعودي)",
+      "fx_rate": "سعر الصرف (إلى {currency})",
       "general_notes": "ملاحظات عامة",
       "home": "الرئيسية",
       "independent_order": "طلب مستقل",
@@ -3684,7 +3704,7 @@
       "system_qty": "كمية النظام",
       "to": "إلى",
       "total": "القيمة الإجمالية",
-      "total_base": "القيمة (SAR)",
+      "total_base": "القيمة ({currency})",
       "type": "النوع",
       "user": "المستخدم",
       "variance": "الفرق"

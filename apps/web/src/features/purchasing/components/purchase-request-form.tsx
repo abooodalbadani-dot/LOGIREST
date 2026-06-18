@@ -101,6 +101,8 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  const status = initialData?.status as DocumentStatus;
  const isLocked = isDocumentLocked('PR', status);
+ const isFormDisabled = initialData ? status !== 'DRAFT' : false;
+ const isDraft = !initialData || status === 'DRAFT';
 
  // Mocks/Hooks for data selection
  const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
@@ -271,10 +273,12 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   setSubmitConfirmOpen(true);
  };
 
+ const isStrictlyDraft = initialData?.status === 'DRAFT' || !initialData;
+
  const workflowActions = (
   <div className="flex items-center gap-3">
    {/* Standard Submit Button for Drafts */}
-   {!isLocked && (
+   {isStrictlyDraft && (
     <>
      <Button
       type="button"
@@ -299,73 +303,76 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
        </>
       )}
      </Button>
+
+     {/* Cancel Button for Draft Documents */}
+     {initialData?.id && (
+      <Button
+       type="button"
+       variant="outline"
+       disabled={cancelPR.isPending}
+       onClick={async () => {
+        const confirmed = window.confirm(t('cancel_confirm') || 'Are you sure you want to cancel this request?');
+        if (!confirmed) return;
+        try {
+         await cancelPR.mutateAsync({ id: initialData.id, version: initialData.version ?? 0 });
+         toast.success(t('cancel_success'));
+         router.push('/purchase-requests', { skipGuard: true });
+        } catch {
+         toast.error(tc('error'));
+        }
+       }}
+       className="h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+      >
+       <Trash2 className="w-3.5 h-3.5 me-2" />
+       {t('cancel_request')}
+      </Button>
+     )}
+
+     {/* Delete Button for Draft Documents */}
+     {initialData?.id && (
+      <Button
+       type="button"
+       variant="outline"
+       disabled={deletePR.isPending}
+       onClick={async () => {
+        const confirmed = window.confirm('Are you sure you want to delete this draft request? This action is permanent.');
+        if (!confirmed) return;
+        try {
+         await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
+         toast.success('Draft request deleted successfully');
+         router.push('/purchase-requests', { skipGuard: true });
+        } catch {
+         toast.error(tc('error'));
+        }
+       }}
+       className="h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+      >
+       <Trash2 className="w-3.5 h-3.5 me-2" />
+       {tc('actions.delete') || 'Delete'}
+      </Button>
+     )}
+
+     {/* EDIT Action ONLY for Drafts (if needed) */}
+     {initialData?.id && (
+      <ActionGuard documentType="PR" status={status} action="EDIT" role={user?.role}>
+       <PermissionGate action="update" resource="pr">
+        <Button
+         onClick={() => router.push(`/purchase-requests/${initialData?.id}/edit`)}
+         variant="outline"
+         className="h-12 px-8 border-none bg-card border border-border shadow-sm text-operational-cyan text-label-xs font-semibold uppercase rounded-xl hover:bg-operational-cyan/5 transition-all shadow-xl shadow-black/5"
+        >
+         <Edit3 className="w-4 h-4 me-2 opacity-60" />
+         {tc('edit')}
+        </Button>
+       </PermissionGate>
+      </ActionGuard>
+     )}
     </>
-   )}
-
-   {/* Cancel Button for Draft Documents */}
-   {!isLocked && initialData?.id && (
-    <Button
-     type="button"
-     variant="outline"
-     disabled={cancelPR.isPending}
-     onClick={async () => {
-      const confirmed = window.confirm(t('cancel_confirm') || 'Are you sure you want to cancel this request?');
-      if (!confirmed) return;
-      try {
-       await cancelPR.mutateAsync({ id: initialData.id, version: initialData.version ?? 0 });
-       toast.success(t('cancel_success'));
-       router.push('/purchase-requests', { skipGuard: true });
-      } catch {
-       toast.error(tc('error'));
-      }
-     }}
-     className="h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
-    >
-     <Trash2 className="w-3.5 h-3.5 me-2" />
-     {t('cancel')}
-    </Button>
-   )}
-
-   {/* Delete Button for Draft Documents */}
-   {!isLocked && initialData?.id && (
-    <Button
-     type="button"
-     variant="outline"
-     disabled={deletePR.isPending}
-     onClick={async () => {
-      const confirmed = window.confirm('Are you sure you want to delete this draft request? This action is permanent.');
-      if (!confirmed) return;
-      try {
-       await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
-       toast.success('Draft request deleted successfully');
-       router.push('/purchase-requests', { skipGuard: true });
-      } catch {
-       toast.error(tc('error'));
-      }
-     }}
-     className="h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
-    >
-     <Trash2 className="w-3.5 h-3.5 me-2" />
-     {tc('actions.delete') || 'Delete'}
-    </Button>
    )}
 
    {/* Workflow Actions for Locked Documents */}
    {isLocked && (
     <>
-     <ActionGuard documentType="PR" status={status} action="EDIT" role={user?.role}>
-      <PermissionGate action="update" resource="pr">
-       <Button
-        onClick={() => router.push(`/purchase-requests/${initialData?.id}/edit`)}
-        variant="outline"
-        className="h-12 px-8 border-none bg-card border border-border shadow-sm text-operational-cyan text-label-xs font-semibold uppercase rounded-xl hover:bg-operational-cyan/5 transition-all shadow-xl shadow-black/5"
-       >
-        <Edit3 className="w-4 h-4 me-2 opacity-60" />
-        {tc('edit')}
-       </Button>
-      </PermissionGate>
-     </ActionGuard>
-
      <ActionGuard documentType="PR" status={status} action="APPROVE" role={user?.role}>
       <PermissionGate action="approve" resource="pr">
        <Button
@@ -396,17 +403,17 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  return (
   <div className="flex flex-col min-h-screen bg-card border border-border shadow-sm pb-32">
-   <DocumentLockBanner status={status} isLocked={isLocked} />
+   <DocumentLockBanner status={status} isLocked={isFormDisabled} />
 
    <Form {...form}>
     <form className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
-     <DocumentLockWrapper isLocked={isLocked}>
+     <DocumentLockWrapper isLocked={isFormDisabled}>
       <div className="space-y-10 w-full bg-card border border-border shadow-sm p-8 rounded-2xl relative transition-all duration-200">
        <div className="flex items-center justify-between">
         <div className="space-y-1">
          <h3 className="text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-3">
           {t('detail_title')}
-          {isLocked && <Badge variant="outline" className="bg-surface-container-high/50 border-none text-muted-foreground/60"><History className="w-3 h-3 me-1" /> {tc('read_only')}</Badge>}
+          {isFormDisabled && <Badge variant="outline" className="bg-surface-container-high/50 border-none text-muted-foreground/60"><History className="w-3 h-3 me-1" /> {tc('read_only')}</Badge>}
          </h3>
         </div>
         {initialData?.documentNumber && (
@@ -445,7 +452,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               onSelect={(item) => field.onChange(item.id)}
               placeholder={tc('select_warehouse')}
               className="bg-card border border-border shadow-sm border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30"
-              disabled={isLocked}
+              disabled={isFormDisabled}
              />
             </FormControl>
             <FormMessage className="text-label-xxs font-semibold uppercase" />
@@ -463,7 +470,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
              {t('expected_date')}
             </FormLabel>
             <FormControl>
-             <Input type="date" className="bg-card border border-border shadow-sm border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
+             <Input type="date" className="bg-card border border-border shadow-sm border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isFormDisabled} />
             </FormControl>
             <FormMessage className="text-label-xxs font-semibold uppercase" />
            </FormItem>
@@ -477,7 +484,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
            <FormItem className="lg:col-span-3">
             <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
             <FormControl>
-             <Input placeholder={tc('notes')} className="bg-card border border-border shadow-sm border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
+             <Input placeholder={tc('notes')} className="bg-card border border-border shadow-sm border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isFormDisabled} />
             </FormControl>
             <FormMessage className="text-label-xxs font-semibold uppercase" />
            </FormItem>
@@ -499,7 +506,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           </div>
          </div>
 
-         {!isLocked && (
+         {!isFormDisabled && (
           <ScanInput
            onScan={handleScan}
            items={itemsData?.data as ComboboxItem[] || []}
@@ -513,7 +520,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         <div className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden shadow-sm">
          <DocumentLineItemTable
           lines={fields.map(f => ({ ...f, itemId: f.item_id, reqQty: f.req_qty, uomId: f.uom_id, qty: f.req_qty })) as unknown as LineItem[]}
-          isReadOnly={isLocked}
+          isReadOnly={isFormDisabled}
           hideLotColumns={true}
           onRemoveLine={(id) => {
            const idx = fields.findIndex(f => f.id === id);
@@ -529,7 +536,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
              <input
               type="number"
               step="0.01"
-              disabled={isLocked}
+              disabled={isFormDisabled}
               className="w-24 bg-card border border-border shadow-sm border-none h-10 rounded-xl font-mono font-bold text-center text-body-md focus:ring-1 focus:ring-operational-cyan/30 outline-none"
               dir="ltr"
               {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
@@ -549,7 +556,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             header: tc('item'),
             cell: (line) => {
              const index = fields.findIndex(f => f.id === line.id);
-             if (isLocked) return null; // Already shown in name column
+             if (isFormDisabled) return null; // Already shown in name column
              
              return (
               <div className="min-w-[200px]">
@@ -573,7 +580,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                 }}
                 placeholder={tc('select_item')}
                 className="h-10 bg-card border border-border shadow-sm border-none rounded-xl text-label-xs font-semibold uppercase"
-                disabled={isLocked}
+                disabled={isFormDisabled}
                />
               </div>
              );
@@ -602,7 +609,8 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
      </DocumentLockWrapper>
 
      <FormFooter
-      isLocked={isLocked}
+      isLocked={isFormDisabled}
+      cancelLabel={tc('back')}
       onCancel={() => router.push('/purchase-requests')}
       actions={workflowActions}
       isSaving={isSubmitting}

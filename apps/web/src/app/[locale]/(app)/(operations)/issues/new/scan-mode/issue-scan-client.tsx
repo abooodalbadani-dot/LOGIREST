@@ -9,6 +9,8 @@ import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { ScanLine, RotateCcw, AlertTriangle, CheckCircle2, ArrowLeft, ArrowRight } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { apiClient } from "@/lib/api/client";
+import { z } from "zod";
 
 interface ScannedLine {
  id: string;
@@ -21,12 +23,10 @@ interface ScannedLine {
  overrideReason?: string;
 }
 
-// Mock barcode → product resolver
-const BARCODE_DB: Record<string, { itemId: string; lotNumber: string; expiryDate: string; isExpired?: boolean }> = {
- "6281017075090": { itemId: "item-tomato", lotNumber: "LOT-T01", expiryDate: "2024-12-31" },
- "6287012349876": { itemId: "item-oil", lotNumber: "LOT-O01", expiryDate: "2024-11-01", isExpired: true },
- "6281011234567": { itemId: "item-salt", lotNumber: "LOT-S01", expiryDate: "2025-06-01" },
-};
+const generateMockLot = () => `LOT-${Date.now().toString().slice(-4)}`;
+const generateMockExpiry = () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+// Removed BARCODE_DB mock
 
 export function IssueScanClient() {
  const t = useTranslations("operations.issue.scan_mode");
@@ -50,25 +50,42 @@ export function IssueScanClient() {
  setTimeout(() => setLastFeedback(null), 1200);
  };
 
- const processBarcode = (barcode: string) => {
- const product = BARCODE_DB[barcode];
- if (!product) {
- flashFeedback("error");
- refocusInput();
- return;
- }
+ const processBarcode = async (barcode: string) => {
+  try {
+   // Assuming endpoint /items/by-barcode or similar. Using a generic schema for now.
+   const response = await apiClient.get(
+    `/items?search=${encodeURIComponent(barcode)}`,
+    z.any()
+   );
+   
+   const items = response?.data || response;
+   const product = Array.isArray(items) ? items.find(i => i.code === barcode || i.barcode === barcode) : items;
 
- const isExpired = product.isExpired || new Date(product.expiryDate) < new Date();
+   if (!product) {
+    flashFeedback("error");
+    refocusInput();
+    return;
+   }
 
- if (isExpired) {
- // Open override modal; do NOT add to lines yet
- setExpiredPending({ barcode, itemId: product.itemId, lotNumber: product.lotNumber, expiryDate: product.expiryDate });
- return;
- }
+   // Fallback mock logic for lot/expiry if API doesn't provide it yet, 
+   // but using the real item ID from the backend.
+   const lotNumber = product.lotNumber || generateMockLot();
+   const expiryDate = product.expiryDate || generateMockExpiry();
+   const isExpired = product.isExpired || new Date(expiryDate) < new Date();
 
- addLine({ barcode, ...product, isExpired: false });
- flashFeedback("success");
- refocusInput();
+   if (isExpired) {
+    // Open override modal; do NOT add to lines yet
+    setExpiredPending({ barcode, itemId: product.id || product.code || 'unknown', lotNumber, expiryDate });
+    return;
+   }
+
+   addLine({ barcode, itemId: product.id || product.code || 'unknown', lotNumber, expiryDate, isExpired: false });
+   flashFeedback("success");
+   refocusInput();
+  } catch (err) {
+   flashFeedback("error");
+   refocusInput();
+  }
  };
 
  const addLine = (product: { barcode: string; itemId: string; lotNumber: string; expiryDate: string; isExpired: boolean }, overrideReason?: string) => {

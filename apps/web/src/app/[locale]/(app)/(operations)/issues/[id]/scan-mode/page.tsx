@@ -26,6 +26,7 @@ import { isIssuePosted } from '@/domain/status-guards';
 import { isDocumentLocked } from '@logirest/shared-types';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { toast } from 'sonner';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 type ScanEntry = { barcode: string; item_name: string; timestamp: Date; success: boolean };
 
@@ -214,7 +215,14 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  <div className="flex items-center gap-8">
  <div className="text-end">
  <div className="text-label-sm text-muted-foreground uppercase mb-1">{t('scan_mode.qty')}</div>
- <div className="text-headline-lg font-bold font-mono">{line.qty} <span className="text-body-md opacity-60">{line.item.primaryUom?.code || line.uomId || ''}</span></div>
+ <div className="text-headline-lg font-bold font-mono">{line.qty} 
+  <RelationalName 
+   name={line.item.primaryUom?.code} 
+   rawId={line.uomId} 
+   fallback="N/A" 
+   className="text-body-md opacity-60 ml-2" 
+  />
+ </div>
  </div>
  <button 
  className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all ${isFullyAllocated ? 'border-operational-cyan text-operational-cyan bg-operational-cyan/5 hover:bg-operational-cyan/10' : 'border-status-error text-status-error animate-pulse bg-status-error/5 hover:bg-status-error/10'}`}
@@ -240,7 +248,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  {/* Scan Log */}
  {scanLog.length > 0 && (
  <div className="bg-card border border-border shadow-sm p-5 rounded-2xl shadow-inner border border-white/5">
- <h3 className="text-label-xs text-cyan-500/60 mb-3 uppercase font-semibold">{t('scan_log_title')}</h3>
+ <h3 className="text-label-xs text-foreground/60 mb-3 uppercase font-semibold">{t('scan_log_title')}</h3>
  <ScanLog entries={scanLog} />
  </div>
  )}

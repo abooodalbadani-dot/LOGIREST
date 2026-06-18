@@ -158,7 +158,7 @@ export default function ForgotPasswordPage() {
             <div className="w-12 h-12 bg-operational-cyan/10 border border-operational-cyan/30 rounded-xl flex items-center justify-center mb-4 overflow-hidden">
               <Image src="/logoicon.png" alt={t('logo_alt')} width={28} height={28} className="object-contain" />
             </div>
-            <h1 className="text-xl font-bold text-foreground text-center">{t('login.hero_title')}</h1>
+            <p className="text-xl font-bold text-foreground text-center">{t('login.hero_title')}</p>
             <div className="mt-1 px-1.5 py-0.5 bg-black/5 dark:bg-card/5 border border-black/10 dark:border-white/10 rounded text-[8px] font-mono text-black/40 dark:text-white/40 uppercase">
               {t('login.version')}
             </div>

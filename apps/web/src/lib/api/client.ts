@@ -345,7 +345,12 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
         }
       }
       
-      console.error(`[API Error] ${method} ${path}`, normalizedErr);
+      console.error(`[API Error] ${method} ${path} Details: ` + JSON.stringify({
+        code: normalizedErr.code,
+        message: normalizedErr.message,
+        fieldErrors: normalizedErr.fieldErrors,
+        rawErrors: 'errors' in (normalizedErr as unknown as Record<string, unknown>) ? (normalizedErr as unknown as { errors: unknown }).errors : undefined
+      }));
       throw normalizedErr;
     }
 

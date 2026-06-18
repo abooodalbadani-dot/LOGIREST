@@ -6,6 +6,7 @@ import {
   Put,
   Param,
   Body,
+  Query,
   UseGuards,
   ForbiddenException,
   HttpCode,
@@ -108,8 +109,23 @@ export class FXRatesController {
     Role.AUDITOR,
     Role.APPROVER,
   )
-  async findAll() {
+  async findAll(@Query() query?: { from?: string; to?: string }) {
+    const where: any = {};
+    if (query?.from && query?.to) {
+      where.OR = [
+        {
+          fromCurrency: { code: query.from },
+          toCurrency: { code: query.to },
+        },
+        {
+          fromCurrencyId: query.from,
+          toCurrencyId: query.to,
+        },
+      ];
+    }
+
     return this.prisma.fXRate.findMany({
+      where,
       orderBy: {
         effectiveFrom: 'desc',
       },

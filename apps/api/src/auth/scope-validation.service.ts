@@ -56,7 +56,13 @@ export class ScopeValidationService {
       return;
     }
 
-    if (role === Role.BRANCH_MGR) {
+    if (
+      role === Role.BRANCH_MGR ||
+      role === Role.PROC_MGR ||
+      role === Role.INV_MGR ||
+      role === Role.STORE_MGR ||
+      role === Role.PROC_OFFICER
+    ) {
       const wh = await this.prisma.warehouse.findUnique({
         where: { id: warehouseId },
         select: { branchId: true },
@@ -67,12 +73,14 @@ export class ScopeValidationService {
       const hasBranchScope = await this.prisma.userBranchScope.findUnique({
         where: { userId_branchId: { userId, branchId: wh.branchId } },
       });
-      if (!hasBranchScope) {
+      if (hasBranchScope) {
+        return;
+      }
+      if (role === Role.BRANCH_MGR) {
         throw new ForbiddenException(
           'Access to this branch is not authorized.',
         );
       }
-      return;
     }
 
     const hasScope = await this.prisma.userWarehouseScope.findUnique({

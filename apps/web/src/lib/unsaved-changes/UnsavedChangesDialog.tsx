@@ -46,19 +46,22 @@ export const UnsavedChangesDialog: React.FC<UnsavedChangesDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{t('title')}</DialogTitle>
-          <DialogDescription>{t('description')}</DialogDescription>
+      <DialogContent className="w-[95vw] sm:w-[500px] sm:max-w-[500px] p-6 bg-card text-card-foreground rounded-lg border border-border shadow-xl">
+        <DialogHeader className="flex flex-col gap-2 text-start">
+          <DialogTitle className="text-lg font-bold text-foreground">{t('title')}</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground text-balance">{t('description')}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="secondary" onClick={onClose}>
+
+        {/* حاوية الأزرار المحصنة ضد الـ RTL Bug */}
+        {/* استخدام sm:space-x-0 لتعطيل مسافات Shadcn الافتراضية والاعتماد على gap-3 */}
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 w-full mt-8 sm:space-x-0">
+          <Button variant="outline" className="w-full sm:w-auto shrink-0" onClick={onClose}>
             {t('stay')}
           </Button>
-          <Button variant="destructive" onClick={handleLeave}>
+          <Button variant="destructive" className="w-full sm:w-auto shrink-0" onClick={handleLeave}>
             {t('leave')}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

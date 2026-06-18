@@ -74,7 +74,7 @@ export function ImportWizardClient({ type, locale }: ImportWizardClientProps) {
   <PageHeader 
    title={getEntityTitle()} 
    description={t('wizard_desc')}
-   icon={<ImportIcon className="w-10 h-10 text-cyan-500" />}
+   icon={<ImportIcon className="w-10 h-10 text-foreground" />}
   />
   </div>
 
@@ -89,7 +89,7 @@ export function ImportWizardClient({ type, locale }: ImportWizardClientProps) {
     key={step.id}
     className={cn(
     "flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-500",
-    isActive ? "bg-cyan-500/10 shadow-sm shadow-cyan-500/5 ring-1 ring-cyan-500/20" : "opacity-40"
+    isActive ? "bg-muted/50 shadow-sm shadow-cyan-500/5 ring-1 ring-cyan-500/20" : "opacity-40"
     )}
    >
     <div className={cn(
@@ -101,7 +101,7 @@ export function ImportWizardClient({ type, locale }: ImportWizardClientProps) {
     <span 
     className={cn(
      "text-label-xs font-semibold uppercase text-center",
-     isActive ? "text-cyan-500" : isCompleted ? "text-emerald-500" : "text-muted-foreground/40"
+     isActive ? "text-foreground" : isCompleted ? "text-foreground" : "text-muted-foreground/40"
     )}
     >
     {step.label}
@@ -119,7 +119,7 @@ export function ImportWizardClient({ type, locale }: ImportWizardClientProps) {
   {wizard.step === 'COMMIT' && <Step4Commit wizard={wizard} />}
   {wizard.step === 'SUCCESS' && (
    <div className="flex flex-col items-center gap-4 p-12 bg-card border border-border shadow-sm rounded-2xl border border-primary/5 min-w-0">
-   <CheckCircle2 className="w-16 h-16 text-emerald-500" />
+   <CheckCircle2 className="w-16 h-16 text-foreground" />
    <h3 className="text-title-lg font-bold">{t('success_title')}</h3>
    <p className="text-muted-foreground">{t('success_description')}</p>
    <button 

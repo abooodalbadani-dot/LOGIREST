@@ -108,7 +108,7 @@ export class AdjustmentsService {
         include: {
           lines: {
             include: {
-              item: true,
+              item: { include: { unitOfMeasure: true, category: true } },
               lot: true,
             },
           },
@@ -145,7 +145,7 @@ export class AdjustmentsService {
         include: {
           lines: {
             include: {
-              item: true,
+              item: { include: { unitOfMeasure: true, category: true } },
               lot: true,
             },
           },
@@ -208,7 +208,7 @@ export class AdjustmentsService {
       include: {
         lines: {
           include: {
-            item: true,
+            item: { include: { unitOfMeasure: true, category: true } },
             lot: true,
           },
         },
@@ -320,7 +320,7 @@ export class AdjustmentsService {
         include: {
           lines: {
             include: {
-              item: true,
+              item: { include: { unitOfMeasure: true, category: true } },
               lot: true,
             },
           },
@@ -361,7 +361,7 @@ export class AdjustmentsService {
         include: {
           lines: {
             include: {
-              item: true,
+              item: { include: { unitOfMeasure: true, category: true } },
               lot: true,
             },
           },

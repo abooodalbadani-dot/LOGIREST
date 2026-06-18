@@ -19,7 +19,7 @@ export interface Category { id: string; code: string; name: string; isReferenced
 export interface Item { id: string; code: string; barcode: string; name: string; categoryId: string; primaryUom: UoM; uomConversions: UoMConversion[]; trackLots: boolean; minStockLevel: number; reorderPoint: number; lastPurchasePrice?: number; isActive: boolean; version?: number; hasTransactions?: boolean; category?: Category | null; }
 export interface Lot { id: string; itemId: string; warehouseId: string; lotNumber: string; expiryDate: string | null; qtyAvailable: number; isExpired: boolean; isNearExpiry: boolean; }
 export interface Supplier { id: string; code: string; name: string; contactEmail?: string | null; contactPhone?: string | null; contactName?: string | null; currencyId: string; paymentTerms: string; isActive: boolean; version?: number; }
-export interface Currency { id: string; code: string; name: string; symbol?: string; isBase: boolean; isActive: boolean; createdAt: string; version?: number; }
+export interface Currency { id: string; code: string; name: string; symbol?: string | null; isBase: boolean; isActive: boolean; createdAt: string; version?: number; }
 export interface FXRate { id: string; fromCurrencyId: string; toCurrencyId: string; rate: number; effectiveDate: string; isActive: boolean; createdAt: string; version?: number; fromCurrency?: Currency | null; toCurrency?: Currency | null; }
 export interface Barcode { id: string; itemId: string; uomId?: string | null; code: string; defaultQty?: number | null; isActive?: boolean | null; version?: number; itemName?: string | null; itemCode?: string | null; }
 export interface VarianceReason { id: string; code: string; name: string; isActive: boolean; }
@@ -90,7 +90,7 @@ export const CurrencySchema = z.object({
   name: z.string().optional(),
   nameEn: z.string().optional(),
   nameAr: z.string().optional(),
-  symbol: z.string().optional(),
+  symbol: z.string().optional().nullable(),
   isBase: z.boolean().optional(),
   isActive: z.boolean().optional(),
   createdAt: z.string().optional(),

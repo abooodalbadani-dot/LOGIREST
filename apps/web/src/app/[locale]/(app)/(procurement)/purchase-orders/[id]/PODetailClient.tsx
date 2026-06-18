@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/purchase-order-form';
 
-import { CheckCircle, Mail, Trash2, FileText } from 'lucide-react';
+import { CheckCircle, Mail, Trash2, FileText, Send, ShieldCheck } from 'lucide-react';
 import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
+import { useSubmitPO } from '@/features/purchasing/hooks/useSubmitPO';
+import { useApprovePO } from '@/features/purchasing/hooks/useApprovePO';
 import { type DocumentStatus } from '@logirest/shared-types';
 import { apiClient } from '@/infrastructure/api/client';
 import { z } from 'zod';
@@ -18,6 +20,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { PO_STATUS } from '@logirest/shared-types';
+
 
 interface PODetailClientProps {
  id: string | null;
@@ -34,6 +37,8 @@ export function PODetailClient({ id }: PODetailClientProps) {
  const { data: po, isLoading } = usePO(id || '');
  const deletePO = useDeletePO();
  const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('purchase-order', id || '');
+ const submitPO = useSubmitPO({ onConflict: triggerConflict });
+ const approvePO = useApprovePO({ onConflict: triggerConflict });
 
  if (isLoading) {
   return (
@@ -53,6 +58,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
  // Generate actions for the viewer (strictly navigation or read-only triggers)
  const actions = (
   <div className="flex items-center gap-3">
+   {/* APPROVED: Receive Items + Email */}
    {status === PO_STATUS.APPROVED && !isNew && (
     <>
      <Button
@@ -80,37 +86,71 @@ export function PODetailClient({ id }: PODetailClientProps) {
     </>
    )}
 
+   {/* DRAFT: Delete + Submit for Approval */}
    {status === PO_STATUS.DRAFT && !isNew && (
-    <PermissionGate action="delete" resource="po">
-     <Button
-      onClick={async () => {
-       const confirmed = window.confirm('Are you sure you want to delete this draft purchase order? This action is permanent.');
-       if (!confirmed) return;
-       try {
-        await deletePO.mutateAsync({ id: id || '', version: po?.version });
-        toast.success('Draft purchase order deleted successfully');
-        router.push('/purchase-orders');
-       } catch (err) {
-        console.error(err);
-       }
-      }}
-      disabled={deletePO.isPending}
-      className="bg-red-500/10 text-red-500 hover:bg-red-500/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-red-500/20"
-     >
-      <Trash2 className="w-4 h-4 me-2" />
-      {tCommon('actions.delete') || 'Delete'}
-     </Button>
-    </PermissionGate>
+    <>
+     <PermissionGate action="delete" resource="po">
+      <Button
+       onClick={async () => {
+        const confirmed = window.confirm('Are you sure you want to delete this draft purchase order? This action is permanent.');
+        if (!confirmed) return;
+        try {
+         await deletePO.mutateAsync({ id: id || '', version: po?.version });
+         toast.success('Draft purchase order deleted successfully');
+         router.push('/purchase-orders');
+        } catch (err) {
+         console.error(err);
+        }
+       }}
+       disabled={deletePO.isPending}
+       className="bg-red-500/10 text-red-500 hover:bg-red-500/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-red-500/20"
+      >
+       <Trash2 className="w-4 h-4 me-2" />
+       {tCommon('actions.delete') || 'Delete'}
+      </Button>
+     </PermissionGate>
+
+     <ActionGuard documentType="PO" status={status} action="SUBMIT" role={user?.role}>
+      <PermissionGate action="submit" resource="po">
+       <Button
+        onClick={async () => {
+         if (!po?.version && po?.version !== 0) return;
+         try {
+          await submitPO.mutateAsync({ id: id || '', version: po.version });
+          toast.success(t('actions.submit_success') || 'Purchase Order submitted for approval');
+         } catch (err) {
+          console.error('[PODetailClient] Submit failed:', err);
+         }
+        }}
+        disabled={submitPO.isPending}
+        className="h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs bg-operational-cyan hover:brightness-110 text-white shadow-md shadow-operational-cyan/20 flex items-center disabled:opacity-50"
+       >
+        <Send className="w-4 h-4 me-2" />
+        {submitPO.isPending ? tCommon('saving') : (t('actions.submit_for_approval') || 'تقديم للاعتماد')}
+       </Button>
+      </PermissionGate>
+     </ActionGuard>
+    </>
    )}
 
+   {/* SUBMITTED: Inline Approve for privileged roles */}
    <ActionGuard documentType="PO" status={status} action="APPROVE" role={user?.role}>
     <PermissionGate action="approve" resource="po">
      <Button
-      onClick={() => router.push(`/purchase-orders/${id}/approve`)}
-      className="bg-surface-container-highest text-foreground hover:bg-surface-container-high h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-outline-variant/50"
+      onClick={async () => {
+       if (!po?.version && po?.version !== 0) return;
+       try {
+        await approvePO.mutateAsync({ id: id || '', version: po.version });
+        toast.success(t('actions.approve_success') || 'Purchase Order approved successfully');
+       } catch (err) {
+        console.error('[PODetailClient] Approve failed:', err);
+       }
+      }}
+      disabled={approvePO.isPending}
+      className="h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center disabled:opacity-50"
      >
-      <CheckCircle className="w-4 h-4 me-2" />
-      {t('actions.go_to_approval')}
+      <ShieldCheck className="w-4 h-4 me-2" />
+      {approvePO.isPending ? tCommon('saving') : (t('actions.approve') || 'اعتماد')}
      </Button>
     </PermissionGate>
    </ActionGuard>

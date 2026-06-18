@@ -33,7 +33,11 @@ export function StoreManagerDashboard() {
  const { data: stats, isLoading, error } = useDashboardStats();
 
  if (!activeScope?.warehouseId) {
-  return <EmptyScopeState context="warehouse" />;
+  return (
+   <div className="flex-1 w-full min-w-0 flex flex-col items-center justify-center">
+    <EmptyScopeState context="warehouse" />
+   </div>
+  );
  }
 
  if (isLoading) {
@@ -234,10 +238,14 @@ export function StoreManagerDashboard() {
        <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('store.stock_velocity')}</h3>
       </div>
       <div className="h-44 flex flex-col items-center justify-center gap-6 bg-card border border-border shadow-sm/30 group-hover:bg-card border border-border shadow-sm/50 transition-all duration-140 ease-industrial">
-       <div className="flex items-end gap-2 h-16">
-        {(stats.efficiencyMetrics?.velocityChart || [40, 70, 45, 90, 65, 80, 55]).map((h, i) => (
-         <div key={i} className="w-3 bg-status-success/10 group-hover:bg-status-success/40 transition-all duration-200 cursor-pointer rounded-full" style={{ height: `${h}%` }} />
-        ))}
+       <div className="flex items-end gap-2 h-16 w-full justify-center">
+        {(stats.efficiencyMetrics?.velocityChart || []).length > 0 ? (
+         (stats.efficiencyMetrics?.velocityChart || []).map((h, i) => (
+          <div key={i} className="w-3 bg-status-success/10 group-hover:bg-status-success/40 transition-all duration-200 cursor-pointer rounded-full" style={{ height: `${h}%` }} />
+         ))
+        ) : (
+         <span className="text-label-xs font-semibold text-muted-foreground/30 uppercase my-auto">{t('no_data', { defaultValue: 'No Data' })}</span>
+        )}
        </div>
        <span className="text-label-xxs font-semibold text-muted-foreground/20 uppercase">{t('store.weekly_throughput', { week: stats.efficiencyMetrics?.throughputWeek || 17 })}</span>
       </div>

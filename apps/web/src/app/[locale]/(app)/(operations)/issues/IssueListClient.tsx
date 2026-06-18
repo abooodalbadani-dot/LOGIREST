@@ -107,7 +107,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
    header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{t('doc_number')}</span>,
    cell: ({ row }) => (
     <div className="flex items-center gap-2">
-     <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500">
+     <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
       {row.original.documentNumber}
      </span>
      <span className="text-[10px] font-bold text-muted-foreground/20 uppercase tracking-tight">
@@ -125,7 +125,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       <Activity className="w-3 h-3 text-muted-foreground/40" />
      </div>
      <span className="text-label-xs font-semibold text-muted-foreground/60">
-      {row.original.destinationDepartmentName || row.original.destinationDeptId || '—'}
+      {row.original.destinationDepartmentName || '—'}
      </span>
     </div>
    ),
@@ -136,7 +136,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
    cell: ({ row }) => (
     <div className="flex items-center gap-2">
      <span className="text-label-xs font-semibold text-muted-foreground/60">
-      {row.original.warehouseName || row.original.warehouseId || '—'}
+      {row.original.warehouseName || '—'}
      </span>
     </div>
    ),
@@ -247,7 +247,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
    <div className="bg-card border border-border shadow-sm/50 p-6 rounded-xl border border-outline-low/10 ambient-shadow backdrop-blur-sm">
     <div className="flex items-center justify-between gap-6 overflow-x-auto no-scrollbar">
      <div className="flex-1 min-w-[300px] relative group">
-      <div className="absolute inset-y-0 start-5 flex items-center pointer-events-none transition-colors group-focus-within:text-cyan-500 text-muted-foreground/30">
+      <div className="absolute inset-y-0 start-5 flex items-center pointer-events-none transition-colors group-focus-within:text-foreground text-muted-foreground/30">
        <Search className="w-4 h-4" />
       </div>
       <Input
@@ -283,7 +283,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
      </div>
 
      <div className="flex items-center gap-1 bg-surface-container-high/50 p-1.5 rounded-md shadow-inner shadow-black/5">
-      <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-cyan-500 bg-card border border-border shadow-sm shadow-sm">
+      <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-foreground bg-card border border-border shadow-sm shadow-sm">
        <LayoutGrid className="w-4 h-4" />
       </Button>
       <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-muted-foreground/20">

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatQuantity, formatCurrency } from '@/utils/currency';
 import { useColumnVisibility } from '@/hooks/useColumnVisibility';
+import { useCurrency } from '@/app/[locale]/providers/currency-provider';
 
 interface ValuationRow {
  id: string;
@@ -27,7 +28,9 @@ interface Props {
  currencySymbol?: string;
 }
 
-export function ValuationTable({ data, isLoading, currencySymbol = 'SAR' }: Props) {
+export function ValuationTable({ data, isLoading, currencySymbol: propCurrency }: Props) {
+ const { currency } = useCurrency();
+ const currencySymbol = propCurrency || currency;
  const locale = useLocale() as 'ar' | 'en';
  const showUnitCost = useColumnVisibility('unitCost');
  const showTotalValue = useColumnVisibility('totalValue');

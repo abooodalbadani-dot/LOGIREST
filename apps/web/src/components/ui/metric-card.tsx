@@ -17,14 +17,14 @@ interface MetricCardProps {
 
 const colorMap = {
     cyan: {
-        text: 'text-status-success',
-        glow: 'from-status-success/50',
-        bg: 'bg-status-success/10',
+        text: 'text-brand-gold',
+        glow: 'from-brand-gold/50',
+        bg: 'bg-brand-gold/10',
     },
     emerald: {
-        text: 'text-status-success',
-        glow: 'from-status-success/50',
-        bg: 'bg-status-success/10',
+        text: 'text-brand-gold',
+        glow: 'from-brand-gold/50',
+        bg: 'bg-brand-gold/10',
     },
     amber: {
         text: 'text-yellow-600 dark:text-yellow-500',

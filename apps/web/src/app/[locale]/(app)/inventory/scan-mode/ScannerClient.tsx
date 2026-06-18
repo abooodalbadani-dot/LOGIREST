@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Scan, Camera, X, CheckCircle2, RefreshCw, RotateCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
+import { apiClient } from '@/lib/api/client';
+import { z } from 'zod';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export default function ScannerClient() {
@@ -14,21 +16,52 @@ export default function ScannerClient() {
  const [result, setResult] = useState<string | null>(null);
  const [status, setStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('scanning');
  const [isPending, startTransition] = useTransition();
+ const [barcodeInput, setBarcodeInput] = useState('');
 
  useEffect(() => {
-  if (status === 'scanning') {
-   const timer = setTimeout(() => {
-    // Mock scan logic
-    setResult('LOT-2024-9942');
-    setStatus('success');
-    playSound('scan');
-   }, 3000);
+  if (status === 'scanning' && barcodeInput.length > 3) {
+   const timer = setTimeout(async () => {
+    try {
+     const res = await apiClient.get(
+      `/items?search=${encodeURIComponent(barcodeInput)}`,
+      z.object({
+       data: z.array(
+        z.object({
+         id: z.string(),
+         code: z.string().nullable().optional(),
+         barcode: z.string().nullable().optional(),
+        })
+       ),
+      })
+     );
+     const items = res.data;
+     const found = items.find(
+      (i: { code?: string | null; barcode?: string | null }) => 
+       i.code === barcodeInput || i.barcode === barcodeInput
+     );
+     
+     if (found) {
+      setResult(found.code || barcodeInput);
+      setStatus('success');
+      playSound('scan');
+     } else {
+      setResult('Not Found');
+      setStatus('error');
+      playSound('error');
+     }
+    } catch (e) {
+     setResult('Error');
+     setStatus('error');
+     playSound('error');
+    }
+   }, 500); // Small debounce for manual typing
    return () => clearTimeout(timer);
   }
- }, [status, playSound]);
+ }, [barcodeInput, status, playSound]);
 
  const resetScanner = () => {
   setResult(null);
+  setBarcodeInput('');
   setStatus('scanning');
  };
 
@@ -91,6 +124,17 @@ export default function ScannerClient() {
        <div className="relative z-10 flex flex-col items-center gap-4 text-white min-w-0">
         <Camera className="w-16 h-16 animate-pulse text-operational-cyan" />
         <p className="text-label-sm font-bold text-operational-cyan/80">{t('scanner.align_tip')}</p>
+        
+        {/* Hidden or subtle input to capture hardware scanner keystrokes */}
+        <input 
+         type="text" 
+         autoFocus
+         value={barcodeInput}
+         onChange={(e) => setBarcodeInput(e.target.value)}
+         className="mt-2 bg-transparent border-b border-operational-cyan/30 text-center text-operational-cyan font-mono focus:outline-none w-48 placeholder-operational-cyan/30"
+         placeholder="Awaiting scan..."
+        />
+
         <Button 
          onClick={resetScanner}
          className="mt-4 !bg-card/10 hover:!bg-card/20 !text-white rounded-full h-12 px-8 gap-2 border border-white/20 shadow-sm backdrop-blur-md transition-all active:scale-95 shadow-operational-cyan/10"
@@ -102,22 +146,30 @@ export default function ScannerClient() {
       </>
      )}
 
-     {status === 'success' && (
+     {(status === 'success' || status === 'error') && (
       <div className="relative z-10 flex flex-col items-center gap-6 animate-in zoom-in duration-500 text-white min-w-0">
-       <div className="w-24 h-24 rounded-full bg-status-success/10 flex items-center justify-center border border-status-success/20">
-        <CheckCircle2 className="w-12 h-12 text-status-success" />
+       <div className={`w-24 h-24 rounded-full flex items-center justify-center border ${status === 'success' ? 'bg-status-success/10 border-status-success/20' : 'bg-status-error/10 border-status-error/20'}`}>
+        {status === 'success' ? (
+         <CheckCircle2 className="w-12 h-12 text-status-success" />
+        ) : (
+         <X className="w-12 h-12 text-status-error" />
+        )}
        </div>
        <div className="text-center space-y-1">
-        <p className="text-label-sm font-medium text-white/70" dir="auto" style={{ unicodeBidi: 'isolate' }}>{t('scanner.identified_record')}</p>
-        <p className="text-headline-lg font-semibold text-status-success uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}><span dir="ltr" className="font-mono">{result}</span></p>
+        <p className="text-label-sm font-medium text-white/70" dir="auto" style={{ unicodeBidi: 'isolate' }}>
+         {status === 'success' ? t('scanner.identified_record') : 'Scan Failed'}
+        </p>
+        <p className={`text-headline-lg font-semibold uppercase ${status === 'success' ? 'text-status-success' : 'text-status-error'}`} dir="auto" style={{ unicodeBidi: 'isolate' }}><span dir="ltr" className="font-mono">{result}</span></p>
        </div>
        <div className="flex flex-col gap-3 w-full max-w-[320px] min-w-0">
-        <Button 
-         onClick={handleLoadData}
-         className="w-full h-14 bg-status-success hover:bg-status-success/90 !text-white rounded-2xl font-bold text-label-sm shadow-xl shadow-status-success/30 active:scale-[0.98] transition-all border border-status-success/20"
-        >
-         {t('scanner.load_operational_data')}
-        </Button>
+        {status === 'success' && (
+         <Button 
+          onClick={handleLoadData}
+          className="w-full h-14 bg-status-success hover:bg-status-success/90 !text-white rounded-2xl font-bold text-label-sm shadow-xl shadow-status-success/30 active:scale-[0.98] transition-all border border-status-success/20"
+         >
+          {t('scanner.load_operational_data')}
+         </Button>
+        )}
         <Button 
          onClick={resetScanner}
          className="w-full h-12 !bg-card/10 hover:!bg-card/20 !text-white font-bold text-label-xs gap-3 active:scale-[0.98] transition-all rounded-xl border border-white/20 shadow-sm backdrop-blur-md shadow-operational-cyan/10"

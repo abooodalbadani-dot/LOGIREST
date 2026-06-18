@@ -1,7 +1,6 @@
 import { DepartmentListClient } from './DepartmentListClient';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { PageHeader } from '@/components/shared/PageHeader';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
@@ -19,9 +18,7 @@ export default async function DepartmentsPage(props: { params: Promise<{ locale:
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data_departments">
  <div className="flex flex-col gap-6 min-w-0">
- <PageHeader 
- title={t('title')} 
- description={t('description')} />
+ 
  <DepartmentListClient locale={params.locale} />
  </div>
  </ProtectedRoute>

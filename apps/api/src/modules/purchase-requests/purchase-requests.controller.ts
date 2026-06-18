@@ -45,6 +45,7 @@ function mapPRDetail(pr: Record<string, unknown>) {
       item: {
         id: (item?.id as string) || '',
         code: (item?.sku as string) || '',
+        name: (item?.name as string) || '',
         nameAr: (item?.name as string) || '',
         nameEn: (item?.name as string) || '',
         primaryUom: unitOfMeasure
@@ -167,7 +168,13 @@ export class PurchaseRequestsController {
 
   @Get()
   async findAll(
-    @Query() query: { status?: string; search?: string; page?: string },
+    @Query()
+    query: {
+      status?: string;
+      search?: string;
+      page?: string;
+      unconverted?: string;
+    },
     @ActiveScope('warehouseId') warehouseId?: string,
   ) {
     const result = await this.prService.findAll(
@@ -175,6 +182,7 @@ export class PurchaseRequestsController {
         status: query.status,
         search: query.search,
         page: query.page ? Number(query.page) : 1,
+        unconverted: query.unconverted === 'true',
       },
       warehouseId,
     );

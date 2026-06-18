@@ -167,9 +167,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (storedScope) {
           try {
             const scopeObj = JSON.parse(storedScope);
-            const isValid = meResponse.scopes.some(
-              (s: UserScope) => s.branchId === scopeObj.branchId && s.warehouseId === scopeObj.warehouseId
-            );
+            const isValid = 
+              meResponse.role === 'ADMIN' || 
+              meResponse.role === 'GM' || 
+              meResponse.scopes.some((s: UserScope) => {
+                if (meResponse.role === 'BRANCH_MGR' || meResponse.role === 'KITCHEN_CHIEF') {
+                  return s.branchId === scopeObj.branchId;
+                }
+                return s.branchId === scopeObj.branchId && s.warehouseId === scopeObj.warehouseId;
+              });
             if (isValid) {
               setActiveScopeState(scopeObj);
             } else {
@@ -182,11 +188,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else if (meResponse.scopes.length > 0) {
           const first = meResponse.scopes[0];
-          setActiveScopeState({
+          const defaultScope = {
             branchId: first.branchId,
             warehouseId: first.warehouseId,
             departmentId: first.departmentId
-          });
+          };
+          setActiveScopeState(defaultScope);
+          localStorage.setItem('logirest_active_scope', JSON.stringify(defaultScope));
         }
         setIsLoading(false);
       } catch (err) {
@@ -231,7 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedScope) {
       try {
         const parsed = JSON.parse(storedScope);
-        if (parsed.branchId && parsed.warehouseId) {
+        if (parsed && typeof parsed === 'object' && ('branchId' in parsed || 'warehouseId' in parsed || 'departmentId' in parsed)) {
           return;
         }
       } catch (e) {

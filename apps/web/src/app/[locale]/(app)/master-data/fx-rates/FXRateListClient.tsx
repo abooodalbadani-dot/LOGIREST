@@ -260,13 +260,13 @@ export function FXRateListClient({ locale }: { locale: string }) {
      />
     }
     filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
+        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
         <Input
          placeholder={tfx('search_placeholder')}
          value={search}
          onChange={(e) => setSearch(e.target.value)}
-         className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
        </div>
      }

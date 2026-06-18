@@ -115,31 +115,29 @@ export function NotificationBell() {
 
    <DropdownMenuContent
     align={isAr ? 'start' : 'end'}
-    className="w-80 md:w-96 rounded-2xl bg-card border border-border shadow-sm p-2 border border-surface-variant/10 shadow-xl"
+    className="w-[350px] max-w-[95vw] p-0 z-50 rounded-2xl border border-border bg-card shadow-xl"
    >
-    <div className="flex items-center justify-between px-3 py-2">
-     <span className="text-body-md font-bold text-foreground">
-      {isAr ? 'الإشعارات' : 'Notifications'}
-     </span>
-     {unreadNotifications.length > 0 && (
-      <button
-       onClick={() => markAllReadMutation.mutate()}
-       disabled={markAllReadMutation.isPending}
-       className="flex items-center gap-1 text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors disabled:opacity-50"
-      >
-       {markAllReadMutation.isPending ? (
-        <Loader2 className="w-3 h-3 animate-spin" />
-       ) : (
-        <Check className="w-3.5 h-3.5" />
-       )}
-       {isAr ? 'تحديد الكل كمقروء' : 'Mark all read'}
-      </button>
-     )}
-    </div>
+     <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+      <span className="text-body-md font-bold text-foreground">
+       {isAr ? 'الإشعارات' : 'Notifications'}
+      </span>
+      {unreadNotifications.length > 0 && (
+       <button
+        onClick={() => markAllReadMutation.mutate()}
+        disabled={markAllReadMutation.isPending}
+        className="flex items-center gap-1 text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors disabled:opacity-50"
+       >
+        {markAllReadMutation.isPending ? (
+         <Loader2 className="w-3 h-3 animate-spin" />
+        ) : (
+         <Check className="w-3.5 h-3.5" />
+        )}
+        {isAr ? 'تحديد الكل كمقروء' : 'Mark all read'}
+       </button>
+      )}
+     </div>
 
-    <DropdownMenuSeparator className="bg-surface-variant/10" />
-
-    <div className="max-h-[350px] overflow-y-auto py-1 space-y-1">
+     <div className="max-h-[400px] overflow-y-auto custom-scrollbar flex flex-col">
      {isLoading ? (
       <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/60 gap-2">
        <Loader2 className="w-6 h-6 animate-spin text-operational-cyan" />
@@ -161,15 +159,16 @@ export function NotificationBell() {
        <DropdownMenuItem
         key={notif.id}
         onClick={() => handleNotificationClick(notif)}
-        className={`flex flex-col items-start gap-1 p-3 rounded-xl transition-all cursor-pointer ${
+        className={`flex flex-col items-start gap-1 p-4 border-b border-border/50 hover:bg-muted/50 transition-colors cursor-pointer ${
          notif.isRead
-          ? 'hover:bg-card border border-border shadow-sm/40'
-          : 'bg-operational-cyan/5 hover:bg-operational-cyan/10 border-s-4 border-operational-cyan'
+          ? ''
+          : 'bg-operational-cyan/5 hover:bg-operational-cyan/10 border-s-4 border-s-operational-cyan'
         }`}
        >
         <div className="flex w-full items-start justify-between gap-2">
          <span
-          className={`text-body-sm leading-snug text-start flex-1 ${
+          dir="auto"
+          className={`text-body-sm leading-snug text-start flex-1 line-clamp-2 break-words ${
            notif.isRead ? 'text-foreground/80' : 'text-foreground font-semibold'
           }`}
          >
@@ -179,7 +178,7 @@ export function NotificationBell() {
           <span className="w-2 h-2 rounded-full bg-operational-cyan mt-1.5 shrink-0" />
          )}
         </div>
-        <span className="text-[10px] text-muted-foreground/60 font-medium">
+        <span className="text-[10px] text-muted-foreground/60 font-medium shrink-0">
          {formatRelativeTime(notif.createdAt, locale)}
         </span>
        </DropdownMenuItem>

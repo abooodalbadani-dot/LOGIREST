@@ -686,8 +686,8 @@ export function AdjustmentForm({
       {!isNew && (
        <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5">
         <div className="flex items-center gap-4">
-         <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-          <Info className="w-5 h-5 text-emerald-500" />
+         <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+          <Info className="w-5 h-5 text-foreground" />
          </div>
          <h4 className="text-label-xs font-semibold uppercase">{t('document_info')}</h4>
         </div>

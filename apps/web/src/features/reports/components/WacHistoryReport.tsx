@@ -9,8 +9,9 @@ import { useItems } from '@/features/items/hooks/useItems';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
-import { formatDate, formatQuantity } from '@/lib/utils';
+import { formatDate, formatQuantity, formatCurrency } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 
 interface WacHistoryRow {
  id: string;
@@ -47,6 +48,7 @@ function getDocumentHref(row: WacHistoryRow): string {
 export default function WacHistoryReportClient() {
  const t = useTranslations('reports');
  const locale = useLocale() as 'ar' | 'en';
+ const { currency: baseCurrency } = useBaseCurrency();
 
  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
  const [itemSearch, setItemSearch] = useState('');
@@ -130,7 +132,7 @@ export default function WacHistoryReportClient() {
    meta: { numeric: true },
    cell: ({ row }) => (
     <span dir="ltr" className="font-mono text-amber-400">
-     {formatQuantity(row.getValue('unit_cost'), locale)}
+     {formatCurrency(row.getValue('unit_cost'), baseCurrency, locale)}
     </span>
    ),
   },
@@ -140,7 +142,7 @@ export default function WacHistoryReportClient() {
    meta: { numeric: true },
    cell: ({ row }) => (
     <span dir="ltr" className="font-mono text-cyan-400 font-semibold">
-     {formatQuantity(row.getValue('new_wac'), locale)}
+     {formatCurrency(row.getValue('new_wac'), baseCurrency, locale)}
     </span>
    ),
   },

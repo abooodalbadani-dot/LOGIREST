@@ -453,7 +453,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       <button
        type="button"
        onClick={() => setCreatingLotForLineId(line.id)}
-       className="bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 hover:bg-cyan-500/20 h-9 px-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap shadow-sm shadow-cyan-500/10"
+       className="bg-muted/50 text-foreground border border-cyan-500/20 hover:bg-muted/50 h-9 px-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap shadow-sm shadow-cyan-500/10"
       >
        + {t('new') || 'New'}
       </button>
@@ -511,7 +511,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       )} />
       
       <div className="flex items-center gap-3 mb-6">
-       <Warehouse className="w-4 h-4 text-cyan-500" />
+       <Warehouse className="w-4 h-4 text-foreground" />
        <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
         {t('details_section')}
        </h3>
@@ -579,7 +579,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
       <div className="flex items-center justify-between mb-8">
        <div className="flex items-center gap-3">
-        <PackagePlus className="w-5 h-5 text-emerald-500" />
+        <PackagePlus className="w-5 h-5 text-foreground" />
         <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
          {t('lines_section')}
         </h3>
@@ -589,16 +589,16 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
          type="button"
          onClick={handleSuggestFIFO}
          disabled={isSuggestingFIFO || lines.length === 0}
-         className="flex items-center gap-2 px-4 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-full border border-cyan-500/20 transition-all group disabled:opacity-50"
+         className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 hover:bg-muted/50 rounded-full border border-cyan-500/20 transition-all group disabled:opacity-50"
         >
-         <Zap className="w-3.5 h-3.5 text-cyan-500 group-hover:scale-110 transition-transform" />
-         <span className="text-label-xxs font-bold uppercase text-cyan-500">
+         <Zap className="w-3.5 h-3.5 text-foreground group-hover:scale-110 transition-transform" />
+         <span className="text-label-xxs font-bold uppercase text-foreground">
           {isSuggestingFIFO ? t('fetching_lots') : t('suggest_fifo')}
          </span>
         </button>
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 rounded-full border border-emerald-500/20">
          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-         <span className="text-label-xxs font-semibold uppercase text-emerald-500">
+         <span className="text-label-xxs font-semibold uppercase text-foreground">
           {lines.length} {tCommon('items') || 'Items'}
          </span>
         </div>

@@ -63,8 +63,14 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  });
 
  const onSubmit = handleSubmit(async (values) => {
-   await create.mutateAsync({ body: values });
- reset({ fromCurrencyId: currencyId, toCurrencyId: '', rate: 0, effectiveDate: new Date().toISOString().substring(0, 10) });
+   const payload = {
+     fromCurrencyId: values.fromCurrencyId,
+     toCurrencyId: values.toCurrencyId,
+     rate: values.rate,
+     effectiveFrom: values.effectiveDate,
+   };
+   await create.mutateAsync({ body: payload }).catch(() => {});
+   reset({ fromCurrencyId: currencyId, toCurrencyId: '', rate: 0, effectiveDate: new Date().toISOString().substring(0, 10) });
  });
 
  const columns: ColumnDef<FXRate>[] = [
@@ -76,10 +82,10 @@ export function FXRatesClient({ currencyId, locale }: Props) {
    return (
     <div className="gap-2 min-w-0 items-center flex-1 gap-6 flex-col flex w-full">
      <div className="w-12 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low shrink-0">
-      <span className="text-label-xs font-mono font-bold text-cyan-500 uppercase">{currency?.code || row.original.toCurrencyId}</span>
+      <span className="text-label-xs font-mono font-bold text-foreground uppercase">{currency?.code || '—'}</span>
      </div>
      <span className="text-body-md font-medium">
-      {currency?.name || row.original.toCurrencyId}
+      {currency?.name || '—'}
      </span>
     </div>
    );
@@ -90,7 +96,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  header: () => <span className="text-label-xs font-semibold uppercase">{t('rate')}</span>,
  cell: ({ row }) => (
  <div className="flex items-center gap-2">
- <TrendingUp className="w-3.5 h-3.5 text-cyan-500/50" />
+ <TrendingUp className="w-3.5 h-3.5 text-foreground/50" />
  <span dir="ltr" className="font-mono font-semibold text-body-md text-foreground tabular-nums">
  {formatRate(row.original.rate, locale, 4)}
  </span>
@@ -131,12 +137,12 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  isSaving={create.isPending}
  onSubmit={onSubmit}
  >
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+ <div className="col-span-1 md:col-span-12 grid grid-cols-1 lg:grid-cols-3 gap-10 w-full">
  {/* Existing Rates Table */}
  <div className="lg:col-span-2 space-y-6">
  <div className="flex items-center gap-3 mb-2">
- <div className="w-10 h-10 rounded-sm bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
- <History className="w-5 h-5 text-cyan-500" />
+ <div className="w-10 h-10 rounded-sm bg-muted/50 border border-cyan-500/20 flex items-center justify-center">
+ <History className="w-5 h-5 text-foreground" />
  </div>
  <div>
  <h2 className="text-title-sm font-semibold uppercase">{t('historical_rates')}</h2>
@@ -160,8 +166,8 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  {/* Add Rate Form */}
  <div className="space-y-6">
  <div className="flex items-center gap-3 mb-2">
- <div className="w-10 h-10 rounded-sm bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
- <PlusCircle className="w-5 h-5 text-cyan-500" />
+ <div className="w-10 h-10 rounded-sm bg-muted/50 border border-cyan-500/20 flex items-center justify-center">
+ <PlusCircle className="w-5 h-5 text-foreground" />
  </div>
  <div>
  <h2 className="text-title-sm font-semibold uppercase">{t('add_rate')}</h2>

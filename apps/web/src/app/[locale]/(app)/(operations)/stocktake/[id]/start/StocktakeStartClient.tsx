@@ -164,7 +164,7 @@ export function StocktakeStartClient({ id }: StocktakeStartClientProps) {
  </div>
 
  <div className="p-8 rounded-3xl bg-surface-container-medium/30 border-none space-y-4">
- <h4 className="text-label-xs font-semibold uppercase text-cyan-500/70">{t('session_details')}</h4>
+ <h4 className="text-label-xs font-semibold uppercase text-foreground/70">{t('session_details')}</h4>
  <p className="text-title-sm font-semibold text-foreground">{session.sessionName}</p>
  {session.description && (
  <p className="text-body-md text-muted-foreground leading-relaxed font-medium">{session.description}</p>

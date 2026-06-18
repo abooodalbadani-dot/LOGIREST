@@ -95,6 +95,7 @@ describe('PurchaseRequestsService', () => {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
             },
@@ -102,6 +103,8 @@ describe('PurchaseRequestsService', () => {
           createdBy: {
             select: { id: true, name: true, email: true, role: true },
           },
+          branch: true,
+          warehouse: true,
         },
       });
     });
@@ -133,6 +136,7 @@ describe('PurchaseRequestsService', () => {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
             },
@@ -140,6 +144,8 @@ describe('PurchaseRequestsService', () => {
           createdBy: {
             select: { id: true, name: true, email: true, role: true },
           },
+          branch: true,
+          warehouse: true,
         },
       });
     });

@@ -115,7 +115,7 @@ export function SettingsClient({ locale }: { locale: string }) {
   <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 relative">
    {/* Premium background decorative glow elements */}
    <div className="absolute top-0 end-1/4 w-96 h-96 bg-operational-cyan/5 rounded-full blur-[120px] pointer-events-none -z-10" />
-   <div className="absolute bottom-1/4 left-10 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[160px] pointer-events-none -z-10" />
+   <div className="absolute bottom-1/4 left-10 w-[400px] h-[400px] bg-muted/50 rounded-full blur-[160px] pointer-events-none -z-10" />
    
    {/* Return to Admin Breadcrumb & Page Title */}
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 min-w-0">
@@ -170,13 +170,13 @@ export function SettingsClient({ locale }: { locale: string }) {
         <Activity className="w-4 h-4 text-operational-cyan animate-pulse" />
        </div>
 
-       <div className="flex items-center gap-4 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+       <div className="flex items-center gap-4 p-5 rounded-2xl bg-muted/50 border border-emerald-500/10">
         <div className="relative flex shrink-0">
          <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 animate-ping absolute opacity-75" />
          <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 relative shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
         </div>
         <div className="space-y-0.5">
-         <p className="text-sm font-bold text-emerald-500">
+         <p className="text-sm font-bold text-foreground">
           Engine Online
          </p>
          <p className="text-[9px] text-muted-foreground/60 uppercase font-semibold tracking-wider">
@@ -373,11 +373,11 @@ export function SettingsClient({ locale }: { locale: string }) {
        transition={{ delay: 0.1 }}
        className="p-8 md:p-10 rounded-[2.5rem] bg-card border border-border shadow-sm/60 backdrop-blur-lg border border-white/10 shadow-2xl space-y-10 relative overflow-hidden"
       >
-       <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
+       <div className="absolute top-0 right-0 w-80 h-80 bg-muted/50 rounded-full blur-[80px] pointer-events-none" />
        
        <div className="flex items-center gap-4.5 border-b border-white/5 pb-6">
-        <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-         <Mail className="w-5 h-5 text-emerald-500" />
+        <div className="p-3 bg-muted/50 rounded-2xl border border-emerald-500/20">
+         <Mail className="w-5 h-5 text-foreground" />
         </div>
         <div>
          <h3 className="text-sm font-extrabold text-foreground uppercase tracking-widest">

@@ -57,11 +57,11 @@ export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
 
  return (
  <div className="max-w-2xl mx-auto flex flex-col gap-8 py-12">
- <Card className="group relative border-dashed border-2 border-muted-foreground/20 bg-muted/5 p-12 flex flex-col items-center gap-6 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all duration-500 cursor-pointer overflow-hidden rounded-[2.5rem]">
+ <Card className="group relative border-dashed border-2 border-muted-foreground/20 bg-muted/5 p-12 flex flex-col items-center gap-6 hover:border-cyan-500/50 hover:bg-muted/50 transition-all duration-500 cursor-pointer overflow-hidden rounded-[2.5rem]">
  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
  
- <div className="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
- <Upload className="w-10 h-10 text-cyan-500" />
+ <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+ <Upload className="w-10 h-10 text-foreground" />
  </div>
 
  <div className="text-center relative z-10">
@@ -92,11 +92,11 @@ export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
 
  <Button 
  variant="outline" 
- className="h-16 rounded-2xl border-muted-foreground/10 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all group overflow-hidden relative"
+ className="h-16 rounded-2xl border-muted-foreground/10 hover:border-cyan-500/40 hover:bg-muted/50 transition-all group overflow-hidden relative"
  onClick={downloadTemplate}
  >
  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
- <Download className="w-4 h-4 me-2 text-cyan-500 group-hover:-translate-y-1 transition-transform" />
+ <Download className="w-4 h-4 me-2 text-foreground group-hover:-translate-y-1 transition-transform" />
  <span className="font-bold">{t('download_template')}</span>
  </Button>
  </div>

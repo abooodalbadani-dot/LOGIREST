@@ -90,7 +90,7 @@ export function TransferListClient() {
    accessorKey: 'documentNumber',
    header: tCommon('doc_number'),
    cell: ({ row }) => (
-    <span dir="ltr" className="font-mono text-cyan-500/90 font-semibold text-body-md">
+    <span dir="ltr" className="font-mono text-foreground/90 font-semibold text-body-md">
      {row.original.documentNumber}
     </span>
    ),
@@ -100,7 +100,7 @@ export function TransferListClient() {
    header: t('from_warehouse'),
    cell: ({ row }) => {
     const name = warehouseMap.get(row.original.fromWarehouseId);
-    const display = name || row.original.fromWarehouseName || row.original.fromWarehouseId;
+    const display = name || row.original.fromWarehouseName || '—';
     return (
      <span className="opacity-80 font-medium">
       {display}
@@ -113,7 +113,7 @@ export function TransferListClient() {
    header: t('to_warehouse'),
    cell: ({ row }) => {
     const name = warehouseMap.get(row.original.toWarehouseId);
-    const display = name || row.original.toWarehouseName || row.original.toWarehouseId;
+    const display = name || row.original.toWarehouseName || '—';
     return (
      <span className="opacity-80 font-medium">
       {display}
@@ -155,7 +155,7 @@ export function TransferListClient() {
      <Button
       variant="ghost"
       size="sm"
-      className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
+      className="text-label-xs font-semibold uppercase text-foreground hover:text-foreground hover:bg-muted/50 h-7"
       onClick={(e) => {
        e.stopPropagation();
        router.push(`/transfers/${row.original.id}`);
@@ -274,13 +274,13 @@ export function TransferListClient() {
       onPageChange: setPage
      } : undefined}
      filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
+      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <Input
          placeholder={tCommon('statuses.all') || "All Statuses"}
          value={status || 'ALL'}
          onChange={(e) => setSearch(e.target.value)}
-         className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
         />
        </div>
      }

@@ -32,6 +32,7 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { formatCurrency } from '@/utils/currency';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 interface Props {
  id: string;
@@ -146,17 +147,21 @@ export function POApproveClient({ id }: Props) {
        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
         <div className="space-y-1.5">
          <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('supplier')}</p>
-         <p className="font-bold text-title-sm">{po.supplierName || po.supplierId}</p>
+         <p className="font-bold text-title-sm">
+          <RelationalName name={po.supplierName} rawId={po.supplierId} fallback="—" />
+         </p>
         </div>
         <div className="space-y-1.5">
          <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.order_total')}</p>
          <p className="font-mono font-semibold text-title-lg text-operational-cyan">
-          {formatCurrency(po.total || 0, po.currencyCode || po.currencyId || 'USD', locale as 'ar' | 'en')}
+          {formatCurrency(po.total || 0, po.currencyCode || 'USD', locale as 'ar' | 'en')}
          </p>
         </div>
         <div className="space-y-1.5">
          <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.target_warehouse')}</p>
-         <p className="font-bold text-title-sm">{po.warehouseName || po.targetWarehouseId}</p>
+         <p className="font-bold text-title-sm">
+          <RelationalName name={po.warehouseName} rawId={po.targetWarehouseId} fallback="—" />
+         </p>
         </div>
         <div className="space-y-1.5">
          <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.expected_delivery_date')}</p>
@@ -199,7 +204,7 @@ export function POApproveClient({ id }: Props) {
     <div className="space-y-8">
      <MetricCard
       label={t('budget_consumption') || 'Budget Consumption'}
-      value={po ? formatCurrency(po.total || 0, po.currencyCode || po.currencyId || 'USD', locale as 'ar' | 'en') : '--'}
+      value={po ? formatCurrency(po.total || 0, po.currencyCode || 'USD', locale as 'ar' | 'en') : '--'}
       trend={t('department_budget_placeholder') || 'Department Budget: -- / --'}
       icon={AlertCircle}
       color="amber"

@@ -47,7 +47,8 @@ function mapGRNDetail(grn: Record<string, unknown>) {
       item: item
         ? {
             id: item.id as string,
-            code: item.sku as string,
+            code: (item.sku as string) || (item.code as string) || '',
+            name: item.name as string,
             nameAr: item.name as string,
             nameEn: item.name as string,
             primaryUom: unitOfMeasure
@@ -60,6 +61,7 @@ function mapGRNDetail(grn: Record<string, unknown>) {
         : {
             id: '',
             code: '',
+            name: '',
             nameAr: '',
             nameEn: '',
             primaryUom: { id: '', code: '' },
@@ -203,14 +205,19 @@ export class GrnController {
       warehouseId,
     );
 
-    const lines = (body.lines || []).map((line) => {
+    const incomingLines = body.lineItems || body.lines || [];
+    const lines = incomingLines.map((line) => {
       const itemId = line.itemId;
-      const lotId = line.lotId;
+      const lotId = line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
+      const lotNumber = line.lotNumber || (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
+      const expiryDate = line.expiryDate || (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
       const quantity = Number(line.receivedQty);
       const unitPrice = Number(line.unitCostForeign);
       return {
         itemId: itemId || '',
-        lotId,
+        lotId: lotId || null,
+        lotNumber: lotNumber || null,
+        expiryDate: expiryDate || null,
         quantity,
         unitPrice,
       };
@@ -292,25 +299,32 @@ export class GrnController {
     const poId = body.poId;
     const warehouseId = body.warehouseId;
 
+    const incomingLines = body.lineItems || body.lines;
     let lines:
       | Array<{
           id?: string;
           itemId: string;
           lotId?: string | null;
+          lotNumber?: string | null;
+          expiryDate?: string | null;
           quantity: number;
           unitPrice: number;
         }>
       | undefined = undefined;
-    if (body.lines) {
-      lines = body.lines.map((line) => {
+    if (incomingLines) {
+      lines = incomingLines.map((line) => {
         const itemId = line.itemId;
-        const lotId = line.lotId;
+        const lotId = line.lotId || (line.lotAllocations && line.lotAllocations[0]?.lotId);
+        const lotNumber = line.lotNumber || (line.lotAllocations && line.lotAllocations[0]?.lotNumber);
+        const expiryDate = line.expiryDate || (line.lotAllocations && line.lotAllocations[0]?.expiryDate);
         const quantity = Number(line.receivedQty);
         const unitPrice = Number(line.unitCostForeign);
         return {
           id: line.id,
           itemId: itemId || '',
-          lotId,
+          lotId: lotId || null,
+          lotNumber: lotNumber || null,
+          expiryDate: expiryDate || null,
           quantity,
           unitPrice,
         };
@@ -393,6 +407,44 @@ export class GrnController {
       body.version,
       ipAddress,
     );
+    return { data: mapGRNDetail(grn) };
+  }
+
+  @Post(':id/submit')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'grn',
+    action: 'SUBMIT',
+    modelName: 'goodsReceivedNote',
+  })
+  @Roles(
+    Role.ADMIN,
+    Role.WH_KEEPER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+    Role.PROC_OFFICER,
+  )
+  @HttpCode(HttpStatus.OK)
+  async submit(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const grn = await this.grnService.submit(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
     return { data: mapGRNDetail(grn) };
   }
 

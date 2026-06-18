@@ -217,7 +217,7 @@ export const PERMISSION_MATRIX: Partial<Record<UserRole, Partial<Record<Resource
   stocktake: ['view', 'export'],
   inventory: ['view', 'export'],
   reports: ['view', 'export'],
-  master_data: ['view', 'export'],
+  master_data: ['view', 'create', 'edit', 'delete', 'export', 'update'],
   admin_audit_logs: ['view', 'export'],
   },
   VIEWER: {

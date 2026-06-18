@@ -199,7 +199,7 @@ export function RolesViewerClient() {
             <div className="w-full min-w-0 flex flex-col gap-6 p-6 mt-4 col-span-12 relative">
                 {/* Subtle decorative glow overlays */}
                 <div className="absolute top-10 left-1/3 w-80 h-80 bg-operational-cyan/5 rounded-full blur-[100px] pointer-events-none -z-10" />
-                <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+                <div className="absolute bottom-20 right-10 w-96 h-96 bg-muted/50 rounded-full blur-[120px] pointer-events-none -z-10" />
 
                 {/* Metrics bento-style cards row */}
                 <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
@@ -352,10 +352,10 @@ export function RolesViewerClient() {
                                                                         transition={{ type: 'spring', stiffness: 450, damping: 12 }}
                                                                         className={cn(
                                                                             "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300",
-                                                                            isCellHovered ? "bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.4)] border border-emerald-400/40" : "bg-emerald-500/10 border border-emerald-500/5"
+                                                                            isCellHovered ? "bg-muted/50 shadow-[0_0_10px_rgba(16,185,129,0.4)] border border-emerald-400/40" : "bg-muted/50 border border-emerald-500/5"
                                                                         )}
                                                                     >
-                                                                        <Check className={cn("w-3.5 h-3.5 text-emerald-500 stroke-[3px] transition-transform duration-300", isCellHovered ? "scale-110" : "")} />
+                                                                        <Check className={cn("w-3.5 h-3.5 text-foreground stroke-[3px] transition-transform duration-300", isCellHovered ? "scale-110" : "")} />
                                                                     </motion.div>
                                                                 ) : (
                                                                     <Minus className={cn("w-3 h-3 transition-colors duration-300", isCellHovered ? "text-operational-cyan/40 font-bold" : "text-muted-foreground/10")} />

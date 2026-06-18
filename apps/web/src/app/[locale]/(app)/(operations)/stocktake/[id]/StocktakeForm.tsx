@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react";
-import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
+import { RelationalName } from "@/components/shared/RelationalName";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -50,12 +50,10 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
  const common = useTranslations('common')
  const router = useRouter();
  const { user } = useAuth();
- const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
  const { data: lockState } = useWarehouseLock(session?.warehouseId ?? null);
 
  const status = session.status as DocumentStatus;
- const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
+ const warehouseName = session.warehouseName;
 
  const isCounting = isStocktakeCounting(status) || status === STOCKTAKE_STATUS.STARTED;
 
@@ -136,13 +134,12 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
      {/* Metadata Grid */}
      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {[
-       { label: common('warehouse'), value: warehouseName, icon: Warehouse, color: 'text-primary' },
-       { label: t('owner'), value: session.postedBy || common('system_user'), icon: User, color: 'text-emerald-500' },
+       { label: common('warehouse'), value: <RelationalName name={warehouseName} rawId={session.warehouseId} />, icon: Warehouse, color: 'text-primary' },
+       { label: t('owner'), value: session.postedBy || common('system_user'), icon: User, color: 'text-foreground' },
        { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
        { label: t('last_updated'), value: session.updatedAt ? <ClientOnlyTime date={session.updatedAt} mode="time" /> : common('dash'), icon: Clock, color: 'text-amber-500' },
       ].map((item, idx) => (
-       
-       <React.Fragment key={idx}>
+       <Card key={idx} className="p-5 bg-card border border-border shadow-sm border-none shadow-sm flex flex-col gap-3 rounded-xl relative overflow-hidden group">
         <div className="flex items-center justify-between relative z-10">
          <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center", item.color)}>
           <item.icon className="w-5 h-5" />
@@ -152,8 +149,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
         <div className="flex flex-col relative z-10">
          <span className="text-title-sm font-semibold text-foreground line-clamp-1">{item.value}</span>
         </div>
-       </React.Fragment>
-       
+       </Card>
       ))}
      </div>
 
@@ -210,8 +206,8 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
           return !isCounting && hasCounted ? (
            <div className={cn(
             "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
-            variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
-            variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
+            variance === 0 ? "bg-muted/50 text-foreground" : 
+            variance > 0 ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
            )} dir="ltr">
             {variance > 0 ? '+' : ''}{variance}
            </div>
@@ -223,7 +219,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
          cell: (line) => {
           const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
           return hasCounted ? (
-           <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none text-label-xxs font-semibold uppercase h-6">
+           <Badge variant="outline" className="bg-muted/50 text-foreground border-none text-label-xxs font-semibold uppercase h-6">
             {common('completed')}
            </Badge>
           ) : (

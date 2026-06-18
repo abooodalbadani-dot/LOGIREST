@@ -39,6 +39,7 @@ import { useAbortController } from '@/hooks/useAbortController';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { SmartCombobox, ComboboxItem } from '@/components/shared/SmartCombobox';
 import { useItems } from '@/features/items/hooks/useItems';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 interface IssueFormProps {
  issue?: StockIssue;
@@ -482,7 +483,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
                }} 
               />
-              <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom?.code || line.uomId || ''}</span>
+              <RelationalName 
+               name={line.item.primaryUom?.code} 
+               rawId={line.uomId} 
+               fallback="N/A" 
+               className="text-label-xs font-semibold uppercase text-primary/20" 
+              />
              </div>
             )
            },

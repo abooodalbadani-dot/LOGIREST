@@ -1,6 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { Link } from '@/i18n/navigation';
 import { 
  Building2, 
@@ -49,10 +48,7 @@ export default async function MasterDataHubPage(props: { params: Promise<{ local
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">
  <div className="flex flex-col gap-8 min-w-0">
- <PageHeader 
- title={t('common.master_data')} 
- description={commonT('master_data')}
- />
+ 
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
  {modules.map((module) => (

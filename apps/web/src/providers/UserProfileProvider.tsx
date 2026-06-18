@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth, AuthUser } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { apiClient } from '@/lib/api/client';
@@ -55,13 +55,15 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   const avatarUrl = user?.avatarUrl || null;
   const displayName = user?.name || '';
   const themePreferences: 'light' | 'dark' = user?.themePreferences || (theme === 'dark' ? 'dark' : 'light');
-  const notificationPreferences = user?.notificationPreferences ?? {
-    lowStock: true,
-    expiry: true,
-    pendingApproval: true,
-    poFinalized: false,
-    security: true,
-  };
+  const notificationPreferences = useMemo(() => {
+    return user?.notificationPreferences ?? {
+      lowStock: true,
+      expiry: true,
+      pendingApproval: true,
+      poFinalized: false,
+      security: true,
+    };
+  }, [user?.notificationPreferences]);
   const locale: 'ar' | 'en' = user?.locale || 'en';
 
   // Synchronize database theme preference to next-themes theme on user load/change
@@ -132,23 +134,9 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
         };
       }
 
-      const localUpdatedFields: Partial<AuthUser> = {};
-      if (fields.displayName !== undefined) localUpdatedFields.name = fields.displayName;
-      if (fields.avatarUrl !== undefined) localUpdatedFields.avatarUrl = fields.avatarUrl;
-      if (fields.phone !== undefined) localUpdatedFields.phone = fields.phone;
-      if (fields.email !== undefined) localUpdatedFields.email = fields.email;
-      if (fields.locale !== undefined) localUpdatedFields.locale = fields.locale;
-      if (fields.themePreferences !== undefined) localUpdatedFields.themePreferences = fields.themePreferences;
-      if (fields.notificationPreferences !== undefined) {
-        localUpdatedFields.notificationPreferences = {
-          ...notificationPreferences,
-          ...fields.notificationPreferences,
-        };
-      }
-
       if (user) {
-        await apiClient.put('/auth/profile', AuthUserSchema, apiPayload);
-        updateUser(localUpdatedFields);
+        const updatedUser = await apiClient.put('/auth/profile', AuthUserSchema, apiPayload);
+        updateUser(updatedUser);
       }
     } catch (err: unknown) {
       console.error('[UserProfileProvider] Failed to update profile:', err);

@@ -84,6 +84,7 @@ export class IssuesService {
                 item: {
                   include: {
                     unitOfMeasure: true,
+                  category: true,
                   },
                 },
                 lotAllocations: {
@@ -167,6 +168,7 @@ export class IssuesService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
               lotAllocations: {
@@ -206,6 +208,7 @@ export class IssuesService {
             item: {
               include: {
                 unitOfMeasure: true,
+                category: true,
               },
             },
             lotAllocations: {

@@ -204,7 +204,7 @@ export class PurchaseOrderController {
       };
     });
 
-    if (role !== Role.ADMIN) {
+    if (role !== Role.ADMIN && role !== Role.GM && role !== Role.PROC_MGR) {
       if (!prId) {
         throw new BadRequestException(
           'prId is required for non-administrative users to create a Purchase Order.',
@@ -272,7 +272,12 @@ export class PurchaseOrderController {
         role,
         po.purchaseRequest.warehouseId,
       );
-    } else if (role !== Role.ADMIN) {
+    } else if (
+      role !== Role.ADMIN &&
+      role !== Role.GM &&
+      role !== Role.PROC_MGR &&
+      role !== Role.PROC_OFFICER
+    ) {
       throw new ForbiddenException(
         'Access denied: Purchase Order lacks warehouse scope.',
       );
@@ -301,7 +306,12 @@ export class PurchaseOrderController {
         role,
         po.purchaseRequest.warehouseId,
       );
-    } else if (role !== Role.ADMIN) {
+    } else if (
+      role !== Role.ADMIN &&
+      role !== Role.GM &&
+      role !== Role.PROC_MGR &&
+      role !== Role.PROC_OFFICER
+    ) {
       throw new ForbiddenException(
         'Access denied: Cannot update a Purchase Order lacking warehouse scope.',
       );
@@ -367,7 +377,12 @@ export class PurchaseOrderController {
         role,
         po.purchaseRequest.warehouseId,
       );
-    } else if (role !== Role.ADMIN) {
+    } else if (
+      role !== Role.ADMIN &&
+      role !== Role.GM &&
+      role !== Role.PROC_MGR &&
+      role !== Role.PROC_OFFICER
+    ) {
       throw new ForbiddenException(
         'Access denied: Cannot delete a Purchase Order lacking warehouse scope.',
       );

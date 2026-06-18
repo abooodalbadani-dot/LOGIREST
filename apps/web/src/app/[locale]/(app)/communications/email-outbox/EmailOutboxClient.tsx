@@ -19,7 +19,7 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const statusConfig: Record<string, { color: string, icon: LucideIcon }> = {
  PENDING: { color: 'text-amber-400', icon: Clock },
- SENT: { color: 'text-emerald-400', icon: Send },
+ SENT: { color: 'text-foreground', icon: Send },
  FAILED: { color: 'text-rose-400', icon: AlertCircle },
 };
 
@@ -136,7 +136,7 @@ export function EmailOutboxClient() {
         <SelectContent className="bg-card border border-border shadow-sm border-white/10">
          <SelectItem value="all" className="text-label-sm font-bold uppercase">{t('all_statuses')}</SelectItem>
          <SelectItem value="PENDING" className="text-label-sm font-bold uppercase">{t('pending')}</SelectItem>
-         <SelectItem value="SENT" className="text-label-sm font-bold uppercase text-emerald-400">{t('sent')}</SelectItem>
+         <SelectItem value="SENT" className="text-label-sm font-bold uppercase text-foreground">{t('sent')}</SelectItem>
          <SelectItem value="FAILED" className="text-label-sm font-bold uppercase text-rose-400">{t('failed')}</SelectItem>
         </SelectContent>
        </Select>

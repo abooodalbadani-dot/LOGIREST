@@ -13,7 +13,8 @@ import {
  Zap,
  History,
  AlertCircle,
- Database
+ Database,
+ Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -149,35 +150,35 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
     initial={{ opacity: 0, y: -20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ type: 'spring', stiffness: 80, damping: 15 }}
-    className="space-y-4"
+    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
    >
-    <Breadcrumb 
-     items={[
-      { label: tc('home'), href: `/dashboard` },
-      { label: tc('master_data'), href: `/master-data` },
-      { label: tc('barcodes'), href: `/master-data/barcodes` },
-      { label: t('title') }
-     ]} 
-    />
-    <PageHeader 
-     title={t('title')} 
-     description={t('description')}
-     actions={
-      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-       <Button 
-        variant="outline" 
-        className={cn(
-         "h-12 px-6 border-white/5 bg-card border border-border shadow-sm hover:bg-surface-container-medium text-label-xs font-bold uppercase rounded-2xl relative overflow-hidden group shadow-md transition-all duration-300",
-         isScanning && "border-operational-cyan/30 text-operational-cyan"
-        )}
-        onClick={() => setIsScanning(!isScanning)}
-       >
-        <Zap className={cn("w-4 h-4 me-2 transition-transform group-hover:scale-110", isScanning ? "text-operational-cyan fill-operational-cyan animate-pulse" : "text-muted-foreground")} />
-        {isScanning ? t('actions.stop_auto_scan') : t('actions.start_auto_scan')}
-       </Button>
-      </motion.div>
-     }
-    />
+    <div className="space-y-1">
+     <Breadcrumb 
+      items={[
+       { label: tc('home'), href: `/dashboard` },
+       { label: tc('master_data'), href: `/master-data` },
+       { label: tc('barcodes'), href: `/master-data/barcodes` },
+       { label: t('title') }
+      ]} 
+     />
+     <div>
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+      <p className="text-sm text-muted-foreground">{t('description')}</p>
+     </div>
+    </div>
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+     <Button 
+      variant="outline" 
+      className={cn(
+       "h-12 px-6 border-white/5 bg-card border border-border shadow-sm hover:bg-surface-container-medium text-label-xs font-bold uppercase rounded-2xl relative overflow-hidden group shadow-md transition-all duration-300",
+       isScanning && "border-operational-cyan/30 text-operational-cyan"
+      )}
+      onClick={() => setIsScanning(!isScanning)}
+     >
+      <Zap className={cn("w-4 h-4 me-2 transition-transform group-hover:scale-110", isScanning ? "text-operational-cyan fill-operational-cyan animate-pulse" : "text-muted-foreground")} />
+      {isScanning ? t('actions.stop_auto_scan') : t('actions.start_auto_scan')}
+     </Button>
+    </motion.div>
    </motion.div>
 
    {/* Metrics Row */}
@@ -257,7 +258,8 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
           placeholder={t('placeholders.scan_here')}
           value={scannedCode}
           onChange={(e) => setScannedCode(e.target.value)}
-          className="h-14 bg-card border border-border shadow-sm border-outline-low focus-visible:ring-operational-cyan/35 focus-visible:border-operational-cyan px-12 font-mono text-lg font-bold tracking-[0.2em] text-operational-cyan rounded-2xl transition-all duration-300"
+          className="w-full h-12 px-12 text-lg tracking-widest text-start font-mono bg-background border-border text-foreground focus:border-brand-gold shadow-sm"
+          autoFocus
          />
          <BarcodeIcon className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/30 group-focus-within:text-operational-cyan transition-colors" />
          
@@ -347,23 +349,23 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
        <h3 className="text-label-xs font-bold uppercase tracking-widest text-muted-foreground/70">{t('items_table.title')}</h3>
       </div>
       
-      <div className="rounded-[2rem] bg-card border border-border shadow-sm border border-white/5 overflow-hidden shadow-xl">
+      <div className="rounded-[2rem] bg-card border border-border shadow-sm border border-white/5 shadow-xl p-6">
        <DataTable 
         columns={columns} 
         data={pendingItems} 
         isLoading={isLoadingItems}
         collectionName="mapping_pending_items"
         filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
-         placeholder={tc('search')}
-         value={search}
-         onChange={ (e) => setSearch(e.target.value) }
-         className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
-        />
-       </div>
-     }
+        <div className="relative w-full">
+         <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+         <Input
+          placeholder={tc('search')}
+          value={search}
+          onChange={ (e) => setSearch(e.target.value) }
+          className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
+         />
+        </div>
+       }
        />
       </div>
      </motion.div>

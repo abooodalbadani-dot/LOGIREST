@@ -59,7 +59,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     description={
      <div className="flex items-center gap-2">
       <span>{tCommon('doc_number')}</span>
-      <span dir="ltr" className="font-mono text-cyan-500/80">{transfer?.documentNumber}</span>
+      <span dir="ltr" className="font-mono text-foreground/80">{transfer?.documentNumber}</span>
      </div>
     }
     actions={
@@ -94,9 +94,9 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
        <ClientOnlyTime 
         date={transfer.shippedAt} 
         mode="datetime" 
-        className="font-mono text-body-md font-bold text-cyan-500/80"
+        className="font-mono text-body-md font-bold text-foreground/80"
        />
-       <Truck className="w-4 h-4 text-cyan-500/40" />
+       <Truck className="w-4 h-4 text-foreground/40" />
       </div>
      </div>
     )}
@@ -108,9 +108,9 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
        <ClientOnlyTime 
         date={transfer.receivedAt} 
         mode="datetime" 
-        className="font-mono text-body-md font-bold text-emerald-500/80"
+        className="font-mono text-body-md font-bold text-foreground/80"
        />
-       <PackageCheck className="w-4 h-4 text-emerald-500/40" />
+       <PackageCheck className="w-4 h-4 text-foreground/40" />
       </div>
      </div>
     )}
@@ -160,7 +160,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
        header: t('received_qty'),
        cell: (line: TransferLine) => (
         <div className="flex justify-center">
-         <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
+         <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.receivedQty ? 'bg-muted/50 text-foreground border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
           {line.receivedQty ?? '—'}
          </span>
         </div>

@@ -56,11 +56,11 @@ export function RolesListClient({ locale: _locale }: { locale: string }) {
       roles?.map((role) => (
        <div key={role.id} className="grid grid-cols-1 lg:grid-cols-12 gap-6 px-6 py-5 border-b border-border hover:bg-muted/50 transition-colors items-center w-full group last:border-b-0">
         <div className="col-span-1 lg:col-span-3 flex items-start gap-4 min-w-0">
-         <div className="p-2.5 bg-muted rounded-xl border border-border group-hover:bg-cyan-500/10 group-hover:border-cyan-500/20 transition-colors shrink-0 mt-0.5">
-          <KeyRound className="w-5 h-5 text-muted-foreground group-hover:text-cyan-500 transition-colors" />
+         <div className="p-2.5 bg-muted rounded-xl border border-border group-hover:bg-muted/50 group-hover:border-cyan-500/20 transition-colors shrink-0 mt-0.5">
+          <KeyRound className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
          </div>
          <div className="flex flex-col gap-1.5 min-w-0 text-start">
-          <span className="text-base font-bold text-foreground group-hover:text-cyan-500 transition-colors">
+          <span className="text-base font-bold text-foreground group-hover:text-foreground transition-colors">
            {ROLE_METADATA[role.id as UserRole]?.displayName || role.name}
           </span>
           <span className="text-[10px] text-muted-foreground/80 font-black uppercase tracking-widest flex items-center gap-1.5 opacity-80">
@@ -75,9 +75,9 @@ export function RolesListClient({ locale: _locale }: { locale: string }) {
          </span>
         </div>
         <div className="col-span-1 lg:col-span-2 flex justify-start lg:justify-center">
-         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border group-hover:bg-cyan-500/10 group-hover:border-cyan-500/20 transition-colors">
-          <Users className="w-3.5 h-3.5 text-muted-foreground group-hover:text-cyan-500 transition-colors" />
-          <span className="text-xs font-bold text-foreground group-hover:text-cyan-500 transition-colors">{role.usersCount}</span>
+         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border group-hover:bg-muted/50 group-hover:border-cyan-500/20 transition-colors">
+          <Users className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+          <span className="text-xs font-bold text-foreground group-hover:text-foreground transition-colors">{role.usersCount}</span>
          </div>
         </div>
         <div className="col-span-1 lg:col-span-2 flex justify-start lg:justify-end gap-2">
@@ -115,7 +115,7 @@ export function RolesListClient({ locale: _locale }: { locale: string }) {
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/[0.02] to-transparent pointer-events-none" />
     <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)] relative z-10 shrink-0" />
     <p className="text-xs font-bold uppercase tracking-widest text-foreground/70 relative z-10 leading-relaxed">
-     <span className="text-cyan-500 font-black">RBAC Propagation:</span> Live system role registry active. Changes will affect associated account streams.
+     <span className="text-foreground font-black">RBAC Propagation:</span> Live system role registry active. Changes will affect associated account streams.
     </p>
    </div>
   </div>

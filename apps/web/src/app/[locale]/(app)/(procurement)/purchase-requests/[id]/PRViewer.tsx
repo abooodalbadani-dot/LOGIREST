@@ -10,6 +10,7 @@ import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
+import { RelationalName } from '@/components/shared/RelationalName';
 
 interface PRViewerProps {
  document: PRDetail;
@@ -88,7 +89,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
          {t('department')}
         </label>
         <div className="bg-card border border-border shadow-sm h-11 px-4 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground/80 border border-surface-variant/5">
-         {document.departmentId}
+         <RelationalName name={document.warehouseName} rawId={document.departmentId} />
         </div>
        </div>
 

@@ -1,6 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { Bell } from 'lucide-react';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -20,10 +19,7 @@ export default async function NotificationsPage(props: { params: Promise<{ local
  return (
  <ProtectedRoute requiredAction="view" requiredResource="inventory">
  <div className="flex flex-col gap-6 min-w-0">
- <PageHeader
- title={t('title')}
- description={t('notifications_page_desc')}
- />
+ 
  <div className="flex flex-col items-center justify-center py-24 gap-4 text-muted-foreground/40 min-w-0">
  <Bell className="w-12 h-12 opacity-20" />
  <p className="text-body-md font-bold uppercase">{t('no_notifications')}</p>

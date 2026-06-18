@@ -166,7 +166,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  
  {/* Form Header Info */}
  <div className="flex items-center gap-6 pb-8">
- <div className="p-4 rounded-[1.5rem] bg-cyan-600/10 text-cyan-500 border border-cyan-500/20 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
+ <div className="p-4 rounded-[1.5rem] bg-cyan-600/10 text-foreground border border-cyan-500/20 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
  <Settings2 className="w-8 h-8" />
  </div>
  <div>

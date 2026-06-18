@@ -209,8 +209,8 @@ function LineItemRow({
             itemCode: matchedItem.code,
             uomId: matchedItem.primaryUom?.id || 'PCS',
             unitPrice: matchedItem.lastPurchasePrice || 0,
-            quantity: rowValues.quantity || 1,
-            notes: rowValues.notes || ''
+            quantity: rowValues?.quantity || 1,
+            notes: rowValues?.notes || ''
            });
           }
          }}
@@ -309,21 +309,20 @@ function LineItemRow({
     />
    </div>
 
-   {!isLocked && (
-    <div className="px-6 py-3 w-16 text-center h-full flex items-center justify-center">
-     <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 h-10 w-10 transition-all rounded-xl"
-      onClick={() => remove(index)}
-      disabled={form.getValues('lines').length === 1}
-     >
-      <Trash2 className="h-4 w-4" />
-     </Button>
-    </div>
-   )}
+    {!isLocked && (
+     <div className="px-6 py-3 w-16 text-center h-full flex items-center justify-center">
+      <Button
+       type="button"
+       variant="ghost"
+       size="icon"
+       className="text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 h-10 w-10 transition-all rounded-xl"
+       onClick={() => remove(index)}
+       disabled={!(form.getValues('lines')) || form.getValues('lines').length <= 1}
+      >
+       <Trash2 className="h-4 w-4" />
+      </Button>
+     </div>
+    )}
   </div>
  );
 }
-

@@ -22,7 +22,6 @@ import {
  Package,
  ShoppingCart
 } from 'lucide-react';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/providers/AuthProvider';
@@ -56,12 +55,23 @@ export default function ProfilePage() {
  const [saveSuccess, setSaveSuccess] = useState(false);
  const [validationError, setValidationError] = useState<string | null>(null);
 
+ // Active Work Streams
+ // - [x] Fix "Unsaved Changes" warning on User Profile screen (Updated DTO and BE update handler)
+ // - [x] Fix Currency Symbol Form Issue (Prisma Schema migrated, BE updated)
+ // - [x] Make Currency search field respect formal properties like name, code, symbol
+ // - [x] Fix Backend Schema to align with Master Data UI (Currencies module)
+ // - [x] Resolve strict mode TS Compilation Errors (`npm run build` passing)
+
  // Unsaved changes guard combining profile fields and change password form
  const isProfileDirty = 
    name !== (displayName || user?.name || '') ||
    email !== (user?.email || '') ||
    phone !== (user?.phone || '') ||
-   JSON.stringify(notifPrefs) !== JSON.stringify(notificationPreferences);
+   notifPrefs.lowStock !== notificationPreferences.lowStock ||
+   notifPrefs.expiry !== notificationPreferences.expiry ||
+   notifPrefs.pendingApproval !== notificationPreferences.pendingApproval ||
+   notifPrefs.poFinalized !== notificationPreferences.poFinalized ||
+   notifPrefs.security !== notificationPreferences.security;
 
  useUnsavedChangesGuard(isProfileDirty || isPasswordDirty);
 
@@ -162,10 +172,7 @@ export default function ProfilePage() {
  return (
   <div className="min-w-0 gap-6 flex-1 fade-in space-y-8 slide-in-from-bottom-4 mx-auto animate-in flex-col flex duration-700 w-full max-w-5xl">
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 min-w-0">
-    <PageHeader 
-     title={t('title') || 'User Profile'} 
-     description={user.email}
-    />
+    
     <div className="flex items-center gap-3 p-1.5 bg-card border border-border shadow-sm/50 backdrop-blur-md border border-border-muted/50 rounded-2xl shadow-xl">
      <div className="p-2 bg-operational-cyan/10 rounded-xl text-operational-cyan">
       <Globe className="w-4 h-4" />
@@ -202,7 +209,7 @@ export default function ProfilePage() {
       <CardContent className="space-y-8">
        {/* Alert Status Banners */}
        {saveSuccess && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center gap-3 text-xs font-bold uppercase tracking-wider animate-in fade-in duration-300">
+        <div className="p-4 bg-muted/50 border border-emerald-500/20 text-foreground rounded-2xl flex items-center gap-3 text-xs font-bold uppercase tracking-wider animate-in fade-in duration-300">
          <CheckCircle className="w-5 h-5 shrink-0" />
          Profile updated successfully / تم تحديث الملف الشخصي بنجاح
         </div>

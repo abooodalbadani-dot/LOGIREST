@@ -171,7 +171,7 @@ export function DataTable<T>({
  <div className="flex flex-col gap-6 w-full">
  {(filters || onExport || exportComponent || (enableExport && data && data.length > 0)) && (
  <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
- <div className="w-full sm:max-w-md flex-1 shrink-0 min-w-[200px]">
+ <div className="w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl min-w-[200px]">
  {filters}
  </div>
  { (onExport || exportComponent || (enableExport && data && data.length > 0)) && (

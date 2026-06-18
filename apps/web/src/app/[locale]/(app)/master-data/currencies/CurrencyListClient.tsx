@@ -32,7 +32,8 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  const s = search.toLowerCase();
  return currencies.filter((c: Currency) => 
  c.code.toLowerCase().includes(s) || 
- c.name.toLowerCase().includes(s)
+ c.name.toLowerCase().includes(s) ||
+ (c.symbol && c.symbol.toLowerCase().includes(s))
  );
  }, [currencies, search]);
 
@@ -51,8 +52,8 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  header: t('fields.code'), 
  cell: ({ row }) => (
  <div className="flex items-center gap-2">
- <Coins className="w-3.5 h-3.5 text-cyan-500/50" />
- <span dir="ltr" className="font-mono text-cyan-500/90 font-bold uppercase bg-cyan-500/5 px-2 py-0.5 rounded-sm whitespace-nowrap inline-block min-w-max">
+ <Coins className="w-3.5 h-3.5 text-foreground/50" />
+ <span dir="ltr" className="font-mono text-foreground/90 font-bold uppercase bg-muted/50 px-2 py-0.5 rounded-sm whitespace-nowrap inline-block min-w-max">
  {row.original.code}
  </span>
  </div>
@@ -102,7 +103,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  <Button 
  variant="ghost" 
  size="sm" 
- className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+ className="text-xs font-bold tracking-wider text-muted-foreground hover:text-brand-gold uppercase transition-colors h-8 px-3 rounded-lg"
  onClick={(e) => {
  e.stopPropagation();
  router.push(`/master-data/currencies/${row.original.id}`);
@@ -116,7 +117,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
      <Button
       variant="ghost"
       size="sm"
-      className="text-label-xs font-semibold uppercase text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 h-7"
+      className="text-xs font-bold tracking-wider text-brand-gold hover:text-brand-gold-hover uppercase transition-colors h-8 px-3 rounded-lg"
       onClick={(e) => {
        e.stopPropagation();
        router.push(`/master-data/currencies/${row.original.id}/edit`);
@@ -205,12 +206,12 @@ export function CurrencyListClient({ locale }: { locale: string }) {
    />
   }
  filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
+        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
         <Input
-         placeholder={tc('search')}
+         placeholder={tc('search_placeholder') || (locale === 'ar' ? 'البحث بالاسم، الرمز، أو كود العملة...' : 'Search by name, symbol, or code...')}
          value={search}
-         onChange={(e) => { setSearch(e.target.value); }} className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         onChange={(e) => { setSearch(e.target.value); }} className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
        </div>
      }
@@ -230,11 +231,11 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  </div>
  </div>
  <div className="p-6 bg-card border border-border shadow-sm/50 rounded-sm border border-white/5 flex items-start gap-4">
- <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
- <ShieldCheck className="w-5 h-5 text-cyan-500" />
+ <div className="w-10 h-10 rounded-sm bg-muted/50 flex items-center justify-center flex-shrink-0">
+ <ShieldCheck className="w-5 h-5 text-foreground" />
  </div>
  <div className="space-y-1">
- <h4 className="text-label-xs font-semibold uppercase text-cyan-500">{t('tips.iso_standard_title')}</h4>
+ <h4 className="text-label-xs font-semibold uppercase text-foreground">{t('tips.iso_standard_title')}</h4>
  <p className="text-label-xs text-muted-foreground font-semibold leading-relaxed uppercase">
  {t('tips.iso_standard_desc')}
  </p>

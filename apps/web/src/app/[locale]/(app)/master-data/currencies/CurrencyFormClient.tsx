@@ -155,7 +155,7 @@ export function CurrencyFormClient({
               onClick={() => guardedRouter.push(`/master-data/currencies/${id}/fx-rates`)}
               className="rounded-xl border-surface-variant/20 bg-card border border-border shadow-sm hover:bg-operational-cyan/10 hover:text-operational-cyan transition-all text-label-xs font-semibold uppercase h-11 px-6 shadow-sm flex items-center gap-2"
             >
-              <TrendingUp className="w-4 h-4 text-cyan-500" />
+              <TrendingUp className="w-4 h-4 text-foreground" />
               <span>{`${t('fx_rates_for')} ${currency?.code || ''}`}</span>
             </Button>
           ) : undefined
@@ -176,7 +176,7 @@ export function CurrencyFormClient({
                   {t('fields.code')}
                 </Label>
                 <div className="relative group">
-                  <Coins className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-cyan-500 transition-colors" />
+                  <Coins className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors" />
                   <Controller
                     control={control}
                     name="code"
@@ -188,7 +188,7 @@ export function CurrencyFormClient({
                         maxLength={3}
                         {...field}
                         disabled={isReadOnly}
-                        className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm uppercase text-cyan-500 disabled:opacity-70 w-full"
+                        className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm uppercase text-foreground disabled:opacity-70 w-full"
                       />
                     )}
                   />
@@ -309,11 +309,11 @@ export function CurrencyFormClient({
 
             <ul className="space-y-4 text-start">
               <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
-                <span className="text-cyan-500/60 font-semibold">/</span>
+                <span className="text-foreground/60 font-semibold">/</span>
                 <span>{t('tips.base_currency_desc')}</span>
               </li>
               <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
-                <span className="text-cyan-500/60 font-semibold">/</span>
+                <span className="text-foreground/60 font-semibold">/</span>
                 <span>{t('tips.iso_standard_desc')}</span>
               </li>
             </ul>

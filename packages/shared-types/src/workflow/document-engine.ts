@@ -50,10 +50,10 @@ const workflowMap: Record<BaseDocumentType, {
 }> = {
   'pr': {
     pending: [PR_STATUS.DRAFT, PR_STATUS.SUBMITTED, PR_STATUS.REJECTED],
-    completed: [PR_STATUS.APPROVED, PR_STATUS.CANCELLED],
+    completed: [PR_STATUS.APPROVED, PR_STATUS.CANCELLED, PR_STATUS.FULFILLED],
     approved: [PR_STATUS.APPROVED],
     posted: [],
-    locked: [PR_STATUS.SUBMITTED, PR_STATUS.APPROVED, PR_STATUS.CANCELLED]
+    locked: [PR_STATUS.SUBMITTED, PR_STATUS.APPROVED, PR_STATUS.CANCELLED, PR_STATUS.FULFILLED]
   },
   'po': {
     pending: [PO_STATUS.DRAFT, PO_STATUS.SUBMITTED, PO_STATUS.REJECTED],
@@ -63,12 +63,12 @@ const workflowMap: Record<BaseDocumentType, {
     locked: [PO_STATUS.SUBMITTED, PO_STATUS.APPROVED, PO_STATUS.FULFILLED, PO_STATUS.PARTIAL, PO_STATUS.CANCELLED]
   },
     'grn': {
-      pending: [GRN_STATUS.DRAFT, GRN_STATUS.RECEIVED],
-      completed: [GRN_STATUS.POSTED, GRN_STATUS.CANCELLED, GRN_STATUS.VOIDED],
-      approved: [],
-      posted: [GRN_STATUS.POSTED],
-      locked: [GRN_STATUS.POSTED, GRN_STATUS.CANCELLED, GRN_STATUS.VOIDED]
-    },
+    pending: [GRN_STATUS.DRAFT],
+    completed: [GRN_STATUS.RECEIVED, GRN_STATUS.POSTED, GRN_STATUS.CANCELLED, GRN_STATUS.VOIDED],
+    approved: [],
+    posted: [GRN_STATUS.POSTED],
+    locked: [GRN_STATUS.RECEIVED, GRN_STATUS.POSTED, GRN_STATUS.CANCELLED, GRN_STATUS.VOIDED]
+  },
   'transfer': {
     pending: [TRANSFER_STATUS.DRAFT, TRANSFER_STATUS.IN_TRANSIT],
     completed: [TRANSFER_STATUS.RECEIVED, TRANSFER_STATUS.CANCELLED],
@@ -128,7 +128,7 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
       'REJECT': { targetStatus: PR_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
     },
     [PR_STATUS.APPROVED]: {
-      'CONVERT_TO_PO': { targetStatus: PR_STATUS.APPROVED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },
+      'CONVERT_TO_PO': { targetStatus: PR_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },
     },
     [PR_STATUS.REJECTED]: {
       'EDIT': { targetStatus: PR_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
@@ -155,12 +155,14 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
     }
   },
   'grn': {
+    [GRN_STATUS.DRAFT]: {
+      'EDIT': { targetStatus: GRN_STATUS.DRAFT, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'PROC_OFFICER'] },
+      'SUBMIT': { targetStatus: GRN_STATUS.RECEIVED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'PROC_OFFICER'] },
+      'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'PROC_OFFICER'] },
+    },
     [GRN_STATUS.RECEIVED]: {
       'POST': { targetStatus: GRN_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },
-    },
-    [GRN_STATUS.DRAFT]: {
-      'EDIT': { targetStatus: GRN_STATUS.DRAFT, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
-      'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
+      'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'PROC_MGR', 'BRANCH_MGR'] },
     },
     [GRN_STATUS.POSTED]: {
       'VOID': { targetStatus: GRN_STATUS.VOIDED, allowedRoles: ['ADMIN'] },

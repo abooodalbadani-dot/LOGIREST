@@ -26,6 +26,8 @@ export class GrnService {
       lines: Array<{
         itemId: string;
         lotId?: string | null;
+        lotNumber?: string | null;
+        expiryDate?: string | null;
         quantity: number;
         unitPrice: number;
       }>;
@@ -44,6 +46,12 @@ export class GrnService {
       if (!po) {
         throw new NotFoundException(
           `Purchase Order with ID ${body.poId} not found`,
+        );
+      }
+
+      if (po.status !== 'APPROVED') {
+        throw new BadRequestException(
+          `Cannot create a GRN against a Purchase Order that is not APPROVED. (Current status: ${po.status})`,
         );
       }
 
@@ -72,6 +80,23 @@ export class GrnService {
         branchId,
       );
 
+      const processedLines = [];
+      for (const line of body.lines) {
+        const lotId = await this.resolveOrCreateLot(
+          tx,
+          line.itemId,
+          line.lotId,
+          line.lotNumber,
+          line.expiryDate,
+        );
+        processedLines.push({
+          itemId: line.itemId,
+          lotId,
+          quantityReceived: line.quantity,
+          unitPrice: line.unitPrice,
+        });
+      }
+
       return tx.goodsReceivedNote.create({
         data: {
           grnNumber,
@@ -79,12 +104,7 @@ export class GrnService {
           warehouseId: body.warehouseId,
           status: 'DRAFT',
           lines: {
-            create: body.lines.map((line) => ({
-              itemId: line.itemId,
-              lotId: line.lotId || null,
-              quantityReceived: line.quantity,
-              unitPrice: line.unitPrice,
-            })),
+            create: processedLines,
           },
         },
         include: {
@@ -93,6 +113,7 @@ export class GrnService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
               lot: true,
@@ -162,6 +183,7 @@ export class GrnService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
               lot: true,
@@ -202,6 +224,7 @@ export class GrnService {
             item: {
               include: {
                 unitOfMeasure: true,
+                category: true,
               },
             },
             lot: true,
@@ -236,6 +259,8 @@ export class GrnService {
         id?: string;
         itemId: string;
         lotId?: string | null;
+        lotNumber?: string | null;
+        expiryDate?: string | null;
         quantity: number;
         unitPrice: number;
       }>;
@@ -265,10 +290,28 @@ export class GrnService {
         );
       }
 
+      let processedLines = undefined;
       if (body.lines) {
         await tx.gRNLine.deleteMany({
           where: { grnId: id },
         });
+
+        processedLines = [];
+        for (const line of body.lines) {
+          const lotId = await this.resolveOrCreateLot(
+            tx,
+            line.itemId,
+            line.lotId,
+            line.lotNumber,
+            line.expiryDate,
+          );
+          processedLines.push({
+            itemId: line.itemId,
+            lotId,
+            quantityReceived: line.quantity,
+            unitPrice: line.unitPrice,
+          });
+        }
       }
 
       return tx.goodsReceivedNote.update({
@@ -277,14 +320,9 @@ export class GrnService {
           poId: body.poId,
           warehouseId: body.warehouseId,
           version: { increment: 1 },
-          ...(body.lines && {
+          ...(processedLines && {
             lines: {
-              create: body.lines.map((line) => ({
-                itemId: line.itemId,
-                lotId: line.lotId || null,
-                quantityReceived: line.quantity,
-                unitPrice: line.unitPrice,
-              })),
+              create: processedLines,
             },
           }),
         },
@@ -294,6 +332,7 @@ export class GrnService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
               lot: true,
@@ -341,13 +380,32 @@ export class GrnService {
     });
   }
 
+  async submit(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: { comments?: string; version?: number; ipAddress?: string },
+  ) {
+    await this.workflowService.executeTransition(
+      id,
+      'goodsReceivedNote',
+      'SUBMIT',
+      userId,
+      userRole,
+      body.comments,
+      body.version,
+      body.ipAddress,
+    );
+    return this.findOne(id);
+  }
+
   async cancel(
     id: string,
     userId: string,
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'goodsReceivedNote',
       'CANCEL',
@@ -357,5 +415,48 @@ export class GrnService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
+  }
+
+  private async resolveOrCreateLot(
+    tx: Prisma.TransactionClient,
+    itemId: string,
+    lotId?: string | null,
+    lotNumber?: string | null,
+    expiryDate?: string | null,
+  ): Promise<string | null> {
+    // If lotId is a valid UUID and doesn't start with 'new-', verify its existence
+    if (lotId && !lotId.startsWith('new-')) {
+      const existing = await tx.lot.findUnique({ where: { id: lotId } });
+      if (existing) return existing.id;
+    }
+
+    // If we have a lotNumber, resolve or create the Lot
+    if (lotNumber && lotNumber.trim().length > 0) {
+      const trimmedLotNumber = lotNumber.trim();
+      const existing = await tx.lot.findUnique({
+        where: { lotNumber: trimmedLotNumber },
+      });
+      if (existing) {
+        if (existing.itemId !== itemId) {
+          throw new BadRequestException(
+            `Lot number ${trimmedLotNumber} is already registered to another item.`,
+          );
+        }
+        return existing.id;
+      }
+
+      // Otherwise, create a new lot
+      const created = await tx.lot.create({
+        data: {
+          itemId,
+          lotNumber: trimmedLotNumber,
+          expiryDate: expiryDate ? new Date(expiryDate) : null,
+        },
+      });
+      return created.id;
+    }
+
+    return null;
   }
 }

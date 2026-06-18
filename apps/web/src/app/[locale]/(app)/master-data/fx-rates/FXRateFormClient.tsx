@@ -325,7 +325,7 @@ export function FXRateFormClient({
                   {t('fields.rate')}
                 </Label>
                 <div className="relative group">
-                  <TrendingUp className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-cyan-500 transition-colors" />
+                  <TrendingUp className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors" />
                   <Input
                     id="fx-rate"
                     type="number"
@@ -346,7 +346,7 @@ export function FXRateFormClient({
                   {t('fields.effective_date')}
                 </Label>
                 <div className="relative group">
-                  <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-cyan-500 transition-colors" />
+                  <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors" />
                   <Input
                     id="fx-date"
                     type="date"
@@ -398,11 +398,11 @@ export function FXRateFormClient({
 
             <ul className="space-y-4 text-start">
               <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
-                <span className="text-cyan-500/60 font-semibold">/</span>
+                <span className="text-foreground/60 font-semibold">/</span>
                 <span>{t('tips.precision_desc')}</span>
               </li>
               <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
-                <span className="text-cyan-500/60 font-semibold">/</span>
+                <span className="text-foreground/60 font-semibold">/</span>
                 <span>{t('tips.temporal_integrity_desc')}</span>
               </li>
             </ul>

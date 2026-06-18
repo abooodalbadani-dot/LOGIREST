@@ -2,22 +2,22 @@
 name: LogiRest Design System
 description: Operational Elegance for High-Integrity Kitchen Store Management.
 colors:
-  primary: "#116479"
-  primary-container: "#135e6d"
-  secondary: "#5c727d"
-  tertiary: "#006a6a"
-  background: "#f7f9ff"
-  foreground: "#181c20"
+  primary: "#CAAE85"
+  primary-container: "#715b38"
+  secondary: "#5c5f5e"
+  tertiary: "#535f76"
+  background: "#F9FAFB"
+  foreground: "#1A1A1A"
   surface-lowest: "#ffffff"
-  surface-low: "#f1f4fa"
-  surface-high: "#eef1f7"
-  surface-highest: "#dfe3e8"
-  operational-cyan: "#006684"
+  surface-low: "#f9f2ed"
+  surface-high: "#eee7e2"
+  surface-highest: "#e8e1dc"
+  operational-cyan: "#CAAE85"
   operational-red: "#ba1a1a"
-  midnight-ledger: "#0a1b24"
+  midnight-ledger: "#121212"
 typography:
   display:
-    fontFamily: "Tajawal, sans-serif"
+    fontFamily: "Be Vietnam Pro, Tajawal, sans-serif"
     fontSize: "2rem"
     fontWeight: 600
     lineHeight: 1.2
@@ -76,17 +76,17 @@ LogiRest's visual identity is rooted in the philosophy of **Operational Elegance
 The palette is anchored by the deep, authoritative tones of professional store management, punctuated by precision-focused action colors.
 
 ### Primary
-- **Culinary Teal (#116479)**: The primary brand anchor. Used for core navigation, primary actions, and brand identity. It conveys calm authority and reliability.
+- **Luxury Gold (#CAAE85)**: The primary brand anchor. Used for core navigation, primary actions, and brand identity. It conveys calm authority, warmth, and high status.
 
 ### Secondary
-- **Midnight Ledger (#0a1b24)**: Used for deep surface backgrounds (especially in dark mode) and high-integrity header regions. It represents the "immutability" of the system.
+- **Nocturne Slate (#121212)**: Used for deep surface backgrounds (especially in dark mode) and high-integrity header regions. It represents the "immutability" of the system.
 
 ### Tertiary
-- **Operational Cyan (#006684)**: Used for active states, highlights, and critical classification labels. It is the color of "action" and "current focus."
+- **Bronze Steel (#535f76)**: Used for muted classifications, inactive categories, and auxiliary elements.
 
 ### Neutral
-- **Base Surface (#f7f9ff)**: The overall application background, providing a clean, low-strain canvas.
-- **Surface Container Low (#f1f4fa)**: Used for secondary groupings and sidebars to provide subtle distinction without lines.
+- **Base Surface (#F9FAFB)**: The overall application background, providing a clean, low-strain canvas.
+- **Surface Container Low (#f9f2ed)**: Used for secondary groupings and sidebars to provide subtle distinction without lines.
 - **Surface Container Lowest (#ffffff)**: Used for primary cards and data tables to maximize contrast and "pop" the focus data.
 
 ### Named Rules
@@ -98,10 +98,10 @@ The palette is anchored by the deep, authoritative tones of professional store m
 
 LogiRest uses a dual-typeface strategy to balance architectural strength with data legibility.
 
-**Display Font:** Tajawal (with sans-serif fallback)
+**Display Font:** Be Vietnam Pro / Tajawal (with sans-serif fallback)
 **Body Font:** IBM Plex Sans Arabic (with sans-serif fallback)
 
-**Character:** Tajawal provides a geometric, authoritative feel for headlines and large numbers. IBM Plex Sans Arabic offers exceptional clarity for high-density inventory data, especially in the technical context of kitchen store management.
+**Character:** Be Vietnam Pro and Tajawal provide a geometric, authoritative feel for headlines and large numbers. IBM Plex Sans Arabic offers exceptional clarity for high-density inventory data, especially in the technical context of kitchen store management.
 
 ### Hierarchy
 - **Display** (600, 2rem, 1.2): Used for primary page titles and high-impact dashboard numbers.
@@ -124,7 +124,7 @@ LogiRest rejects the "floating card" aesthetic in favor of **Tonal Stacking**. D
 
 ### Buttons
 - **Shape:** Rounded (16px)
-- **Primary:** High-contrast Culinary Teal with a subtle gradient to Primary Container. Used for "Confirm" or "Commit" actions.
+- **Primary:** High-contrast Luxury Gold with a subtle gradient to Primary Container. Used for "Confirm" or "Commit" actions.
 - **Hover / Focus:** Subtle scale reduction (0.99) and opacity shift (0.9). Focus uses a high-contrast ring with offset.
 
 ### Cards / Containers

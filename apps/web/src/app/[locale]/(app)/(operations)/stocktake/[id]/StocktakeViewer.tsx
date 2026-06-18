@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react";
-import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
+import { RelationalName } from "@/components/shared/RelationalName";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { 
@@ -37,9 +37,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
  const router = useRouter()
  
  const [manifestSearch, setManifestSearch] = React.useState('')
- const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
- const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
+ const warehouseName = session.warehouseName;
 
  const filteredItems = React.useMemo(() => {
   if (!manifestSearch) return session.items
@@ -120,8 +118,8 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
     {/* Metadata Grid */}
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
      {[
-      { label: common('warehouse'), value: warehouseName, icon: Warehouse, color: 'text-primary' },
-      { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-emerald-500' },
+      { label: common('warehouse'), value: <RelationalName name={warehouseName} rawId={session.warehouseId} />, icon: Warehouse, color: 'text-primary' },
+      { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-foreground' },
       { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
       { label: t('last_updated'), value: <ClientOnlyTime date={session.updatedAt ?? session.snapshotAt} mode="time" />, icon: Clock, color: 'text-amber-500' },
      ].map((item, idx) => (
@@ -206,8 +204,8 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
           return hasCounted && line.snapshotQty !== null ? (
            <div className={cn(
             "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
-            variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
-            variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
+            variance === 0 ? "bg-muted/50 text-foreground" : 
+            variance > 0 ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
            )} dir="ltr">
             {variance > 0 ? '+' : ''}{variance}
            </div>
@@ -221,7 +219,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
          cell: (line) => {
           const hasCounted = line.countedQty !== null;
           return hasCounted ? (
-           <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none text-label-xxs font-semibold uppercase h-6">
+           <Badge variant="outline" className="bg-muted/50 text-foreground border-none text-label-xxs font-semibold uppercase h-6">
             {common('completed')}
            </Badge>
           ) : (

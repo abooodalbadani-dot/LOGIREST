@@ -39,6 +39,7 @@ export const AdjustmentDetailSchema = z.object({
  documentNumber: z.string(),
  status: AdjustmentStatusSchema,
  warehouseId: z.string(),
+ warehouseName: z.string().optional().nullable(),
  reason: z.string(),
  notes: z.string().nullable().optional(),
  reject: z.string().nullable().optional(),

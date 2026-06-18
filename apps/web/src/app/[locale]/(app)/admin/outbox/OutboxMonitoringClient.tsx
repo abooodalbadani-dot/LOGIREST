@@ -63,11 +63,21 @@ export function OutboxMonitoringClient() {
  const [totalPages, setTotalPages] = useState(1);
  const [totalEvents, setTotalEvents] = useState(0);
 
- const fetchFailedEvents = async (pageNum: number) => {
+ 
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'SUCCESS': return 'text-status-success bg-status-success/10 border-status-success/20';
+      case 'PENDING': return 'text-status-warning bg-status-warning/10 border-status-warning/20';
+      case 'FAILED': return 'text-status-error bg-status-error/10 border-status-error/20';
+      default: return 'text-muted-foreground bg-muted/10 border-border';
+    }
+  };
+
+  const fetchEvents = async (pageNum: number) => {
   setIsLoading(true);
   try {
    const res = await apiClient.get(
-    `/admin/outbox/failed?page=${pageNum}&limit=10`,
+    `/admin/outbox?page=${pageNum}&limit=10`,
     OutboxResponseSchema
    );
    setData(res.data);
@@ -85,7 +95,7 @@ export function OutboxMonitoringClient() {
  };
 
  useEffect(() => {
-  fetchFailedEvents(page);
+  fetchEvents(page);
  }, [page]);
 
  const handleRetryEvent = async (id: string) => {
@@ -108,7 +118,7 @@ export function OutboxMonitoringClient() {
    }
    
    // Re-fetch current page to backfill
-   fetchFailedEvents(page);
+   fetchEvents(page);
   } catch (err: unknown) {
    playSound('error');
    const message = err instanceof Error ? err.message : String(err);
@@ -124,11 +134,11 @@ export function OutboxMonitoringClient() {
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 min-w-0">
     <div className="space-y-4">
      <Link 
-      href="/admin"
+      href="/dashboard"
       className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-operational-cyan transition-all"
      >
       <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform rtl:rotate-180" />
-      Return to Admin
+      Return to Dashboard
      </Link>
      <div className="space-y-1">
       <div className="flex items-center gap-3">
@@ -140,7 +150,7 @@ export function OutboxMonitoringClient() {
        </h1>
       </div>
       <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
-       Track failed transactional mail transmissions, analyze SMTP runtime exceptions, and manually trigger redeliveries.
+       Track all transactional mail transmissions, analyze SMTP runtime exceptions, and manually trigger redeliveries.
       </p>
      </div>
     </div>
@@ -205,11 +215,11 @@ export function OutboxMonitoringClient() {
           </div>
 
           {/* Last Exception */}
-          <div className="p-4 bg-status-error/5 rounded-2xl border border-status-error/10 space-y-2">
+          <div className={`p-4 rounded-2xl border space-y-2 ${selectedEvent.status === 'FAILED' ? 'bg-status-error/5 border-status-error/10' : 'bg-muted/5 border-border'}`}>
            <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-status-error" />
-            <span className="text-[10px] text-status-error uppercase font-bold tracking-wider">
-             Last SMTP Exception
+            <AlertCircle className={`w-4 h-4 ${selectedEvent.status === 'FAILED' ? 'text-status-error' : 'text-muted-foreground'}`} />
+            <span className={`text-[10px] uppercase font-bold tracking-wider ${selectedEvent.status === 'FAILED' ? 'text-status-error' : 'text-muted-foreground'}`}>
+             {selectedEvent.status === 'FAILED' ? 'Last SMTP Exception' : 'Event Details'}
             </span>
            </div>
            <p dir="ltr" className="text-xs font-mono text-muted-foreground leading-relaxed bg-card border border-border shadow-sm p-3 rounded-lg break-all max-h-32 overflow-y-auto text-left">
@@ -235,6 +245,7 @@ export function OutboxMonitoringClient() {
         </div>
 
         <div className="pt-6 border-t border-surface-highest/10 flex gap-4">
+         {selectedEvent.status === 'FAILED' && (
          <Button
           onClick={() => handleRetryEvent(selectedEvent.id)}
           disabled={isRetryingMap[selectedEvent.id]}
@@ -247,6 +258,7 @@ export function OutboxMonitoringClient() {
           )}
           Requeue Communication
          </Button>
+         )}
         </div>
        </motion.div>
       ) : (
@@ -255,7 +267,7 @@ export function OutboxMonitoringClient() {
         <div className="max-w-[200px] text-center">
          <h3 className="text-lg font-semibold text-foreground">No Event Selected</h3>
          <p className="text-sm text-muted-foreground mt-2">
-          Click on any failed outbox communication event in the queue list to inspect details.
+          Click on any outbox communication event in the queue list to inspect details.
          </p>
         </div>
        </div>
@@ -264,20 +276,20 @@ export function OutboxMonitoringClient() {
     </div>
 
     {/* Right Column: Queue List */}
-    <div className="w-full md:w-2/3 min-w-0 bg-card border border-border rounded-xl p-6 space-y-6">
-     <div className="flex items-center justify-between border-b border-surface-highest/10 pb-4">
-      <div className="space-y-1">
-       <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
-        Failed Communications Queue
-       </h3>
-       <p className="text-xs text-muted-foreground">
-        Total failed events: <span className="font-bold text-operational-red">{totalEvents}</span>
+    <div className="w-full lg:w-2/3 flex flex-col space-y-4">
+     <div className="flex items-center justify-between">
+      <div>
+       <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
+        Communications Queue
+       </h2>
+       <p className="text-xs text-muted-foreground mt-0.5">
+        Total events: <span className="font-bold text-foreground">{totalEvents}</span>
        </p>
       </div>
       <Button
        variant="ghost"
        size="sm"
-       onClick={() => fetchFailedEvents(page)}
+       onClick={() => fetchEvents(page)}
        disabled={isLoading}
        className="h-10 px-3 hover:bg-surface-container-high rounded-xl text-muted-foreground hover:text-foreground"
       >
@@ -288,7 +300,7 @@ export function OutboxMonitoringClient() {
      {isLoading ? (
       <div className="py-20 flex flex-col items-center justify-center space-y-4 min-w-0">
        <Loader2 className="w-8 h-8 animate-spin text-operational-cyan" />
-       <p className="text-xs text-muted-foreground">Retrieving failed outbox queue...</p>
+       <p className="text-xs text-muted-foreground">Retrieving communications queue...</p>
       </div>
      ) : data.length === 0 ? (
       <div className="w-full py-20 flex flex-col items-center justify-center text-center space-y-4 min-w-0">
@@ -296,9 +308,9 @@ export function OutboxMonitoringClient() {
         <CheckCircle2 className="w-10 h-10 text-status-success" />
        </div>
        <div className="space-y-1 max-w-[280px] mx-auto text-center">
-        <p className="text-sm font-bold text-foreground">All Clear!</p>
+        <p className="text-sm font-bold text-foreground">Empty Queue!</p>
         <p className="text-xs text-muted-foreground">
-         No failed communications events found in the database logs.
+         No communications events found in the database logs.
         </p>
        </div>
       </div>
@@ -317,7 +329,7 @@ export function OutboxMonitoringClient() {
         >
          <div className="space-y-2 flex-1 w-full min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-status-error/10 text-status-error border border-status-error/20 uppercase font-bold tracking-wider">
+           <span className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-bold tracking-wider border ${getStatusColor(event.status)}`}>
             <span dir="ltr" className="inline-block text-left break-all whitespace-normal">
              {event.eventType}
             </span>
@@ -326,17 +338,17 @@ export function OutboxMonitoringClient() {
             Attempts: {event.attempts}
            </span>
           </div>
-          <h4 className="text-xs font-bold text-foreground truncate max-w-sm" dir="ltr">
-           {event.payload?.subject || 'No Subject Defined'}
+          <h4 className="text-xs font-bold text-foreground line-clamp-1" dir="ltr">
+           {String(event.payload?.subject || event.payload?.documentNumber || event.payload?.id || 'No Document Ref / Subject')}
           </h4>
-          <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground/60">
-           <span dir="ltr" className="inline-flex items-center gap-1 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-[10px] text-muted-foreground/60">
+           <span dir="ltr" className="inline-flex items-center gap-1 text-left whitespace-nowrap">
             <Calendar className="w-3 h-3 shrink-0" />
-            {new Date(event.createdAt).toLocaleString()}
+            {new Intl.DateTimeFormat('en-US', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(event.createdAt))}
            </span>
-           <span>•</span>
-           <span dir="ltr" className="text-status-error font-medium truncate max-w-xs block text-left">
-            {event.lastError || 'Unknown Error'}
+           <span className="hidden sm:inline">•</span>
+           <span dir="ltr" className={`font-medium line-clamp-1 text-left ${event.status === 'FAILED' ? 'text-status-error' : 'text-muted-foreground'}`}>
+            {event.lastError || (event.status === 'SUCCESS' ? 'Processed Successfully' : 'Pending Processing')}
            </span>
           </div>
          </div>

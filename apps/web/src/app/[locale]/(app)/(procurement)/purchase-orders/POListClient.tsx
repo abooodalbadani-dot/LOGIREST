@@ -69,7 +69,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
    cell: ({ row }) => (
     <div className="flex flex-col text-start min-w-0">
      <span className="opacity-90 font-bold text-body-md">
-      {row.original.supplierName || row.original.supplierId}
+      {row.original.supplierName || '—'}
      </span>
      <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('supplier')}</span>
     </div>
@@ -244,12 +244,12 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  onPageChange: setPage
  } : undefined}
  filters={
-      <div className="relative w-full sm:max-w-md flex-1 shrink-0 min-w-[250px]">
+      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <Input
          placeholder={tc('statuses.all')}
          value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 pe-4 bg-background border-border text-foreground focus:ring-operational-cyan focus:border-operational-cyan shadow-sm transition-all rounded-lg"
+         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
         />
        </div>
      }

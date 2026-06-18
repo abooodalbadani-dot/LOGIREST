@@ -298,7 +298,7 @@ export function TransferNewClient() {
       <div className={`absolute top-0 inset-x-0 h-1 rounded-t-[2.5rem] ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
       
       <div className="flex items-center gap-3 mb-6">
-       <Warehouse className="w-4 h-4 text-cyan-500" />
+       <Warehouse className="w-4 h-4 text-foreground" />
        <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
         {t('transfer_parameters')}
        </h3>
@@ -374,7 +374,7 @@ export function TransferNewClient() {
       
       <div className="flex items-center justify-between mb-8">
        <div className="flex items-center gap-3">
-        <PackagePlus className="w-5 h-5 text-emerald-500" />
+        <PackagePlus className="w-5 h-5 text-foreground" />
         <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
          {t('items_to_transfer')}
         </h3>
@@ -389,9 +389,9 @@ export function TransferNewClient() {
          <Sparkles className="w-3 h-3" />
          {isSuggestingFIFO ? (locale === 'ar' ? 'جاري...' : 'Loading...') : (locale === 'ar' ? 'اقتراح FIFO' : 'Suggest FIFO')}
         </button>
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 rounded-full border border-emerald-500/20">
          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-         <span className="text-label-xxs font-semibold uppercase text-emerald-500">
+         <span className="text-label-xxs font-semibold uppercase text-foreground">
           {lines.length} {tCommon('items')}
          </span>
         </div>

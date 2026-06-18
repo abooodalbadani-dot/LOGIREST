@@ -77,7 +77,7 @@ export function StocktakeArchiveClient({
    cell: ({ row }) => (
     <div className="flex items-center gap-2">
      <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
-     <span className="font-medium text-label-sm">{row.original.warehouseName || row.original.warehouseId}</span>
+     <span className="font-medium text-label-sm">{row.original.warehouseName || '—'}</span>
     </div>
    ),
   },

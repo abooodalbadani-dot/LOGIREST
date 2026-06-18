@@ -37,6 +37,11 @@ export default function ChangePasswordClient({ onDirtyChange }: ChangePasswordCl
 
  const { register, handleSubmit, formState: { errors, isDirty }, reset } = useForm<PasswordValues>({
   resolver: zodResolver(passwordSchema),
+  defaultValues: {
+   currentPassword: '',
+   newPassword: '',
+   confirmPassword: ''
+  }
  });
 
  // Propagate dirty state to parent component

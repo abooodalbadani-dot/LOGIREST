@@ -10,6 +10,24 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+export class LotAllocationDto {
+  @IsString()
+  @IsNotEmpty()
+  lotId!: string;
+
+  @IsNumber()
+  @Min(0)
+  quantityAllocated!: number;
+
+  @IsString()
+  @IsOptional()
+  lotNumber?: string | null;
+
+  @IsString()
+  @IsOptional()
+  expiryDate?: string | null;
+}
+
 export class GrnLineDto {
   @IsString()
   @IsNotEmpty()
@@ -19,6 +37,14 @@ export class GrnLineDto {
   @IsOptional()
   lotId?: string | null;
 
+  @IsString()
+  @IsOptional()
+  lotNumber?: string | null;
+
+  @IsString()
+  @IsOptional()
+  expiryDate?: string | null;
+
   @IsNumber()
   @Min(0)
   receivedQty!: number;
@@ -26,6 +52,12 @@ export class GrnLineDto {
   @IsNumber()
   @Min(0)
   unitCostForeign!: number;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => LotAllocationDto)
+  lotAllocations?: LotAllocationDto[];
 }
 
 export class CreateGrnDto {
@@ -46,7 +78,14 @@ export class CreateGrnDto {
   notes?: string;
 
   @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => GrnLineDto)
-  lines!: GrnLineDto[];
+  lines?: GrnLineDto[];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => GrnLineDto)
+  lineItems?: GrnLineDto[];
 }

@@ -10,6 +10,24 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+export class LotAllocationDto {
+  @IsString()
+  @IsNotEmpty()
+  lotId!: string;
+
+  @IsNumber()
+  @Min(0)
+  quantityAllocated!: number;
+
+  @IsString()
+  @IsOptional()
+  lotNumber?: string | null;
+
+  @IsString()
+  @IsOptional()
+  expiryDate?: string | null;
+}
+
 export class UpdateGrnLineDto {
   @IsString()
   @IsOptional()
@@ -23,6 +41,14 @@ export class UpdateGrnLineDto {
   @IsOptional()
   lotId?: string | null;
 
+  @IsString()
+  @IsOptional()
+  lotNumber?: string | null;
+
+  @IsString()
+  @IsOptional()
+  expiryDate?: string | null;
+
   @IsNumber()
   @Min(0)
   receivedQty!: number;
@@ -30,6 +56,12 @@ export class UpdateGrnLineDto {
   @IsNumber()
   @Min(0)
   unitCostForeign!: number;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => LotAllocationDto)
+  lotAllocations?: LotAllocationDto[];
 }
 
 export class UpdateGrnDto {
@@ -58,4 +90,10 @@ export class UpdateGrnDto {
   @ValidateNested({ each: true })
   @Type(() => UpdateGrnLineDto)
   lines?: UpdateGrnLineDto[];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateGrnLineDto)
+  lineItems?: UpdateGrnLineDto[];
 }

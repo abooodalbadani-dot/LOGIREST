@@ -29,6 +29,8 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/app/[locale]/providers/currency-provider';
+import { formatCurrency } from '@/utils/currency';
 
 interface RecentOrder {
  id: string;
@@ -42,6 +44,7 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
  const tc = useTranslations('common');
  const t = useTranslations('master_data.suppliers');
  const router = useRouter();
+ const { currency } = useCurrency();
 
  const { data: suppliersData, isLoading: isLoadingSupplier } = useSuppliers();
  const supplier = useMemo(() => 
@@ -58,7 +61,7 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
   { 
    accessorKey: 'id', 
    header: tc('doc_number'),
-   cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-cyan-500">{row.original.id}</span>
+   cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-foreground">{row.original.id}</span>
   },
   { 
    accessorKey: 'date', 
@@ -74,17 +77,17 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
    accessorKey: 'amount', 
    header: tc('amount'),
    cell: ({ row }) => (
-    <span className="text-label-xs font-bold text-emerald-500 font-mono">
-     {row.original.amount.toLocaleString()} {tc('currencies.sar')}
-    </span>
-   )
-  },
-  { 
-   accessorKey: 'status', 
-   header: tc('status'),
-   cell: ({ row }) => <StatusBadge status={row.original.status} className="h-5" />
-  }
- ], [tc]);
+     <span className="text-label-xs font-bold text-foreground font-mono">
+      {formatCurrency(row.original.amount, currency, locale as 'ar' | 'en')}
+     </span>
+    )
+   },
+   { 
+    accessorKey: 'status', 
+    header: tc('status'),
+    cell: ({ row }) => <StatusBadge status={row.original.status} className="h-5" />
+   }
+  ], [tc, currency, locale]);
 
  if (isLoadingSupplier) {
   return <div className="p-8 animate-pulse text-center opacity-20">{tc('loading')}</div>;
@@ -207,16 +210,16 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
      {/* Financial Charts Placeholder */}
      <div className="bg-card border border-border shadow-sm border border-white/5 rounded-sm p-8 space-y-6 shadow-xl relative overflow-hidden group">
       <div className="flex items-center gap-3">
-       <div className="w-8 h-8 rounded-sm bg-emerald-500/10 flex items-center justify-center">
-        <PieChart className="w-4 h-4 text-emerald-500" />
+       <div className="w-8 h-8 rounded-sm bg-muted/50 flex items-center justify-center">
+        <PieChart className="w-4 h-4 text-foreground" />
        </div>
        <h3 className="text-label-xs font-bold uppercase tracking-wider">{t('profile.financials')}</h3>
       </div>
       
       <div className="h-48 flex items-end gap-2 px-2">
        {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
-        <div key={i} className="flex-1 bg-emerald-500/10 rounded-t-sm relative group-hover:bg-emerald-500/20 transition-all cursor-pointer" style={{ height: `${h}%` }}>
-         <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/10" />
+        <div key={i} className="flex-1 bg-muted/50 rounded-t-sm relative group-hover:bg-muted/50 transition-all cursor-pointer" style={{ height: `${h}%` }}>
+         <div className="absolute inset-0 bg-muted/50 group-hover:bg-muted/50" />
         </div>
        ))}
       </div>
@@ -232,8 +235,8 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
      <div className="bg-card border border-border shadow-sm border border-white/5 rounded-sm p-8 space-y-6 shadow-xl">
        <div className="flex items-center justify-between">
        <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-sm bg-cyan-500/10 flex items-center justify-center">
-         <TrendingUp className="w-4 h-4 text-cyan-500" />
+        <div className="w-8 h-8 rounded-sm bg-muted/50 flex items-center justify-center">
+         <TrendingUp className="w-4 h-4 text-foreground" />
         </div>
         <h3 className="text-label-xs font-bold uppercase tracking-wider">{t('profile.performance')}</h3>
        </div>
@@ -252,16 +255,16 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
         <div className="p-4 bg-black/20 rounded-sm border border-white/5 space-y-2">
          <p className="text-[10px] font-bold text-muted-foreground/40 uppercase">{t('profile.reliability_index')}</p>
          <div className="flex items-center gap-2">
-          <span className="text-xl font-mono font-bold text-emerald-500">98/100</span>
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          <span className="text-xl font-mono font-bold text-foreground">98/100</span>
+          <CheckCircle2 className="w-4 h-4 text-foreground" />
          </div>
          <p className="text-[10px] font-semibold text-muted-foreground/30 uppercase">{t('profile.reliability_index_desc')}</p>
         </div>
         <div className="p-4 bg-black/20 rounded-sm border border-white/5 space-y-2">
          <p className="text-[10px] font-bold text-muted-foreground/40 uppercase">{t('profile.credit_rating')}</p>
          <div className="flex items-center gap-2">
-          <span className="text-xl font-mono font-bold text-cyan-500">{t('profile.credit_rating_tier')}</span>
-          <Building2 className="w-4 h-4 text-cyan-500" />
+          <span className="text-xl font-mono font-bold text-foreground">{t('profile.credit_rating_tier')}</span>
+          <Building2 className="w-4 h-4 text-foreground" />
          </div>
          <p className="text-[10px] font-semibold text-muted-foreground/30 uppercase">{t('profile.partner_status')}</p>
         </div>

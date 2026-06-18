@@ -21,7 +21,7 @@ const statusBadgeVariants = cva(
  variants: {
  variant: {
  default:
- "bg-surface-container-high text-muted-foreground hover:bg-surface-container-highest",
+ "bg-muted text-foreground border border-border hover:bg-surface-container-highest",
  brand:
  "bg-primary/15 text-primary hover:bg-primary/25",
  warning:
@@ -29,7 +29,7 @@ const statusBadgeVariants = cva(
  error:
  "bg-status-error/15 text-status-error hover:bg-status-error/25",
  success:
- "bg-status-success/15 text-status-success hover:bg-status-success/25",
+ "bg-brand-gold/10 text-brand-gold border border-brand-gold/20",
  outline: "text-foreground bg-surface-container border",
  info: "bg-status-info/15 text-status-info hover:bg-status-info/25",
  },

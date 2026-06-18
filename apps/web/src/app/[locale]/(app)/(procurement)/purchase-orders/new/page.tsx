@@ -1,4 +1,4 @@
-
+import React, { Suspense } from "react";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { PurchaseOrderForm } from "@/features/purchasing/components/purchase-order-form";
 import { useTranslations } from "next-intl";
@@ -23,7 +23,9 @@ export default function NewPurchaseOrderPage() {
  <p className="text-muted-foreground mt-2 mb-8">
  {t('create_subtitle')}
  </p>
- <PurchaseOrderForm />
+ <Suspense fallback={<div className="h-96 bg-card border border-border shadow-sm rounded-2xl animate-pulse" />}>
+  <PurchaseOrderForm />
+ </Suspense>
  </div>
  </div>
  );

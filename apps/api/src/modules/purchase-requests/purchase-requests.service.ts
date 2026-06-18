@@ -49,11 +49,14 @@ export class PurchaseRequestsService {
             },
           },
           include: {
+            warehouse: true,
+            branch: true,
             lines: {
               include: {
                 item: {
                   include: {
                     unitOfMeasure: true,
+                  category: true,
                   },
                 },
               },
@@ -69,7 +72,12 @@ export class PurchaseRequestsService {
   }
 
   async findAll(
-    params: { status?: string; search?: string; page?: number },
+    params: {
+      status?: string;
+      search?: string;
+      page?: number;
+      unconverted?: boolean;
+    },
     warehouseId?: string,
   ) {
     const page = Number(params.page) || 1;
@@ -80,12 +88,30 @@ export class PurchaseRequestsService {
     if (params.status) {
       where.status = params.status;
     }
+    if (params.unconverted) {
+      where.purchaseOrders = {
+        none: {},
+      };
+    }
     if (warehouseId) {
       where.warehouseId = warehouseId;
     }
     if (params.search) {
       where.OR = [
         { requestNumber: { contains: params.search, mode: 'insensitive' } },
+        {
+          createdBy: { name: { contains: params.search, mode: 'insensitive' } },
+        },
+        {
+          warehouse: { name: { contains: params.search, mode: 'insensitive' } },
+        },
+        {
+          lines: {
+            some: {
+              item: { name: { contains: params.search, mode: 'insensitive' } },
+            },
+          },
+        },
       ];
     }
 
@@ -100,6 +126,7 @@ export class PurchaseRequestsService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
             },
@@ -130,11 +157,14 @@ export class PurchaseRequestsService {
     const pr = await this.prisma.purchaseRequest.findUnique({
       where: { id },
       include: {
+        warehouse: true,
+        branch: true,
         lines: {
           include: {
             item: {
               include: {
                 unitOfMeasure: true,
+                category: true,
               },
             },
           },
@@ -208,6 +238,7 @@ export class PurchaseRequestsService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  category: true,
                 },
               },
             },

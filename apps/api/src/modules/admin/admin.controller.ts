@@ -118,6 +118,16 @@ export class AdminController {
     return this.emailService.testConnection(dto);
   }
 
+  @Get('outbox')
+  async getAllOutboxEvents(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page || '1', 10));
+    const limitNum = Math.max(1, parseInt(limit || '50', 10));
+    return this.adminService.getAllOutboxEvents(pageNum, limitNum);
+  }
+
   @Get('outbox/failed')
   async getFailedOutboxEvents(
     @Query('page') page?: string,

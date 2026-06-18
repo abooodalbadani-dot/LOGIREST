@@ -51,11 +51,17 @@ export function EmptyScopeState({ context, title, description, buttonText, class
     </div>
     
     {/* 3. إزالة self-stretch الخبيثة التي قد تكسر التوسيط، واستخدام flex-col صريح */}
-    <div className="w-full flex flex-col items-center gap-3 px-4 shrink-0">
-     <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight text-center w-full break-words">
+    {/* 2. الضبط المطبعي الدقيق (Typographic Polish) */}
+    <div className="flex flex-col items-center gap-3 w-full shrink-0">
+     <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight text-center whitespace-nowrap">
       {title ?? t(`${context}_title`)}
      </h2>
-     <p className="text-sm md:text-base text-muted-foreground leading-relaxed text-center max-w-sm mx-auto break-words">
+     
+     {/* إضافة text-balance لتوحيد أطوال الأسطر، و dir="rtl" لضبط النقطة */}
+     <p 
+       dir="rtl" 
+       className="text-sm md:text-base text-muted-foreground leading-relaxed text-center text-balance max-w-[320px]"
+     >
       {description ?? t(`${context}_desc`)}
      </p>
     </div>
