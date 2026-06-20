@@ -14,7 +14,7 @@ import {
  Plus
 } from 'lucide-react';
 import { KPICard } from './KPICard';
-import { formatNumber } from '@/utils/currency';
+import { formatNumber, formatDate } from '@/utils/currency';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useLocale } from '@/hooks/useLocale';
@@ -24,6 +24,7 @@ import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { useAuth } from '@/providers/AuthProvider';
 import { EmptyScopeState } from '@/components/ui/EmptyScopeState';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const mapStatus = (status: string) => {
  const s = status.toLowerCase();
@@ -58,15 +59,15 @@ export function KitchenDashboard() {
  return (
   <main role="main" className="space-y-10 animate-in fade-in duration-200">
    {/* Kitchen Chief Header */}
-   <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-    <div className="space-y-1">
+   <PageHeader
+    title={tc('department')}
+    highlight={t('kitchen.overview')}
+    subtitle={
      <Badge className="bg-status-warning/10 text-status-warning border-none text-label-xs font-semibold uppercase mb-2">
       {t('kitchen.operations')}
      </Badge>
-     <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
-      {tc('department')} <span className="text-brand-gold">{t('kitchen.overview')}</span>
-     </h1>
-    </div>
+    }
+   >
     <PermissionGate action="create" resource="operations_kitchen_requests">
      <Link href="/kitchen-requests/new" className="contents">
       <Button className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors font-semibold uppercase px-8 rounded-xl h-12">
@@ -74,7 +75,7 @@ export function KitchenDashboard() {
       </Button>
      </Link>
     </PermissionGate>
-   </header>
+   </PageHeader>
 
    {/* KPI Grid */}
    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" aria-labelledby="kpi-grid-title">
@@ -98,7 +99,6 @@ export function KitchenDashboard() {
      value={formatNumber(stats.todayConsumption, locale as 'ar' | 'en')}
      icon={Utensils}
      accent="cyan"
-     trend={{ value: '8%', isPositive: true }}
      description={t('kitchen.total_items_used')}
     />
     <KPICard
@@ -128,35 +128,37 @@ export function KitchenDashboard() {
       </CardHeader>
       <CardContent className="p-0">
        <div className="divide-y divide-transparent">
-        {stats.recentRequests.map((req, i) => (
-         <div key={i} className="p-5 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group cursor-pointer">
-          <div className="flex items-start gap-4">
-           <div className={`p-3 rounded-xl border-none ${ mapStatus(req.status) === 'pending' ? 'bg-status-warning/10' : mapStatus(req.status) === 'fulfilled' ? 'bg-status-success/10' : 'bg-status-error/10' }`}>
-            <PackageSearch className={`w-5 h-5 ${ mapStatus(req.status) === 'pending' ? 'text-status-warning' : mapStatus(req.status) === 'fulfilled' ? 'text-status-success' : 'text-status-error' }`} />
-           </div>
-           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-             <span className="text-body-md font-semibold text-foreground uppercase italic">{req.documentNumber}</span>
-             <Badge variant="outline" className={`text-label-xxs font-semibold uppercase px-1.5 h-4 ${ req.priority.toLowerCase() === 'urgent' || req.priority.toLowerCase() === 'high' ? 'text-status-error bg-status-error/5' : 'text-muted-foreground/40 bg-card border border-border shadow-sm' }`}>
-              {t(`kitchen.priority.${(req.priority || 'normal').toLowerCase()}`)}
-             </Badge>
+        {stats.recentRequests.map((req) => (
+         <Link key={req.id} href={`/kitchen-requests/${req.id}`} className="block">
+          <div className="p-5 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group">
+           <div className="flex items-start gap-4">
+            <div className={`p-3 rounded-xl border-none ${ mapStatus(req.status) === 'pending' ? 'bg-status-warning/10' : mapStatus(req.status) === 'fulfilled' ? 'bg-status-success/10' : 'bg-status-error/10' }`}>
+             <PackageSearch className={`w-5 h-5 ${ mapStatus(req.status) === 'pending' ? 'text-status-warning' : mapStatus(req.status) === 'fulfilled' ? 'text-status-success' : 'text-status-error' }`} />
             </div>
-            <p className="text-label-xs text-muted-foreground font-medium line-clamp-1">{req.itemsSummary}</p>
+            <div className="space-y-1">
+             <div className="flex items-center gap-2">
+              <span className="text-body-md font-semibold text-foreground uppercase italic">{req.documentNumber}</span>
+              <Badge variant="outline" className={`text-label-xxs font-semibold uppercase px-1.5 h-4 ${ req.priority.toLowerCase() === 'urgent' || req.priority.toLowerCase() === 'high' ? 'text-status-error bg-status-error/5' : 'text-muted-foreground/40 bg-card border border-border shadow-sm' }`}>
+               {t(`kitchen.priority.${(req.priority || 'normal').toLowerCase()}`)}
+              </Badge>
+             </div>
+             <p className="text-label-xs text-muted-foreground font-medium line-clamp-1">{req.itemsSummary}</p>
+            </div>
+           </div>
+           <div className="flex flex-col items-end gap-2">
+            <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase flex items-center gap-1.5">
+             <Clock className="w-3 h-3" /> {formatDate(req.createdAt, locale as 'ar' | 'en')}
+            </span>
+            <Badge className={`${
+             mapStatus(req.status) === 'pending' ? 'bg-status-warning/10 text-status-warning' : 
+             mapStatus(req.status) === 'fulfilled' ? 'bg-status-success/10 text-status-success' : 
+             'bg-status-error/10 text-status-error'
+            } text-label-xxs font-semibold uppercase border-none`}>
+             {t(`kitchen.status.${mapStatus(req.status)}`)}
+            </Badge>
            </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-           <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase flex items-center gap-1.5">
-            <Clock className="w-3 h-3" /> {new Date(req.createdAt).toLocaleDateString()}
-           </span>
-           <Badge className={`${
-            mapStatus(req.status) === 'pending' ? 'bg-status-warning/10 text-status-warning' : 
-            mapStatus(req.status) === 'fulfilled' ? 'bg-status-success/10 text-status-success' : 
-            'bg-status-error/10 text-status-error'
-           } text-label-xxs font-semibold uppercase border-none`}>
-            {t(`kitchen.status.${mapStatus(req.status)}`)}
-           </Badge>
-          </div>
-         </div>
+         </Link>
         ))}
        </div>
       </CardContent>

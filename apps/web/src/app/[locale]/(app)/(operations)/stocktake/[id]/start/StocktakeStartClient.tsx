@@ -1,12 +1,12 @@
 "use client";
-
+// Force Next.js Turbopack compiler cache invalidation after import layout changes
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from "next-intl";
 import { ClientOnlyTime } from "@/components/shared/ClientOnlyTime";
 import { 
- ArrowLeft, 
+ ArrowRight, 
  Play, 
  Warehouse, 
  Calendar,
@@ -31,7 +31,7 @@ import { LockBanner } from "@/components/shared/LockBanner";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
-import { useStocktake, useStartStocktake, useBeginCounting } from "@/features/operations/api/useStocktakes";
+import { useStocktake, useStartStocktake } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
@@ -53,15 +53,25 @@ export function StocktakeStartClient({ id }: StocktakeStartClientProps) {
  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
  const { data: lockState, isLoading: lockLoading, error: errorLock, guardedRouter: router } = useWarehouseLock(session?.warehouseId ?? null);
  const startStocktake = useStartStocktake();
- const beginCounting = useBeginCounting();
  const { playSound } = useAudioFeedback();
  
  const [confirmOpen, setConfirmOpen] = useState(false);
 
+ // Clean up pointer-events on unmount to prevent Radix UI Dialog freeze bug
+ useEffect(() => {
+  return () => {
+   document.body.style.pointerEvents = 'auto';
+  };
+ }, []);
+
  // Redirect if already started
  useEffect(() => {
   if (session && !canStartStocktake(session.status)) {
-   router.replace(`/stocktake/${id}`);
+   // Slight delay to ensure dialog animations complete before unmount
+   const timer = setTimeout(() => {
+    router.replace(`/stocktake/${id}`);
+   }, 300);
+   return () => clearTimeout(timer);
   }
  }, [session, id, router]);
 
@@ -76,16 +86,8 @@ export function StocktakeStartClient({ id }: StocktakeStartClientProps) {
  const handleStart = () => {
   startStocktake.mutate({ id }, {
    onSuccess: () => {
-    beginCounting.mutate({ id }, {
-     onSuccess: () => {
-      playSound('success');
-      router.push(`/stocktake/${id}/count`, { skipGuard: true });
-     },
-     onError: () => {
-      playSound('error');
-      toast.error(t('errors.failed_to_begin_counting'));
-     }
-    });
+    playSound('success');
+    router.push(`/stocktake/${id}/count`, { skipGuard: true });
    },
    onError: (error: unknown) => {
     playSound('error');
@@ -100,81 +102,89 @@ export function StocktakeStartClient({ id }: StocktakeStartClientProps) {
  return (
   <ScopeGuard warehouseId={session?.warehouseId}>
    <PermissionGate resource="operations_stocktake" action="edit">
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
- <PageHeader 
- title={t('start_session_title')}
- description={t('start_session_subtitle')}
- actions={
- <Button 
- variant="ghost" 
- size="sm" 
- onClick={() => router.back()}
- className="text-label-xs font-semibold uppercase text-muted-foreground/60 hover:text-foreground h-10 px-4 rounded-xl"
- >
- <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
- {common('back')}
- </Button>
- }
- />
+     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto text-start">
+      <div className="flex justify-start w-full mb-6">
+       <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={() => router.back()}
+        className="text-label-xs font-semibold uppercase text-muted-foreground/60 hover:text-foreground h-10 px-4 rounded-xl flex items-center"
+       >
+        <ArrowRight className="w-4 h-4 ml-2" />
+        {common('back')}
+       </Button>
+      </div>
 
- {isAlreadyLocked && <LockBanner lockState={lockState} />}
+      <PageHeader 
+       title={t('start_session_title')}
+       description={t('start_session_subtitle')}
+      />
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <Card className="md:col-span-2 bg-card border border-border shadow-sm border-none shadow-none rounded-[2.5rem] overflow-hidden">
- <CardContent className="p-10 space-y-10">
- <div className="flex items-center gap-6 pb-8 bg-card/[0.01]">
- <div className="p-4 rounded-[1.5rem] bg-amber-500/10 text-amber-500 border-none shadow-[0_0_40px_rgba(245,158,11,0.05)]">
- <ShieldAlert className="w-8 h-8" />
- </div>
- <div>
- <h3 className="text-title-lg font-semibold text-foreground">{t('pre_start_verification')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase mt-1 italic">
- {t('critical_lockdown_protocol')}
- </p>
- </div>
- </div>
+      {isAlreadyLocked && <LockBanner lockState={lockState} />}
 
- <div className="space-y-8">
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
- <div className="space-y-2">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/30 flex items-center gap-2">
- <Warehouse className="w-3.5 h-3.5" />
- {common('warehouse')}
- </p>
- <p className="text-body-md font-semibold text-foreground">{warehouseName}</p>
- </div>
- <div className="space-y-2">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/30 flex items-center gap-2">
- <Calendar className="w-3.5 h-3.5" />
- {common('created_at')}
- </p>
- <p className="text-body-md font-semibold text-foreground" dir="ltr">
- <ClientOnlyTime date={session.createdAt ?? session.snapshotAt} mode="datetime" />
- </p>
- </div>
- <div className="space-y-2">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/30 flex items-center gap-2">
- <ClipboardList className="w-3.5 h-3.5" />
- {t('items_count')}
- </p>
- <p className="text-body-md font-semibold text-foreground">
- {session.items?.length || 0} {t('skus')}
- </p>
- </div>
- </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start w-full">
+       <Card className="md:col-span-2 bg-card rounded-[2.5rem] overflow-hidden w-full border-none shadow-none">
+        <CardContent className="p-10 space-y-10 text-start">
+         <div className="flex items-start gap-6 pb-8 bg-card/[0.01] w-full text-start">
+          <div className="p-4 rounded-[1.5rem] bg-amber-500/10 text-amber-500 border-none shadow-[0_0_40px_rgba(245,158,11,0.05)] shrink-0">
+           <ShieldAlert className="w-8 h-8" />
+          </div>
+          <div className="space-y-1 text-start">
+           <h3 className="text-title-lg font-semibold text-foreground text-start">{t('pre_start_verification')}</h3>
+           <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase mt-1 italic text-start">
+            {t('critical_lockdown_protocol')}
+           </p>
+          </div>
+         </div>
 
- <div className="p-8 rounded-3xl bg-surface-container-medium/30 border-none space-y-4">
- <h4 className="text-label-xs font-semibold uppercase text-foreground/70">{t('session_details')}</h4>
- <p className="text-title-sm font-semibold text-foreground">{session.sessionName}</p>
- {session.description && (
- <p className="text-body-md text-muted-foreground leading-relaxed font-medium">{session.description}</p>
- )}
- </div>
- </div>
- </CardContent>
- </Card>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-start">
+          {/* Warehouse */}
+          <div className="flex flex-col items-start gap-1">
+           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-row-reverse justify-end w-full">
+            <Warehouse className="w-4 h-4 ml-1" />
+            <span>{common('warehouse')}</span>
+           </div>
+           <div className="text-lg font-semibold text-foreground">{warehouseName}</div>
+          </div>
 
- <div className="space-y-6">
+          {/* Date */}
+          <div className="flex flex-col items-start gap-1">
+           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-row-reverse justify-end w-full">
+            <Calendar className="w-4 h-4 ml-1" />
+            <span>{common('created_at')}</span>
+           </div>
+           <div className="text-lg font-semibold text-foreground" dir="ltr">
+            <ClientOnlyTime date={session.createdAt ?? session.snapshotAt} mode="datetime" />
+           </div>
+          </div>
+
+          {/* Item Count */}
+          <div className="flex flex-col items-start gap-1">
+           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-row-reverse justify-end w-full">
+            <ClipboardList className="w-4 h-4 ml-1" />
+            <span>{t('items_count')}</span>
+           </div>
+           <div className="text-lg font-semibold text-foreground">
+            {session.items?.length || 0} {t('skus')}
+           </div>
+          </div>
+
+          {/* Session Details */}
+          <div className="flex flex-col items-start gap-1 md:col-span-2 bg-surface-container-medium/20 p-6 rounded-2xl w-full border border-border/40 text-start mt-2">
+           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-row-reverse justify-end w-full">
+            <ClipboardList className="w-4 h-4 ml-1" />
+            <span>{t('session_details')}</span>
+           </div>
+           <div className="text-lg font-semibold text-foreground mt-1 text-start">{session.sessionName}</div>
+           {session.description && (
+            <p className="text-body-md text-muted-foreground leading-relaxed font-medium mt-2 text-start">{session.description}</p>
+           )}
+          </div>
+         </div>
+        </CardContent>
+       </Card>
+
+       <div className="space-y-6 mt-8 md:mt-0 w-full">
  <Card className={cn(
  "rounded-[2.5rem] overflow-hidden border-none shadow-none",
  isAlreadyLocked ? "bg-amber-500/5" : "bg-red-500/5"
@@ -213,11 +223,11 @@ export function StocktakeStartClient({ id }: StocktakeStartClientProps) {
      >
       <Button
        onClick={() => setConfirmOpen(true)}
-       disabled={startStocktake.isPending || beginCounting.isPending || lockLoading}
+       disabled={startStocktake.isPending || lockLoading}
        className="w-full h-20 rounded-[1.5rem] text-white bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)] transition-all group overflow-hidden relative"
       >
        <div className="relative z-10 flex items-center justify-center gap-4">
-        {startStocktake.isPending || beginCounting.isPending ? (
+        {startStocktake.isPending ? (
          <Loader2 className="w-6 h-6 animate-spin" />
         ) : (
          <>

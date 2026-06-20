@@ -196,7 +196,7 @@ export function GRNListClient({
  const draftCount = data?.data?.filter(p => isPendingStatus('GRN', p.status as DocumentStatus)).length || 0;
 
  return (
- <div className="p-10 max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+ <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
  <div className="space-y-4">
  <Breadcrumb 
  items={[
@@ -206,11 +206,11 @@ export function GRNListClient({
  />
  <PageHeader
  title={t('title')}
- description={t('description')}
- actions={
+ subtitle={t('description')}
+ children={
  <div className="flex items-center gap-6">
  <PermissionGate action="create" resource="grn">
-  <Link href="/goods-received/new">
+  <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm shadow-cyan-900/10 border-none">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -260,7 +260,7 @@ export function GRNListClient({
       </Tabs>
      </div>
 
-    <div className="bg-card border border-border shadow-sm border border-surface-variant/5 rounded-lg p-1">
+    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
      <DataTable
       columns={columns}
       data={data?.data || []}
@@ -275,7 +275,7 @@ export function GRNListClient({
         description={t('no_grns_desc') || 'Create a new GRN when goods are delivered to update stock levels.'} 
         action={
          <PermissionGate action="create" resource="grn">
-          <Link href="/goods-received/new">
+          <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
            <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-label-xs font-semibold uppercase rounded-md transition-all">
             <Plus className="w-3.5 h-3.5 me-2" />
             {t('create_new')}
@@ -293,15 +293,20 @@ export function GRNListClient({
        onPageChange: setPage
       } : undefined}
       filters={
-      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
-         placeholder={tc('statuses.all')}
-         value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
-        />
-       </div>
-     }
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          <div className="w-full sm:w-64">
+            <div className="relative w-full">
+              <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder={tc('search')}
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+              />
+            </div>
+          </div>
+        </div>
+      }
      />
     </div>
    </QueryBoundary>

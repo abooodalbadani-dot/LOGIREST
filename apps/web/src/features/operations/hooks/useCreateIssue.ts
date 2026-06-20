@@ -23,6 +23,7 @@ export const CreateIssuePayloadSchema = z.object({
  destinationDeptId: z.string().min(1),
  lines: z.array(CreateIssueLineSchema).min(1),
  notes: z.string().optional(),
+ kitchenRequestId: z.string().optional(),
 });
 
 export type CreateIssuePayload = z.infer<typeof CreateIssuePayloadSchema>;
@@ -35,10 +36,10 @@ export function useCreateIssue(options?: { onConflict?: () => void }) {
   mutationFn: ({ signal, ...data }: CreateIssuePayload & { signal?: AbortSignal }) =>
    apiClient.post(
     '/operations/issues',
-    z.object({ data: StockIssueDetailSchema }),
+    StockIssueDetailSchema,
     CreateIssuePayloadSchema.parse(data),
     { signal }
-   ).then(res => res.data),
+   ),
   onSuccess: () => {
    queryClient.invalidateQueries({ queryKey: ['issues'] });
   },

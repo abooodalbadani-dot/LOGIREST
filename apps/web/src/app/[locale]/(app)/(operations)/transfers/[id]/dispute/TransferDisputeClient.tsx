@@ -55,7 +55,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
  ) ?? [];
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
    <div className="flex items-center justify-between">
     <Breadcrumb 
      items={[
@@ -76,7 +76,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
 
    <PageHeader
     title={t('dispute_title') || 'Dispute Mediation'}
-    description={
+    subtitle={
      <div className="flex items-center gap-3">
       <Scale className="w-5 h-5 text-operational-cyan/60" />
       <span className="uppercase font-bold text-label-sm tracking-widest text-muted-foreground/60">
@@ -84,7 +84,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
       </span>
      </div>
     }
-    actions={
+    children={
       <div className="flex gap-4">
        <Button variant="outline" className="h-11 px-6 font-semibold uppercase text-label-xs rounded-sm" disabled={isDisputing}>
         {t('request_recount') || 'Request Recount'}

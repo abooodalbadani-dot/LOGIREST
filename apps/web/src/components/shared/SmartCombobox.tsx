@@ -278,15 +278,15 @@ export function SmartCombobox<T extends ComboboxItem>({
  const finalTriggerClasses = cn(
   "flex-1 w-full min-w-[200px] justify-between text-start flex items-center transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed",
   !hasHeight && defaultHeight,
-  !hasBg && "bg-card border border-border shadow-sm/40 hover:bg-card border border-border shadow-sm focus:bg-card border border-border shadow-sm",
-  !hasBorder && "border border-white/5",
+  !hasBg && "bg-background/50 backdrop-blur-sm",
+  !hasBorder && "border border-brand-gold/40 hover:border-brand-gold/70",
   !hasRounded && defaultRounded,
   !hasPadding && defaultPadding,
   !hasText && defaultText,
   !hasFont && defaultFont,
-  "focus:ring-2 focus:ring-operational-cyan/20",
-  isOpen && "ring-2 ring-operational-cyan/20 bg-card border border-border shadow-sm",
-  error && "ring-2 ring-status-error/20 border-status-error/30",
+  "transition-colors duration-200 focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold",
+  isOpen && "ring-1 ring-brand-gold/50 border-brand-gold bg-background/50",
+  error && "ring-1 ring-red-500/50 border-red-500",
   styleClasses,
   triggerClassName
  );

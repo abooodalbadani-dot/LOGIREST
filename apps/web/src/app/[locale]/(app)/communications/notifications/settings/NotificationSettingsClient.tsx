@@ -38,7 +38,7 @@ export function NotificationSettingsClient() {
  };
 
  return (
-  <div className="min-w-0 gap-6 flex-1 max-w-4xl fade-in slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex duration-700 space-y-12 w-full">
+  <div className="min-w-0 gap-6 flex-1 max-w-4xl fade-in slide-in-from-bottom-4 mx-auto animate-in flex-col flex duration-700 space-y-12 w-full">
    <div className="flex flex-col gap-4 border-b border-outline-low pb-8 min-w-0">
     <Link 
      href="/communications/notifications"

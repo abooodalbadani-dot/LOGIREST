@@ -72,7 +72,7 @@ export default function ScannerClient() {
  };
 
  return (
-  <div className=" text-foreground w-full min-w-0 bg-card items-center flex-1 selection:bg-operational-cyan/30 border gap-6 shadow-sm justify-center flex-col flex min-h-screen border-border p-6 dark:bg-card-dark">
+  <div className="text-foreground w-full min-w-0 bg-card items-center flex-1 selection:bg-operational-cyan/30 border gap-6 shadow-sm justify-center flex-col flex min-h-screen border-border dark:bg-card-dark">
    
    {/* Full-Screen Loading Overlay to prevent "flipping" feel */}
    {isPending && (

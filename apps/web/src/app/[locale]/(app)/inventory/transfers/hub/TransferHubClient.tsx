@@ -17,19 +17,21 @@ import {
  FileCheck
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
+import { useRouter } from '@/i18n/navigation';
 import { useTransferList, type TransferSummary } from '@/features/operations/hooks/useTransferList';
 
 export function TransferHubClient() {
  const t = useTranslations('transfers');
  const tc = useTranslations('common');
+ const router = useRouter();
  
  const { data: transfersData } = useTransferList();
  const transfers = transfersData?.data || [];
 
  const stats = useMemo(() => {
-  const pending = transfers.filter(x => x.transferStatus === 'PENDING').length;
+  const pending = transfers.filter(x => x.transferStatus === 'DRAFT' || x.transferStatus === 'PENDING').length;
   const transit = transfers.filter(x => x.transferStatus === 'IN_TRANSIT').length;
-  const completed = transfers.filter(x => x.transferStatus === 'COMPLETED').length;
+  const completed = transfers.filter(x => x.transferStatus === 'RECEIVED' || x.transferStatus === 'POSTED' || x.transferStatus === 'COMPLETED').length;
   
   return {
    pending,
@@ -74,7 +76,7 @@ export function TransferHubClient() {
     const colorClass = colors[s as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
     return (
      <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-sm border ${colorClass}`}>
-      {t(s?.toLowerCase() as 'pending' | 'in_transit' | 'completed')}
+      {tc(`statuses.${s?.toLowerCase()}` as 'statuses.pending')}
      </span>
     );
    },
@@ -84,11 +86,28 @@ export function TransferHubClient() {
    header: '',
    cell: ({ row }) => (
     <div className="flex justify-end gap-2">
-     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-card/5">
+     <Button 
+      variant="ghost" 
+      size="sm" 
+      className="h-8 w-8 p-0 hover:bg-card/5"
+      onClick={(e) => {
+       e.stopPropagation();
+       router.push(`/transfers/${row.original.id}`);
+      }}
+     >
       <Eye className="w-4 h-4 opacity-50" />
      </Button>
-     {row.original.transferStatus !== 'COMPLETED' && (
-      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/50 hover:text-foreground">
+     {(row.original.transferStatus === 'DRAFT' || row.original.transferStatus === 'IN_TRANSIT') && (
+      <Button 
+       variant="ghost" 
+       size="sm" 
+       className="h-8 w-8 p-0 hover:bg-muted/50 hover:text-foreground"
+       onClick={(e) => {
+        e.stopPropagation();
+        const target = row.original.transferStatus === 'DRAFT' ? 'ship' : 'receive';
+        router.push(`/transfers/${row.original.id}/${target}`);
+       }}
+      >
        <FileCheck className="w-4 h-4" />
       </Button>
      )}
@@ -98,12 +117,15 @@ export function TransferHubClient() {
  ];
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
    <PageHeader 
     title={t('title')} 
-    description={t('subtitle')}
-    actions={
-     <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-bold uppercase rounded-sm transition-all shadow-sm shadow-primary/20">
+    subtitle={t('subtitle')}
+    children={
+     <Button 
+      onClick={() => router.push('/transfers/new')}
+      className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-bold uppercase rounded-sm transition-all shadow-sm shadow-primary/20"
+     >
       <ArrowLeftRight className="w-3.5 h-3.5 me-2" />
       {t('new_transfer')}
      </Button>

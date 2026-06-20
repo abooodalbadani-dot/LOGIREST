@@ -29,6 +29,9 @@ export const TransferLineSchema = z.object({
    nameAr: z.string().optional(),
    nameEn: z.string().optional(),
   }),
+  barcodes: z.array(z.object({
+   barcode: z.string(),
+  })).optional(),
  }),
  lotId: z.string().nullable(),
  lot: z.object({

@@ -122,7 +122,13 @@ export class AdjustmentsController {
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Post()
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -191,7 +197,13 @@ export class AdjustmentsController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -245,7 +257,13 @@ export class AdjustmentsController {
   }
 
   @Post(':id/edit')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async edit(
     @Param('id') id: string,
@@ -281,7 +299,13 @@ export class AdjustmentsController {
   }
 
   @Post(':id/submit')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -311,7 +335,14 @@ export class AdjustmentsController {
   }
 
   @Post(':id/approve')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.GM,
+    Role.INV_MGR,
+    Role.APPROVER,
+    Role.BRANCH_MGR,
+    Role.STORE_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -341,7 +372,14 @@ export class AdjustmentsController {
   }
 
   @Post(':id/reject')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.GM,
+    Role.INV_MGR,
+    Role.APPROVER,
+    Role.BRANCH_MGR,
+    Role.STORE_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -377,6 +415,13 @@ export class AdjustmentsController {
     action: 'CANCEL',
     modelName: 'adjustment',
   })
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async cancel(
     @Param('id') id: string,

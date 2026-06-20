@@ -55,6 +55,14 @@ describe('IssuePostService', () => {
     notificationLog: {
       create: jest.fn(),
     },
+    kitchenRequest: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue({}),
+    },
+    kitchenRequestItem: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue({}),
+    },
   } as unknown as Prisma.TransactionClient;
 
   const mockPrisma = {

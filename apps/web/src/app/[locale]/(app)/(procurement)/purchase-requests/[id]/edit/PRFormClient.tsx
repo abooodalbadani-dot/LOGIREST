@@ -13,7 +13,7 @@ export function PRFormClient({ id }: { id: string }) {
 
  if (isLoading) {
   return (
-   <div className=" min-w-0 items-center bg-card flex-1 gap-6 shadow-xl animate-pulse justify-center shadow-sm flex-col flex border border-border rounded-2xl h-[60vh] w-full dark:bg-card-dark">
+   <div className="min-w-0 items-center bg-card flex-1 gap-6 shadow-xl animate-pulse justify-center shadow-sm flex-col flex border border-border rounded-2xl h-[60vh] w-full dark:bg-card-dark">
     <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
     <p className="mt-6 text-label-xs font-semibold uppercase text-primary/60">{t('sync_context')}</p>
    </div>

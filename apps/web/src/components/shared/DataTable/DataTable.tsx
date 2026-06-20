@@ -168,16 +168,15 @@ export function DataTable<T>({
  };
 
  return (
- <div className="flex flex-col gap-6 w-full">
+ <div className="flex flex-col gap-6 w-full min-w-0">
  {(filters || onExport || exportComponent || (enableExport && data && data.length > 0)) && (
- <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
- <div className="w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl min-w-[200px]">
- {filters}
- </div>
- { (onExport || exportComponent || (enableExport && data && data.length > 0)) && (
- <PermissionGate action="export" resource={collectionName || 'generic_table'}>
- <div className="w-full sm:w-auto flex items-center gap-2">
- {exportComponent}
+  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full mb-6 min-w-0">
+   {filters}
+   <div className="hidden md:block flex-1" />
+   { (onExport || exportComponent || (enableExport && data && data.length > 0)) && (
+   <PermissionGate action="export" resource={collectionName || 'generic_table'}>
+   <div className="flex items-center w-full md:w-auto mt-2 md:mt-0 justify-end">
+  {exportComponent}
  {!exportComponent && enableExport && data && data.length > 0 && (
   <ExportMenu
    data={data as Record<string, unknown>[]}
@@ -220,14 +219,14 @@ export function DataTable<T>({
     )}
    </div>
   ) : (
-    <div 
-     ref={parentRef}
-     className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm"
-     style={enableVirtualization ? { height: containerHeight } : {}}
-    >
-     <table 
-      className="w-full text-start border-collapse text-sm whitespace-nowrap min-w-[800px]"
+     <div 
+      ref={parentRef}
+      className="w-full min-w-0 -mx-4 px-4 md:mx-0 md:px-0 md:border md:border-border/50 md:rounded-xl overflow-x-auto bg-card md:bg-transparent custom-scrollbar"
+      style={enableVirtualization ? { height: containerHeight } : {}}
      >
+      <table 
+       className="w-full text-start border-collapse text-sm whitespace-nowrap min-w-[800px]"
+      >
       <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider sticky top-0 z-20">
        {table.getHeaderGroups().map(headerGroup => (
         <tr key={headerGroup.id}>
@@ -240,7 +239,7 @@ export function DataTable<T>({
             <th 
              key={header.id} 
              className={cn(
-              "px-6 py-4 font-medium text-start whitespace-nowrap backdrop-blur-sm bg-muted/50",
+              "px-6 py-4 font-medium text-start whitespace-nowrap backdrop-blur-sm bg-muted/50 group/header",
               isNumeric ? 'text-end' : 'text-start',
               isFirst ? 'sticky start-0 z-30 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[-4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]' : '',
               sortable && 'cursor-pointer select-none'
@@ -251,7 +250,10 @@ export function DataTable<T>({
              {flexRender(header.column.columnDef.header, header.getContext())}
              {sortIndicator && (
               <span className={cn(
-               "text-xs opacity-60 inline-block",
+               "text-xs inline-block transition-opacity duration-150",
+               sorting.some((s: ColumnSort) => s.id === header.column.id)
+                 ? "opacity-100 text-primary"
+                 : "opacity-0 group-hover/header:opacity-50",
                isRtl ? "order-first" : "order-last"
               )}>
                {sortIndicator}
@@ -275,9 +277,9 @@ export function DataTable<T>({
          {virtualRows.map((virtualRow) => {
           const row = rows[virtualRow.index];
            return (
-            <tr 
+             <tr 
              key={row.id} 
-             className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors group ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
+             className={`border-b border-border/50 last:border-0 hover:bg-surface-container-highest/20 transition-colors group ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
              style={{ height: `${virtualRowHeight}px` }}
              onClick={() => onRowClick && onRowClick(row.original)}
             >
@@ -311,7 +313,7 @@ export function DataTable<T>({
         table.getRowModel().rows.map((row) => (
          <tr 
           key={row.id} 
-          className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors group ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
+          className={`border-b border-border/50 last:border-0 hover:bg-surface-container-highest/20 transition-colors group ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
           style={{ height: `${virtualRowHeight}px` }}
           onClick={() => onRowClick && onRowClick(row.original)}
          >

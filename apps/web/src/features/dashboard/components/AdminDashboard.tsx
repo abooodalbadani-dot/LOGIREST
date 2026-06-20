@@ -26,6 +26,7 @@ import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export function AdminDashboard() {
  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
@@ -43,21 +44,30 @@ export function AdminDashboard() {
  }
 
  // Additional derived info
- const lastBackupTime = tc('time_ago.hours', { count: 2 });
+ let lastBackupTime = tc('no_data');
+ if (stats.lastBackupTimestamp) {
+  const diffHours = Math.abs(new Date().getTime() - new Date(stats.lastBackupTimestamp).getTime()) / 36e5;
+  if (diffHours < 1) {
+   lastBackupTime = tc('time_ago.minutes', { count: Math.floor(diffHours * 60) || 1 });
+  } else if (diffHours < 24) {
+   lastBackupTime = tc('time_ago.hours', { count: Math.floor(diffHours) });
+  } else {
+   lastBackupTime = tc('time_ago.days', { count: Math.floor(diffHours / 24) });
+  }
+ }
 
  return (
   <main role="main" className="space-y-10">
    {/* Admin Header */}
-   <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-    <div className="space-y-1">
+   <PageHeader
+    title={t('title')}
+    highlight={t('kitchen.overview')}
+    subtitle={
      <Badge className="bg-operational-cyan/10 text-operational-cyan border-none text-label-xs font-semibold uppercase mb-2">
       {tc('role.admin')}
      </Badge>
-     <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
-      {t('title')} <span className="text-brand-gold">{t('kitchen.overview')}</span>
-     </h1>
-    </div>
-   </header>
+    }
+   />
 
    {/* KPI Grid */}
    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" aria-labelledby="kpi-grid-title">
@@ -67,7 +77,6 @@ export function AdminDashboard() {
      value={formatCurrency(stats.totalValue, stats.currency, locale as 'ar' | 'en')}
      icon={Package}
      accent="cyan"
-     trend={{ value: '12%', isPositive: true }}
      description={t('kpi.vs_last_month')}
      currency={stats.currency}
      symbol={stats.currencySymbol}

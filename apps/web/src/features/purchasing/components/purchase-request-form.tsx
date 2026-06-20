@@ -262,7 +262,16 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   } catch (error) {
    console.error(error);
    playSound('error');
-   toast.error(tc('error'));
+   let isToastShown = false;
+   if (error && typeof error === 'object') {
+    const errObj = error as Record<string, unknown>;
+    if (errObj._isToastShown === true) {
+     isToastShown = true;
+    }
+   }
+   if (!isToastShown) {
+    toast.error(tc('error'));
+   }
   } finally {
    setIsSubmitting(false);
    setSubmitConfirmOpen(false);
@@ -318,8 +327,11 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
          await cancelPR.mutateAsync({ id: initialData.id, version: initialData.version ?? 0 });
          toast.success(t('cancel_success'));
          router.push('/purchase-requests', { skipGuard: true });
-        } catch {
-         toast.error(tc('error'));
+        } catch (error) {
+         const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+         if (!isToastShown) {
+          toast.error(tc('error'));
+         }
         }
        }}
        className="h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
@@ -342,8 +354,11 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
          await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
          toast.success('Draft request deleted successfully');
          router.push('/purchase-requests', { skipGuard: true });
-        } catch {
-         toast.error(tc('error'));
+        } catch (error) {
+         const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+         if (!isToastShown) {
+          toast.error(tc('error'));
+         }
         }
        }}
        className="h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
@@ -402,9 +417,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   </div>
  );
 
- return (
-  <div className="flex flex-col min-h-screen bg-card border border-border shadow-sm pb-32">
-   <DocumentLockBanner status={status} isLocked={isFormDisabled} />
+  return (
+   <div className="flex flex-col w-full bg-card border border-border shadow-sm pb-32 h-fit min-h-full shrink-0">
+    <DocumentLockBanner status={status} isLocked={isFormDisabled} />
 
    <Form {...form}>
     <form className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
@@ -452,7 +467,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               value={field.value ?? undefined}
               onSelect={(item) => field.onChange(item.id)}
               placeholder={tc('select_warehouse')}
-              className="bg-card border border-border shadow-sm border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30"
+              className="bg-card h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-brand-gold/50"
               disabled={isFormDisabled}
              />
             </FormControl>
@@ -471,7 +486,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
              {t('expected_date')}
             </FormLabel>
             <FormControl>
-             <Input type="date" className="bg-card border border-border shadow-sm border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isFormDisabled} />
+             <Input type="date" className="bg-card h-11 rounded-xl font-semibold text-label-xs uppercase" {...field} disabled={isFormDisabled} />
             </FormControl>
             <FormMessage className="text-label-xxs font-semibold uppercase" />
            </FormItem>
@@ -485,7 +500,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
            <FormItem className="lg:col-span-3">
             <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
             <FormControl>
-             <Input placeholder={tc('notes')} className="bg-card border border-border shadow-sm border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isFormDisabled} />
+             <Input placeholder={tc('notes')} className="bg-card h-11 rounded-xl font-semibold text-label-xs uppercase" {...field} disabled={isFormDisabled} />
             </FormControl>
             <FormMessage className="text-label-xxs font-semibold uppercase" />
            </FormItem>
@@ -538,7 +553,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               type="number"
               step="0.01"
               disabled={isFormDisabled}
-              className="w-24 bg-card border border-border shadow-sm border-none h-10 rounded-xl font-mono font-bold text-center text-body-md focus:ring-1 focus:ring-operational-cyan/30 outline-none"
+              className="w-24 bg-card border border-brand-gold/40 hover:border-brand-gold/70 h-10 rounded-xl font-mono font-bold text-center text-body-md focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none"
               dir="ltr"
               {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
              />
@@ -580,7 +595,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                  form.setValue(`lines.${index}.uom_id`, matchedItem?.primaryUom?.id || 'EA');
                 }}
                 placeholder={tc('select_item')}
-                className="h-10 bg-card border border-border shadow-sm border-none rounded-xl text-label-xs font-semibold uppercase"
+                className="h-10 bg-card rounded-xl text-label-xs font-semibold uppercase"
                 disabled={isFormDisabled}
                />
               </div>

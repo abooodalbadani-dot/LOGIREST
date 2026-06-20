@@ -18,11 +18,11 @@ interface StatusConfig {
  */
 export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   // Generic / Common
-  DRAFT: { variant: 'outline', labelKey: 'statuses.draft' },
+  DRAFT: { variant: 'warning', labelKey: 'statuses.draft' },
   POSTED: { variant: 'success', labelKey: 'statuses.posted' },
   CANCELLED: { variant: 'error', labelKey: 'statuses.cancelled' },
   SUBMITTED: { variant: 'info', labelKey: 'statuses.submitted' },
-  APPROVED: { variant: 'success', labelKey: 'statuses.approved' },
+  APPROVED: { variant: 'info', labelKey: 'statuses.approved' },
   REJECTED: { variant: 'error', labelKey: 'statuses.rejected' },
   PENDING: { variant: 'warning', labelKey: 'statuses.pending' },
   COMPLETED: { variant: 'success', labelKey: 'statuses.completed' },

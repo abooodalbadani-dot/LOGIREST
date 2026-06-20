@@ -243,7 +243,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   } catch (error) {
    console.error('[PO Submit Error Details] ' + JSON.stringify(error));
    playSound('error');
-   toast.error(tc("error_occurred"));
+   const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+   if (!isToastShown) {
+    toast.error(tc("error_occurred"));
+   }
   }
  }
 
@@ -437,11 +440,11 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
  return (
   <Form {...form}>
-   <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-0 w-full min-h-screen bg-card border border-border shadow-sm flex flex-col pb-32">
+   <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-0 w-full min-h-screen flex flex-col pb-32">
     <DocumentLockBanner isLocked={isLocked} status={status} />
 
-    <div className="px-8 pt-8">
-     <div className="bg-card border border-border shadow-sm p-8 rounded-2xl relative shadow-2xl shadow-black/5">
+    <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-8">
+     <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl relative shadow-2xl shadow-black/5">
       <div className="flex items-center justify-between pb-6 mb-6">
        <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">
         {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
@@ -480,7 +483,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
              value={field.value}
              onSelect={(item) => field.onChange(item.id)}
              placeholder={t('select_supplier')}
-             className="bg-card border border-border shadow-sm border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30 text-label-xs font-semibold uppercase"
+             className="bg-card h-11 rounded-xl focus:ring-1 focus:ring-brand-gold/50 text-label-xs font-semibold uppercase"
              disabled={isLocked}
             />
            </FormControl>
@@ -497,7 +500,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
            <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('linked_pr')}</FormLabel>
            <div className="flex gap-2">
             <FormControl>
-             <Input placeholder={t('linked_pr_placeholder')} disabled={isLocked} className="bg-card border border-border shadow-sm uppercase font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 flex-1" {...field} />
+             <Input placeholder={t('linked_pr_placeholder')} disabled={isLocked} className="bg-card uppercase font-mono h-11 rounded-xl flex-1" {...field} />
             </FormControl>
             {!isLocked && (
              <Button
@@ -576,7 +579,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           <FormItem>
            <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('expected_date')}</FormLabel>
            <FormControl>
-            <Input type="date" disabled={isLocked} className="bg-card border border-border shadow-sm border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
+            <Input type="date" disabled={isLocked} className="bg-card h-11 rounded-xl" {...field} />
            </FormControl>
            <FormMessage />
           </FormItem>
@@ -618,7 +621,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
              value={field.value}
              onSelect={(item) => field.onChange(item.id)}
              placeholder={t('currency_placeholder')}
-             className="bg-card border border-border shadow-sm border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30 text-label-xs font-semibold uppercase font-mono"
+             className="bg-card h-11 rounded-xl focus:ring-1 focus:ring-brand-gold/50 text-label-xs font-semibold uppercase font-mono"
              disabled={isLocked}
             />
            </FormControl>
@@ -640,7 +643,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               step="0.0001" 
               min="0" 
               disabled={isLocked}
-              className="bg-card border border-border shadow-sm border-none h-11 ps-10 rounded-xl focus-visible:ring-operational-cyan/30" 
+              className="bg-card h-11 ps-10 rounded-xl" 
               dir="ltr" 
               {...field} 
               onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -658,7 +661,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           <FormItem className="md:col-span-3 text-start">
            <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('general_notes')}</FormLabel>
            <FormControl>
-            <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-card border border-border shadow-sm border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
+            <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-card h-11 rounded-xl" {...field} />
            </FormControl>
            <FormMessage />
           </FormItem>
@@ -679,7 +682,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
          </div>
 
          {!isLocked && (
-          <div className="flex-1 max-w-2xl">
+          <div className="flex-1 w-full max-w-2xl">
            <ScanInput
             onScan={handleScan}
             scanStatus={scanStatus}
@@ -707,13 +710,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
         
         <div className="mt-10 flex flex-col md:flex-row justify-end gap-6">
-         <div className="bg-surface-container-high/20 px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px]">
+         <div className="bg-surface-container-high/20 px-6 sm:px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-4 sm:gap-10 w-full md:w-auto md:min-w-[300px]">
           <span className="text-label-xs uppercase font-semibold text-muted-foreground/40">{t('supplier_total')}</span>
           <span className="text-title-lg font-mono font-semibold text-foreground" dir="ltr">
            {formatCurrency(supplierTotalAmount, selectedCurrencyCode, locale as 'ar' | 'en')}
           </span>
          </div>
-         <div className="bg-operational-cyan/[0.03] px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px] backdrop-blur-sm relative overflow-hidden">
+         <div className="bg-operational-cyan/[0.03] px-6 sm:px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-4 sm:gap-10 w-full md:w-auto md:min-w-[300px] backdrop-blur-sm relative overflow-hidden">
           <div className="absolute top-0 start-0 w-1 h-full bg-operational-cyan/20" />
           <span className="text-label-xs uppercase font-semibold text-operational-cyan/60">{t('base_total', { currency: baseCurrency })}</span>
           <span className="text-headline-lg font-mono font-semibold text-operational-cyan" dir="ltr">

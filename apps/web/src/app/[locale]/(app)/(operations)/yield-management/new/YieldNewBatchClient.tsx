@@ -60,7 +60,7 @@ export function YieldNewBatchClient() {
  };
 
  return (
-  <div className=" min-w-0 bg-card flex-1 fade-in gap-6 border shadow-sm duration-200 animate-in flex-col flex min-h-screen pb-32 border-border w-full dark:bg-card-dark">
+  <div className="min-w-0 bg-card flex-1 fade-in gap-6 border shadow-sm duration-200 animate-in flex-col flex min-h-screen pb-32 border-border w-full dark:bg-card-dark">
    <div className="glass-header sticky top-0 z-50 h-16 px-6 lg:px-10 flex items-center justify-between gap-6">
     <div className="flex items-center gap-6">
      <Button 

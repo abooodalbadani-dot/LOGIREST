@@ -50,8 +50,8 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
  const isLockedState = isLocked;
 
  return (
-  <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
-   <div className="flex items-center justify-between">
+  <div className="flex flex-col flex-1 w-full max-w-full min-w-0 overflow-x-hidden p-4 sm:p-6 md:p-8 pb-32 md:pb-8 mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
+   <div className="flex flex-wrap items-center justify-between gap-4 w-full max-w-full min-w-0">
     <Breadcrumb 
      items={[
       { label: tCommon('modules.operations'), href: `/transfers` },
@@ -71,13 +71,13 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
 
    <PageHeader
     title={t('detail_title')}
-    description={
+    subtitle={
      <div className="flex items-center gap-2">
       <span>{tCommon('doc_number')}</span>
       <span dir="ltr" className="font-mono text-cyan-500/80">{transfer?.documentNumber}</span>
      </div>
     }
-    actions={
+    children={
      <div className="flex gap-4 items-center">
       <StatusBadge status={transferStatus as BadgeStatus} />
       
@@ -173,7 +173,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
        )}
       </div>
 
-      <div className="bg-card border border-border shadow-sm/30 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-full min-w-0 overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
        <DocumentReadOnlyOverlay isPosted={transferStatus === 'POSTED' || transferStatus === 'CANCELLED'}>
         <DocumentLineItemTable<TransferLine>
          lines={(transfer?.lines ?? []) as unknown as TransferLine[]}
@@ -221,7 +221,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
      isLocked={isLockedState}
      isDirty={false}
      isValid={true}
-     actions={
+     children={
       <div className="flex items-center gap-2">
        {transferStatus === TRANSFER_STATUS.DRAFT && (
         <PermissionGate action="ship" resource="operations_transfers">

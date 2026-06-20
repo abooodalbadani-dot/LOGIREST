@@ -25,8 +25,8 @@ export function StickyGlassHeader({
  return (
   <div
    className={cn(
-    'sticky top-0 z-[9999] w-full bg-card/90 backdrop-blur-md border-b border-slate-200 shadow-sm dark:bg-slate-950/90 dark:border-slate-800 flex items-center justify-between px-6 py-4 print:hidden',
-    isEditing && 'border-l-4 border-l-primary',
+    'w-full bg-card border border-border/50 rounded-xl flex items-center justify-between px-6 py-4 print:hidden',
+    isEditing && 'border-s-4 border-s-primary',
     className,
    )}
   >
@@ -42,7 +42,7 @@ export function StickyGlassHeader({
      </Button>
     )}
     <div className="flex flex-col min-w-0">
-     <h1 className="text-title-lg font-semibold uppercase truncate">
+     <h1 className="text-2xl font-extrabold text-foreground tracking-tight uppercase truncate">
       {title}
      </h1>
      {statusBadge && (

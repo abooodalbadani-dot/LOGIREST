@@ -118,6 +118,7 @@ function mapIssueDetail(issue: Record<string, unknown>) {
 
   const warehouse = issue.warehouse as Record<string, unknown> | null;
   const department = issue.department as Record<string, unknown> | null;
+  const kitchenRequest = issue.kitchenRequest as Record<string, unknown> | null;
 
   return {
     id: issue.id as string,
@@ -151,6 +152,12 @@ function mapIssueDetail(issue: Record<string, unknown>) {
     postedBy: null,
     version: issue.version as number,
     lines,
+    kitchenRequest: kitchenRequest
+      ? {
+          id: kitchenRequest.id as string,
+          requestNumber: kitchenRequest.requestNumber as string,
+        }
+      : null,
   };
 }
 
@@ -210,9 +217,16 @@ export class IssuesController {
   async create(
     @Body()
     body: {
-      departmentId: string;
+      destinationDeptId?: string;
+      departmentId?: string;
       warehouseId?: string;
-      lines: Array<{ itemId: string; quantity: number }>;
+      lines: Array<{
+        itemId: string;
+        requestedQty?: number;
+        quantity?: number;
+      }>;
+      notes?: string;
+      kitchenRequestId?: string;
     },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
@@ -227,7 +241,40 @@ export class IssuesController {
       role,
       warehouseId,
     );
-    const issue = await this.issuesService.create(body, userId, warehouseId);
+
+    const departmentId = body.destinationDeptId || body.departmentId;
+    if (!departmentId) {
+      throw new BadRequestException('Department ID is required');
+    }
+
+    if (!body.lines || !Array.isArray(body.lines) || body.lines.length === 0) {
+      throw new BadRequestException('At least one line item is required');
+    }
+
+    const lines = body.lines.map((line) => {
+      const qty =
+        line.requestedQty !== undefined ? line.requestedQty : line.quantity;
+      if (qty === undefined || qty === null) {
+        throw new BadRequestException(
+          `Quantity is required for item ${line.itemId}`,
+        );
+      }
+      return {
+        itemId: line.itemId,
+        quantity: Number(qty),
+      };
+    });
+
+    const issue = await this.issuesService.create(
+      {
+        departmentId,
+        lines,
+        kitchenRequestId: body.kitchenRequestId,
+        notes: body.notes,
+      },
+      userId,
+      warehouseId,
+    );
     return mapIssueDetail(issue);
   }
 
@@ -280,6 +327,7 @@ export class IssuesController {
     Role.WH_KEEPER,
     Role.STORE_MGR,
     Role.KITCHEN_CHIEF,
+    Role.BRANCH_MGR,
   )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
@@ -316,6 +364,7 @@ export class IssuesController {
     Role.WH_KEEPER,
     Role.STORE_MGR,
     Role.KITCHEN_CHIEF,
+    Role.BRANCH_MGR,
   )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
@@ -347,7 +396,7 @@ export class IssuesController {
 
   @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/post')
-  @Roles(Role.ADMIN, Role.INV_MGR)
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'issue',

@@ -1282,6 +1282,7 @@ export class ReportsService {
       fulfilledRequests,
       ledgerAggregation,
       auditLogsList,
+      lastBackupSetting,
     ] = await Promise.all([
       // Total inventory value (sum of WAC * qtyOnHand)
       this.prisma.warehouseItem.findMany({
@@ -1299,8 +1300,13 @@ export class ReportsService {
       this.prisma.warehouseItem.count({
         where: { qtyOnHand: { lte: 0 } },
       }),
-      // Active users
-      this.prisma.user.count({ where: { isActive: true } }),
+      // Active users (sessions)
+      this.prisma.refreshToken
+        .groupBy({
+          by: ['sessionId'],
+          where: { expiresAt: { gt: new Date() }, isRevoked: false },
+        })
+        .then((res) => res.length),
       // Near-expiry lots (within 30 days)
       this.prisma.lot.count({
         where: {
@@ -1485,6 +1491,10 @@ export class ReportsService {
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: { user: true },
+      }),
+      // 13. System Last Backup
+      this.prisma.systemSetting.findUnique({
+        where: { key: 'last_backup_at' },
       }),
     ]);
 
@@ -1719,6 +1729,7 @@ export class ReportsService {
         velocityChart,
       },
       systemAuditLogs,
+      lastBackupTimestamp: lastBackupSetting?.value || undefined,
     };
   }
 
@@ -1793,9 +1804,12 @@ export class ReportsService {
           status: { in: ['DRAFT', 'STARTED', 'COUNTING', 'REVIEW'] },
         },
       }),
-      this.prisma.user.count({
-        where: { isActive: true },
-      }),
+      this.prisma.refreshToken
+        .groupBy({
+          by: ['sessionId'],
+          where: { expiresAt: { gt: new Date() }, isRevoked: false },
+        })
+        .then((res) => res.length),
       this.prisma.lot.count({
         where: {
           status: 'ACTIVE',
@@ -2364,10 +2378,13 @@ export class ReportsService {
       this.prisma.outboxEvent.count({
         where: { deadLettered: true },
       }),
-      // 8. Active users
-      this.prisma.user.count({
-        where: { isActive: true },
-      }),
+      // 8. Active users (sessions)
+      this.prisma.refreshToken
+        .groupBy({
+          by: ['sessionId'],
+          where: { expiresAt: { gt: new Date() }, isRevoked: false },
+        })
+        .then((res) => res.length),
     ]);
 
     // Calculate shortages

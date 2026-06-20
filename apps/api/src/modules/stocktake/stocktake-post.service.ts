@@ -329,6 +329,16 @@ export class StocktakePostService {
         },
       });
 
+      await tx.warehouseItem.updateMany({
+        where: {
+          warehouseId: session.warehouseId,
+          isFrozen: true,
+        },
+        data: {
+          isFrozen: false,
+        },
+      });
+
       await tx.warehouse.update({
         where: { id: session.warehouseId },
         data: {

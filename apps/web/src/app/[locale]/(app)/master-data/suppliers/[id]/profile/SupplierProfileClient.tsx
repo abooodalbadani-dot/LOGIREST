@@ -95,8 +95,8 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
 
  if (!supplier) {
   return (
-   <div className="min-w-0 max-w-[1600px] flex-1 gap-6 p-8 mx-auto flex-col flex w-full">
-    <PageHeader title={t('empty.title')} description={t('empty.description')} />
+   <div className="min-w-0 max-w-[1600px] flex-1 gap-6 mx-auto flex-col flex w-full">
+    <PageHeader title={t('empty.title')} subtitle={t('empty.description')} />
    </div>
   );
  }
@@ -114,8 +114,8 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
     />
     <PageHeader 
      title={supplier.name} 
-     description={t('profile.title')}
-     actions={
+     subtitle={t('profile.title')}
+     children={
       <Button 
        variant="outline" 
        className="h-11 px-6 border-white/5 bg-card border border-border shadow-sm hover:bg-surface-container-medium text-label-xs font-semibold uppercase rounded-sm"

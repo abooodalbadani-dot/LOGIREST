@@ -98,7 +98,7 @@ export function SettingsClient({ locale }: { locale: string }) {
 
  if (isLoading) {
   return (
-   <div className="md:p-8 min-w-0 gap-6 flex-1 space-y-8 flex p-4 animate-pulse mx-auto flex-col max-w-7xl w-full">
+   <div className="min-w-0 gap-6 flex-1 space-y-8 flex animate-pulse mx-auto flex-col max-w-7xl w-full">
     <div className="h-12 w-64 bg-surface-container-highest rounded-2xl" />
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
      <div className="lg:col-span-4 space-y-6">

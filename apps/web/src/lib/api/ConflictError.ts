@@ -3,6 +3,7 @@ export class ConflictError extends Error {
   public updatedBy?: string;
   public updatedAt?: string;
   public code: string;
+  public _isToastShown?: boolean;
 
   constructor(payload: {
     message: string;

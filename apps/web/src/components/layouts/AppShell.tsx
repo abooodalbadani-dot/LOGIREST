@@ -14,8 +14,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations('common');
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <div className="flex flex-1 flex-col overflow-hidden relative">
+    <div className="flex min-h-screen flex-col md:flex-row md:h-screen md:overflow-hidden bg-background">
+      <div className="flex flex-1 flex-col overflow-x-hidden md:overflow-hidden relative w-full">
         {isLocked && (
           <div className="bg-status-warning/10 px-4 py-1.5 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 z-[60] print:hidden">
             <Lock className="w-3.5 h-3.5 text-status-warning" />
@@ -30,11 +30,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Topbar locale={locale} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         </div>
 
-        <div className="flex flex-1 overflow-hidden relative">
+        <div className="flex flex-1 flex-col md:flex-row overflow-x-hidden md:overflow-hidden relative">
           {/* Mobile Sidebar Overlay */}
           <div
             className={cn(
-              "fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 print:hidden",
+              "fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] md:hidden transition-all duration-300 print:hidden",
               isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
             onClick={() => setIsSidebarOpen(false)}
@@ -42,21 +42,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Sidebar Wrapper */}
           <div className={cn(
-            "fixed inset-y-0 start-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto print:hidden",
+            "fixed inset-y-0 start-0 z-[100] w-64 bg-background transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto print:hidden",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0"
           )}>
             <Sidebar onClose={() => setIsSidebarOpen(false)} />
           </div>
 
           <main className={cn(
-            "flex-1 overflow-x-hidden overflow-y-auto bg-background transition-all duration-300 print:w-full print:m-0 print:p-0 print:col-span-full print:overflow-visible",
-            isLocked && 'pointer-events-none grayscale-[0.3] opacity-90'
+            "flex-1 w-full min-w-0 max-w-[100vw] 2xl:max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 overflow-x-hidden md:overflow-y-auto bg-background transition-all duration-300 print:w-full print:m-0 print:p-0 print:col-span-full print:overflow-visible",
+            isLocked && 'grayscale-[0.05] opacity-98'
           )}>
-            <div className="w-full min-h-screen flex justify-center">
-              <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-6">
-                {children}
-              </div>
-            </div>
+            {children}
           </main>
         </div>
 

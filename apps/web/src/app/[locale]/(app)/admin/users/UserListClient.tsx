@@ -83,37 +83,13 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
    accessorKey: 'scopes',
    header: t('scopes'),
    cell: ({ row }) => {
-    const scopeLabels: string[] = [];
-    row.original.scopes.forEach((s) => {
-     if (s.department) {
-      if (s.branch) {
-       scopeLabels.push(`${s.branch.name} - ${s.department.name}`);
-      } else {
-       scopeLabels.push(`${s.department.name}`);
-      }
-     } else if (s.warehouse) {
-      if (s.warehouse.branch) {
-       scopeLabels.push(`${s.warehouse.branch.name} - ${s.warehouse.name}`);
-      } else {
-       scopeLabels.push(`${s.warehouse.name}`);
-      }
-     } else if (s.branch) {
-      scopeLabels.push(`${s.branch.name}`);
-     } else {
-      const parts: string[] = [];
-      if (s.branchId) parts.push(`B:${s.branchId.slice(0, 8)}...`);
-      if (s.warehouseId) parts.push(`W:${s.warehouseId.slice(0, 8)}...`);
-      if (s.departmentId) parts.push(`D:${s.departmentId.slice(0, 8)}...`);
-      if (parts.length) scopeLabels.push(parts.join(', '));
-     }
-    });
+    const scopes = row.original.scopes || [];
+    if (scopes.length === 0) return <span className="text-muted-foreground italic">— {t('no_scope')} —</span>;
+    const firstScopeName = scopes[0].department?.name || scopes[0].warehouse?.name || scopes[0].branch?.name || 'Scope';
     return (
-     <div className="w-full min-w-0 gap-6 flex-1 flex flex-col flex-wrap gap-1">
-      {scopeLabels.length > 0 ? scopeLabels.map((sl, idx) => (
-       <span key={idx} dir="ltr" className="text-label-xs font-mono opacity-60 bg-card/5 px-1.5 py-0.5 rounded-sm">
-        {sl}
-       </span>
-      )) : <span className="opacity-20 text-label-xs italic">— {t('no_scope')} —</span>}
+     <div className="flex items-center gap-2 flex-wrap">
+      <Badge variant="outline" className="truncate max-w-[200px]">{firstScopeName}</Badge>
+      {scopes.length > 1 && <Badge variant="secondary" className="shrink-0">+{scopes.length - 1}</Badge>}
      </div>
     );
    },
@@ -200,15 +176,19 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
      onPageChange: setPage
     } : undefined}
     filters={
-      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:max-w-md">
+           <div className="relative w-full group">
+             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+             <Input
          placeholder={t('search_placeholder')}
          value={search}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
+         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
         />
+           </div>
+         </div>
        </div>
-     }
+      }
    />
   </div>
  );

@@ -42,7 +42,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
 
  if (isLoading) {
   return (
-   <div className=" min-w-0 items-center bg-card flex-1 gap-6 animate-pulse rounded-lg justify-center shadow-sm flex-col flex border border-border h-[60vh] w-full dark:bg-card-dark">
+   <div className="min-w-0 items-center bg-card flex-1 gap-6 animate-pulse rounded-lg justify-center shadow-sm flex-col flex border border-border h-[60vh] w-full dark:bg-card-dark">
     <div className="relative">
      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
     </div>

@@ -12,7 +12,7 @@ import { useGRN } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2, type DocumentStatus, GRN_STATUS } from '@logirest/shared-types';
 
-import { useSettings } from '@/hooks/useSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
 import { formatCurrency, formatRate, formatNumber } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
@@ -61,9 +61,9 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
 
  const fxRate = useWatch({ control: form.control, name: 'fx_rate' });
  const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
- const postMutation = usePostGRN();
+ const postMutation = usePostGRN({ skipAutoToast: true });
 
- const { baseCurrency, isLoading: loadingSettings } = useSettings();
+ const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
  const supplierCurrency = grn?.currencyCode || 'USD';
 
  // Live FX conversion logic for display
@@ -113,23 +113,46 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
 
  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
- const handlePost = () => {
-  postMutation.mutate({
-   id,
-   version: grn?.version || 1
-  }, {
-   onSuccess: () => {
+  const handlePost = async () => {
+   try {
+    await postMutation.mutateAsync({
+     id,
+     version: grn?.version || 1
+    });
     playSound('success');
     toast.success(t('posted_success'));
     setIsPostDialogOpen(false);
     guardedRouter.push(`/goods-received/${id}`, { skipGuard: true });
-   },
-   onError: () => {
+   } catch (error: unknown) {
     playSound('error');
-    toast.error(tc('error'));
+    let errorMessage = "";
+    if (error && typeof error === 'object') {
+     const errObj = error as Record<string, unknown>;
+     if (typeof errObj.message === 'string') {
+      errorMessage = errObj.message;
+     } else if (
+      errObj.response &&
+      typeof errObj.response === 'object' &&
+      'data' in errObj.response &&
+      errObj.response.data &&
+      typeof errObj.response.data === 'object'
+     ) {
+      const dataObj = errObj.response.data as Record<string, unknown>;
+      if (typeof dataObj.message === 'string') {
+       errorMessage = dataObj.message;
+      }
+     }
+    }
+    
+    if (errorMessage.toLowerCase().includes("frozen") || errorMessage.toLowerCase().includes("locked")) {
+     toast.error("تعذر الاعتماد: يوجد صنف مجمد (تحت الجرد) في المستودع الوجهة.", {
+      description: errorMessage,
+     });
+    } else {
+     toast.error(tc('error') || "حدث خطأ أثناء اعتماد السند.");
+    }
    }
-  });
- };
+  };
 
  if (isLoadingGRN || loadingSettings) {
   return <PageSkeleton />;
@@ -152,10 +175,10 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="flex flex-col gap-10 pb-20 min-w-0">
  <PageHeader
  title={`#${grn.documentNumber}`}
- description={t('fx_capture_title')}
+ subtitle={t('fx_capture_title')}
  showStatus
  status={grn.status}
- actions={
+ children={
  <div className="flex items-center gap-4">
  <Button variant="ghost" onClick={() => router.back()} className="rounded-2xl">
  {tc('cancel')}

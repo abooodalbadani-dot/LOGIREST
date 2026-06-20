@@ -130,10 +130,10 @@ export function AuditLogsClient() {
  ], [t, tc, locale, expandedId]);
 
  return (
- <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+ <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
  <PageHeader 
- title={t('audit_logs.title')} description={t('audit_logs.client_description')}
- actions={
+ title={t('audit_logs.title')} subtitle={t('audit_logs.client_description')}
+ children={
  <PermissionGate action="export" resource="admin_audit_logs">
  <Button 
  onClick={handleExport}

@@ -115,7 +115,7 @@ type FrozenItem = z.infer<typeof FrozenItemSchema>;
  };
 
  return (
-  <div className="md:p-8 min-w-0 gap-6 flex-1 space-y-8 flex p-4 mx-auto flex-col max-w-7xl w-full">
+  <div className="min-w-0 gap-6 flex-1 space-y-8 flex mx-auto flex-col max-w-7xl w-full">
    {/* Premium Header */}
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 min-w-0">
     <div className="space-y-4">

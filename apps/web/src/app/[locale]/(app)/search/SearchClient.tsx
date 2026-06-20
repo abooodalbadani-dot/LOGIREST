@@ -107,7 +107,7 @@ export default function SearchClient() {
  ];
 
  return (
-  <div className="p-4 flex duration-700 border-border flex-1 shadow-sm text-foreground min-h-screen lg:p-10 min-w-0 animate-in bg-card gap-6 fade-in flex-col border space-y-10 w-full dark:bg-card-dark">
+  <div className="flex duration-700 border-border flex-1 shadow-sm text-foreground min-h-screen min-w-0 animate-in bg-card gap-6 fade-in flex-col border space-y-10 w-full dark:bg-card-dark">
    
    {/* Header & Global Search */}
    <div className="max-w-[1400px] mx-auto space-y-8">

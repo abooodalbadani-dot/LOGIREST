@@ -18,22 +18,24 @@ export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
 const statusBadgeVariants = cva(
  "inline-flex items-center rounded-full px-2.5 py-0.5 text-label-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 uppercase whitespace-nowrap",
  {
- variants: {
- variant: {
- default:
- "bg-muted text-foreground border border-border hover:bg-surface-container-highest",
- brand:
- "bg-primary/15 text-primary hover:bg-primary/25",
- warning:
- "bg-status-warning/15 text-status-warning hover:bg-status-warning/25",
- error:
- "bg-status-error/15 text-status-error hover:bg-status-error/25",
- success:
- "bg-brand-gold/10 text-brand-gold border border-brand-gold/20",
- outline: "text-foreground bg-surface-container border",
- info: "bg-status-info/15 text-status-info hover:bg-status-info/25",
- },
- },
+  variants: {
+  variant: {
+  default:
+  "bg-muted/50 text-muted-foreground border-none hover:bg-muted",
+  brand:
+  "bg-primary/15 text-primary border-none hover:bg-primary/25",
+  warning:
+  "bg-amber-500/10 text-amber-500 border-none hover:bg-amber-500/20",
+  error:
+  "bg-red-500/10 text-red-500 border-none hover:bg-red-500/20",
+  success:
+  "bg-emerald-500/10 text-emerald-500 border-none hover:bg-emerald-500/20",
+  outline: 
+  "text-muted-foreground bg-transparent border border-border/50",
+  info: 
+  "bg-cyan-500/10 text-cyan-500 border-none hover:bg-cyan-500/20",
+  },
+  },
  defaultVariants: {
  variant: "default",
  },

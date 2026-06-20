@@ -282,7 +282,7 @@ export function TransferNewClient() {
 
    <PageHeader
     title={t('create_new')}
-    description={t('description')}
+    subtitle={t('description')}
    />
 
    <div className="space-y-2">
@@ -405,10 +405,10 @@ export function TransferNewClient() {
         </label>
         <ScanInput 
          onScan={handleAddItem}
-         placeholder={t('scan_item_placeholder')} 
+         placeholder={t('scan_item_placeholder') || "Scan item barcode..."} 
          className="w-full"
+         variant="standard"
          scannerMode={true}
-         size="lg"
          disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
         />
        </div>
@@ -422,6 +422,7 @@ export function TransferNewClient() {
          getPrimaryLabel={(item) => item.name}
          placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
          disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
+         triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-xl text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
         />
        </div>
       </div>

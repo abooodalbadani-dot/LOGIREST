@@ -132,7 +132,7 @@ export function KitchenRequestsListClient({
  const fulfilledCount = data?.data?.filter(r => r.status === KITCHEN_REQUEST_STATUS.FULFILLED).length || 0;
 
  return (
-  <div className="w-full min-w-0 gap-6 flex-1 flex-col flex p-6">
+  <div className="w-full min-w-0 gap-6 flex-1 flex-col flex">
    <Breadcrumb
     items={[
      { label: tc('home'), href: '/' },
@@ -143,8 +143,8 @@ export function KitchenRequestsListClient({
 
    <PageHeader
     title={t('title')}
-    description={t('description')}
-    actions={
+    subtitle={t('description')}
+    children={
      <PermissionGate action="create" resource="kitchen_requests">
       <Button 
        onClick={() => router.push('/kitchen-requests/new')}
@@ -184,7 +184,7 @@ export function KitchenRequestsListClient({
     />
    </div>
 
-   <div className="bg-card border border-border shadow-sm rounded-xl border border-outline-low shadow-sm">
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
     <DataTable
      columns={columns}
      data={data?.data ?? []}

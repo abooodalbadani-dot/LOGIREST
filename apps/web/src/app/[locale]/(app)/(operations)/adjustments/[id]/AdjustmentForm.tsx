@@ -50,7 +50,7 @@ import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operation
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/layouts/FormLayout';
-import { formatQuantity } from '@/utils/currency';
+import { formatQuantity, formatDate } from '@/utils/currency';
 import { audioAlerts } from '@/utils/audio';
 import { VoidButton } from '@/components/shared/VoidButton';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -394,7 +394,7 @@ export function AdjustmentForm({
   }));
  }, [document]);
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm pb-12 animate-in fade-in duration-500 print:bg-card print:p-0 print:m-0 print:pb-0 print:animate-none">
+  <div className="min-h-screen pb-12 animate-in fade-in duration-500 print:bg-card print:p-0 print:m-0 print:pb-0 print:animate-none">
    {/* Print header (visible only when printing) */}
    <div className="print-only print-header p-8 border-b-2 border-gray-300 mb-6">
     <div className="flex justify-between items-start">
@@ -403,7 +403,7 @@ export function AdjustmentForm({
       <p className="text-sm text-muted-foreground mt-1">{document?.documentNumber || ''}</p>
      </div>
      <div className="text-end text-sm text-muted-foreground">
-      <p>{document?.createdAt ? new Date(document.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</p>
+       <p>{document?.createdAt ? formatDate(document.createdAt, locale as 'ar' | 'en') : ''}</p>
      </div>
     </div>
    </div>

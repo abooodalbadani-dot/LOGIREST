@@ -104,7 +104,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
  ], [t, locale]);
 
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm print:bg-card print:min-h-0">
+  <div className="min-h-screen print:bg-card print:min-h-0">
    {/* Print-Only Voucher Header */}
    <div className="print-only print-header p-6 border-b-2 border-gray-300 mb-6">
     <div className="flex justify-between items-start">

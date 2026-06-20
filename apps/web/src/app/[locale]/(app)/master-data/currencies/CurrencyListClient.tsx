@@ -133,7 +133,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
 
  if (isError) {
  return (
-  <div className="min-w-0 gap-6 flex-1 p-8 flex-col flex w-full">
+  <div className="min-w-0 gap-6 flex-1 flex-col flex w-full">
   <ErrorState 
    type="server_error"
    onRetry={() => refetch()}
@@ -154,10 +154,10 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  />
  <PageHeader 
  title={t('title')} 
- description={t('description')}
- actions={
+ subtitle={t('description')}
+ children={
  <PermissionGate action="create" resource="master_data">
-    <Link href={`/master-data/currencies/new`}>
+    <Link href={`/master-data/currencies/new`} className="shrink-0 w-full sm:w-auto">
      <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm shadow-primary/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {tc('create')}
@@ -206,15 +206,19 @@ export function CurrencyListClient({ locale }: { locale: string }) {
    />
   }
  filters={
-      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-        <Input
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:w-80 md:w-96">
+           <div className="relative w-full group">
+             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+             <Input
          placeholder={tc('search_placeholder') || (locale === 'ar' ? 'البحث بالاسم، الرمز، أو كود العملة...' : 'Search by name, symbol, or code...')}
          value={search}
          onChange={(e) => { setSearch(e.target.value); }} className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
+           </div>
+         </div>
        </div>
-     }
+      }
  />
 
  {/* Quick Tips */}

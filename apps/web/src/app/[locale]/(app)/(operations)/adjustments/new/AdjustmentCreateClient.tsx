@@ -52,7 +52,7 @@ function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen:
 
  return (
   <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-   <DialogContent className="sm:max-w-[425px] bg-card border border-border shadow-sm border-white/10 text-foreground">
+   <DialogContent className="sm:max-w-[425px] bg-card border border-border shadow-sm text-foreground">
     <DialogHeader>
      <DialogTitle className="text-title-md font-semibold text-operational-cyan uppercase">{t('create_lot') || 'Create New Lot'}</DialogTitle>
      <p className="text-label-sm text-muted-foreground/80">{defaultItemName}</p>
@@ -60,11 +60,11 @@ function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen:
     <div className="grid gap-6 py-4">
      <div className="space-y-2">
       <Label htmlFor="lotNumber" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tCommon('lot_number') || 'Lot Number'} *</Label>
-      <Input id="lotNumber" value={lotNumber} onChange={(e) => setLotNumber(e.target.value)} className="bg-surface-container-highest/40 border-white/10" placeholder="LOT-1234" />
+      <Input id="lotNumber" value={lotNumber} onChange={(e) => setLotNumber(e.target.value)} className="bg-surface-container-highest/40" placeholder="LOT-1234" />
      </div>
      <div className="space-y-2">
       <Label htmlFor="expiryDate" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tCommon('expiry_date') || 'Expiry Date'}</Label>
-      <Input id="expiryDate" type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="bg-surface-container-highest/40 border-white/10" />
+      <Input id="expiryDate" type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="bg-surface-container-highest/40" />
      </div>
     </div>
     <DialogFooter>
@@ -447,7 +447,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
        const val = e.target.value;
        setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
       }}
-      className="w-32 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 px-2 font-mono text-label-xs font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+      className="w-32 bg-surface-container-highest/60 border border-brand-gold/40 hover:border-brand-gold/70 rounded-lg text-center h-9 px-2 font-mono text-label-xs font-semibold focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
      />
      {line.direction === 'INCREASE' && (
       <button
@@ -464,7 +464,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  ];
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex pb-32 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex pb-32 w-full">
    {createAdjustment.error && (
     <div 
      role="alert"
@@ -495,7 +495,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
    <PageHeader
     title={t('create_new')}
-    description={t('subtitle')} 
+    subtitle={t('subtitle')} 
    />
 
    <LockBanner lockState={lockState} />
@@ -528,7 +528,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
          value={warehouseId}
          onSelect={(item) => setWarehouseId(item.id)}
          placeholder={tCommon('select_warehouse') || "Select Warehouse"}
-         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+         triggerClassName="w-full bg-surface-container-highest/40 h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 transition-all"
         />
        </div>
 
@@ -542,7 +542,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
          value={reasonCategory}
          onSelect={(item) => setReasonCategory(item.id)}
          placeholder={t('reason') || "Select Reason"}
-         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+         triggerClassName="w-full bg-surface-container-highest/40 h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 transition-all"
         />
        </div>
 
@@ -556,7 +556,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
          value={notes}
          onChange={(e) => setNotes(e.target.value)}
          placeholder={t('notes_placeholder')}
-         className="w-full bg-surface-container-highest/40 border border-white/5 rounded-2xl p-4 font-medium text-body-md focus:ring-2 focus:ring-cyan-500/30 transition-all outline-none resize-none min-h-[140px] hover:bg-surface-container-highest/60"
+         className="w-full bg-surface-container-highest/40 rounded-2xl p-4 font-medium text-body-md transition-all outline-none resize-none min-h-[140px] hover:bg-surface-container-highest/60"
         />
         {showNotesError && (
          <p className="text-[10px] font-bold text-status-error uppercase px-1 mt-1">
@@ -663,7 +663,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             const val = parseFloat(e.target.value);
             setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
            }}
-           className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+           className="w-24 bg-surface-container-highest/60 border border-brand-gold/40 hover:border-brand-gold/70 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
           />
          </div>
         )}

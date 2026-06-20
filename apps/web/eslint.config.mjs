@@ -28,6 +28,7 @@ const eslintConfig = defineConfig([
       "react-hooks/incompatible-library": "off",
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/set-state-in-effect": "off",
+      "react/no-children-prop": "off",
     },
   },
 ]);

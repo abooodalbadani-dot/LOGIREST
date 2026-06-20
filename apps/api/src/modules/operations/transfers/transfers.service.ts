@@ -196,8 +196,14 @@ export class TransfersService {
   }
 
   async findOne(id: string) {
-    const transfer = await this.prisma.transfer.findUnique({
-      where: { id },
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
+    const transfer = await this.prisma.transfer.findFirst({
+      where: isUuid
+        ? { OR: [{ id }, { transferNumber: id }] }
+        : { transferNumber: id },
       include: {
         lines: {
           include: {
@@ -205,6 +211,7 @@ export class TransfersService {
               include: {
                 unitOfMeasure: true,
                 category: true,
+                barcodeMappings: true,
               },
             },
           },

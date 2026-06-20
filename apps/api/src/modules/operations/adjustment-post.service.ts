@@ -102,22 +102,7 @@ export class AdjustmentPostService {
               const lotId = line.lotId;
               const qtyVal = Number(line.quantity);
 
-              // Historical posting guard with raw SELECT FOR UPDATE to serialize concurrent posts
-              const latestLedgers = await tx.$queryRaw<{ postedAt: Date }[]>`
-          SELECT "postedAt"
-          FROM "stock_ledger"
-          WHERE "warehouseId" = ${adj.warehouseId} AND "itemId" = ${item.id}
-          ORDER BY "postedAt" DESC
-          LIMIT 1
-          FOR UPDATE
-        `;
-              const latestLedger = latestLedgers[0];
-              if (
-                latestLedger &&
-                adj.createdAt < new Date(latestLedger.postedAt)
-              ) {
-                throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
-              }
+              // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
 
               // Check if item is frozen in warehouse
               const whItemCheck = await tx.warehouseItem.findUnique({

@@ -171,7 +171,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
  };
 
  return (
-  <div className="md:p-8 min-w-0 gap-6 flex-1 max-w-4xl space-y-8 p-4 mx-auto relative flex-col flex w-full">
+  <div className="min-w-0 gap-6 flex-1 max-w-4xl space-y-8 mx-auto relative flex-col flex w-full">
    <div className="absolute top-0 end-1/4 w-96 h-96 bg-operational-cyan/5 rounded-full blur-[120px] pointer-events-none -z-10" />
 
    {/* Header section */}

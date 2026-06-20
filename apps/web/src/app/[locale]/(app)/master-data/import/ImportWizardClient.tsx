@@ -61,7 +61,7 @@ export function ImportWizardClient({ type, locale }: ImportWizardClientProps) {
  };
 
  return (
- <div className="w-full min-w-0 gap-6 flex-1 flex-col flex p-6">
+ <div className="w-full min-w-0 gap-6 flex-1 flex-col flex">
   <Breadcrumb
   items={[
    { label: tc('navigation.master_data'), href: '/master-data' },
@@ -73,7 +73,7 @@ export function ImportWizardClient({ type, locale }: ImportWizardClientProps) {
   <div className="flex items-center justify-between">
   <PageHeader 
    title={getEntityTitle()} 
-   description={t('wizard_desc')}
+   subtitle={t('wizard_desc')}
    icon={<ImportIcon className="w-10 h-10 text-foreground" />}
   />
   </div>

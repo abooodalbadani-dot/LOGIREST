@@ -187,14 +187,15 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
  const draftCount = data?.data?.filter(i => isIssueDraft(i.status)).length || 0;
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex w-full">
    <PageHeader
-    title={t('title')}
-    description={t('description')}
-    actions={
+    title="STOCK"
+    highlight="ISSUES"
+    subtitle={t('description')}
+    children={
      <div className="flex items-center gap-4">
       <PermissionGate action="create" resource="issue">
-       <Link href={`/issues/new`}>
+       <Link href={`/issues/new`} className="shrink-0 w-full sm:w-auto">
         <Button className="h-10 px-6 rounded-md bg-card border border-border shadow-sm border border-outline-low/5 text-label-xs font-semibold uppercase gap-2 group transition-all hover:bg-surface-container-medium shadow-sm whitespace-nowrap">
          <Plus className="w-3.5 h-3.5 me-2" />
          {t('create_new')}
@@ -243,58 +244,60 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
     </div>
    </div>
 
-   {/* Advanced Filter Substrate */}
-   <div className="bg-card border border-border shadow-sm/50 p-6 rounded-xl border border-outline-low/10 ambient-shadow backdrop-blur-sm">
-    <div className="flex items-center justify-between gap-6 overflow-x-auto no-scrollbar">
-     <div className="flex-1 min-w-[300px] relative group">
-      <div className="absolute inset-y-0 start-5 flex items-center pointer-events-none transition-colors group-focus-within:text-foreground text-muted-foreground/30">
+   {/* Unified Toolbar */}
+   <div className="flex flex-col lg:flex-row items-center justify-between gap-4 w-full mb-6">
+    <div className="flex flex-wrap items-center gap-3 flex-1 overflow-x-auto custom-scrollbar pb-2">
+     <div className="flex-1 min-w-[200px] max-w-[300px] relative group">
+      <div className="absolute inset-y-0 start-4 flex items-center pointer-events-none transition-colors group-focus-within:text-foreground text-muted-foreground/40">
        <Search className="w-4 h-4" />
       </div>
       <Input
        placeholder={t('search_placeholder')}
-       className="w-full bg-surface-container-high/50 border-none h-14 ps-14 pe-6 text-label-xs font-semibold rounded-md shadow-inner shadow-black/5 focus-visible:ring-2 focus-visible:ring-cyan-500/10 transition-all"
+       className="w-full bg-card border border-border/50 h-11 ps-12 pe-4 text-label-xs font-semibold rounded-xl shadow-sm focus-visible:ring-1 focus-visible:ring-cyan-500/30 transition-all"
       />
      </div>
+     
+     <SmartCombobox
+      items={statusItems}
+      value={initialStatus || 'ALL'}
+      onSelect={(item) => handleStatusChange(item.id)}
+      placeholder={tc('statuses.all') || "All Statuses"}
+      triggerClassName="w-[160px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold uppercase rounded-xl shadow-sm focus:ring-1 focus:ring-cyan-500/30 whitespace-nowrap"
+     />
 
-     <div className="flex items-center gap-4">
-      <div className="w-px h-10 bg-surface-container-high/50 mx-2" />
-      <div className="flex items-center gap-2">
-       <SmartCombobox
-        items={statusItems}
-        value={initialStatus || 'ALL'}
-        onSelect={(item) => handleStatusChange(item.id)}
-        placeholder={tc('statuses.all') || "All Statuses"}
-        triggerClassName="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold uppercase rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10 whitespace-nowrap"
-       />
+     <SmartCombobox
+      items={warehouseItems}
+      value={isWarehouseLocked ? (warehouseId || '') : warehouseFilter}
+      onSelect={(item) => { if (!isWarehouseLocked) { setWarehouseFilter(item.id as string); } }}
+      placeholder={tFilters('warehouse')}
+      disabled={isWarehouseLocked}
+      triggerClassName="w-[180px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold rounded-xl shadow-sm focus:ring-1 focus:ring-cyan-500/30 whitespace-nowrap"
+     />
 
-       <SmartCombobox
-        items={warehouseItems}
-        value={isWarehouseLocked ? (warehouseId || '') : warehouseFilter}
-        onSelect={(item) => { if (!isWarehouseLocked) { setWarehouseFilter(item.id as string); } }}
-        placeholder={tFilters('warehouse')}
-        disabled={isWarehouseLocked}
-        triggerClassName="w-[200px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10 whitespace-nowrap"
-       />
+     <Button variant="outline" className="h-11 px-4 bg-card hover:bg-surface-container-low border border-border/50 rounded-xl shadow-sm">
+      <Filter className="w-4 h-4 text-muted-foreground/60" />
+     </Button>
+    </div>
 
-       <Button variant="outline" className="h-14 px-6 bg-surface-container-high/50 hover:bg-surface-container-high border-none rounded-md shadow-inner shadow-black/5">
-        <Filter className="w-4 h-4 text-muted-foreground/60" />
-       </Button>
-      </div>
-     </div>
-
-     <div className="flex items-center gap-1 bg-surface-container-high/50 p-1.5 rounded-md shadow-inner shadow-black/5">
-      <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-foreground bg-card border border-border shadow-sm shadow-sm">
+    <div className="flex items-center shrink-0 gap-3">
+     <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-border/50">
+      <Button size="icon" variant="ghost" className="w-9 h-9 rounded-lg text-foreground bg-card shadow-sm">
        <LayoutGrid className="w-4 h-4" />
       </Button>
-      <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-muted-foreground/20">
+      <Button size="icon" variant="ghost" className="w-9 h-9 rounded-lg text-muted-foreground/40 hover:text-foreground">
        <ListIcon className="w-4 h-4" />
       </Button>
      </div>
+     
+     <Button variant="outline" className="h-11 px-6 bg-card border border-border/50 rounded-xl shadow-sm hover:bg-surface-container-low">
+      <FileText className="w-4 h-4 me-2 text-muted-foreground" />
+      <span className="text-label-xs font-semibold uppercase">{tc('export') || 'Export'}</span>
+     </Button>
     </div>
    </div>
 
    {/* Main Consumption Ledger */}
-   <div className="bg-card border border-border shadow-sm rounded-lg border border-outline-low/5 shadow-sm overflow-hidden">
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
     <DataTable
      columns={columns}
      data={data?.data || []}

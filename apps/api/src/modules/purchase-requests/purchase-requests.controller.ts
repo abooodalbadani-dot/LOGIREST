@@ -132,7 +132,6 @@ export class PurchaseRequestsController {
     Role.PROC_OFFICER,
     Role.PROC_MGR,
     Role.BRANCH_MGR,
-    Role.STORE_MGR,
   )
   @Idempotent()
   @ApiIdempotentHeader()
@@ -280,7 +279,6 @@ export class PurchaseRequestsController {
     Role.ADMIN,
     Role.PROC_OFFICER,
     Role.INV_MGR,
-    Role.STORE_MGR,
     Role.BRANCH_MGR,
     Role.PROC_MGR,
   )
@@ -312,14 +310,7 @@ export class PurchaseRequestsController {
   }
 
   @Post(':id/approve')
-  @Roles(
-    Role.ADMIN,
-    Role.APPROVER,
-    Role.INV_MGR,
-    Role.STORE_MGR,
-    Role.BRANCH_MGR,
-    Role.PROC_MGR,
-  )
+  @Roles(Role.ADMIN, Role.GM, Role.BRANCH_MGR, Role.PROC_MGR, Role.APPROVER)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'pr',
@@ -348,14 +339,7 @@ export class PurchaseRequestsController {
   }
 
   @Post(':id/reject')
-  @Roles(
-    Role.ADMIN,
-    Role.APPROVER,
-    Role.INV_MGR,
-    Role.STORE_MGR,
-    Role.BRANCH_MGR,
-    Role.PROC_MGR,
-  )
+  @Roles(Role.ADMIN, Role.GM, Role.BRANCH_MGR, Role.PROC_MGR, Role.APPROVER)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'pr',
@@ -388,7 +372,6 @@ export class PurchaseRequestsController {
     Role.ADMIN,
     Role.PROC_OFFICER,
     Role.INV_MGR,
-    Role.STORE_MGR,
     Role.BRANCH_MGR,
     Role.PROC_MGR,
   )

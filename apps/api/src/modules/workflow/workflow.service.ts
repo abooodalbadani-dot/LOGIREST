@@ -501,6 +501,15 @@ export class WorkflowService {
           docType === 'kitchen_request' &&
           targetStatus === 'SUBMITTED'
         ) {
+          await transaction.notificationLog.create({
+            data: {
+              targetRole: 'WH_KEEPER',
+              warehouseId: updatedDoc.warehouseId,
+              message: `Kitchen Request ${updatedDoc.requestNumber} is awaiting fulfillment.`,
+              documentType: 'KITCHEN_REQUEST',
+              documentId: updatedDoc.id,
+            },
+          });
           await this.outboxService.writeEvent(
             transaction,
             'KITCHEN_REQUEST_SUBMITTED',
@@ -510,7 +519,19 @@ export class WorkflowService {
               warehouseId: updatedDoc.warehouseId,
             },
           );
-        } else if (docType === 'kitchen_request' && targetStatus === 'POSTED') {
+        } else if (
+          docType === 'kitchen_request' &&
+          targetStatus === 'FULFILLED'
+        ) {
+          await transaction.notificationLog.create({
+            data: {
+              targetRole: 'KITCHEN_CHIEF',
+              warehouseId: updatedDoc.warehouseId,
+              message: `Kitchen Request ${updatedDoc.requestNumber} has been fulfilled.`,
+              documentType: 'KITCHEN_REQUEST',
+              documentId: updatedDoc.id,
+            },
+          });
           await this.outboxService.writeEvent(
             transaction,
             'KITCHEN_REQUEST_POSTED',

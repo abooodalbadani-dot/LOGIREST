@@ -165,12 +165,14 @@ const transitionMapV2 = {
             'CANCEL': { targetStatus: statuses_1.STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
         },
         [statuses_1.STOCKTAKE_STATUS.STARTED]: {
-            'COUNT': { targetStatus: statuses_1.STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-            'CANCEL': { targetStatus: statuses_1.STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
+            'COUNT': { targetStatus: statuses_1.STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
+            'SUBMIT': { targetStatus: statuses_1.STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
+            'CANCEL': { targetStatus: statuses_1.STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
         },
         [statuses_1.STOCKTAKE_STATUS.COUNTING]: {
-            'COUNT': { targetStatus: statuses_1.STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-            'SUBMIT': { targetStatus: statuses_1.STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+            'COUNT': { targetStatus: statuses_1.STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
+            'SUBMIT': { targetStatus: statuses_1.STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
+            'CANCEL': { targetStatus: statuses_1.STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
         },
         [statuses_1.STOCKTAKE_STATUS.REVIEW]: {
             'REVIEW_VARIANCE': { targetStatus: statuses_1.STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'INV_MGR'] },

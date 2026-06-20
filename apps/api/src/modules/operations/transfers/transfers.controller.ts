@@ -61,6 +61,11 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
                     nameEn: unitOfMeasure.name as string,
                   }
                 : { id: '', code: '', nameAr: '', nameEn: '' },
+              barcodes: (
+                (item.barcodeMappings as Record<string, unknown>[]) || []
+              ).map((b) => ({
+                barcode: b.barcode as string,
+              })),
             }
           : {
               id: '',
@@ -68,6 +73,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
               nameAr: '',
               nameEn: '',
               primaryUom: { id: '', code: '', nameAr: '', nameEn: '' },
+              barcodes: [],
             },
         lotId: null,
         lot: null,
@@ -395,7 +401,13 @@ export class TransfersController {
   }
 
   @Post(':id/dispute')
-  @Roles(Role.ADMIN, Role.WH_KEEPER, Role.INV_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.WH_KEEPER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'transfer',

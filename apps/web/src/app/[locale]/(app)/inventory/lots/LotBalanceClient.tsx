@@ -28,6 +28,7 @@ import { apiClient } from '@/lib/api/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { formatDate } from '@/utils/currency';
 import { z } from 'zod';
 
 export default function LotBalanceClient() {
@@ -94,7 +95,7 @@ export default function LotBalanceClient() {
   });
 
   return (
-    <div className="min-h-screen bg-surface text-foreground p-4 lg:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+    <div className="min-h-screen bg-surface text-foreground space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
       <div className="max-w-[1600px] mx-auto space-y-8">
         
         {/* Premium Header */}
@@ -112,48 +113,59 @@ export default function LotBalanceClient() {
                   Lot Ledger Directory
                 </h1>
               </div>
-              <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2">
-                Scan, review, and control quarantined inventory batches. Toggle lot statuses to quarantine defective goods or release cleared assets for production.
-              </p>
+              <div dir="ltr" className="text-left w-full">
+                <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2">
+                  Scan, review, and control quarantined inventory batches. Toggle lot statuses to quarantine defective goods or release cleared assets for production.
+                </p>
+              </div>
             </div>
-          </div>
-
-          {/* Quick Filters */}
-          <div className="flex flex-wrap items-center gap-4 bg-card border border-border shadow-sm p-3 rounded-2xl">
-            <div className="flex items-center gap-2 px-2">
-              <Switch
-                id="expired-switch"
-                checked={includeExpired}
-                onCheckedChange={setIncludeExpired}
-                className="data-[state=checked]:bg-operational-cyan"
-              />
-              <Label htmlFor="expired-switch" className="text-xs font-bold text-muted-foreground uppercase cursor-pointer">
-                Include Expired Lots
-              </Label>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ['inventory/lots'] })}
-              className="h-10 px-3 hover:bg-surface-container-high rounded-xl text-muted-foreground"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
           </div>
         </div>
 
         {/* Directory Controls & Table */}
         <div className="p-6 md:p-8 rounded-[2.5rem] bg-card border border-border space-y-6 shadow-sm">
-          {/* Search Inputs */}
-          <div className="relative group max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-operational-cyan transition-colors" />
-            <Input
-              type="text"
-              placeholder="Search by lot number, SKU, or name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 font-medium bg-card border border-border shadow-sm border-outline-low rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all"
-            />
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-4 w-full mb-6 bg-transparent">
+            {/* Start side: Search and Toggle */}
+            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+              <div className="w-full sm:w-64">
+                <div className="relative group w-full">
+                  <Search className="absolute ltr:left-4 rtl:right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-operational-cyan transition-colors" />
+                  <Input
+                    type="text"
+                    placeholder={tCommon('search_placeholder') || "Search..."}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-12 font-medium bg-black/5 dark:bg-white/5 border border-border/50 shadow-sm rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all ltr:pl-12 rtl:pr-12"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 px-4 h-12 bg-black/5 dark:bg-white/5 border border-border/50 rounded-2xl shrink-0">
+                <Switch
+                  id="expired-switch"
+                  checked={includeExpired}
+                  onCheckedChange={setIncludeExpired}
+                  className="data-[state=checked]:bg-operational-cyan"
+                />
+                <Label htmlFor="expired-switch" className="text-sm font-medium text-foreground uppercase tracking-wider cursor-pointer whitespace-nowrap">
+                  Include Expired Lots
+                </Label>
+              </div>
+            </div>
+
+            {/* End side: Refresh Button */}
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['inventory/lots'] })}
+                className="h-12 px-4 bg-black/5 dark:bg-white/5 border border-border/50 hover:bg-surface-container-high rounded-2xl text-muted-foreground shrink-0"
+              >
+                <RefreshCw className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                <span className="font-bold text-xs uppercase">{tCommon('retry') || 'Refresh'}</span>
+              </Button>
+            </div>
           </div>
 
           {/* Table Container */}
@@ -223,15 +235,15 @@ export default function LotBalanceClient() {
                             </p>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-end">
-                          <span className="text-xs font-bold font-mono text-foreground">
-                            {Number(lot.qtyAvailable).toLocaleString()}
+                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-end" dir="ltr">
+                          <span className="text-xs font-bold font-mono text-foreground tabular-nums">
+                            {Number(lot.qtyAvailable).toLocaleString('en-US')}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
                           <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <Calendar className="w-3.5 h-3.5" />
-                            {lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString() : '—'}
+                            {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">

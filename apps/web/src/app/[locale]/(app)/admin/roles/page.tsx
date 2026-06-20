@@ -24,8 +24,8 @@ export default async function RolesPage(props: { params: Promise<{ locale: strin
    <div className="flex flex-col gap-10 p-8 max-w-[1600px] mx-auto min-w-0">
     <PageHeader 
      title={t('roles.roles_title')} 
-     description={t('roles.roles_page_description')}
-     actions={
+     subtitle={t('roles.roles_page_description')}
+     children={
       <Link href="/admin/roles/matrix">
        <Button className="h-11 px-8 bg-surface-container-high hover:bg-surface-container-highest text-cyan-500 text-label-xs font-semibold uppercase rounded-sm transition-all border border-cyan-500/30">
         {t('roles.view_matrix')}

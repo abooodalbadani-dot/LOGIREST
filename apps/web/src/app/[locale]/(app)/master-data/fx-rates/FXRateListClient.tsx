@@ -201,8 +201,8 @@ export function FXRateListClient({ locale }: { locale: string }) {
     <Breadcrumb items={breadcrumbs} />
     <PageHeader 
      title={tfx('title')} 
-     description={tfx('description')}
-     actions={
+     subtitle={tfx('description')}
+     children={
       normalizedRole === 'auditor' ? (
        <Button disabled className="h-11 px-8 bg-operational-cyan text-white text-label-xs font-bold uppercase rounded-xl opacity-50 cursor-not-allowed">
         <Plus className="w-3.5 h-3.5 me-2" />
@@ -210,7 +210,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
        </Button>
       ) : (
        <PermissionGate action="create" resource="master_data">
-        <Link href={`/master-data/fx-rates/new`}>
+        <Link href={`/master-data/fx-rates/new`} className="shrink-0 w-full sm:w-auto">
          <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
           <Plus className="w-3.5 h-3.5 me-2" />
           {t('create_new')}
@@ -260,16 +260,20 @@ export function FXRateListClient({ locale }: { locale: string }) {
      />
     }
     filters={
-      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-        <Input
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:w-80 md:w-96">
+           <div className="relative w-full group">
+             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+             <Input
          placeholder={tfx('search_placeholder')}
          value={search}
          onChange={(e) => setSearch(e.target.value)}
          className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
+           </div>
+         </div>
        </div>
-     }
+      }
    />
   </div>
  );

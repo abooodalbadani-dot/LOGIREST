@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { 
  ArrowLeft, 
  CheckCircle2, 
@@ -356,7 +356,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
  );
 
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm flex flex-col animate-in fade-in duration-1000 pb-32">
+  <div className="min-h-screen flex flex-col animate-in fade-in duration-1000 pb-32">
    <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 w-full space-y-8">
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
      <div data-slot="page-header" className="space-y-4">
@@ -396,7 +396,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
        {/* Left Column: Details and Items */}
        <div className="lg:col-span-8 space-y-8">
-        <div className="bg-card border border-border shadow-sm p-5 px-6 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className={cn(
+          "bg-card border border-border shadow-sm p-5 px-6 rounded-lg border border-surface-container-high/20 grid grid-cols-1 gap-8",
+          request.issueId ? "md:grid-cols-4" : "md:grid-cols-3"
+         )}>
          <div className="space-y-1">
           <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
            <Building2 className="w-3.5 h-3.5" />
@@ -418,8 +421,27 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           </span>
           <p className="text-body-md font-bold">{request.requestedBy}</p>
          </div>
+         {request.issueId && (
+          <div className="space-y-1">
+           <span className="text-label-xs font-semibold uppercase text-cyan-500 flex items-center gap-2">
+            <FileText className="w-3.5 h-3.5" />
+            {t('stock_issue')}
+           </span>
+           <p className="text-body-md font-bold">
+            <Link 
+             href={`/issues/${request.issueId}`} 
+             className="text-cyan-600 hover:text-cyan-500 underline decoration-cyan-500/30 hover:decoration-cyan-500 transition-colors"
+            >
+             {t('view_stock_issue')}
+            </Link>
+           </p>
+          </div>
+         )}
          {request.notes && (
-          <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
+          <div className={cn(
+           "pt-4 border-t border-surface-container-high/50 space-y-1",
+           request.issueId ? "md:col-span-4" : "md:col-span-3"
+          )}>
            <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
             <FileText className="w-3.5 h-3.5" />
             {tCommon('notes')}
@@ -428,7 +450,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           </div>
          )}
          {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejectionReason && (
-          <div className="md:col-span-3 p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1">
+          <div className={cn(
+           "p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1",
+           request.issueId ? "md:col-span-4" : "md:col-span-3"
+          )}>
            <span className="text-label-xs font-semibold uppercase text-red-500/60 flex items-center gap-2">
             <AlertCircle className="w-3.5 h-3.5" />
             {t('rejection_reason_label')}

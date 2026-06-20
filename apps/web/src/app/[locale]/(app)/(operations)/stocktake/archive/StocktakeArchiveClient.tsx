@@ -108,7 +108,7 @@ export function StocktakeArchiveClient({
  ], [t, tc, locale, router]);
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
    <div className="flex flex-col gap-6 min-w-0">
     <Breadcrumb 
      items={[
@@ -119,7 +119,7 @@ export function StocktakeArchiveClient({
     />
     <PageHeader
      title={t('archive_title') || 'Stocktake Archive'}
-     description={t('archive_description') || 'Historical inventory audits and finalized verification sessions'}
+     subtitle={t('archive_description') || 'Historical inventory audits and finalized verification sessions'}
      icon={<Archive className="w-8 h-8 text-muted-foreground/40" />}
     />
    </div>
@@ -189,7 +189,7 @@ export function StocktakeArchiveClient({
       </Button>
      </div>
 
-     <div className="bg-card border border-border shadow-sm rounded-lg border border-outline-low overflow-hidden shadow-sm">
+     <div className="flex-1 w-full min-h-[400px] md:min-h-0">
       <DataTable
        columns={columns}
        data={data?.data || []}

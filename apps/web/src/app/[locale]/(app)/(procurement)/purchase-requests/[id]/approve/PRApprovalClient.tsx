@@ -81,7 +81,10 @@ export function PRApprovalClient({ id }: Props) {
   } catch (e) {
    console.error(e);
    playSound('error');
-   toast.error(tc('error'));
+   const isToastShown = e && typeof e === 'object' && (e as Record<string, unknown>)._isToastShown === true;
+   if (!isToastShown) {
+    toast.error(tc('error'));
+   }
   }
  };
 
@@ -100,7 +103,10 @@ export function PRApprovalClient({ id }: Props) {
   } catch (e) {
    console.error(e);
    playSound('error');
-   toast.error(tc('error'));
+   const isToastShown = e && typeof e === 'object' && (e as Record<string, unknown>)._isToastShown === true;
+   if (!isToastShown) {
+    toast.error(tc('error'));
+   }
   }
  };
 
@@ -125,7 +131,7 @@ export function PRApprovalClient({ id }: Props) {
     </div>
     <PageHeader
      title={t('approval.title')}
-     description={`${t('approval.description')} #${pr.documentNumber}`}
+     subtitle={`${t('approval.description')} #${pr.documentNumber}`}
     />
    </div>
 

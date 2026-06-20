@@ -3,6 +3,7 @@
 import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ConflictError } from '@/lib/api/ConflictError';
+import { useTranslations } from 'next-intl';
 
 /**
  * AxiosLikeError defines the minimal structure we expect for API errors
@@ -18,6 +19,7 @@ export interface AxiosLikeError {
   name?: string;
   code?: string;
   message?: string;
+  _isToastShown?: boolean;
 }
 
 /**
@@ -49,8 +51,9 @@ export function useSafeMutation<
   options: SafeMutationOptions<TData, TError, TVariables, TContext>
 ): UseMutationResult<TData, TError, TVariables, TContext> {
   const { onConflict, onError, skipAutoToast, ...rest } = options;
+  const t = useTranslations();
 
-  return useMutation<TData, TError, TVariables, TContext>({
+  const mutation = useMutation<TData, TError, TVariables, TContext>({
     ...rest,
     onError: (error, variables, context) => {
       // 1. Check if this is an Optimistic Locking Conflict (HTTP 409 or ConflictError)
@@ -73,15 +76,111 @@ export function useSafeMutation<
         error.message === 'Aborted' || 
         error.message === 'AbortError';
 
-      if (!isConflict && !isAbortError && !skipAutoToast) {
-        const message = error.message || error.response?.data?.message || 'Operation failed / فشلت العملية';
+      const isToastShown = !!error._isToastShown;
+
+      if (!isConflict && !isAbortError && !skipAutoToast && !isToastShown) {
+        const rawMessage = error.message || error.response?.data?.message || 'errors.generic';
+        let message = rawMessage;
+        try {
+          if (t.has(rawMessage)) {
+            message = t(rawMessage);
+          }
+        } catch {
+          // Fallback to rawMessage
+        }
         toast.error(message);
       }
 
       // 2. Forward to original error handler for all other cases
       if (onError) {
-        (onError as (err: TError, vars: TVariables, ctx: TContext | undefined) => unknown)(error, variables, context);
+        if (isToastShown) {
+          const originalToastError = toast.error;
+          try {
+            // Temporarily disable toast.error to prevent duplicate toasts inside custom onError
+            const writableToast = toast as typeof toast & { error: typeof toast.error };
+            writableToast.error = () => "";
+            (onError as (err: TError, vars: TVariables, ctx: TContext | undefined) => unknown)(error, variables, context);
+          } catch (e) {
+            console.error('[SafeMutation] Error in wrapped onError handler:', e);
+          } finally {
+            const writableToast = toast as typeof toast & { error: typeof toast.error };
+            writableToast.error = originalToastError;
+          }
+        } else {
+          (onError as (err: TError, vars: TVariables, ctx: TContext | undefined) => unknown)(error, variables, context);
+        }
       }
     },
   });
+
+  const originalMutate = mutation.mutate;
+  const originalMutateAsync = mutation.mutateAsync;
+
+  const wrappedMutate = (
+    variables: TVariables,
+    mutateOptions?: Parameters<typeof originalMutate>[1]
+  ) => {
+    let finalOptions = mutateOptions;
+    if (mutateOptions?.onError) {
+      const originalOnError = mutateOptions.onError;
+      finalOptions = {
+        ...mutateOptions,
+        onError: (...args) => {
+          const error = args[0] as AxiosLikeError;
+          const isToastShown = !!(error && error._isToastShown);
+          if (isToastShown) {
+            const originalToastError = toast.error;
+            try {
+              const writableToast = toast as typeof toast & { error: typeof toast.error };
+              writableToast.error = () => "";
+              originalOnError(...args);
+            } finally {
+              const writableToast = toast as typeof toast & { error: typeof toast.error };
+              writableToast.error = originalToastError;
+            }
+          } else {
+            originalOnError(...args);
+          }
+        }
+      };
+    }
+    originalMutate(variables, finalOptions);
+  };
+
+  const wrappedMutateAsync = (
+    variables: TVariables,
+    mutateOptions?: Parameters<typeof originalMutateAsync>[1]
+  ) => {
+    let finalOptions = mutateOptions;
+    if (mutateOptions?.onError) {
+      const originalOnError = mutateOptions.onError;
+      finalOptions = {
+        ...mutateOptions,
+        onError: (...args) => {
+          const error = args[0] as AxiosLikeError;
+          const isToastShown = !!(error && error._isToastShown);
+          if (isToastShown) {
+            const originalToastError = toast.error;
+            try {
+              const writableToast = toast as typeof toast & { error: typeof toast.error };
+              writableToast.error = () => "";
+              originalOnError(...args);
+            } finally {
+              const writableToast = toast as typeof toast & { error: typeof toast.error };
+              writableToast.error = originalToastError;
+            }
+          } else {
+            originalOnError(...args);
+          }
+        }
+      };
+    }
+    return originalMutateAsync(variables, finalOptions);
+  };
+
+  return {
+    ...mutation,
+    mutate: wrappedMutate,
+    mutateAsync: wrappedMutateAsync
+  };
 }

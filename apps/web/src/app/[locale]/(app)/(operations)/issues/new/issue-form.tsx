@@ -28,6 +28,7 @@ import { LockBanner } from "@/components/ui/lock-banner";
 import { FEFOLotAllocator } from "@/components/ui/fefo-lot-allocator";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { useCreateIssue, type CreateIssuePayload } from "@/features/operations/hooks/useCreateIssue";
+import { useKitchenRequestList, useKitchenRequest } from "@/features/operations/hooks/useKitchenRequests";
 import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -85,6 +86,11 @@ export function IssueForm() {
  const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
  const [confirmOpen, setConfirmOpen] = useState(false);
 
+ const [selectedKitchenRequestId, setSelectedKitchenRequestId] = useState<string | null>(null);
+ const { data: kitchenRequestsPaginated } = useKitchenRequestList({ status: "SUBMITTED" });
+ const kitchenRequests = kitchenRequestsPaginated?.data || [];
+ const { data: kitchenRequestData } = useKitchenRequest(selectedKitchenRequestId || "");
+
  const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
  const form = useForm<IssueFormValues>({
@@ -96,6 +102,22 @@ export function IssueForm() {
   notes: "",
  },
  });
+
+ // Sync kitchen request items and properties
+ useEffect(() => {
+   if (kitchenRequestData) {
+     form.setValue("warehouseId", kitchenRequestData.warehouseId);
+     form.setValue("destinationDeptId", kitchenRequestData.departmentId);
+     const newLines = kitchenRequestData.items.map(item => ({
+       itemId: item.itemId,
+       requestedQty: item.quantity,
+       qty: 0,
+       lotAllocations: [],
+       notes: "",
+     }));
+     form.setValue("lines", newLines, { shouldDirty: true, shouldValidate: true });
+   }
+ }, [kitchenRequestData, form]);
 
  // Register dirty state
  useEffect(() => {
@@ -259,6 +281,7 @@ export function IssueForm() {
      allocatedQty: lot.allocatedQty,
     })),
    })),
+   kitchenRequestId: selectedKitchenRequestId || undefined,
   };
   createIssue.mutate(payload, {
  onSuccess: (issue) => {
@@ -283,7 +306,7 @@ export function IssueForm() {
  <Settings2 className="w-8 h-8" />
  </div>
  <div>
- <h2 className="text-headline-lg font-semibold text-foreground">{t('title')}</h2>
+ <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight uppercase flex items-center gap-3">STOCK <span className="text-primary font-extrabold mx-1">ISSUES</span></h2>
  <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase mt-1 italic">{t('new_description')}</p>
  </div>
  <div className="ms-auto flex items-center gap-2">
@@ -298,6 +321,25 @@ export function IssueForm() {
  )}
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+  <FormItem>
+  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+  <FileText className="w-3.5 h-3.5" />
+  {t('kitchen_request') || "Kitchen Request"}
+  </FormLabel>
+  <FormControl>
+  <SmartCombobox
+  items={kitchenRequests.map(kr => ({
+   id: kr.id,
+   name: `${kr.requestNumber} (${kr.departmentName || kr.departmentId})`,
+  }))}
+  value={selectedKitchenRequestId || ""}
+  onSelect={(item) => setSelectedKitchenRequestId(item.id)}
+  placeholder={t('select_kitchen_request') || "Select Kitchen Request"}
+  triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
+  />
+  </FormControl>
+  </FormItem>
+
  <FormField<IssueFormValues, "warehouseId">
  control={form.control}
  name="warehouseId"
@@ -313,6 +355,7 @@ export function IssueForm() {
  value={field.value}
  onSelect={(item) => field.onChange(item.id)}
  placeholder={tc('warehouse') || "Select Warehouse"}
+ disabled={!!selectedKitchenRequestId}
  triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
  />
  </FormControl>
@@ -336,6 +379,7 @@ export function IssueForm() {
  value={field.value}
  onSelect={(item) => field.onChange(item.id)}
  placeholder={t('select_department')}
+ disabled={!!selectedKitchenRequestId}
  triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
  />
  </FormControl>
@@ -354,7 +398,7 @@ export function IssueForm() {
  {t('operational_notes')}
  </FormLabel>
  <FormControl>
- <Input placeholder={t('notes_placeholder')} className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full" {...field} />
+ <Input placeholder={t('notes_placeholder')} className="bg-card border border-input shadow-sm h-11 rounded-xl text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -377,8 +421,8 @@ export function IssueForm() {
  </div>
  </div>
 
- <div className="mb-8 w-full max-w-xl mx-auto space-y-2">
-  <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block text-center whitespace-nowrap">
+ <div className="flex flex-col w-full gap-2 items-start mb-6">
+  <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block whitespace-nowrap">
    {tc('select_item') || "Search Item"}
   </label>
   <SmartCombobox
@@ -393,6 +437,7 @@ export function IssueForm() {
     }
    }}
    placeholder={tc('select_item') || "Search and Select Item"}
+   triggerClassName="w-full"
   />
  </div>
 

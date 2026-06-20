@@ -7,7 +7,6 @@ import {
  StocktakeSessionSchema, 
  CreateStocktakeDTO, 
  SubmitCountDTO,
- StocktakeItemSchema
 } from '../types/stocktake';
 import { successSchema } from '@/types/api';
 import { STOCKTAKE_STATUS } from '@logirest/shared-types';
@@ -106,7 +105,7 @@ export function useSubmitVariance(options?: { onConflict?: () => void }) {
  const qc = useQueryClient();
  return useSafeMutation({
   onConflict: options?.onConflict,
-  mutationFn: ({ id, items, signal }: { id: string; items: { line_id: string; variance_reason?: string }[]; signal?: AbortSignal }) => 
+  mutationFn: ({ id, items, signal }: { id: string; items: { lineId: string; varianceReason?: string }[]; signal?: AbortSignal }) => 
    apiClient.post(`/stocktake/sessions/${id}/review_variance`, StocktakeSessionSchema, { items }, { signal }),
   onSuccess: (_, { id }) => {
    qc.invalidateQueries({ queryKey: ['stocktakes'] });
@@ -124,9 +123,9 @@ export function useUpdateItemCount(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: ({ stocktakeId, itemId: _itemId, lineId, countedQty, varianceReason, signal, headers }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string; signal?: AbortSignal; headers?: Record<string, string> }) => 
-   apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeItemSchema, { 
-    counted_qty: countedQty, 
-    variance_reason: varianceReason 
+   apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeSessionSchema, { 
+    countedQty, 
+    varianceReason 
    }, { signal, headers }),
   onSuccess: (_, { stocktakeId }) => {
    qc.invalidateQueries({ queryKey: ['stocktakes', stocktakeId] });
@@ -238,7 +237,7 @@ export function useRecountItems(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: ({ id, itemIds, signal }: { id: string; itemIds: string[]; signal?: AbortSignal }) =>
-   apiClient.post(`/stocktake/sessions/${id}/recount`, StocktakeSessionSchema, { item_ids: itemIds }, { signal }),
+   apiClient.post(`/stocktake/sessions/${id}/recount`, StocktakeSessionSchema, { itemIds }, { signal }),
   onSuccess: (_, { id }) => {
    qc.invalidateQueries({ queryKey: ['stocktakes'] });
    qc.invalidateQueries({ queryKey: ['stocktakes', id] });

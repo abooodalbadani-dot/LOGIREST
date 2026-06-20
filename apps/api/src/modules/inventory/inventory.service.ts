@@ -175,6 +175,47 @@ export class InventoryService {
       ? Prisma.sql`AND sl."itemId" = ${query.itemId}`
       : Prisma.empty;
 
+    const searchFilter = query.search
+      ? Prisma.sql`AND (
+          i.sku ILIKE ${'%' + query.search + '%'} OR
+          i.name ILIKE ${'%' + query.search + '%'} OR
+          sl."documentId" ILIKE ${'%' + query.search + '%'} OR
+          grn."grnNumber" ILIKE ${'%' + query.search + '%'} OR
+          issue."issueNumber" ILIKE ${'%' + query.search + '%'} OR
+          tf."transferNumber" ILIKE ${'%' + query.search + '%'} OR
+          adj."adjustmentNumber" ILIKE ${'%' + query.search + '%'} OR
+          st."sessionNumber" ILIKE ${'%' + query.search + '%'}
+        )`
+      : Prisma.empty;
+
+    let docTypeDbValue: string | undefined = undefined;
+    if (query.documentType) {
+      const norm = query.documentType.toUpperCase();
+      if (norm === 'GRN' || norm === 'GOODS_RECEIVED_NOTE') {
+        docTypeDbValue = 'GOODS_RECEIVED_NOTE';
+      } else if (norm === 'ISSUE' || norm === 'INVENTORY_ISSUE') {
+        docTypeDbValue = 'INVENTORY_ISSUE';
+      } else if (norm === 'TRANSFER') {
+        docTypeDbValue = 'TRANSFER';
+      } else if (norm === 'ADJUSTMENT') {
+        docTypeDbValue = 'ADJUSTMENT';
+      } else if (norm === 'STOCKTAKE') {
+        docTypeDbValue = 'STOCKTAKE';
+      } else if (norm === 'KITCHEN_REQUEST') {
+        docTypeDbValue = 'KITCHEN_REQUEST';
+      } else {
+        docTypeDbValue = query.documentType;
+      }
+    }
+
+    const docTypeFilter = docTypeDbValue
+      ? Prisma.sql`AND m."transactionType" = ${docTypeDbValue}::"DocumentType"`
+      : Prisma.empty;
+
+    const docTypeFilterCount = docTypeDbValue
+      ? Prisma.sql`AND sl."documentType" = ${docTypeDbValue}::"DocumentType"`
+      : Prisma.empty;
+
     interface RawMovementResult {
       id: string;
       timestamp: Date;
@@ -183,6 +224,7 @@ export class InventoryService {
       itemName: string;
       transactionType: string;
       documentReference: string | null;
+      documentId: string | null;
       quantity: number | string;
       balanceAfter: number | string;
       performedByUserName: string | null;
@@ -203,8 +245,10 @@ export class InventoryService {
             issue."issueNumber",
             tf."transferNumber",
             adj."adjustmentNumber",
+            st."sessionNumber",
             sl."documentId"
           ) as "documentReference",
+          sl."documentId" as "documentId",
           sl.quantity::float as quantity,
           SUM(sl.quantity) OVER (
             PARTITION BY sl."itemId" 
@@ -217,8 +261,10 @@ export class InventoryService {
         LEFT JOIN inventory_issues issue ON issue.id = sl."documentId" AND sl."documentType" = 'INVENTORY_ISSUE'
         LEFT JOIN transfers tf ON tf.id = sl."documentId" AND sl."documentType" = 'TRANSFER'
         LEFT JOIN adjustments adj ON adj.id = sl."documentId" AND sl."documentType" = 'ADJUSTMENT'
+        LEFT JOIN stocktake_sessions st ON st.id = sl."documentId" AND sl."documentType" = 'STOCKTAKE'
         WHERE sl."warehouseId" = ${warehouseId}
           ${itemIdFilter}
+          ${searchFilter}
       )
       SELECT m.*, COALESCE(u.name, 'System User') as "performedByUserName"
       FROM movements_with_balance m
@@ -232,6 +278,7 @@ export class InventoryService {
         LIMIT 1
       ) u ON true
       WHERE 1=1
+        ${docTypeFilter}
         ${query.startDate ? Prisma.sql`AND m.raw_posted_at >= ${new Date(query.startDate)}` : Prisma.empty}
         ${query.endDate ? Prisma.sql`AND m.raw_posted_at <= ${new Date(query.endDate)}` : Prisma.empty}
       ORDER BY m.raw_posted_at DESC, m.id DESC
@@ -242,8 +289,16 @@ export class InventoryService {
     const totalResult = await this.prisma.$queryRaw<Array<{ count: bigint }>>`
       SELECT COUNT(*)::bigint as count
       FROM stock_ledger sl
+      INNER JOIN items i ON i.id = sl."itemId"
+      LEFT JOIN goods_received_notes grn ON grn.id = sl."documentId" AND sl."documentType" = 'GOODS_RECEIVED_NOTE'
+      LEFT JOIN inventory_issues issue ON issue.id = sl."documentId" AND sl."documentType" = 'INVENTORY_ISSUE'
+      LEFT JOIN transfers tf ON tf.id = sl."documentId" AND sl."documentType" = 'TRANSFER'
+      LEFT JOIN adjustments adj ON adj.id = sl."documentId" AND sl."documentType" = 'ADJUSTMENT'
+      LEFT JOIN stocktake_sessions st ON st.id = sl."documentId" AND sl."documentType" = 'STOCKTAKE'
       WHERE sl."warehouseId" = ${warehouseId}
         ${itemIdFilter}
+        ${searchFilter}
+        ${docTypeFilterCount}
         ${query.startDate ? Prisma.sql`AND sl."postedAt" >= ${new Date(query.startDate)}` : Prisma.empty}
         ${query.endDate ? Prisma.sql`AND sl."postedAt" <= ${new Date(query.endDate)}` : Prisma.empty}
     `;
@@ -257,6 +312,7 @@ export class InventoryService {
       itemName: movement.itemName,
       transactionType: movement.transactionType,
       documentReference: movement.documentReference,
+      documentId: movement.documentId,
       quantity: Number(movement.quantity),
       balanceAfter: Number(movement.balanceAfter),
       performedByUserName: movement.performedByUserName,

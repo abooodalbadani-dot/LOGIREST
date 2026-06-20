@@ -57,14 +57,14 @@ export function ConvertToPOModal({ pr, open, onOpenChange }: ConvertToPOModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] sm:w-full sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{t('convert_to_po')}</DialogTitle>
           <DialogDescription>
             {t('convert_to_po_desc')}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label className="text-label-xs font-semibold uppercase">{tc('supplier')}</label>
@@ -90,8 +90,8 @@ export function ConvertToPOModal({ pr, open, onOpenChange }: ConvertToPOModalPro
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {tc('actions.cancel')}
           </Button>
-          <Button 
-            onClick={handleConvert} 
+          <Button
+            onClick={handleConvert}
             disabled={!supplierId || !currencyId || convertMutation.isPending}
             className="bg-brand-gold hover:bg-brand-gold-hover text-white"
           >

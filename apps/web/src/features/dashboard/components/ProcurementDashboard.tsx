@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export function ProcurementDashboard() {
  const t = useTranslations('dashboard');
@@ -35,17 +36,19 @@ export function ProcurementDashboard() {
   <main role="main" className="space-y-10 animate-in fade-in duration-200">
 
    {/* Procurement Header - Enterprise Style */}
-   <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 ps-6">
-    <div className="space-y-2">
-     <span className="text-label-xs font-semibold uppercase text-operational-cyan block mb-2 opacity-80">{t('procurement.supply_chain')}</span>
-     <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight leading-none">
-       {t('procurement.strategic')} <span className="text-brand-gold">{t('procurement.sourcing')}</span>
-      </h1>
-     <div className="flex items-center gap-3">
-      <div className="h-[2px] w-12 bg-operational-cyan" />
-      <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('procurement.central_procurement_unit')}</p>
-     </div>
-    </div>
+   <PageHeader
+    title={t('procurement.strategic')}
+    highlight={t('procurement.sourcing')}
+    subtitle={
+     <>
+      <span className="text-label-xs font-semibold uppercase text-operational-cyan block mb-2 opacity-80">{t('procurement.supply_chain')}</span>
+      <div className="flex items-center gap-3">
+       <div className="h-[2px] w-12 bg-operational-cyan" />
+       <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('procurement.central_procurement_unit')}</p>
+      </div>
+     </>
+    }
+   >
     <div className="flex gap-4">
      <PermissionGate action="create" resource="procurement_pr">
       <Link href="/purchase-requests/new" className="contents">
@@ -63,7 +66,7 @@ export function ProcurementDashboard() {
       </Link>
      </PermissionGate>
     </div>
-   </header>
+   </PageHeader>
 
    {/* KPI Grid */}
    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" aria-labelledby="kpi-heading">
@@ -119,33 +122,35 @@ export function ProcurementDashboard() {
         </div>
        </div>
        <div className="divide-y divide-transparent">
-        {stats.pendingApprovals.filter(doc => doc.type === 'PR').map((doc, i) => (
-         <div key={i} className="px-8 py-6 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial cursor-pointer group">
-          <div className="flex items-center gap-8">
-           <div className="flex flex-col items-center justify-center w-14 h-14 bg-card border border-border shadow-sm rounded-2xl font-mono text-label-sm font-semibold group-hover:bg-operational-cyan/10 transition-all duration-200">
-            <span className="opacity-10 text-label-xxs mb-1">{tc('id')}</span>
-            {doc.documentNumber.split('-')[1] || doc.documentNumber}
-           </div>
-           <div className="space-y-2">
-            <div className="flex items-center gap-4">
-             <span className="text-body-md font-semibold text-foreground uppercase">{doc.destination}</span>
-             <Badge className={`rounded-lg text-label-xxs font-semibold uppercase px-2.5 py-1 border-none ${ doc.priority === 'high' ? 'bg-status-error text-white animate-pulse' : 'bg-surface-container-high text-muted-foreground/60' }`}>
-              {tc(`priority.${doc.priority.toLowerCase()}`)}
-             </Badge>
+        {stats.pendingApprovals.filter(doc => doc.type === 'PR').map((doc) => (
+         <Link key={doc.id} href={`/purchase-requests/${doc.id}`} className="block">
+          <div className="px-8 py-6 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group">
+           <div className="flex items-center gap-8">
+            <div className="flex flex-col items-center justify-center w-14 h-14 bg-card border border-border shadow-sm rounded-2xl font-mono text-label-sm font-semibold group-hover:bg-operational-cyan/10 transition-all duration-200">
+             <span className="opacity-10 text-label-xxs mb-1">{tc('id')}</span>
+             {doc.documentNumber.split('-')[1] || doc.documentNumber}
             </div>
-            <p className="text-label-xs text-muted-foreground/30 font-semibold uppercase">
-             {formatCurrency(doc.totalValue || 0, stats.currency, locale as 'ar' | 'en')} • {t('procurement.purchase_request')}
-            </p>
+            <div className="space-y-2">
+             <div className="flex items-center gap-4">
+              <span className="text-body-md font-semibold text-foreground uppercase">{doc.destination}</span>
+              <Badge className={`rounded-lg text-label-xxs font-semibold uppercase px-2.5 py-1 border-none ${ doc.priority === 'high' ? 'bg-status-error text-white animate-pulse' : 'bg-surface-container-high text-muted-foreground/60' }`}>
+               {tc(`priority.${doc.priority.toLowerCase()}`)}
+              </Badge>
+             </div>
+             <p className="text-label-xs text-muted-foreground/30 font-semibold uppercase">
+              {formatCurrency(doc.totalValue || 0, stats.currency, locale as 'ar' | 'en')} • {t('procurement.purchase_request')}
+             </p>
+            </div>
+           </div>
+           <div className="flex items-center gap-4">
+            <PermissionGate action="approve" resource="procurement_pr">
+             <div className="flex items-center justify-center rounded-2xl bg-card border border-border shadow-sm h-12 px-6 font-semibold uppercase text-label-xs hover:bg-operational-cyan hover:text-black transition-all">
+              {tc('actions.review')}
+             </div>
+            </PermissionGate>
            </div>
           </div>
-          <div className="flex items-center gap-4">
-           <PermissionGate action="approve" resource="procurement_pr">
-            <Button variant="ghost" className="rounded-2xl bg-card border border-border shadow-sm h-12 px-6 font-semibold uppercase text-label-xs hover:bg-operational-cyan hover:text-black transition-all">
-             {tc('actions.review')}
-            </Button>
-           </PermissionGate>
-          </div>
-         </div>
+         </Link>
         ))}
        </div>
       </div>

@@ -13,7 +13,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Repeat, Truck, CheckCircle, AlertTriangle, Search } from 'lucide-react';
+import { Plus, Filter, Repeat, Truck, CheckCircle, AlertTriangle, Search, X } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -170,12 +170,12 @@ export function TransferListClient() {
 
  const totalTransfersCount = summaryData?.total ?? data?.meta?.total ?? 0;
  const inTransitCount = summaryData?.inTransit ?? 0;
- const completedCount = data?.data?.filter(i => isTransferPosted(i.transferStatus)).length ?? 0;
+ const completedCount = data?.data?.filter(i => i.transferStatus === 'RECEIVED' || i.transferStatus === 'POSTED' || i.transferStatus === 'COMPLETED').length ?? 0;
 
  const overdueCount = summaryData?.overdueCount ?? 0;
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
    <Breadcrumb
     items={[
      { label: tCommon('modules.operations'), href: `/transfers` },
@@ -201,8 +201,8 @@ export function TransferListClient() {
 
    <PageHeader
     title={t('title')}
-    description={t('description')}
-    actions={
+    subtitle={t('description')}
+    children={
      <div className="flex items-center gap-6">
       <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex min-w-0">
        <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
@@ -214,7 +214,7 @@ export function TransferListClient() {
        </div>
       </div>
       <PermissionGate action="create" resource="transfer">
-       <Link href="/transfers/new">
+       <Link href="/transfers/new" className="shrink-0 w-full sm:w-auto">
         <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm shadow-cyan-900/10 whitespace-nowrap">
          <Plus className="w-3.5 h-3.5 me-2" />
          {t('create_new')}
@@ -248,7 +248,7 @@ export function TransferListClient() {
     />
    </div>
 
-   <div className="bg-card border border-border shadow-sm rounded-lg border border-outline-low/5 overflow-hidden shadow-sm">
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
     <DataTable
      columns={columns}
      data={data?.data || []}
@@ -273,17 +273,40 @@ export function TransferListClient() {
       totalPages: data.meta.totalPages,
       onPageChange: setPage
      } : undefined}
-     filters={
-      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
-         placeholder={tCommon('statuses.all') || "All Statuses"}
-         value={status || 'ALL'}
-         onChange={(e) => setSearch(e.target.value)}
-         className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
-        />
-       </div>
-     }
+      filters={
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          <div className="w-full sm:w-64">
+            <div className="relative w-full">
+              <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder={tCommon('search') || "Search..."}
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+              />
+            </div>
+          </div>
+          <div className="w-full sm:w-48 relative group">
+            <SmartCombobox
+              items={statusItems}
+              value={status || 'ALL'}
+              onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+              placeholder={tCommon('statuses.all') || "All Statuses"}
+              triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+            />
+            {status && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      }
     />
    </div>
   </div>

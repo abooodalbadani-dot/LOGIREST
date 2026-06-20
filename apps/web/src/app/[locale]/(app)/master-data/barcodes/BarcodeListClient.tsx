@@ -101,7 +101,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
  ], [tc, t, locale, router, items]);
 
  return (
-  <div className="overflow-x-hidden md:p-8 min-w-0 gap-6 flex-1 sm:p-6 fade-in p-4 max-w-full slide-in-from-bottom-4 duration-1000 animate-in flex-col flex w-full">
+  <div className="overflow-x-hidden min-w-0 gap-6 flex-1 fade-in max-w-full slide-in-from-bottom-4 duration-1000 animate-in flex-col flex w-full">
    <div className="space-y-4">
     <Breadcrumb 
      items={[
@@ -112,17 +112,17 @@ export function BarcodeListClient({ locale }: { locale: string }) {
     />
     <PageHeader 
      title={t('title')} 
-     description={t('description')}
-     actions={
+     subtitle={t('description')}
+     children={
       <PermissionGate action="create" resource="master_data">
        <div className="flex gap-4">
-        <Link href={`/master-data/barcodes/mapping`}>
+        <Link href={`/master-data/barcodes/mapping`} className="shrink-0 w-full sm:w-auto">
          <Button variant="outline" className="h-11 px-6 border-white/5 bg-card border border-border shadow-sm hover:bg-surface-container-medium text-label-xs font-semibold uppercase rounded-sm">
           <ScanLine className="w-3.5 h-3.5 me-2 text-foreground" />
           {useTranslations('master_data.barcode_mapping')('title')}
          </Button>
         </Link>
-        <Link href={`/master-data/barcodes/new`}>
+        <Link href={`/master-data/barcodes/new`} className="shrink-0 w-full sm:w-auto">
          <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm shadow-primary/20">
           <Plus className="w-3.5 h-3.5 me-2" />
           {tc('create')}
@@ -165,15 +165,19 @@ export function BarcodeListClient({ locale }: { locale: string }) {
      />
     }
     filters={
-      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-        <Input
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:w-80 md:w-96">
+           <div className="relative w-full group">
+             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+             <Input
          placeholder={tc('search')}
          value={search}
          onChange={(e) => { setSearch(e.target.value); }} className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
+           </div>
+         </div>
        </div>
-     }
+      }
    />
 
    {/* Quick Tips */}

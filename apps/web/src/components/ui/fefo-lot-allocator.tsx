@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle2, PackageSearch, Zap, Calendar, ArrowRight, ShieldAlert, BadgeCheck } from "lucide-react";
 import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { formatDate } from "@/utils/currency";
 
 interface AvailableLot extends IssueLot {
  availableQty: number;
@@ -26,6 +27,7 @@ interface FEFOLotAllocatorProps {
 
 export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllocate, lots }: FEFOLotAllocatorProps) {
  const t = useTranslations("common.fefo");
+ const locale = useLocale();
  const availableLots = lots ?? [];
  const [allocations, setAllocations] = useState<Record<string, number>>({});
 
@@ -184,7 +186,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
              <div className="flex items-center gap-4 text-label-xs font-bold text-muted-foreground/40 uppercase" dir="ltr">
               <span className="flex items-center gap-1.5">
                <Calendar className="w-3 h-3" />
-               {t("expiry_label")} <span className={isExpiredFlag ? "text-status-error" : "text-foreground/60"}>{lot.expiryDate}</span>
+               {t("expiry_label")} <span className={isExpiredFlag ? "text-status-error" : "text-foreground/60"}>{lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : 'N/A'}</span>
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-muted/20" />
               <span>{t("in_stock")} <span className="text-foreground/60">{lot.availableQty}</span></span>

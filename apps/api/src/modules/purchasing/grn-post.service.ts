@@ -87,14 +87,7 @@ export class GrnPostService {
               const item = line.item;
               const lotId = line.lotId;
 
-              // Historical posting guard
-              const latestLedger = await tx.stockLedger.findFirst({
-                where: { warehouseId: grn.warehouseId, itemId: item.id },
-                orderBy: { postedAt: 'desc' },
-              });
-              if (latestLedger && grn.createdAt < latestLedger.postedAt) {
-                throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
-              }
+              // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
 
               // Check if item is frozen in destination warehouse
               const destWhItemCheck = await tx.warehouseItem.findUnique({

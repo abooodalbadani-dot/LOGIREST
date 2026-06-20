@@ -17,6 +17,7 @@ describe('StocktakeService', () => {
   const mockWarehouseLockCreate = jest.fn();
   const mockWarehouseLockUpdateMany = jest.fn();
   const mockWarehouseItemFindMany = jest.fn();
+  const mockWarehouseItemUpdateMany = jest.fn();
   const mockWarehouseItemLotFindMany = jest.fn();
   const mockStocktakeSnapshotCreateMany = jest.fn();
   const mockStocktakeCountFindFirst = jest.fn();
@@ -39,6 +40,7 @@ describe('StocktakeService', () => {
     },
     warehouseItem: {
       findMany: mockWarehouseItemFindMany,
+      updateMany: mockWarehouseItemUpdateMany,
     },
     warehouseItemLot: {
       findMany: mockWarehouseItemLotFindMany,
@@ -108,11 +110,17 @@ describe('StocktakeService', () => {
     });
 
     it('should lock warehouse, write snapshot, and execute transition', async () => {
-      mockStocktakeSessionFindUnique.mockResolvedValue({
-        id: 's-1',
-        status: 'DRAFT',
-        warehouseId: 'wh-1',
-      });
+      mockStocktakeSessionFindUnique
+        .mockResolvedValueOnce({
+          id: 's-1',
+          status: 'DRAFT',
+          warehouseId: 'wh-1',
+        })
+        .mockResolvedValue({
+          id: 's-1',
+          status: 'STARTED',
+          warehouseId: 'wh-1',
+        });
       mockWarehouseItemFindMany.mockResolvedValue([
         {
           itemId: 'item-1',
@@ -131,7 +139,11 @@ describe('StocktakeService', () => {
         version: 1,
         comments: 'start',
       });
-      expect(result).toEqual({ id: 's-1', status: 'STARTED' });
+      expect(result).toEqual({
+        id: 's-1',
+        status: 'STARTED',
+        warehouseId: 'wh-1',
+      });
       expect(mockWarehouseUpdate).toHaveBeenCalledWith({
         where: { id: 'wh-1' },
         data: { isLocked: true },
@@ -183,18 +195,28 @@ describe('StocktakeService', () => {
 
   describe('cancel', () => {
     it('should unlock warehouse and transition session to cancelled', async () => {
-      mockStocktakeSessionFindUnique.mockResolvedValue({
-        id: 's-1',
-        status: 'STARTED',
-        warehouseId: 'wh-1',
-      });
+      mockStocktakeSessionFindUnique
+        .mockResolvedValueOnce({
+          id: 's-1',
+          status: 'STARTED',
+          warehouseId: 'wh-1',
+        })
+        .mockResolvedValue({
+          id: 's-1',
+          status: 'CANCELLED',
+          warehouseId: 'wh-1',
+        });
       mockWorkflowService.executeTransition.mockResolvedValue({
         id: 's-1',
         status: 'CANCELLED',
       });
 
       const result = await service.cancel('s-1', 'user-1', 'WH_KEEPER', {});
-      expect(result).toEqual({ id: 's-1', status: 'CANCELLED' });
+      expect(result).toEqual({
+        id: 's-1',
+        status: 'CANCELLED',
+        warehouseId: 'wh-1',
+      });
       expect(mockWarehouseUpdate).toHaveBeenCalledWith({
         where: { id: 'wh-1' },
         data: { isLocked: false },
@@ -202,6 +224,10 @@ describe('StocktakeService', () => {
       expect(mockWarehouseLockUpdateMany).toHaveBeenCalledWith({
         where: { warehouseId: 'wh-1', isActive: true },
         data: { isActive: false },
+      });
+      expect(mockWarehouseItemUpdateMany).toHaveBeenCalledWith({
+        where: { warehouseId: 'wh-1', isFrozen: true },
+        data: { isFrozen: false },
       });
     });
   });

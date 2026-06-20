@@ -117,20 +117,20 @@ export function DocumentLineItemTable<T extends LineItem>({
  return (
   <div 
    ref={parentRef}
-   className={cn("w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm", dense ? "border-border/80" : "")}
+   className={cn("w-full overflow-x-auto relative custom-scrollbar rounded-xl border border-border bg-card shadow-sm", dense ? "border-border/80" : "")}
    style={enableVirtualization ? { maxHeight, overflowY: 'auto' } : {}}
   >
-   <table className="w-full text-start border-collapse text-sm whitespace-nowrap">
-    <thead className={cn("bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider sticky top-0 z-10", dense ? "border-b border-border" : "")}>
+   <table className="w-full min-w-full md:min-w-[600px] text-start border-collapse text-sm whitespace-nowrap">
+    <thead className={cn("bg-card border-b border-border text-muted-foreground text-xs uppercase tracking-wider sticky top-0 z-20", dense ? "border-b border-border" : "")}>
      <tr>
-      <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", dense ? "px-4 py-2 h-9 text-[10px]" : "px-8 h-14 min-w-[300px]")}>{h.name}</th>
+      <th className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground w-full min-w-[120px] md:min-w-[300px]", dense ? "px-4 py-2 h-9 text-[10px]" : "px-8 h-14")}>{h.name}</th>
       {!hideLotColumns && (
        <>
-        <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.lot}</th>
-        <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.expiry}</th>
+        <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.lot}</th>
+        <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.expiry}</th>
        </>
       )}
-      <th className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.qty}</th>
+      <th className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground min-w-[120px]", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14 min-w-[120px]")}>{h.qty}</th>
       <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.uom}</th>
       {extraColumns.map((col, i) => (
        <th key={i} className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{col.header}</th>
@@ -166,9 +166,9 @@ export function DocumentLineItemTable<T extends LineItem>({
           )}
           style={{ height: `${dense ? 48 : 64}px` }}
          >
-          <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>
-           <div className="flex flex-col gap-0.5">
-            <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors", dense ? "text-xs" : "text-body-md")}>
+          <td className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-full min-w-[120px] md:min-w-[300px]", dense ? "px-4 py-1.5" : "px-8 py-5")}>
+           <div className="flex flex-col gap-0.5 max-w-[120px] sm:max-w-[150px] md:max-w-none">
+            <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-body-md")}>
              {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
             </span>
             <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
@@ -178,17 +178,17 @@ export function DocumentLineItemTable<T extends LineItem>({
           </td>
           {!hideLotColumns && (
            <>
-            <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
+            <td className={cn("font-mono text-label-xs text-muted-foreground/60 hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
              {line.lot ? <span dir="ltr">{line.lot.lotNumber}</span> : <span className="opacity-20">—</span>}
             </td>
-            <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
+            <td className={cn("font-mono text-label-xs text-muted-foreground/60 hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
              {line.lot?.expiryDate
               ? <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
               : <span className="opacity-20">—</span>}
             </td>
            </>
           )}
-          <td className={cn("text-center", dense ? "px-3 py-1.5" : "px-6")}>
+          <td className={cn("text-center min-w-[120px]", dense ? "px-3 py-1.5" : "px-6")}>
            {renderQty ? (
             renderQty(line)
            ) : (
@@ -201,7 +201,7 @@ export function DocumentLineItemTable<T extends LineItem>({
            {renderUom ? (
             renderUom(line)
            ) : (
-            <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-label-xs font-black uppercase text-muted-foreground/30" />
+            <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-xs font-medium uppercase text-muted-foreground" />
            )}
           </td>
           {extraColumns.map((col, i) => (
@@ -210,7 +210,7 @@ export function DocumentLineItemTable<T extends LineItem>({
            </td>
           ))}
           {!isReadOnly && onRemoveLine && (
-           <td className={cn("text-center", dense ? "px-2 py-1" : "px-6")}>
+           <td className={cn("text-center min-w-[120px]", dense ? "px-2 py-1" : "px-6")}>
             <button
              type="button"
              onClick={() => onRemoveLine(line.id)}
@@ -243,9 +243,9 @@ export function DocumentLineItemTable<T extends LineItem>({
          rowClassName?.(line, idx)
         )}
        >
-        <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>
-         <div className="flex flex-col gap-0.5">
-          <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors", dense ? "text-xs" : "text-body-md")}>
+        <td className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-full min-w-[120px] md:min-w-[300px]", dense ? "px-4 py-1.5" : "px-8 py-5")}>
+         <div className="flex flex-col gap-0.5 max-w-[120px] sm:max-w-[150px] md:max-w-none">
+          <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-body-md")}>
            {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
           </span>
           <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
@@ -255,17 +255,17 @@ export function DocumentLineItemTable<T extends LineItem>({
         </td>
         {!hideLotColumns && (
          <>
-          <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
+          <td className={cn("font-mono text-label-xs text-muted-foreground/60 hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
            {line.lot ? <span dir="ltr">{line.lot.lotNumber}</span> : <span className="opacity-20">—</span>}
           </td>
-          <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
+          <td className={cn("font-mono text-label-xs text-muted-foreground/60 hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
            {line.lot?.expiryDate
             ? <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
             : <span className="opacity-20">—</span>}
           </td>
          </>
         )}
-        <td className={cn("text-center", dense ? "px-3 py-1.5" : "px-6")}>
+        <td className={cn("text-center min-w-[120px]", dense ? "px-3 py-1.5" : "px-6")}>
          {renderQty ? (
           renderQty(line)
          ) : (
@@ -278,7 +278,7 @@ export function DocumentLineItemTable<T extends LineItem>({
          {renderUom ? (
           renderUom(line)
          ) : (
-          <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-label-xs font-black uppercase text-muted-foreground/30" />
+          <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-xs font-medium uppercase text-muted-foreground" />
          )}
         </td>
         {extraColumns.map((col, i) => (

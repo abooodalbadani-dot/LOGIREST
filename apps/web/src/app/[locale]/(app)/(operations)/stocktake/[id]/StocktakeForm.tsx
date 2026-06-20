@@ -12,7 +12,8 @@ import {
  User, 
  ClipboardList, 
  History,
- Search
+ Search,
+ Play
 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
@@ -93,7 +94,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
  }, [filteredItems]);
 
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm pb-48 animate-in fade-in duration-500">
+  <div className="min-h-screen pb-48 animate-in fade-in duration-500">
    {/* Sticky Glass Header */}
    <StickyGlassHeader
     title={
@@ -129,7 +130,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
     {/* Form Content Wrapper with Visual Locking */}
     <div className={cn(
      "space-y-6 transition-all duration-500",
-     isLocked && "opacity-60 grayscale-[0.2] pointer-events-none select-none"
+     isLocked && "opacity-60 grayscale-[0.2] select-none"
     )}>
      {/* Metadata Grid */}
      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -181,6 +182,22 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
       {filteredItems.length === 0 && manifestSearch ? (
        <div className="px-6 pb-8 text-center">
         <p className="text-label-sm text-muted-foreground/40">{common('no_results') || 'No matching items'}</p>
+       </div>
+      ) : status === 'DRAFT' && session.items.length === 0 ? (
+       <div className="px-6 py-12 flex flex-col items-center justify-center text-center gap-4 bg-muted/5 border border-border/10 rounded-2xl">
+        <div className="p-4 rounded-full bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+         <Play className="w-8 h-8 fill-current translate-x-[1px]" />
+        </div>
+        <div className="space-y-2 w-full">
+         <h4 className="text-body-md font-bold text-foreground">
+          {locale === 'ar' ? 'مسودة جلسة الجرد فارغة' : 'Draft Stocktake Manifest is Empty'}
+         </h4>
+         <p className="text-label-sm text-muted-foreground w-full max-w-2xl mx-auto md:whitespace-nowrap leading-relaxed">
+          {locale === 'ar' 
+            ? 'يرجى النقر فوق زر "بدء الجلسة" (أيقونة التشغيل) بالأسفل لأخذ اللقطة المخزنية وتجميد المستودع وبدء الجرد.' 
+            : 'Click the "Start Session" (Play) button below to freeze the warehouse, take the initial stock snapshot, and begin counting.'}
+         </p>
+        </div>
        </div>
       ) : (
       <DocumentLineItemTable<StocktakeLineItem>

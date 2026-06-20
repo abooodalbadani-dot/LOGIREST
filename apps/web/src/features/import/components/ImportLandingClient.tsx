@@ -55,7 +55,7 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
 
  <PageHeader
  title={t('title')}
- description={t('select_type')}
+ subtitle={t('select_type')}
  icon={<ImportIcon className="w-6 h-6 text-cyan-500" />}
  />
 

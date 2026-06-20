@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useAbortController } from '@/hooks/useAbortController';
+import { formatDate } from '@/utils/currency';
 
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -128,7 +129,10 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     throw new Error('WarehouseLocked');
    }
 
-   const lineIndex = lines.findIndex(l => l.item?.code === barcode);
+   const lineIndex = lines.findIndex(l => 
+     l.item?.code === barcode || 
+     l.item?.barcodes?.some(b => b.barcode === barcode)
+   );
    if (lineIndex !== -1) {
     const line = lines[lineIndex];
     const shippedQty = line.shippedQty ?? line.qty;
@@ -172,18 +176,16 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
    return;
   }
 
-  const receiveLines = lines.map(l => {
+  const linesReceived = lines.map(l => {
    const hasLots = l.lotAllocations && l.lotAllocations.length > 0;
    const lineQty = hasLots && l._lotReceives
     ? Object.values(l._lotReceives).reduce((sum, q) => sum + q, 0)
     : (l._receivedQty ?? l.qty);
-   const lotReceives = hasLots && l._lotReceives
-    ? Object.entries(l._lotReceives).map(([lot_id, received_qty]) => ({ lot_id, received_qty }))
-    : undefined;
+   const hasDiscrepancy = lineQty !== (l.shippedQty ?? l.qty);
    return {
-    line_id: l.id,
-    received_qty: lineQty,
-    ...(lotReceives && lotReceives.length > 0 ? { lot_receives: lotReceives } : {}),
+    lineId: l.id,
+    quantityReceived: lineQty,
+    varianceReason: hasDiscrepancy ? varianceReason : undefined
    };
   });
   
@@ -191,9 +193,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
    id,
    body: {
     version: transfer.version ?? 0,
-    lines: receiveLines,
-    confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
-    variance_reason: hasVariance ? varianceReason : undefined
+    linesReceived,
    },
    signal: abortController.signal,
    headers: {
@@ -251,7 +251,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
    <PageHeader
     title={t('confirm_receipt')}
-    description={t('receive_confirm_desc')}
+    subtitle={t('receive_confirm_desc')}
    />
 
    <div className="space-y-4">
@@ -520,14 +520,14 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
        {t('lot_allocation_desc') || 'Set received quantities per lot'}
       </DialogDescription>
      </DialogHeader>
-     <div className="py-4 space-y-4">
+      <div className="py-4 space-y-4">
       {lotModalLine && lotModalLine.lotAllocations?.map((la) => (
        <div key={la.lotId} className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border shadow-sm border border-white/5">
         <div className="flex-1 space-y-1">
          <span className="font-mono font-bold text-label-sm">{la.lotNumber}</span>
          {la.expiryDate && (
           <p className="text-label-xs text-muted-foreground/50">
-           {tCommon('expiry') || 'Expiry'}: {new Date(la.expiryDate).toLocaleDateString()}
+           {tCommon('expiry') || 'Expiry'}: {formatDate(la.expiryDate, locale as 'ar' | 'en')}
           </p>
          )}
         </div>

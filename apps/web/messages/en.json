@@ -1,4 +1,16 @@
 {
+  "errors": {
+    "unauthorized": "Session expired. Please log in again.",
+    "forbidden": "Access denied. You do not have the required permissions.",
+    "network": "Network error. Please check your connection.",
+    "validation": "Validation failed. Please correct the highlighted errors.",
+    "unknown": "An unexpected error occurred. Please try again later.",
+    "generic": "An unexpected error occurred. Please try again later.",
+    "operations_title": "Operations Module Error",
+    "operations_desc": "A rendering error occurred in this operations view. This might be due to mismatched data or a temporary connection loss.",
+    "retry": "Retry Action",
+    "dashboard": "Back to Dashboard"
+  },
   "scope_guard": {
     "branch_title": "Branch Context Required",
     "branch_desc": "Please select a branch from the top menu to view the data.",
@@ -427,7 +439,11 @@
     "sign_in": "Sign In"
   },
   "common": {
+    "no_results": "No results found.",
+    "characters": "characters",
     "submission_failed": "Submission failed",
+    "reason": "Reason",
+    "enter_reason": "Enter reason...",
     "error_generic": "An error occurred",
     "no_item_found": "Item not found",
     "security_standard_desc": "Your login session is secured with standard encryption and enterprise scope protection.",
@@ -579,6 +595,7 @@
     },
     "document_locked": "Document Locked",
     "document_status": "Document Status",
+    "delete": "Delete",
     "edit": "Edit",
     "error": "Error",
     "error_occurred": "An error occurred",
@@ -1439,7 +1456,8 @@
         "goods_received_note": "Goods Received",
         "issue": "Kitchen Issue",
         "inventory_issue": "Kitchen Issue",
-        "transfer": "Warehouse Transfer"
+        "transfer": "Warehouse Transfer",
+        "stocktake": "Stocktake"
       },
       "zero_movement": "Zero Movement Detected"
     },
@@ -2808,6 +2826,8 @@
       "title": "Expired Product"
     },
     "issue": {
+      "kitchen_request": "Supply Requisition",
+      "select_kitchen_request": "Select Supply Requisition",
       "active_consumption": "Active Consumption",
       "alloc_suffix": "ALLOC",
       "allocate": "Allocate",
@@ -2883,6 +2903,14 @@
       "requested_by": "Requested By",
       "requested_by_placeholder": "Employee Name/ID",
       "save_draft": "Save Draft",
+      "submit": "Submit",
+      "submitting": "Submitting...",
+      "submit_success": "Issue submitted successfully",
+      "submit_error": "Failed to submit issue",
+      "cancel": "Delete",
+      "confirm_cancel": "Are you sure you want to delete this draft?",
+      "cancel_success": "Draft deleted successfully",
+      "cancel_error": "Failed to delete draft",
       "scan_and_add": "Physical Acquisition",
       "scan_log_empty": "No items scanned yet.",
       "scan_log_title": "Scan Log",
@@ -2936,6 +2964,8 @@
     "kitchen_request": {
       "approve": "Approve",
       "cancel": "Cancel",
+      "stock_issue": "Stock Issue",
+      "view_stock_issue": "View Stock Issue",
       "confirm_rejection": "Confirm Rejection",
       "create_new": "New Request",
       "created_success": "Kitchen Request created successfully",
@@ -3004,6 +3034,12 @@
     },
     "stocktake": {
       "active_counting": "Active Counting",
+      "items_remaining": "items remaining",
+      "scan_barcode_to_count": "Scan barcode to count...",
+      "scan_session": "Scan Session",
+      "cancel_confirm_desc": "Are you sure you want to cancel this stocktake? This action cannot be undone.",
+      "cancel_session": "Cancel Session",
+      "cancelled_success": "Stocktake session cancelled successfully",
       "already_locked": "This warehouse already has an active stocktake session.",
       "approve": "Approve",
       "approve_session_action": "Approve Stocktake",
@@ -3023,7 +3059,7 @@
       "confirm_finish_desc": "Are you sure you want to finish the counting phase? You will not be able to edit counts after this.",
       "confirm_finish_title": "Confirm Finish Counting",
       "confirm_keyword": "POST",
-      "confirm_keyword_placeholder": "Type '{keyword}' to confirm...",
+      "confirm_keyword_placeholder": "Type ''{keyword}'' to confirm...",
       "confirm_post_desc": "All variances will be posted and inventory records updated. This action is irreversible.",
       "confirm_post_title": "Confirm Final Posting",
       "confirm_rejection": "Confirm Rejection & Return to Count",
@@ -3054,6 +3090,7 @@
         "pending_documents_error": "Resolve pending documents first",
         "post_failed": "Failed to post stocktake session",
         "reject_failed": "Failed to reject stocktake session",
+        "failed_to_begin_counting": "Failed to begin the counting phase",
         "start_failed": "Failed to start stocktake session",
         "update_failed": "Failed to update stocktake quantities"
       },
@@ -3063,7 +3100,9 @@
       "final_posting": "Final Posting",
       "finalized_audits": "Finalized Audits",
       "finish_counting": "Finish Counting",
+      "submit_for_review": "Submit for Review",
       "go_to_count": "Go to Counting",
+      "resume_counting": "Resume Counting",
       "go_to_post": "Proceed to Posting",
       "in_progress": "In Progress",
       "initialize_session": "Initialize Session",
@@ -3297,7 +3336,7 @@
       "back_to_detail": "Back to Detail",
       "base_value": "Base Value ({currency})",
       "confirm_keyword": "POST",
-      "confirm_keyword_placeholder": "Type '{keyword}' to confirm...",
+      "confirm_keyword_placeholder": "Type ''{keyword}'' to confirm...",
       "confirm_lot": "Confirm Lot Identity",
       "create_new": "Create New",
       "create_success": "Goods Received Note created successfully.",

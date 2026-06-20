@@ -54,14 +54,21 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
   return () => setDirty(false);
  }, [confirmValue, setDirty]);
 
- if (isLoading) return <LoadingSkeleton />
- if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
+  // Access Control: Redirect if not allowed
+  const isAllowed = React.useMemo(() => {
+    if (!session) return false;
+    return canPerformActionV2('STOCKTAKE', session.status as DocumentStatus, 'POST', user?.role);
+  }, [session, user?.role]);
 
- // Access Control: Only ADMIN and status APPROVED
- if (!canPerformActionV2('STOCKTAKE', session.status as DocumentStatus, 'POST', user?.role)) {
- router.replace(`/stocktake/${id}`);
- return null;
- }
+  React.useEffect(() => {
+    if (!isLoading && session && !isAllowed) {
+      router.replace(`/stocktake/${id}`);
+    }
+  }, [isLoading, session, isAllowed, router, id]);
+
+  if (isLoading) return <LoadingSkeleton />
+  if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
+  if (!isAllowed) return null;
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
@@ -88,91 +95,94 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
 
  return (
  <ScopeGuard warehouseId={session?.warehouseId}>
- <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
- <PermissionGate action="post" resource="operations_stocktake">
- <PageHeader
- title={
- <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
- <ShieldAlert className="w-6 h-6 text-primary" />
- </div>
- <div className="flex flex-col min-w-0">
- <span className="font-semibold text-headline-lg">
- {t('final_posting')}
- </span>
- <span className="text-label-xs uppercase font-semibold text-muted-foreground/40 mt-1">
- {session.sessionName} • {warehouseName}
- </span>
- </div>
- </div>
- }
- backHref={`/stocktake/${id}`}
- />
+  <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+  <PermissionGate action="post" resource="operations_stocktake">
+  <PageHeader
+  title={
+  <div className="flex items-center gap-4">
+  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+  <ShieldAlert className="w-6 h-6 text-primary" />
+  </div>
+  <div className="flex flex-col min-w-0">
+  <span className="font-semibold text-headline-lg">
+  {t('final_posting')}
+  </span>
+  <span className="text-label-xs uppercase font-semibold text-muted-foreground/40 mt-1">
+  {session.sessionName} • {warehouseName}
+  </span>
+  </div>
+  </div>
+  }
+  backHref={`/stocktake/${id}`}
+  className="w-full text-start"
+  />
 
- {/* Warning Panel */}
- <Card className="bg-status-error/5 border-none shadow-none rounded-[2.5rem] p-10 flex flex-col md:flex-row gap-8 items-start relative overflow-hidden min-w-0">
- <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
- <ShieldAlert className="w-48 h-48 text-status-error" />
- </div>
- 
- <div className="w-16 h-16 rounded-2xl bg-status-error/10 flex items-center justify-center shrink-0">
- <AlertTriangle className="w-8 h-8 text-status-error" />
- </div>
- 
- <div className="space-y-6 relative z-10">
- <div className="space-y-2">
- <h3 className="text-title-lg font-semibold text-foreground">{t('post_warning_title')}</h3>
- <p className="text-muted-foreground leading-relaxed max-w-xl">
- {t('post_warning_desc')}
- </p>
- </div>
+  {/* Warning Panel */}
+  <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 flex flex-col md:flex-row items-start gap-4 w-full mb-8 text-start">
+    <div className="shrink-0 p-2 bg-destructive/20 rounded-full mt-1">
+       <AlertTriangle className="w-6 h-6 text-destructive" />
+    </div>
+    <div className="flex flex-col flex-1 w-full gap-2">
+       <h3 className="text-lg font-bold text-destructive">{t('post_warning_title')}</h3>
+       <p className="text-muted-foreground leading-relaxed w-full whitespace-normal break-words">
+         {t('post_warning_desc')}
+       </p>
+    </div>
+  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg">
- <div className="p-5 bg-card/[0.02] rounded-2xl space-y-1">
- <span className="text-label-xs font-semibold uppercase text-muted-foreground/30">{t('total_adjustments')}</span>
- <p className="text-title-sm font-semibold text-foreground">{session.items.filter(i => (i.variance || 0) !== 0).length} {t('skus')}</p>
- </div>
- <div className="p-5 bg-card/[0.02] rounded-2xl space-y-1">
- <span className="text-label-xs font-semibold uppercase text-muted-foreground/30">{t('net_financial_value')}</span>
- <p className={cn("text-title-sm font-semibold", netImpact >= 0 ? "text-status-success" : "text-status-error")} dir="ltr">
-  {formatCurrency(netImpact, baseCurrency, locale)}
- </p>
- </div>
- </div>
+  {/* Statistics Grid */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-8">
+    <div className="flex flex-col items-start text-start gap-2 p-6 rounded-xl bg-card border border-brand-gold/20 w-full shadow-sm">
+       <span className="text-sm font-semibold text-muted-foreground">{t('total_adjustments')}</span>
+       <span className="text-3xl font-bold text-foreground">
+         {session.items.filter(i => (i.variance || 0) !== 0).length}
+       </span>
+    </div>
+    <div className="flex flex-col items-start text-start gap-2 p-6 rounded-xl bg-card border border-brand-gold/20 w-full shadow-sm">
+       <span className="text-sm font-semibold text-muted-foreground">{t('net_financial_value')}</span>
+       <span className={cn("text-3xl font-bold font-mono tabular-nums", netImpact >= 0 ? "text-status-success" : "text-status-error")} dir="ltr">
+         {formatCurrency(netImpact, baseCurrency, locale)}
+       </span>
+    </div>
+  </div>
 
- <div className="flex flex-col gap-4 bg-card/[0.03] p-6 rounded-2xl border border-white/[0.05] min-w-0">
- <div className="flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground/50">
- <Info className="w-3 h-3" />
- <span>{t('type_to_confirm_label')}</span>
- </div>
- <div className="flex flex-col md:flex-row gap-3 min-w-0">
- <Input 
- value={confirmValue}
- onChange={(e) => setConfirmValue(e.target.value)}
- placeholder={t('confirm_keyword_placeholder', { keyword: confirmKeyword })}
- className="bg-card border border-border shadow-sm border-none h-12 px-6 font-semibold placeholder:text-muted-foreground/20 placeholder:tracking-normal"
- />
- <Button 
- onClick={handlePost}
- disabled={confirmValue !== confirmKeyword || postStocktake.isPending}
- className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-12 px-10 shadow-sm shadow-primary/20"
- >
- {t('confirm_final_post')}
- <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
- </Button>
- </div>
- </div>
- </div>
- </Card>
+  {/* Confirmation Section */}
+  <div className="flex flex-col gap-4 bg-card p-6 rounded-xl border border-brand-gold/20 w-full min-w-0 mb-8">
+  <div className="flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground/50">
+  <Info className="w-3 h-3" />
+  <span>{t('type_to_confirm_label')}</span>
+  </div>
+  <div className="flex flex-col md:flex-row gap-3 min-w-0">
+  <Input 
+  value={confirmValue}
+  onChange={(e) => setConfirmValue(e.target.value)}
+  placeholder={t('confirm_keyword_placeholder', { keyword: confirmKeyword })}
+  className="flex-1 bg-background border border-brand-gold/40 h-12 px-6 font-semibold"
+  />
+  <Button 
+  onClick={handlePost}
+  disabled={confirmValue !== confirmKeyword || postStocktake.isPending}
+  className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-12 px-10 shadow-sm shadow-primary/20 shrink-0"
+  >
+  {t('confirm_final_post')}
+  <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+  </Button>
+  </div>
+  </div>
 
- {/* Read-only manifest link */}
- <div className="flex justify-center">
- <Button variant="link" onClick={() => router.push(`/stocktake/${id}`)} className="text-muted-foreground/40 hover:text-primary transition-colors text-label-xs font-semibold uppercase">
- {t('return_to_manifest')}
- </Button>
- </div>
- </PermissionGate>
- </div>
+  {/* Read-only manifest link */}
+  <div className="flex justify-center w-full mt-4">
+  <Button 
+    variant="outline" 
+    onClick={() => router.push(`/stocktake/${id}`)} 
+    className="border border-brand-gold/30 text-foreground bg-transparent hover:bg-brand-gold/10 hover:text-brand-gold transition-all duration-200 px-8 h-11 rounded-xl text-sm font-bold gap-2 flex items-center justify-center"
+  >
+    <ArrowRight className="w-4 h-4 rotate-180 rtl:rotate-0" />
+    {t('return_to_manifest')}
+  </Button>
+  </div>
+  </PermissionGate>
+  </div>
  </ScopeGuard>
  )
 }

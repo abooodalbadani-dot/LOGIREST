@@ -432,7 +432,7 @@ function MultiSelect({ label, icon, options, selected, onChange, disabled, t }: 
      } else if (isSelected) {
       buttonClass += " bg-primary border-primary text-primary-foreground font-bold shadow-md ring-1 ring-primary/50";
      } else {
-      buttonClass += " bg-background border-border text-foreground hover:bg-muted hover:border-primary/30 font-medium";
+      buttonClass += " bg-background border border-border text-foreground hover:bg-muted hover:border-primary/30 font-medium";
      }
 
      return (

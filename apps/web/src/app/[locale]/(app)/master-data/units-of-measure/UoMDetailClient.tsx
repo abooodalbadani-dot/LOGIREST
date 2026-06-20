@@ -28,7 +28,7 @@ export function UoMDetailClient({ id }: Props) {
  // 2. Error State
  if (isError) {
   return (
-   <div className="min-w-0 gap-6 flex-1 p-8 flex-col flex w-full">
+   <div className="min-w-0 gap-6 flex-1 flex-col flex w-full">
     <ErrorState 
      type="server_error"
      onRetry={() => refetch()}

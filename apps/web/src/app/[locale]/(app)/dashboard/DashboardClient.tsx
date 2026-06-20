@@ -37,7 +37,6 @@ export default function DashboardClient() {
         lowStockItems: statsData?.lowStockItems ?? 0,
         systemHealth: statsData?.systemHealth ?? 98.4,
         activeUsers: statsData?.activeUsers ?? 0,
-        lastBackup: '2h ago',
     };
 
     // Visibility logic based on roles
@@ -70,7 +69,6 @@ export default function DashboardClient() {
                                 value={formatCurrency(stats.totalStockValue, stats.baseCurrency, locale as 'ar' | 'en')}
                                 icon={Package}
                                 accent="cyan"
-                                trend={{ value: '12%', isPositive: true }}
                                 description={t('kpi.vs_last_month')}
                             />
                             <KPICard
@@ -92,7 +90,6 @@ export default function DashboardClient() {
                                 value={formatNumber(stats.lowStockItems, locale as 'ar' | 'en')}
                                 icon={AlertTriangle}
                                 accent="red"
-                                trend={{ value: '4', isPositive: false }}
                                 description={t('kpi.critical_items')}
                             />
                         </div>
@@ -125,51 +122,7 @@ export default function DashboardClient() {
     };
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20">
-            <PageHeader
-                title={t('title')}
-                description={`${t('description')} - ${user?.role || 'User'}`}
-                className="pb-10"
-                actions={
-                    <div className="flex items-center gap-4 bg-card border border-border shadow-sm p-4 rounded-xl">
-                        <div className="flex flex-col gap-1 pe-4 border-e border-surface-container-high/50 min-w-0">
-                            <span className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
-                                <Activity className="w-3 h-3 text-operational-cyan" />
-                                {tc('system_stats.live_updates')}
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <div className="h-1.5 w-32 bg-surface-container-high rounded-full overflow-hidden">
-                                    <div className="h-full bg-operational-cyan w-[98%] shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
-                                </div>
-                                <span className="text-label-xs font-bold text-foreground">{stats.systemHealth}%</span>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                            <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-status-success/10 text-status-success border-status-success/20 text-label-xxs font-semibold h-5 px-1.5 uppercase">
-                                    <ShieldCheck className="w-2.5 h-2.5 me-1" />
-                                    {t('secure')}
-                                </Badge>
-                                <span className="text-label-xxs font-bold text-muted-foreground/40 uppercase">
-                                    {tc('system_stats.last_sync')}: <ClientOnlyTime className="inline" locale={locale as 'ar' | 'en'} />
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1">
-                                <div className="flex items-center gap-1.5">
-                                    <Database className="w-3 h-3 text-muted-foreground/60" />
-                                    <span className="text-label-xs font-bold text-muted-foreground/60">Backup: {stats.lastBackup}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <Users className="w-3 h-3 text-muted-foreground/60" />
-                                    <span className="text-label-xs font-bold text-muted-foreground/60">{t('users_online', { count: stats.activeUsers })}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            />
-
+        <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20">
             {renderDashboard()}
 
             {/* Intelligence & Analytics Section - Global */}

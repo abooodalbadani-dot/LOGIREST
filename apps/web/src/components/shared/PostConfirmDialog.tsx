@@ -103,13 +103,22 @@ export function PostConfirmDialog({
  const isRtl = locale === 'ar';
  const defaultKeyword = isRtl ? 'تأكيد' : 'CONFIRM';
  const requiredWord = confirmKeyword || defaultKeyword;
- const isConfirmDisabled = isLoading || disabled || (requiresTextConfirmation && confirmInput !== requiredWord);
+ const isConfirmDisabled =
+  isLoading ||
+  disabled ||
+  (requiresTextConfirmation &&
+   confirmInput.trim().toLowerCase() !== requiredWord.trim().toLowerCase());
 
  const handleConfirm = async (e: React.MouseEvent) => {
   e.preventDefault();
-  await onConfirm();
-  handleOpenChange(false);
-  setConfirmInput('');
+  try {
+   await onConfirm();
+  } catch (error) {
+   console.error('[PostConfirmDialog] onConfirm error:', error);
+  } finally {
+   handleOpenChange(false);
+   setConfirmInput('');
+  }
  };
 
  const Icon = (icon && ICON_MAP[icon]) || (variant === 'info' ? Info : AlertTriangle);

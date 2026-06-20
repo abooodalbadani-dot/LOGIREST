@@ -215,7 +215,7 @@ function LineItemRow({
           }
          }}
          placeholder={tc('select_item')}
-         className="h-11 w-full bg-surface-container-high border border-white/20 rounded-xl focus:ring-1 focus:ring-operational-cyan/50 text-body-sm font-bold uppercase transition-all group-hover:bg-surface-container-highest group-hover:border-operational-cyan/30 shadow-sm"
+         className="h-11 w-full bg-surface-container-high rounded-xl text-body-sm font-bold uppercase transition-all group-hover:bg-surface-container-highest shadow-sm"
          disabled={isLocked}
         />
        </FormControl>
@@ -236,7 +236,7 @@ function LineItemRow({
          type="number"
          min="1"
          disabled={isLocked}
-         className="bg-card border border-border shadow-sm border border-white/10 font-mono h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-body-sm font-bold text-center transition-all group-hover:bg-surface-container-high"
+         className="bg-card font-mono h-11 rounded-xl text-body-sm font-bold text-center transition-all group-hover:bg-surface-container-high"
          dir="ltr"
          {...inputField}
          onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -248,22 +248,26 @@ function LineItemRow({
     />
    </div>
 
-   <div className="px-4 py-3 w-28 border-e border-white/5 h-full flex items-center justify-center">
-    <FormField
-     control={form.control}
-     name={`lines.${index}.uomId`}
-     render={({ field: inputField }) => (
-      <FormItem className="space-y-0 w-full">
-       <FormControl>
-        <div className="h-11 w-full flex items-center justify-center px-2 bg-surface-container-high/20 rounded-xl font-mono uppercase text-[11px] font-black text-muted-foreground/40 border border-white/5">
-         {inputField.value || 'PCS'}
-        </div>
-       </FormControl>
-       <FormMessage className="text-[10px] mt-1" />
-      </FormItem>
-     )}
-    />
-   </div>
+    <div className="px-4 py-3 w-28 border-e border-white/5 h-full flex items-center justify-center">
+     <FormField
+      control={form.control}
+      name={`lines.${index}.uomId`}
+      render={({ field: inputField }) => {
+       const matchedItem = itemsData?.data?.find((i) => i.id === rowValues?.itemId);
+       const uomCode = matchedItem?.primaryUom?.code || (inputField.value && inputField.value.length === 36 ? '...' : (inputField.value || 'PCS'));
+       return (
+        <FormItem className="space-y-0 w-full">
+         <FormControl>
+          <div className="h-11 w-full flex items-center justify-center px-2 bg-surface-container-high/20 rounded-xl font-mono uppercase text-[11px] font-black text-muted-foreground/40 border border-white/5">
+           {uomCode}
+          </div>
+         </FormControl>
+         <FormMessage className="text-[10px] mt-1" />
+        </FormItem>
+       );
+      }}
+     />
+    </div>
 
    <div className="px-4 py-3 w-36 text-center border-e border-white/5 h-full flex items-center justify-center">
     <FormField
@@ -277,7 +281,7 @@ function LineItemRow({
          step="0.01"
          min="0"
          disabled={isLocked}
-         className="bg-card border border-border shadow-sm border border-white/10 font-mono h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-body-sm font-bold text-center transition-all group-hover:bg-surface-container-high"
+         className="bg-card font-mono h-11 rounded-xl text-body-sm font-bold text-center transition-all group-hover:bg-surface-container-high"
          dir="ltr"
          {...inputField}
          onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -299,7 +303,7 @@ function LineItemRow({
         <Input
          placeholder={t('notes_placeholder')}
          disabled={isLocked}
-         className="bg-card border border-border shadow-sm border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-body-sm font-medium transition-all group-hover:bg-surface-container-high"
+         className="bg-card h-11 rounded-xl text-body-sm font-medium transition-all group-hover:bg-surface-container-high"
          {...inputField}
         />
        </FormControl>

@@ -154,7 +154,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  }
 
  return (
-  <div className="w-full min-w-0 gap-6 flex-1 fade-in space-y-8 p-8 mx-auto animate-in slide-in-from-bottom-2 flex flex-col duration-700 max-w-[1200px]">
+  <div className="w-full min-w-0 gap-6 flex-1 fade-in space-y-8 mx-auto animate-in slide-in-from-bottom-2 flex flex-col duration-700 max-w-[1200px]">
    <Breadcrumb 
     items={[
      { label: tCommon('inventory'), href: '#' },
@@ -165,7 +165,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
    <PageHeader
     title={t('create_new')}
-    description={t('new_description')}
+    subtitle={t('new_description')}
    />
 
    <form className="space-y-8">
@@ -236,26 +236,24 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       </div>
      </div>
 
-     {/* Search / Add Item Bar */}
-     <div className="mb-8 w-full max-w-xl mx-auto space-y-2">
-      <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block text-center whitespace-nowrap">
-       {tCommon('select_item')}
-      </label>
-      <SmartCombobox
-       items={itemItems}
-       onSelect={(item) => {
-        const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
-        if (existingIndex !== -1) {
-         const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
-         form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
-        } else {
-         append({ itemId: String(item.id), quantity: 1, notes: '' });
-        }
-       }}
-       getPrimaryLabel={(item) => item.name}
-       placeholder={tCommon('select_item')}
-      />
-     </div>
+      {/* Search / Add Item Bar */}
+      <div className="w-full mb-4">
+       <SmartCombobox
+        items={itemItems}
+        onSelect={(item) => {
+         const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
+         if (existingIndex !== -1) {
+          const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
+          form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+         } else {
+          append({ itemId: String(item.id), quantity: 1, notes: '' });
+         }
+        }}
+        getPrimaryLabel={(item) => item.name}
+        placeholder={tCommon('select_item')}
+        triggerClassName="w-full bg-background border border-input text-foreground h-12 rounded-xl px-4 shadow-sm"
+       />
+      </div>
 
      <div className="space-y-4">
       {fields.length === 0 ? (

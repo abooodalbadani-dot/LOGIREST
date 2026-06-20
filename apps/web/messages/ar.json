@@ -1,4 +1,16 @@
 {
+  "errors": {
+    "unauthorized": "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+    "forbidden": "تم رفض الوصول. لا تملك الصلاحيات الكافية.",
+    "network": "فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.",
+    "validation": "فشل التحقق من البيانات. يرجى تصحيح الأخطاء المحددة.",
+    "unknown": "حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.",
+    "generic": "حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.",
+    "operations_title": "خطأ في وحدة العمليات",
+    "operations_desc": "حدث خطأ غير متوقع أثناء تحميل أو عرض هذه الصفحة. قد يكون ذلك بسبب عدم تطابق البيانات أو فقدان الاتصال المؤقت.",
+    "retry": "إعادة المحاولة",
+    "dashboard": "العودة للوحة التحكم"
+  },
   "scope_guard": {
     "branch_title": "الفرع مطلوب",
     "branch_desc": "يرجى اختيار الفرع من شريط النطاق العلوي لاستعراض البيانات.",
@@ -427,7 +439,11 @@
     "sign_in": "دخول"
   },
   "common": {
+    "no_results": "لم يتم العثور على نتائج.",
+    "characters": "حرف",
     "submission_failed": "فشل التقديم",
+    "reason": "السبب",
+    "enter_reason": "أدخل السبب...",
     "error_generic": "حدث خطأ",
     "no_item_found": "لم يتم العثور على الصنف",
     "security_standard_desc": "جلسة تسجيل الدخول الخاصة بك مؤمنة بالتشفير القياسي وحماية النطاق للمؤسسات.",
@@ -579,6 +595,7 @@
     },
     "document_locked": "المستند مقفل",
     "document_status": "حالة المستند",
+    "delete": "حذف",
     "edit": "تعديل",
     "error": "خطأ",
     "error_occurred": "حدث خطأ ما",
@@ -1439,7 +1456,8 @@
         "goods_received_note": "استلام بضائع",
         "issue": "صرف للمطبخ",
         "inventory_issue": "صرف للمطبخ",
-        "transfer": "تحويل مخزني"
+        "transfer": "تحويل مخزني",
+        "stocktake": "جرد مخزني"
       },
       "zero_movement": "لم يتم رصد أي حركة"
     },
@@ -2808,6 +2826,8 @@
       "title": "منتج منتهي الصلاحية"
     },
     "issue": {
+      "kitchen_request": "طلب توريد تشغيلي",
+      "select_kitchen_request": "اختر طلب توريد تشغيلي",
       "active_consumption": "الاستهلاك النشط",
       "alloc_suffix": "تخصيص",
       "allocate": "تخصيص",
@@ -2883,6 +2903,14 @@
       "requested_by": "بواسطة",
       "requested_by_placeholder": "اسم الموظف / الرقم الوظيفي",
       "save_draft": "حفظ مسودة",
+      "submit": "تقديم",
+      "submitting": "جاري التقديم...",
+      "submit_success": "تم تقديم سند الصرف بنجاح",
+      "submit_error": "فشل تقديم سند الصرف",
+      "cancel": "حذف",
+      "confirm_cancel": "هل أنت متأكد من رغبتك في حذف هذه المسودة؟",
+      "cancel_success": "تم حذف المسودة بنجاح",
+      "cancel_error": "فشل حذف المسودة",
       "scan_and_add": "الاستحواذ الفعلي",
       "scan_log_empty": "لم يتم مسح أي أصناف بعد.",
       "scan_log_title": "سجل المسح",
@@ -2936,6 +2964,8 @@
     "kitchen_request": {
       "approve": "اعتماد",
       "cancel": "إلغاء",
+      "stock_issue": "سند صرف",
+      "view_stock_issue": "عرض سند الصرف",
       "confirm_rejection": "تأكيد الرفض",
       "create_new": "طلب جديد",
       "created_success": "تم إنشاء طلب المطبخ بنجاح",
@@ -3004,6 +3034,12 @@
     },
     "stocktake": {
       "active_counting": "عد نشط",
+      "items_remaining": "عناصر متبقية",
+      "scan_barcode_to_count": "امسح الباركود للعد...",
+      "scan_session": "جلسة المسح",
+      "cancel_confirm_desc": "هل أنت متأكد من إلغاء جلسة جرد المخزون هذه؟ لا يمكن التراجع عن هذا الإجراء.",
+      "cancel_session": "إلغاء الجلسة",
+      "cancelled_success": "تم إلغاء الجلسة بنجاح",
       "already_locked": "يوجد جرد نشط بالفعل لهذا المستودع.",
       "approve": "اعتماد",
       "approve_session_action": "اعتماد الجرد",
@@ -3023,7 +3059,7 @@
       "confirm_finish_desc": "هل أنت متأكد من إنهاء مرحلة العد؟ لن تتمكن من تعديل الكميات بعد ذلك.",
       "confirm_finish_title": "تأكيد إنهاء العد",
       "confirm_keyword": "ترحيل",
-      "confirm_keyword_placeholder": "اكتب '{keyword}' للتأكيد...",
+      "confirm_keyword_placeholder": "اكتب ''{keyword}'' للتأكيد...",
       "confirm_post_desc": "سيتم ترحيل جميع الفوارق وتحديث المخزون. لا يمكن التراجع عن هذا الإجراء.",
       "confirm_post_title": "تأكيد ترحيل الجرد النهائي",
       "confirm_rejection": "تأكيد الرفض والعودة للعد",
@@ -3054,6 +3090,7 @@
         "pending_documents_error": "قم بترحيل المستندات المعلقة أولاً",
         "post_failed": "فشل ترحيل جلسة الجرد",
         "reject_failed": "فشل رفض جلسة الجرد",
+        "failed_to_begin_counting": "فشل بدء مرحلة العد",
         "start_failed": "فشل بدء جلسة الجرد",
         "update_failed": "فشل تحديث كميات الجرد"
       },
@@ -3063,7 +3100,9 @@
       "final_posting": "الترحيل النهائي",
       "finalized_audits": "تدقيقات مكتملة",
       "finish_counting": "إنهاء العد",
+      "submit_for_review": "إرسال للمراجعة",
       "go_to_count": "انتقل إلى صفحة العد",
+      "resume_counting": "متابعة العد",
       "go_to_post": "الانتقال للترحيل",
       "in_progress": "جاري العد",
       "initialize_session": "بدء الجلسة",
@@ -3297,7 +3336,7 @@
       "back_to_detail": "العودة للتفاصيل",
       "base_value": "القيمة الأساسية ({currency})",
       "confirm_keyword": "ترحيل",
-      "confirm_keyword_placeholder": "اكتب '{keyword}' للتأكيد...",
+      "confirm_keyword_placeholder": "اكتب ''{keyword}'' للتأكيد...",
       "confirm_lot": "تأكيد هوية الدفعة",
       "create_new": "إنشاء جديد",
       "create_success": "تم إنشاء سند استلام البضائع بنجاح.",

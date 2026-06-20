@@ -15,7 +15,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     dir={dir ?? (type === "date" ? "ltr" : undefined)}
     data-slot="input"
     className={cn(
-     "flex h-10 w-full rounded-md bg-transparent dark:bg-[#121212] border border-border px-4 py-2 text-sm text-text-main dark:text-white shadow-sm transition-colors duration-200 outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500",
+     "flex h-10 w-full rounded-md bg-background/50 border border-brand-gold/40 hover:border-brand-gold/70 px-4 py-2 text-sm text-text-main dark:text-white shadow-sm transition-colors duration-200 outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 dark:placeholder-gray-500 focus-visible:outline-none focus-visible:border-brand-gold focus-visible:ring-1 focus-visible:ring-brand-gold/50 backdrop-blur-sm disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500",
+     "dark:text-foreground",
      className
     )}
     {...props}

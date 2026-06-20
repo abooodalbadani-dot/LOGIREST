@@ -117,15 +117,15 @@ export function SupplierListClient({ locale }: { locale: string }) {
  ];
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex w-full">
    <Breadcrumb items={breadcrumbs} />
 
    <PageHeader
     title={tc('title')}
-    description={tc('description')}
-    actions={
+    subtitle={tc('description')}
+    children={
      <PermissionGate action="create" resource="master_data">
-      <Link href={`/master-data/suppliers/new`}>
+      <Link href={`/master-data/suppliers/new`} className="shrink-0 w-full sm:w-auto">
        <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
         <Plus className="w-3.5 h-3.5 me-2" />
         {t('create_new')}
@@ -174,16 +174,20 @@ export function SupplierListClient({ locale }: { locale: string }) {
      />
     }
     filters={
-      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-        <Input
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:w-80 md:w-96">
+           <div className="relative w-full group">
+             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+             <Input
          placeholder={tc('search_placeholder') || 'البحث عن الموردين بالكود أو الاسم...'}
          value={search}
          onChange={ (e) => setSearch(e.target.value) }
          className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
+           </div>
+         </div>
        </div>
-     }
+      }
    />
   </div>
  );

@@ -10,7 +10,9 @@ export function useInventoryMovements(
  filters: { 
   page?: number;
   search?: string;
-  document_type?: string;
+  documentType?: string;
+  startDate?: string;
+  endDate?: string;
  } = {},
  options?: { enabled?: boolean }
 ) {
@@ -21,7 +23,9 @@ export function useInventoryMovements(
    const qs = new URLSearchParams();
    if (filters.page) qs.append('page', filters.page.toString());
    if (filters.search) qs.append('search', filters.search);
-   if (filters.document_type) qs.append('document_type', filters.document_type);
+   if (filters.documentType) qs.append('documentType', filters.documentType);
+   if (filters.startDate) qs.append('startDate', filters.startDate);
+   if (filters.endDate) qs.append('endDate', filters.endDate);
    
    const path = `/inventory/movements${qs.toString() ? `?${qs.toString()}` : ''}`;
    return apiClient.get<PaginatedResponse<InventoryMovement>>(path, paginatedSchema(InventoryMovementSchema), { signal });

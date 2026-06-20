@@ -52,7 +52,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  const filteredWarehouses = warehouses?.filter(wh => wh.branchId === selectedBranchId) || [];
 
  return (
- <div className="py-12 min-w-0 items-center px-6 flex-1 gap-6 justify-center min-h-[80vh] flex-col flex w-full">
+ <div className="min-w-0 items-center flex-1 gap-6 justify-center min-h-[80vh] flex-col flex w-full">
  <div className="w-full max-w-5xl space-y-12">
  {/* Header Section */}
  <div className="text-center space-y-4">

@@ -115,14 +115,7 @@ export class TransferPostService {
           for (const line of transfer.lines) {
             const item = line.item;
 
-            // Historical posting guard
-            const latestLedger = await tx.stockLedger.findFirst({
-              where: { warehouseId: transfer.fromWarehouseId, itemId: item.id },
-              orderBy: { postedAt: 'desc' },
-            });
-            if (latestLedger && transfer.createdAt < latestLedger.postedAt) {
-              throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
-            }
+            // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
 
             // Check if item is frozen in source warehouse
             await this.scopeValidationService.checkWarehouseItemQuarantine(
@@ -418,9 +411,11 @@ export class TransferPostService {
             string,
             { quantityReceived: number; varianceReason?: string }
           >();
-          if (linesReceived) {
+          if (linesReceived && Array.isArray(linesReceived)) {
             for (const input of linesReceived) {
-              receivedMap.set(input.lineId, input);
+              if (input && typeof input.lineId === 'string') {
+                receivedMap.set(input.lineId, input);
+              }
             }
           }
 
@@ -428,18 +423,12 @@ export class TransferPostService {
           for (const line of transfer.lines) {
             const item = line.item;
 
-            // Historical posting guard
-            const latestLedger = await tx.stockLedger.findFirst({
-              where: { warehouseId: transfer.toWarehouseId, itemId: item.id },
-              orderBy: { postedAt: 'desc' },
-            });
-            if (latestLedger && transfer.createdAt < latestLedger.postedAt) {
-              throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
-            }
+            // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
             const input = receivedMap.get(line.id);
-            const receivedQty = input
-              ? input.quantityReceived
-              : Number(line.quantityShipped);
+            const receivedQty =
+              input && typeof input.quantityReceived === 'number'
+                ? input.quantityReceived
+                : Number(line.quantityShipped);
             const varianceReason = input ? input.varianceReason : undefined;
             const shippedQty = Number(line.quantityShipped);
 
@@ -473,6 +462,24 @@ export class TransferPostService {
               },
             });
 
+            // Ensure WarehouseItem exists in destination warehouse first to satisfy the FK on WarehouseItemLot
+            await tx.warehouseItem.upsert({
+              where: {
+                warehouseId_itemId: {
+                  warehouseId: transfer.toWarehouseId,
+                  itemId: item.id,
+                },
+              },
+              create: {
+                warehouseId: transfer.toWarehouseId,
+                itemId: item.id,
+                qtyOnHand: 0,
+                qtyAllocated: 0,
+                wac: sourceWac,
+              },
+              update: {},
+            });
+
             // Lock WarehouseItem first (destination warehouse)
             await this.lockService.lockItem(
               tx,
@@ -485,6 +492,12 @@ export class TransferPostService {
               const allocations = await tx.lotAllocation.findMany({
                 where: { transferLineId: line.id },
               });
+
+              if (allocations.length === 0) {
+                throw new BadRequestException(
+                  `No lot allocations found from shipment phase for item ${item.sku}. Lot tracking is required.`,
+                );
+              }
 
               // Distribute receivedQty progressively across the shipped lots
               let remainingReceived = receivedQty;
@@ -773,8 +786,12 @@ export class TransferPostService {
       );
     } catch (error: unknown) {
       const logger = new Logger(TransferPostService.name);
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.warn(`Transfer RECEIVE failed for user ${userId}: ${errorMsg}`);
+      const errorMsg =
+        error instanceof Error ? error.stack || error.message : String(error);
+      logger.error(
+        `Transfer RECEIVE failed for user ${userId}: ${errorMsg}`,
+        error instanceof Error ? error.stack : undefined,
+      );
 
       if (error instanceof ForbiddenException) {
         let action = 'WORKFLOW_RECEIVE_FAILED';

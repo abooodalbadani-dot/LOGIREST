@@ -121,11 +121,11 @@ export function EmailOutboxClient() {
  const failed = data?.data?.filter(e => e.status === 'FAILED').length || 0;
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
    <PageHeader 
     title={t('email_outbox_title')} 
-    description={t('email_outbox_desc')}
-    actions={
+    subtitle={t('email_outbox_desc')}
+    children={
      <div className="flex items-center gap-4">
       <div className="flex flex-col items-end gap-1 px-4 border-e border-white/10 min-w-0">
        <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">{t('filter_by_status')}</span>

@@ -116,8 +116,9 @@ export class StocktakeService {
     };
   }
 
-  async findOne(id: string) {
-    const session = await this.prisma.stocktakeSession.findUnique({
+  async findOne(id: string, tx?: Prisma.TransactionClient) {
+    const client = tx || this.prisma;
+    const session = await client.stocktakeSession.findUnique({
       where: { id },
       include: {
         counts: {
@@ -241,7 +242,7 @@ export class StocktakeService {
       }
 
       // Execute Workflow transition
-      return this.workflowService.executeTransition(
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'START',
@@ -251,12 +252,16 @@ export class StocktakeService {
         body.version,
         body.ipAddress,
       );
+
+      return this.findOne(id, tx);
     });
   }
 
   async count(
     id: string,
-    counts: Array<{ itemId: string; lotId?: string; qtyCounted: number }>,
+    counts:
+      | Array<{ itemId: string; lotId?: string; qtyCounted: number }>
+      | undefined,
     userId: string,
   ) {
     const session = await this.prisma.stocktakeSession.findUnique({
@@ -273,8 +278,10 @@ export class StocktakeService {
       );
     }
 
+    const safeCounts = counts ?? [];
+
     return this.prisma.$transaction(async (tx) => {
-      for (const cnt of counts) {
+      for (const cnt of safeCounts) {
         await tx.stocktakeCount.upsert({
           where: {
             sessionId_itemId_lotId: {
@@ -369,7 +376,7 @@ export class StocktakeService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'stocktakeSession',
       'SUBMIT',
@@ -379,6 +386,7 @@ export class StocktakeService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async approve(
@@ -387,7 +395,7 @@ export class StocktakeService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'stocktakeSession',
       'APPROVE',
@@ -397,6 +405,7 @@ export class StocktakeService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async reject(
@@ -405,7 +414,7 @@ export class StocktakeService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'stocktakeSession',
       'REJECT',
@@ -415,6 +424,7 @@ export class StocktakeService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async recount(
@@ -491,7 +501,7 @@ export class StocktakeService {
         });
       }
 
-      return this.workflowService.executeTransition(
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'RECOUNT',
@@ -502,6 +512,8 @@ export class StocktakeService {
         body.ipAddress,
         tx,
       );
+
+      return this.findOne(id, tx);
     });
   }
 
@@ -523,7 +535,7 @@ export class StocktakeService {
         throw new NotFoundException(`StocktakeSession ${id} not found`);
       }
 
-      return this.workflowService.executeTransition(
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'REVIEW_VARIANCE',
@@ -534,6 +546,8 @@ export class StocktakeService {
         body.ipAddress,
         tx,
       );
+
+      return this.findOne(id, tx);
     });
   }
 
@@ -562,7 +576,12 @@ export class StocktakeService {
         data: { isActive: false },
       });
 
-      return this.workflowService.executeTransition(
+      await tx.warehouseItem.updateMany({
+        where: { warehouseId: session.warehouseId, isFrozen: true },
+        data: { isFrozen: false },
+      });
+
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'CANCEL',
@@ -571,7 +590,10 @@ export class StocktakeService {
         body.comments,
         body.version,
         body.ipAddress,
+        tx,
       );
+
+      return this.findOne(id, tx);
     });
   }
 }

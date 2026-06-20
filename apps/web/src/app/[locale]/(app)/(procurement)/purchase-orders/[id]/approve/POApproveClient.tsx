@@ -77,7 +77,10 @@ export function POApproveClient({ id }: Props) {
   } catch (e) {
    console.error(e);
    playSound('error');
-   toast.error(tc('error'));
+   const isToastShown = e && typeof e === 'object' && (e as Record<string, unknown>)._isToastShown === true;
+   if (!isToastShown) {
+    toast.error(tc('error'));
+   }
   }
  };
 
@@ -96,7 +99,10 @@ export function POApproveClient({ id }: Props) {
   } catch (e) {
    console.error(e);
    playSound('error');
-   toast.error(tc('error'));
+   const isToastShown = e && typeof e === 'object' && (e as Record<string, unknown>)._isToastShown === true;
+   if (!isToastShown) {
+    toast.error(tc('error'));
+   }
   }
  };
 
@@ -121,7 +127,7 @@ export function POApproveClient({ id }: Props) {
     </div>
     <PageHeader
      title={t('approval.title')}
-     description={`${t('approval.description')} #${po.documentNumber}`}
+     subtitle={`${t('approval.description')} #${po.documentNumber}`}
     />
    </div>
 

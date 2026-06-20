@@ -25,6 +25,7 @@ describe('StocktakePostService', () => {
   const mockWarehouseItemUpsert = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockWarehouseItemFindUnique = jest.fn();
+  const mockWarehouseItemUpdateMany = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockWarehouseLockUpdateMany = jest.fn();
   const mockWarehouseUpdate = jest.fn();
@@ -56,6 +57,7 @@ describe('StocktakePostService', () => {
       upsert: mockWarehouseItemUpsert,
       update: mockWarehouseItemUpdate,
       findUnique: mockWarehouseItemFindUnique,
+      updateMany: mockWarehouseItemUpdateMany,
     },
     stockLedger: {
       create: mockStockLedgerCreate,
@@ -167,6 +169,10 @@ describe('StocktakePostService', () => {
     expect(mockWarehouseLockUpdateMany).toHaveBeenCalledWith({
       where: { warehouseId, isActive: true },
       data: { isActive: false },
+    });
+    expect(mockWarehouseItemUpdateMany).toHaveBeenCalledWith({
+      where: { warehouseId, isFrozen: true },
+      data: { isFrozen: false },
     });
     expect(mockWarehouseUpdate).toHaveBeenCalledWith({
       where: { id: warehouseId },

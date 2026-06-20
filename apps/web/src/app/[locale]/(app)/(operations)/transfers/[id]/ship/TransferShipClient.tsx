@@ -91,7 +91,10 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
    throw new Error('WarehouseLocked');
   }
 
-  const line = transfer?.lines.find(l => l.item?.code === barcode);
+  const line = transfer?.lines.find(l => 
+    l.item?.code === barcode || 
+    l.item?.barcodes?.some(b => b.barcode === barcode)
+  );
   if (line) {
    const currentScanned = scannedLines[line.id] ?? 0;
    if (currentScanned >= line.qty) {
@@ -186,8 +189,8 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
 
    <PageHeader
     title={t('ship_transfer')}
-    description={t('ship_confirm_desc')}
-    actions={
+    subtitle={t('ship_confirm_desc')}
+    children={
      <PermissionGate action="post" resource="transfer">
       <Button
        variant="outline"

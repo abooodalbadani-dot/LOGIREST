@@ -20,6 +20,8 @@ export class IssuesService {
     body: {
       departmentId: string;
       lines: Array<{ itemId: string; quantity: number }>;
+      kitchenRequestId?: string;
+      notes?: string;
     },
     userId: string,
     activeWarehouseId: string,
@@ -71,12 +73,16 @@ export class IssuesService {
             warehouseId: activeWarehouseId,
             departmentId: body.departmentId,
             status: 'DRAFT',
+            notes: body.notes,
             lines: {
               create: body.lines.map((line) => ({
                 itemId: line.itemId,
                 quantity: line.quantity,
               })),
             },
+            kitchenRequest: body.kitchenRequestId
+              ? { connect: { id: body.kitchenRequestId } }
+              : undefined,
           },
           include: {
             lines: {
@@ -96,6 +102,7 @@ export class IssuesService {
             },
             warehouse: true,
             department: true,
+            kitchenRequest: true,
           },
         });
       },
@@ -220,6 +227,9 @@ export class IssuesService {
         },
         department: true,
         warehouse: true,
+        kitchenRequest: {
+          select: { id: true, requestNumber: true },
+        },
         createdBy: {
           select: { name: true, email: true },
         },

@@ -83,14 +83,11 @@ export function formatDate(date: Date | string | null | undefined, locale: 'ar' 
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '—';
   
-  const safeLocale = locale || 'en';
-  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
   
-  return d.toLocaleDateString(formatterLocale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+  return `${day}/${month}/${year}`;
 }
 
 /**
@@ -105,17 +102,15 @@ export function formatDateTime(
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '—';
   
-  const safeLocale = locale || 'en';
-  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
   
-  return d.toLocaleString(formatterLocale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: includeSeconds ? '2-digit' : undefined
-  });
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const secondsStr = includeSeconds ? `:${String(d.getSeconds()).padStart(2, '0')}` : '';
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}${secondsStr}`;
 }
 
 /**

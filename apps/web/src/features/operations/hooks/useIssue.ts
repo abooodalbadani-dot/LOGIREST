@@ -52,8 +52,11 @@ export const StockIssueDetailSchema = z.object({
  type: z.literal('ISSUE').default('ISSUE'),
  destinationDeptId: z.string().default(''),
  destinationDepartmentId: z.string().nullable().optional(),
+ destinationDepartmentName: z.string().nullable().optional(),
+ departmentName: z.string().nullable().optional(),
  requestedBy: z.string().default(''),
  warehouseId: z.string(),
+ warehouseName: z.string().nullable().optional(),
  branchId: z.string().default(''),
  notes: z.string().nullable(),
  createdBy: z.string().default(''),
@@ -62,7 +65,11 @@ export const StockIssueDetailSchema = z.object({
  postedAt: z.string().nullable(),
  postedBy: z.string().nullable(),
  version: z.number().default(1),
- lines: z.array(IssueLineItemSchema).default([])
+ lines: z.array(IssueLineItemSchema).default([]),
+ kitchenRequest: z.object({
+   id: z.string(),
+   requestNumber: z.string(),
+ }).nullable().optional(),
 });
 
 export type StockIssueDetail = z.infer<typeof StockIssueDetailSchema>;

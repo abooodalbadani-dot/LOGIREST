@@ -39,6 +39,7 @@ export const InventoryMovementSchema = z.object({
   itemName: z.string(),
   transactionType: z.string(),
   documentReference: z.string(),
+  documentId: z.string().optional().nullable(),
   quantity: z.number(),
   balanceAfter: z.number(),
   performedByUserName: z.string().nullable().optional(),

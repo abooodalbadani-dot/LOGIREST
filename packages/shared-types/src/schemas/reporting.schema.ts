@@ -21,6 +21,8 @@ export type InventoryLotsQuery = z.infer<typeof InventoryLotsQuerySchema>;
 
 export const InventoryMovementsQuerySchema = z.object({
   itemId: z.string().uuid().optional(),
+  search: z.string().optional(),
+  documentType: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   startDate: z.string().datetime().optional(),

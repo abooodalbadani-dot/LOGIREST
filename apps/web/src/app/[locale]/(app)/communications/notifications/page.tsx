@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { Bell } from 'lucide-react';
+import { NotificationsClient } from './NotificationsClient';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
@@ -14,17 +14,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function NotificationsPage(props: { params: Promise<{ locale: string }> }) {
  const { locale } = await props.params;
  setRequestLocale(locale);
- const t = await getTranslations('notifications');
 
  return (
  <ProtectedRoute requiredAction="view" requiredResource="inventory">
- <div className="flex flex-col gap-6 min-w-0">
- 
- <div className="flex flex-col items-center justify-center py-24 gap-4 text-muted-foreground/40 min-w-0">
- <Bell className="w-12 h-12 opacity-20" />
- <p className="text-body-md font-bold uppercase">{t('no_notifications')}</p>
- </div>
- </div>
+  <NotificationsClient locale={locale as 'ar' | 'en'} />
  </ProtectedRoute>
  );
 }

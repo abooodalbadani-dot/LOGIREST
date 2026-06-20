@@ -84,6 +84,11 @@ function checkItemVisibility(item: NavItem, user: AuthUser | null, isLoading: bo
   return false;
  }
 
+ // Explicitly gate Settings links to ADMIN role
+ if ((item.key === 'settings' || item.key === 'mail_settings') && user.role !== 'ADMIN') {
+  return false;
+ }
+
  // Operations & Inventory: Hide from PROC_OFFICER, PROC_MGR, APPROVER, VIEWER
  const opsRestrictedRoles = ['PROC_OFFICER', 'PROC_MGR', 'APPROVER', 'VIEWER'];
  const opsResources = [

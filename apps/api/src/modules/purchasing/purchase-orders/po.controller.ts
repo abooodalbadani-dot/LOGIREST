@@ -160,13 +160,7 @@ export class PurchaseOrderController {
   ) {}
 
   @Post()
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -282,13 +276,7 @@ export class PurchaseOrderController {
   }
 
   @Put(':id')
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -353,13 +341,7 @@ export class PurchaseOrderController {
   }
 
   @Delete(':id')
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -388,13 +370,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/submit')
-  @Roles(
-    Role.ADMIN,
-    Role.PROC_OFFICER,
-    Role.INV_MGR,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -424,14 +400,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/approve')
-  @Roles(
-    Role.ADMIN,
-    Role.APPROVER,
-    Role.INV_MGR,
-    Role.STORE_MGR,
-    Role.BRANCH_MGR,
-    Role.PROC_MGR,
-  )
+  @Roles(Role.ADMIN, Role.GM, Role.BRANCH_MGR, Role.PROC_MGR, Role.APPROVER)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -461,14 +430,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/reject')
-  @Roles(
-    Role.ADMIN,
-    Role.APPROVER,
-    Role.INV_MGR,
-    Role.STORE_MGR,
-    Role.BRANCH_MGR,
-    Role.PROC_MGR,
-  )
+  @Roles(Role.ADMIN, Role.GM, Role.BRANCH_MGR, Role.PROC_MGR, Role.APPROVER)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -498,13 +460,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/cancel')
-  @Roles(
-    Role.ADMIN,
-    Role.PROC_OFFICER,
-    Role.INV_MGR,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',

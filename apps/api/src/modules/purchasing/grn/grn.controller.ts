@@ -210,7 +210,6 @@ export class GrnController {
     Role.INV_MGR,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
-    Role.PROC_MGR,
   )
   async create(
     @Body() body: CreateGrnDto,
@@ -302,9 +301,9 @@ export class GrnController {
   @Put(':id')
   @Roles(
     Role.ADMIN,
+    Role.WH_KEEPER,
     Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
+    Role.STORE_MGR,
     Role.BRANCH_MGR,
   )
   async update(
@@ -377,9 +376,9 @@ export class GrnController {
   @Delete(':id')
   @Roles(
     Role.ADMIN,
+    Role.WH_KEEPER,
     Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
+    Role.STORE_MGR,
     Role.BRANCH_MGR,
   )
   async remove(
@@ -412,13 +411,7 @@ export class GrnController {
     action: 'POST',
     modelName: 'goodsReceivedNote',
   })
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
   @HttpCode(HttpStatus.OK)
   async post(
     @Param('id') id: string,
@@ -492,8 +485,6 @@ export class GrnController {
     Role.INV_MGR,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
-    Role.PROC_MGR,
-    Role.PROC_OFFICER,
   )
   @HttpCode(HttpStatus.OK)
   async submit(
@@ -524,6 +515,13 @@ export class GrnController {
     action: 'CANCEL',
     modelName: 'goodsReceivedNote',
   })
+  @Roles(
+    Role.ADMIN,
+    Role.WH_KEEPER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async cancel(
     @Param('id') id: string,

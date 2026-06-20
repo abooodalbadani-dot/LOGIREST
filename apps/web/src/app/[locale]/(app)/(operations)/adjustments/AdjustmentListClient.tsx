@@ -347,7 +347,7 @@ const t = useTranslations('operations.adjustment');
  const majorAdjustmentsCount = summaryData?.criticalLosses ?? 0;
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
    <Breadcrumb
     items={[
      { label: tCommon('inventory'), href: '#' },
@@ -356,7 +356,7 @@ const t = useTranslations('operations.adjustment');
    />
    <PageHeader
     title={t('title')}
-    description={t('description') || 'Corrective inventory volume adjustments and audits'} actions={
+    subtitle={t('description') || 'Corrective inventory volume adjustments and audits'} children={
      <div className="flex items-center gap-6">
       <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex min-w-0">
        <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
@@ -368,7 +368,7 @@ const t = useTranslations('operations.adjustment');
        </div>
       </div>
       <PermissionGate action="create" resource="adjustment">
-       <Link href="/adjustments/new">
+       <Link href="/adjustments/new" className="shrink-0 w-full sm:w-auto">
         <Button className="h-10 px-8 bg-card border border-border shadow-sm border border-outline-low/10 text-status-active text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-medium shadow-sm gap-2">
          <Plus className="w-3.5 h-3.5" />
          {t('create_new')}
@@ -451,15 +451,19 @@ const t = useTranslations('operations.adjustment');
      onPageChange: setPage
     } : undefined}
     filters={
-      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:max-w-md">
+           <div className="relative w-full group">
+             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+             <Input
          placeholder={tCommon('statuses.all') || "All Statuses"}
          value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
+         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
         />
+           </div>
+         </div>
        </div>
-     }
+      }
    />
 
    <PostConfirmDialog

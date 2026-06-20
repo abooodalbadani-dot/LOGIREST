@@ -166,9 +166,12 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  router.push('/purchase-requests');
  } catch (error) {
- console.error(error);
- playSound('error');
- toast.error(tc('error'));
+  console.error(error);
+  playSound('error');
+  const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+  if (!isToastShown) {
+   toast.error(tc('error'));
+  }
  } finally {
  setIsSubmitting(false);
  setSubmitConfirmOpen(false);

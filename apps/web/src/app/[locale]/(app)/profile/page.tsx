@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/providers/AuthProvider';
 import { useUserProfile } from '@/providers/UserProfileProvider';
 import ChangePasswordClient from './ChangePasswordClient';
+import { RelationalName } from '@/components/shared/RelationalName';
 import LocaleSwitcher from '@/components/shared/LocaleSwitcher';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -309,7 +310,8 @@ export default function ProfilePage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+966 50 000 0000"
-            className="h-12 ps-11 bg-card border border-border shadow-sm/80 border border-outline-low rounded-2xl focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-xs font-semibold"
+            dir="ltr"
+            className="h-12 ps-11 bg-card border border-border shadow-sm/80 border border-outline-low rounded-2xl focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-xs font-semibold text-right"
            />
            <Phone className="w-4 h-4 text-muted-foreground/45 absolute left-4 top-1/2 -translate-y-1/2" />
           </div>
@@ -356,11 +358,11 @@ export default function ProfilePage() {
            <div className="w-2 h-2 rounded-full bg-operational-cyan group-hover:shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.6)] transition-all" />
            <div className="flex flex-col min-w-0">
             <span className="text-label-sm font-bold text-foreground">
-             {scope.branchId || tc('actions.all_branches') || 'All Branches'}
+             {scope.branchId ? <RelationalName name={scope.branch?.name} rawId={scope.branchId} fallback="Unknown Branch" /> : tc('actions.all_branches') || 'All Branches'}
             </span>
-            <span className="text-label-xs text-muted-foreground font-medium">
-             {scope.warehouseId ? `${tc('warehouses.warehouses') || 'Warehouse'}: ${scope.warehouseId}` : t('global_access') || 'Global Access'}
-             {scope.departmentId && ` • Dept: ${scope.departmentId}`}
+            <span className="text-label-xs text-muted-foreground font-medium flex items-center flex-wrap gap-1">
+             {scope.warehouseId ? <><span className="me-1">{tc('warehouses.warehouses') || 'Warehouse'}:</span><RelationalName name={scope.warehouse?.name} rawId={scope.warehouseId} fallback="Unknown Warehouse" /></> : t('global_access') || 'Global Access'}
+             {scope.departmentId && <><span className="mx-1">•</span>Dept: <RelationalName name={scope.department?.name} rawId={scope.departmentId} fallback="Unknown Dept" /></>}
             </span>
            </div>
           </div>
@@ -391,11 +393,14 @@ export default function ProfilePage() {
           <Sun className="w-5 h-5 text-operational-cyan" />
          )}
         </div>
-        <CardTitle className="text-title-sm uppercase">Theme Preferences / مظهر النظام</CardTitle>
+        <div className="flex flex-col gap-1 items-start text-start">
+         <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Theme Preferences</h3>
+         <p className="text-lg font-bold text-muted-foreground">مظهر النظام</p>
+        </div>
        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-       <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-semibold leading-relaxed">
+       <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-semibold leading-relaxed text-start">
         Choose system theme. Updates are instantly synchronized to all UI components.
        </p>
        <div className="flex p-1 bg-card border border-border shadow-sm border border-outline-low rounded-xl">
@@ -435,7 +440,10 @@ export default function ProfilePage() {
         <div className="p-2 bg-operational-cyan/10 rounded-lg">
          <Bell className="w-5 h-5 text-operational-cyan" />
         </div>
-        <CardTitle className="text-title-sm uppercase">Notification Preferences / تفضيلات التنبيهات</CardTitle>
+        <div className="flex flex-col gap-1 items-start text-start">
+         <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Notification Preferences</h3>
+         <p className="text-lg font-bold text-muted-foreground">تفضيلات التنبيهات</p>
+        </div>
        </div>
       </CardHeader>
       <CardContent className="space-y-3">

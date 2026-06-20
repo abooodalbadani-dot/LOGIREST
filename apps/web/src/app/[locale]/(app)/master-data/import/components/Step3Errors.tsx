@@ -85,7 +85,7 @@ export function Step3Errors({ wizard }: Step3ErrorsProps) {
  </Button>
  </div>
 
- <div className="bg-muted/5 rounded-[2.5rem] border border-foreground/5 overflow-hidden">
+ <div className="flex-1 w-full min-h-[400px] md:min-h-0">
  <DataTable 
  columns={columns} 
  data={wizard.errors}

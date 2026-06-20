@@ -17,7 +17,8 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
-import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History, RotateCcw } from 'lucide-react';
+import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History, RotateCcw, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -215,7 +216,7 @@ const inProgressCount = summaryData?.active ?? 0;
 const postedCount = summaryData?.completed ?? 0;
 
  return (
- <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+ <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <div className="flex flex-col gap-6 min-w-0">
  <Breadcrumb 
  items={[
@@ -225,7 +226,7 @@ const postedCount = summaryData?.completed ?? 0;
  />
  <PageHeader
  title={t('title')}
- description={t('description') || 'Physical inventory verification and variance auditing'} actions={
+ subtitle={t('description') || 'Physical inventory verification and variance auditing'} children={
  <div className="flex items-center gap-8">
  <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-8 hidden md:flex min-w-0">
  <div className="text-label-xs font-semibold uppercase text-foreground flex items-center gap-2">
@@ -238,7 +239,7 @@ const postedCount = summaryData?.completed ?? 0;
  </div>
  </div>
  <PermissionGate action="create" resource="stocktake">
- <Link href={`/stocktake/new`}>
+ <Link href={`/stocktake/new`} className="shrink-0 w-full sm:w-auto">
  <Button className="h-12 px-10 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-xl shadow-cyan-900/20 group">
  <Plus className="w-4 h-4 me-2 group-hover:rotate-90 transition-transform" />
  {t('create_new')}
@@ -278,124 +279,78 @@ const postedCount = summaryData?.completed ?? 0;
      />
     </div>
 
-<div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-card border border-border shadow-sm rounded-lg border border-outline-low shadow-2xl">
-       <div className="flex flex-col gap-3 min-w-[280px] flex-1 min-w-0">
-        <div className="flex items-center gap-2 ms-1">
-         <Filter className="w-3 h-3 text-foreground/60" />
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
-        </div>
-        <SmartCombobox
-         items={statusItems}
-         value={initialStatus || 'ALL'}
-         onSelect={(item) => handleStatusChange(item.id === 'ALL' ? '' : String(item.id))}
-         placeholder={tc('statuses.all') || "All Statuses"}
-         triggerClassName="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all"
-        />
-       </div>
-
-       <div className="flex flex-col gap-3 min-w-[340px] flex-[2] min-w-0">
-        <div className="flex items-center gap-2 ms-1">
-         <Search className="w-3 h-3 text-foreground/60" />
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
-        </div>
-        <div className="relative group">
-         <input
-          placeholder={t('search_placeholder') || 'Search by Session ID...'}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
+      <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+       <DataTable
+        columns={columns}
+        data={data?.data || []}
+        isLoading={false}
+        onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
+        collectionName="operations_stocktake"
+        enableVirtualization={true}
+        containerHeight="600px"
+        sorting={sorting}
+        onSortingChange={setSorting}
+        filters={
+         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+           <div className="w-full sm:w-64">
+             <div className="relative w-full">
+               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+               <Input
+                 placeholder={t('search_placeholder') || 'Search by Session ID...'}
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+               />
+             </div>
+           </div>
+           <div className="w-full sm:w-48 relative group">
+             <SmartCombobox
+               items={statusItems}
+               value={initialStatus || 'ALL'}
+               onSelect={(item) => handleStatusChange(item.id === 'ALL' ? '' : String(item.id))}
+               placeholder={tc('statuses.all') || "All Statuses"}
+               triggerClassName={initialStatus && initialStatus !== 'ALL' ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+             />
+             {initialStatus && initialStatus !== 'ALL' && (
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                 onClick={(e) => { e.stopPropagation(); handleStatusChange(''); }}
+               >
+                 <X className="h-4 w-4" />
+               </Button>
+             )}
+           </div>
+         </div>
+        }
+        emptyState={
+         <EmptyState 
+          variant="minimal"
+          title={t('no_records') || 'No Stocktakes Found'} 
+          description={t('description') || 'Physical inventory verification sessions will appear here.'} 
+          action={
+           <PermissionGate action="create" resource="stocktake">
+            <Button 
+             onClick={() => router.push(`/stocktake/new`)}
+             className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
+            >
+             <Plus className="w-4 h-4 me-2" />
+             {t('create_new')}
+            </Button>
+           </PermissionGate>
+          }
          />
-        </div>
-       </div>
-
-       <Button
-        className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-label-xs font-semibold uppercase rounded-md transition-all border border-outline-low hover:text-foreground group"
-        onClick={() => setShowFilters(!showFilters)}
-       >
-        <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180" />
-        {tc('filters_button')}
-        {activeFilterCount > 0 && (
-         <span className="ms-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500 text-white text-label-xxs font-bold">
-          {activeFilterCount}
-         </span>
-        )}
-       </Button>
-       <Button
-        variant="ghost"
-        size="sm"
-        className="h-12 px-4 text-muted-foreground/60 hover:text-foreground text-label-xs font-semibold uppercase rounded-md transition-all"
-        onClick={() => { handleStatusChange(''); setDateFrom(''); setDateTo(''); }}
-       >
-        <RotateCcw className="w-3.5 h-3.5 me-2" />
-        {tc('clear_filters') || 'Clear Filters'}
-       </Button>
+        }
+        pagination={data?.meta ? {
+         page: data.meta.page,
+         pageSize: data.meta.pageSize,
+         total: data.meta.total,
+         totalPages: data.meta.totalPages,
+         onPageChange: handlePageChange
+        } : undefined}
+       />
       </div>
-
-      {showFilters && (
-       <div className="flex items-center gap-6 px-8 py-4 bg-card border border-border shadow-sm/30 border border-outline-low/5 rounded-lg">
-        <div className="flex flex-col gap-2 min-w-[180px] min-w-0">
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">{tFilters('date_from')}</label>
-         <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => { setDateFrom(e.target.value); handlePageChange(1); }}
-          className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-cyan-500/20 outline-none"
-          dir="ltr"
-         />
-        </div>
-        <div className="flex flex-col gap-2 min-w-[180px] min-w-0">
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">{tFilters('date_to')}</label>
-         <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => { setDateTo(e.target.value); handlePageChange(1); }}
-          className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-cyan-500/20 outline-none"
-          dir="ltr"
-         />
-        </div>
-       </div>
-      )}
-
-     <div className="bg-card border border-border shadow-sm rounded-lg border border-outline-low overflow-hidden shadow-2xl">
-      <DataTable
-       columns={columns}
-       data={data?.data || []}
-       isLoading={false}
-       onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
-       collectionName="operations_stocktake"
-       enableVirtualization={true}
-       containerHeight="600px"
-       sorting={sorting}
-       onSortingChange={setSorting}
-       emptyState={
-        <EmptyState 
-         variant="minimal"
-         title={t('no_records') || 'No Stocktakes Found'} 
-         description={t('description') || 'Physical inventory verification sessions will appear here.'} 
-         action={
-          <PermissionGate action="create" resource="stocktake">
-           <Button 
-            onClick={() => router.push(`/stocktake/new`)}
-            className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
-           >
-            <Plus className="w-4 h-4 me-2" />
-            {t('create_new')}
-           </Button>
-          </PermissionGate>
-         }
-        />
-       }
-       pagination={data?.meta ? {
-        page: data.meta.page,
-        pageSize: data.meta.pageSize,
-        total: data.meta.total,
-        totalPages: data.meta.totalPages,
-        onPageChange: handlePageChange
-       } : undefined}
-      />
-     </div>
-    </div>
    </QueryBoundary>
  </div>
  );

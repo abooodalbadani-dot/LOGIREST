@@ -77,6 +77,7 @@ function mapKitchenRequestDetail(
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
     version: kr.version as number,
+    issueId: (kr.issueId as string) || null,
     items,
   };
 }
@@ -180,7 +181,14 @@ export class KitchenRequestsController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.KITCHEN_CHIEF)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
+  )
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateKitchenRequestDto,
@@ -220,7 +228,14 @@ export class KitchenRequestsController {
   }
 
   @Post(':id/submit')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.KITCHEN_CHIEF, Role.STORE_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'kitchen_request',
@@ -294,9 +309,10 @@ export class KitchenRequestsController {
   @Roles(
     Role.ADMIN,
     Role.INV_MGR,
-    Role.KITCHEN_CHIEF,
+    Role.WH_KEEPER,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
   )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({

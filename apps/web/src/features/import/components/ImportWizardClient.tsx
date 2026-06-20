@@ -53,7 +53,7 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
 
  <PageHeader
  title={`${t('title')} — ${getEntityTitle()}`}
- description={t('select_type')}
+ subtitle={t('select_type')}
  />
 
  {/* Stepper Container */}

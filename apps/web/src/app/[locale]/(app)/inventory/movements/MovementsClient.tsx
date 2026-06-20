@@ -45,25 +45,28 @@ export default function MovementsClient() {
 
  const { data, isLoading, isError, error } = useInventoryMovements({
   search: searchFilter || undefined,
-  document_type: typeFilter || undefined,
+  documentType: typeFilter || undefined,
   page
  });
 
  const getDocumentPath = useMemo(() => (movement: InventoryMovement): string => {
   const type = movement.transactionType.toUpperCase();
   if (type === 'GRN' || type === 'GOODS_RECEIVED_NOTE') {
-   return `/goods-received/${movement.documentReference}`;
+   return `/goods-received/${movement.documentId || movement.documentReference}`;
   }
   if (type === 'ISSUE' || type === 'INVENTORY_ISSUE') {
-   return `/issues/${movement.documentReference}`;
+   return `/issues/${movement.documentId || movement.documentReference}`;
   }
   if (type === 'TRANSFER') {
-   return `/transfers/${movement.documentReference}`;
+   return `/transfers/${movement.documentId || movement.documentReference}`;
   }
   if (type === 'ADJUSTMENT') {
    return movement.documentReference === 'INITIAL_BALANCE'
     ? '/adjustments/new?type=INITIAL_BALANCE'
-    : `/adjustments/${movement.documentReference}`;
+    : `/adjustments/${movement.documentId || movement.documentReference}`;
+  }
+  if (type === 'STOCKTAKE') {
+   return `/stocktake/${movement.documentId || movement.documentReference}`;
   }
   return '#';
  }, []);
@@ -73,27 +76,21 @@ export default function MovementsClient() {
    accessorKey: 'timestamp',
    header: t('posted_at'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 min-w-0">
-     <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/60">
-      {formatDate(row.original.timestamp, currentLocale as 'ar' | 'en')}
-     </span>
-     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('temporal_mark')}</span>
-    </div>
+    <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/60 tabular-nums">
+     {formatDate(row.original.timestamp, currentLocale as 'ar' | 'en')}
+    </span>
    ),
   },
   {
    accessorKey: 'documentReference',
    header: t('document_number'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 min-w-0">
-     <Link
-      href={getDocumentPath(row.original)}
-      className="text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
-     >
-      <span dir="ltr">{row.original.documentReference}</span>
-     </Link>
-     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('source_reference')}</span>
-    </div>
+    <Link
+     href={getDocumentPath(row.original)}
+     className="text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)] block"
+    >
+     <span dir="ltr">{row.original.documentReference}</span>
+    </Link>
    ),
   },
   {
@@ -109,26 +106,18 @@ export default function MovementsClient() {
    accessorKey: 'itemCode',
    header: t('item_code'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 min-w-0">
-     <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase">
-      {row.original.itemCode || '—'}
-     </span>
-     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('system_id')}</span>
-    </div>
+    <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase block">
+     {row.original.itemCode || '—'}
+    </span>
    ),
   },
   {
    id: 'itemName',
    header: t('item_name'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 max-w-[220px] min-w-0">
-     <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-foreground transition-colors leading-tight">
-      {row.original.itemName}
-     </span>
-     <span className="text-label-xxs font-bold text-muted-foreground/60 truncate uppercase">
-      {t('sku_master_entity')}
-     </span>
-    </div>
+    <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-foreground transition-colors leading-tight block max-w-[220px]">
+     {row.original.itemName}
+    </span>
    ),
   },
   {
@@ -149,15 +138,13 @@ export default function MovementsClient() {
   {
    accessorKey: 'quantity',
    header: t('qty'),
+   meta: { numeric: true },
    cell: ({ row }) => {
     const isEntry = row.original.quantity > 0;
     return (
-     <div className="min-w-0 gap-6 flex-1 items-end flex-col flex w-full">
-      <span dir="ltr" className={`font-mono text-label-sm font-semibold px-3 py-1 rounded-xl ${isEntry ? 'text-status-success bg-status-success/10 border border-status-success/20' : 'text-status-error bg-status-error/10 border border-status-error/20'}`}>
-       {formatQuantity(Math.abs(row.original.quantity), currentLocale as 'ar' | 'en')}
-      </span>
-      <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">{t('movement_delta')}</span>
-     </div>
+     <span dir="ltr" className={`inline-block font-mono text-label-sm font-semibold px-3 py-1 rounded-xl tabular-nums ${isEntry ? 'text-status-success bg-status-success/10 border border-status-success/20' : 'text-status-error bg-status-error/10 border border-status-error/20'}`}>
+      {formatQuantity(Math.abs(row.original.quantity), currentLocale as 'ar' | 'en')}
+     </span>
     );
    },
   },
@@ -261,13 +248,13 @@ export default function MovementsClient() {
        {t('ledger_query')}
       </span>
       <div className="relative group">
-       <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-foreground transition-colors" />
+       <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-operational-cyan transition-colors" />
        <input
         type="search"
         placeholder={t('search_placeholder')}
         value={searchFilter}
         onChange={(e) => { setSearchFilter(e.target.value); setPage(1); }}
-        className="w-full h-12 ps-12 pe-4 bg-surface-container-highest/30 border-none focus:ring-2 focus:ring-operational-cyan/30 rounded-xl text-label-sm font-bold transition-all"
+        className="w-full h-12 ps-12 pe-4 bg-white/5 border border-border/50 focus:ring-2 focus:ring-operational-cyan/30 rounded-xl text-label-sm font-bold transition-all"
         dir={isRtl ? 'rtl' : 'ltr'} />
       </div>
      </div>

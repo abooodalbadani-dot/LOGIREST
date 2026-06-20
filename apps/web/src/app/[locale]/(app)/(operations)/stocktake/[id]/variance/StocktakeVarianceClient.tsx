@@ -153,8 +153,8 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
 
  const handleSubmit = () => {
   const updates = session.items.map(item => ({
-   line_id: item.id,
-   variance_reason: reasons[item.id] || ""
+   lineId: item.id,
+   varianceReason: reasons[item.id] || ""
   }))
 
   submitVariance.mutate(
@@ -295,7 +295,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
          header: t('snapshot_qty'),
          cell: (line) => (
           <span className="font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
-           {formatQuantity(line.snapshotQty, locale)} {line.uom}
+           {formatQuantity(line.snapshotQty, locale)}
           </span>
          )
         },

@@ -96,7 +96,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
     });
 
     it('should call create', async () => {
-      const body = { departmentId: 'dept-1', lines: [] };
+      const body = {
+        destinationDeptId: 'dept-1',
+        lines: [{ itemId: 'item-1', requestedQty: 5 }],
+        kitchenRequestId: 'req-1',
+        notes: 'test notes',
+      };
       mockIssuesService.create.mockResolvedValue({ id: 'iss-1' });
 
       const result = await controller.create(
@@ -107,7 +112,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
       );
       expect(result.id).toBe('iss-1');
       expect(mockIssuesService.create).toHaveBeenCalledWith(
-        body,
+        {
+          departmentId: 'dept-1',
+          lines: [{ itemId: 'item-1', quantity: 5 }],
+          kitchenRequestId: 'req-1',
+          notes: 'test notes',
+        },
         'user-1',
         'wh-1',
       );

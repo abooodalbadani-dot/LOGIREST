@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,10 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { RelationalName } from '@/components/shared/RelationalName';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import type { LotAllocation, StockIssue } from '@/types/documents';
+import { useAuth } from '@/providers/AuthProvider';
+import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
+import { canPerformActionV2 } from '@logirest/shared-types';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 
 interface IssueViewerProps {
  issue: StockIssue;
@@ -35,18 +39,50 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
  const t = useTranslations('operations.issue');
  const tCommon = useTranslations('common');
  const router = useRouter();
+ const { user } = useAuth();
  const { data: settings, isLoading: isLoadingSettings } = useSystemPrintSettings();
  const [thermalConfig, setThermalConfig] = useState<{ paperSize: '80mm' | '58mm'; showLogo: boolean } | null>(null);
+ const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+ const postIssueMutation = usePostIssue();
 
  const issueStatus = issue?.status ?? 'DRAFT';
  
- // Adapt timeline entries
- const timelineEntries = [
-  { status: 'draft' as Status, at: issue.createdAt ?? '', by: issue.createdBy ?? tCommon('system_user') }
- ];
- if (issue.postedAt) {
-  timelineEntries.push({ status: 'posted' as Status, at: issue.postedAt, by: issue.postedBy ?? tCommon('system_user') });
- }
+ const handlePost = async () => {
+  try {
+   await postIssueMutation.mutateAsync({
+    id: issue.id,
+    confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
+    version: issue.version
+   });
+   setIsPostDialogOpen(false);
+  } catch (err) {
+   console.error(err);
+  }
+ };
+
+  // Adapt timeline entries
+  const timelineEntries = useMemo(() => {
+    const issueAny = issue as unknown as Record<string, unknown>;
+    const cachedTimeline = issueAny.timeline as {
+      status: string;
+      at: string;
+      by: string;
+    }[] | undefined;
+    if (cachedTimeline && cachedTimeline.length > 0) {
+      return cachedTimeline.map(e => ({
+        status: e.status.toLowerCase() as Status,
+        at: e.at,
+        by: e.by
+      }));
+    }
+    const h = [
+      { status: 'draft' as Status, at: issue.createdAt ?? '', by: issue.createdBy ?? tCommon('system_user') }
+    ];
+    if (issue.postedAt) {
+      h.push({ status: 'posted' as Status, at: issue.postedAt, by: issue.postedBy ?? tCommon('system_user') });
+    }
+    return h;
+  }, [issue, tCommon]);
 
  const lines: LineItem[] = (issue.lines || []).map(l => ({
   id: l.id,
@@ -63,93 +99,100 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
  }));
 
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm">
-   {/* Sticky Glass Header */}
-   <div className="sticky top-0 z-40 w-full glass-header h-16 border-b border-outline-variant/10 px-6 lg:px-10 flex items-center justify-between gap-6 transition-all">
-    <div className="flex items-center gap-4 overflow-hidden">
-     <Button 
-      variant="ghost" 
-      size="icon" 
-      onClick={() => router.back()} 
-      className="rounded-lg shrink-0 hover:bg-surface-container-high"
-      aria-label={tCommon('back')}
-     >
-      <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
-     </Button>
-     <div className="flex flex-col min-w-0">
-      <h1 className="text-title-lg font-semibold uppercase italic truncate">
-       {issue?.documentNumber || '...'}
-      </h1>
-      <div className="flex items-center gap-2 mt-0.5">
-       <StatusBadge status={issueStatus} />
-       <ClientOnlyTime 
-        date={issue?.createdAt || new Date()} 
-        mode="date"
-        className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
-       />
-      </div>
-     </div>
-    </div>
-    <div className="flex items-center gap-3 shrink-0">
-     <Button
-      variant="outline"
-      disabled={isLoadingSettings}
-      className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
-      onClick={() => dispatchPrintJob({
-       docType: 'INVENTORY_ISSUE',
-       doc: issue,
-       settings,
-       locale,
-       onThermalPrint: (paperSize, showLogo) => {
-        setThermalConfig({ paperSize, showLogo });
-       }
-      })}
-     >
-      <Printer className="w-4 h-4 me-2" />
-      {tCommon('print')}
-     </Button>
-    </div>
-   </div>
-
+  <div className="min-h-screen bg-background">
    {/* Main Content */}
-   <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+   <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
      {/* Left Column */}
-     <div className="lg:col-span-8 space-y-8">
-      {/* Header Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card border border-border shadow-sm p-6 rounded-lg shadow-sm space-y-3">
-         <div className="flex items-center gap-2 text-primary/40">
-          <MapPin className="w-4 h-4" />
-          <span className="text-label-xs font-semibold uppercase">{t('destination')}</span>
+     <div className="lg:col-span-2 flex flex-col gap-6 w-full">
+      {/* 1. The Header block (Normal Flow) */}
+      <div className="flex items-center justify-between w-full bg-card p-4 rounded-xl border border-border/50">
+       <div className="flex items-center gap-4 overflow-hidden">
+        <Button 
+         variant="ghost" 
+         size="icon" 
+         onClick={() => router.back()} 
+         className="rounded-lg shrink-0 hover:bg-surface-container-high"
+         aria-label={tCommon('back')}
+        >
+         <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+        </Button>
+        <div className="flex flex-col min-w-0">
+          <h1 className="text-2xl font-extrabold text-foreground tracking-tight uppercase">
+           {issue?.documentNumber || '...'}
+          </h1>
+         <div className="flex items-center gap-2 mt-0.5">
+          <StatusBadge status={issueStatus} />
+          <ClientOnlyTime 
+           date={issue?.createdAt || new Date()} 
+           mode="date"
+           className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
+          />
          </div>
-         <p className="font-bold text-body-md">
-          {issue.destinationDeptId === 'dep-1' ? tCommon('departments.kitchen_1') : 
-           issue.destinationDeptId === 'dep-2' ? tCommon('departments.pastry') : 
-           issue.destinationDeptId || '—'}
-         </p>
         </div>
-        <div className="bg-card border border-border shadow-sm p-6 rounded-lg shadow-sm space-y-3">
-         <div className="flex items-center gap-2 text-primary/40">
-          <User className="w-4 h-4" />
-          <span className="text-label-xs font-semibold uppercase">{t('requested_by')}</span>
-         </div>
-         <p className="font-bold text-body-md">{issue.requestedBy || '—'}</p>
-        </div>
-        <div className="bg-card border border-border shadow-sm p-6 rounded-lg shadow-sm space-y-3">
-         <div className="flex items-center gap-2 text-primary/40">
-          <Clock className="w-4 h-4" />
-          <span className="text-label-xs font-semibold uppercase">{tCommon('warehouse')}</span>
-         </div>
-         <p className="font-bold text-body-md">
-          {issue.warehouseId === 'wh-1' ? tCommon('warehouses.main') :
-           issue.warehouseId || tCommon('dash')}
-         </p>
-        </div>
+       </div>
+       <div className="flex items-center gap-3 shrink-0">
+        <Button
+         variant="outline"
+         disabled={isLoadingSettings}
+         className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
+         onClick={() => dispatchPrintJob({
+          docType: 'INVENTORY_ISSUE',
+          doc: issue,
+          settings,
+          locale,
+          onThermalPrint: (paperSize, showLogo) => {
+           setThermalConfig({ paperSize, showLogo });
+          }
+         })}
+        >
+         <Printer className="w-4 h-4 me-2" />
+         {tCommon('print')}
+        </Button>
+       </div>
       </div>
 
-      {/* Items Table */}
-      <div className="bg-card border border-border shadow-sm rounded-lg shadow-sm overflow-hidden">
+      {/* 2. The Summary Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+       <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
+        <div className="flex items-center gap-2 text-primary/40">
+         <MapPin className="w-4 h-4" />
+         <span className="text-label-xs font-semibold uppercase">{t('destination')}</span>
+        </div>
+         <p className="font-bold text-body-md">
+          <RelationalName 
+           name={issue.destinationDeptId === 'dep-1' ? tCommon('departments.kitchen_1') : 
+                 issue.destinationDeptId === 'dep-2' ? tCommon('departments.pastry') : 
+                 issue.destinationDepartmentName || issue.departmentName} 
+           rawId={issue.destinationDeptId} 
+           fallback="—"
+          />
+         </p>
+       </div>
+       <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
+        <div className="flex items-center gap-2 text-primary/40">
+         <User className="w-4 h-4" />
+         <span className="text-label-xs font-semibold uppercase">{t('requested_by')}</span>
+        </div>
+        <p className="font-bold text-body-md">{issue.requestedBy || '—'}</p>
+       </div>
+       <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
+        <div className="flex items-center gap-2 text-primary/40">
+         <Clock className="w-4 h-4" />
+         <span className="text-label-xs font-semibold uppercase">{tCommon('warehouse')}</span>
+        </div>
+         <p className="font-bold text-body-md">
+          <RelationalName 
+           name={issue.warehouseId === 'wh-1' ? tCommon('warehouses.main') : issue.warehouseName} 
+           rawId={issue.warehouseId} 
+           fallback={tCommon('dash')}
+          />
+         </p>
+       </div>
+      </div>
+
+      {/* 3. The Line Items Table */}
+      <div className="w-full bg-card border border-border shadow-sm rounded-lg overflow-hidden">
        <div className="p-8 flex justify-between items-center border-b border-outline-variant/5">
         <div className="flex items-center gap-4">
          <div className="w-1.5 h-6 bg-primary rounded-full" />
@@ -206,7 +249,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
 
       {/* Notes Section */}
       {issue.notes && (
-       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm space-y-4">
+       <div className="bg-card border border-border shadow-sm p-8 rounded-lg space-y-4">
         <div className="flex items-center gap-3 text-primary/30">
          <FileText className="w-4 h-4" />
          <h3 className="text-label-xs font-semibold uppercase">{t('operational_notes')}</h3>
@@ -221,9 +264,9 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
      </div>
 
      {/* Right Column */}
-     <div className="lg:col-span-4 space-y-8">
+     <div className="lg:col-span-1 space-y-6">
       {/* History Section */}
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm relative overflow-hidden group">
+      <div className="bg-card border border-border shadow-sm p-8 rounded-lg relative overflow-hidden group">
        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
        <div className="relative space-y-8">
         <div className="flex items-center gap-4">
@@ -239,12 +282,12 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       </div>
 
       {/* Audit Info */}
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm space-y-6">
+      <div className="bg-card border border-border shadow-sm p-8 rounded-lg space-y-6">
        <div className="flex items-center gap-4 border-b border-outline-variant/5 pb-4">
         <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
          <Info className="w-5 h-5 text-foreground" />
         </div>
-        <h4 className="text-label-xs font-semibold uppercase">{tCommon('audit_info')}</h4>
+        <h4 className="text-label-xs font-semibold uppercase">{tCommon('audit_trail')}</h4>
        </div>
        <div className="space-y-4">
         <div className="flex justify-between items-center py-2">
@@ -309,7 +352,30 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
      onClose={() => setThermalConfig(null)}
     />
    )}
+
+   {/* Action Toolbar / Footer */}
+   {issueStatus === 'SUBMITTED' && canPerformActionV2('issue', 'SUBMITTED', 'POST', user?.role) && (
+    <div className="w-full flex items-center justify-end gap-4 px-6 lg:px-10 py-4 bg-muted/30 border-t border-border mt-auto print:hidden">
+     <Button 
+      onClick={() => setIsPostDialogOpen(true)}
+      disabled={postIssueMutation.isPending}
+      className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-11 px-8 rounded-xl font-bold uppercase"
+     >
+      {t('post_issue') || 'Post Issue'}
+     </Button>
+    </div>
+   )}
+
+   <PostConfirmDialog
+    open={isPostDialogOpen}
+    onOpenChange={setIsPostDialogOpen}
+    title={t('post_confirm_title') || 'Post Confirmation'}
+    description={t('post_confirm_desc') || 'Are you sure you want to post this issue? This action is irreversible.'}
+    warningText=""
+    requiresTextConfirmation={true}
+    onConfirm={handlePost}
+    isLoading={postIssueMutation.isPending}
+   />
   </div>
  );
 }
-
