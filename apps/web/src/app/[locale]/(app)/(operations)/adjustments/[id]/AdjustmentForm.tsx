@@ -29,7 +29,10 @@ import {
  Info,
  Clock,
  AlertCircle,
- Pencil
+ Pencil,
+ X as XIcon,
+ XCircle as XCircleIcon,
+ CheckCircle as CheckCircleIcon
 } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -60,6 +63,75 @@ interface AdjustmentFormProps {
  id: string;
  isLocked: boolean;
  onConflict?: () => void;
+}
+
+function UnitCostInput({
+  value,
+  onChange,
+  disabled,
+  placeholder,
+  className
+}: {
+  value: number | null | undefined;
+  onChange: (val: number | null) => void;
+  disabled?: boolean;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [localValue, setLocalValue] = useState<string>(value !== null && value !== undefined ? String(value) : '');
+
+  useEffect(() => {
+    const numVal = value !== null && value !== undefined ? Number(value) : null;
+    const localNum = localValue !== '' ? Number(localValue) : null;
+    if (numVal !== localNum) {
+      setLocalValue(value !== null && value !== undefined ? String(value) : '');
+    }
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+      setLocalValue(rawVal);
+      if (rawVal === '' || rawVal === '.') {
+        onChange(null);
+      } else {
+        const parsed = parseFloat(rawVal);
+        onChange(isNaN(parsed) ? null : parsed);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    if (localValue === '' || localValue === '.') {
+      setLocalValue('0');
+      onChange(0);
+    } else {
+      const parsed = parseFloat(localValue);
+      if (isNaN(parsed)) {
+        setLocalValue('0');
+        onChange(0);
+      } else {
+        setLocalValue(String(parsed));
+        onChange(parsed);
+      }
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={localValue}
+      lang="en"
+      dir="ltr"
+      style={{ direction: 'ltr' }}
+      disabled={disabled}
+      placeholder={placeholder}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={className}
+    />
+  );
 }
 
 export function AdjustmentForm({ 
@@ -106,7 +178,7 @@ export function AdjustmentForm({
  );
 
  const hasInvalidCosts = useMemo(
-  () => lines.some(line => line.direction === 'INCREASE' && (line.unitCost === null || line.unitCost === undefined || line.unitCost <= 0)),
+  () => lines.some(line => line.direction === 'INCREASE' && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0)),
   [lines]
  );
 
@@ -205,10 +277,10 @@ export function AdjustmentForm({
    toast.error(t('errors.negative_stock_not_allowed'));
    return;
   }
-  if (hasInvalidCosts) {
-   toast.error(locale === 'ar' ? 'تكلفة الوحدة مطلوبة ويجب أن تكون أكبر من 0 لبنود الزيادة' : 'Unit cost is required and must be > 0 for increase lines.');
-   return;
-  }
+   if (hasInvalidCosts) {
+    toast.error(locale === 'ar' ? 'تكلفة الوحدة مطلوبة ويجب أن تكون أكبر من أو تساوي 0 لبنود الزيادة' : 'Unit cost is required and must be >= 0 for increase lines.');
+    return;
+   }
   try {
    const payload = {
     version: document?.version || 0,
@@ -293,6 +365,8 @@ export function AdjustmentForm({
    router.push(`/adjustments`);
   } catch (e) {
    console.error(e);
+   const message = e instanceof Error ? e.message : tc('error_occurred');
+   toast.error(message);
   }
  };
 
@@ -354,7 +428,7 @@ export function AdjustmentForm({
       direction: 'INCREASE',
       qtyBefore: currentQty,
       qtyAdjusted: 1,
-      unitCost: null,
+      unitCost: 0,
       uomId: item.primaryUom.id,
       reasonNotes: ''
      }];
@@ -487,10 +561,12 @@ export function AdjustmentForm({
          onChange={e => setNotes(e.target.value)}
          readOnly={!canEdit}
          placeholder={t('notes_placeholder')}
-         className={cn(
-          "bg-card border border-border shadow-sm border-none rounded-lg h-[calc(6rem+3rem+1rem)] p-4 text-body-md resize-none transition-all",
-          (!canEdit) ? "cursor-default opacity-85 select-all focus:ring-0 animate-pulse-slow" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
-         )}
+          className={cn(
+           "h-[calc(6rem+3rem+1rem)] p-4 text-body-md resize-none transition-all w-full",
+           (!canEdit) 
+             ? "bg-white/5 border border-white/10 rounded-xl p-3 min-h-[100px] text-muted-foreground cursor-default select-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" 
+             : "bg-card border border-border shadow-sm focus:ring-1 focus:ring-primary-fixed-dim/10"
+          )}
         />
        </div>
       </div>
@@ -554,6 +630,9 @@ export function AdjustmentForm({
             min="0.001"
             step="0.001"
             value={line.qty}
+            lang="en"
+            dir="ltr"
+            style={{ direction: 'ltr' }}
             readOnly={!canEdit || !!lockState?.isLocked}
             onChange={(e) => {
              const val = parseFloat(e.target.value);
@@ -570,21 +649,16 @@ export function AdjustmentForm({
             const isIncrease = line.direction === 'INCREASE';
             return (
              <div className="flex justify-center">
-              <input
-               type="number"
-               min="0.0001"
-               step="0.01"
-               value={line.unitCost ?? ''}
-               readOnly={!canEdit || !isIncrease}
-               disabled={!isIncrease}
-               placeholder={isIncrease ? (locale === 'ar' ? 'مطلوب' : 'Required') : '-'}
-               onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                updateLine(line.id, { unitCost: isNaN(val) ? null : val });
+              <UnitCostInput
+               value={line.unitCost}
+               disabled={!isIncrease || !canEdit}
+               placeholder={isIncrease ? '0' : '-'}
+               onChange={(val) => {
+                updateLine(line.id, { unitCost: val });
                }}
                className={cn(
                 "w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-30",
-                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost <= 0) && "border-red-500/50 focus:ring-red-500/30"
+                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
                )}
               />
              </div>
@@ -630,7 +704,9 @@ export function AdjustmentForm({
            header: t('qty_before') || 'Qty Before',
            cell: (line: AdjustmentLine) => (
             <div className="flex flex-col items-center gap-0.5 tabular-nums">
-             <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qtyBefore, locale as 'ar' | 'en')}</span>
+             <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
+              {Number(line.qtyBefore).toLocaleString('en-US')}
+             </span>
             </div>
            )
           },
@@ -643,8 +719,8 @@ export function AdjustmentForm({
               <span className={cn(
                "text-body-md font-bold",
                after < 0 ? "text-red-500" : "text-foreground"
-              )}>
-               {formatQuantity(after, locale as 'ar' | 'en')}
+              )} lang="en" dir="ltr">
+               {Number(after).toLocaleString('en-US')}
               </span>
               {after < 0 && (
                <span className="text-xs text-red-500">{t('errors.exceeds_available_stock')}</span>
@@ -721,102 +797,123 @@ export function AdjustmentForm({
      </div>
     </DocumentLockWrapper>
 
-    <FormFooter 
-     onCancel={() => router.push(`/adjustments`)}
-     onSubmit={handleSaveDraft}
-     isSaving={createAdjustment.isPending || updateAdjustment.isPending}
-     isLocked={isLocked}
-     isDirty={lines.length > 0}
-     isValid={!hasNegativeStock && !hasInvalidCosts && lines.length > 0 && notes.trim().length >= 10 && !isRefreshingStock}
-     className="print-hidden"
-     actions={
-      !isNew && (
-       <div className="flex items-center gap-3">
-        {isLocked && (
-         <VoidButton
-          documentId={id}
-          documentType="ADJUSTMENT"
-          status={adjustmentStatus}
-          version={document?.version || 1}
-         />
-        )}
-        {!isLocked && (
-         <>
-          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role} disabled={hasNegativeStock}>
-           <Button 
-            variant="outline"
-            onClick={() => setSubmitDialogOpen(true)}
-            className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-           >
-            <Send className="w-5 h-5 me-3" />
-            {t('submit_for_approval')}
-           </Button>
-          </ActionGuard>
+    {isLocked ? (
+     <div className="sticky bottom-0 w-full bg-background/95 backdrop-blur-md border-t border-border/50 p-4 z-50 flex items-center justify-between print-hidden">
+      {/* Start Edge (RTL Right): Cancel / Close */}
+      <div>
+       <button 
+        type="button"
+        onClick={() => router.push('/adjustments')}
+        className="px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-semibold flex items-center gap-2"
+       >
+        <XIcon className="w-4 h-4" /> {tc('actions.close')}
+       </button>
+      </div>
+      {/* End Edge (RTL Left): Approval Actions */}
+      <div className="flex items-center gap-3">
+       {isLocked && (
+        <VoidButton
+         documentId={id}
+         documentType="ADJUSTMENT"
+         status={adjustmentStatus}
+         version={document?.version || 1}
+        />
+       )}
+       <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role || ''} disabled={hasNegativeStock}>
+        <button
+         type="button"
+         onClick={() => setSubmitDialogOpen(true)}
+         className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+        >
+         <Send className="w-4 h-4" /> {t('submit_for_approval')}
+        </button>
+       </ActionGuard>
 
-          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="EDIT" role={user?.role}>
-           <Button 
-            variant="outline"
-            onClick={() => editAdjustment.mutate({ id, version: document?.version ?? 0 })}
-            className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-           >
-            <Pencil className="w-5 h-5 me-3" />
-            {t('edit_rejected')}
-           </Button>
-          </ActionGuard>
+       <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="EDIT" role={user?.role || ''}>
+        <button
+         type="button"
+         onClick={() => editAdjustment.mutate({ id, version: document?.version ?? 0 })}
+         className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+        >
+         <Pencil className="w-4 h-4" /> {t('edit_rejected')}
+        </button>
+       </ActionGuard>
 
-          <PermissionGate action="reject" resource="operations_adjustments">
-           <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role}>
-            <Button 
-             variant="ghost" 
-             onClick={() => setRejectDialogOpen(true)}
-             className="h-14 px-8 text-red-500 hover:bg-red-500/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-            >
-             <XCircle className="w-5 h-5 me-3" />
-             {t('reject')}
-            </Button>
-           </ActionGuard>
-          </PermissionGate>
-          
-          <PermissionGate action="approve" resource="operations_adjustments">
-           <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role} disabled={hasNegativeStock}>
-            <Button 
-             onClick={() => setApproveDialogOpen(true)}
-             className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-emerald-600/30 border-none"
-            >
-             <CheckCircle className="w-5 h-5 me-3" />
-             {t('approve')}
-            </Button>
-           </ActionGuard>
-          </PermissionGate>
+       <PermissionGate action="reject" resource="operations_adjustments">
+        <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role || ''}>
+         <button
+          type="button"
+          onClick={() => setRejectDialogOpen(true)}
+          className="px-6 py-2.5 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 font-bold flex items-center gap-2"
+         >
+          <XCircleIcon className="w-5 h-5" /> {t('reject')}
+         </button>
+        </ActionGuard>
+       </PermissionGate>
+       
+       <PermissionGate action="approve" resource="operations_adjustments">
+        <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role || ''} disabled={hasNegativeStock}>
+         <button
+          type="button"
+          onClick={() => setApproveDialogOpen(true)}
+          className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+         >
+          <CheckCircleIcon className="w-5 h-5" /> {t('approve')}
+         </button>
+        </ActionGuard>
+       </PermissionGate>
 
-          <PermissionGate action="post" resource="operations_adjustments">
-           <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''} disabled={hasNegativeStock}>
-            <Button 
-             onClick={() => setPostDialogOpen(true)}
-             className="h-14 px-12 bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-primary/30 border-none"
-            >
-             <CheckCircle className="w-5 h-5 me-3" />
-             {t('post_adjustment')}
-            </Button>
-           </ActionGuard>
-          </PermissionGate>
+       <PermissionGate action="post" resource="operations_adjustments">
+        <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''} disabled={hasNegativeStock}>
+         <button
+          type="button"
+          onClick={() => setPostDialogOpen(true)}
+          className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+         >
+          <CheckCircleIcon className="w-5 h-5" /> {t('post_adjustment')}
+         </button>
+        </ActionGuard>
+       </PermissionGate>
 
-          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="CANCEL" role={user?.role || ''}>
-           <Button 
-            variant="ghost" 
-            onClick={() => setCancelDialogOpen(true)}
-            className="h-14 px-8 text-red-400 hover:bg-red-500/10 hover:text-red-500 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-           >
-            <XCircle className="w-5 h-5 me-3" />
-            {tc('cancel')}
-           </Button>
-          </ActionGuard>
-         </>
-        )}
-       </div>
-      )
-     }
-    />
+       <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="CANCEL" role={user?.role || ''}>
+        <button
+         type="button"
+         onClick={() => setCancelDialogOpen(true)}
+         className="px-6 py-2.5 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 font-bold flex items-center gap-2"
+        >
+         <XCircleIcon className="w-5 h-5" /> {t('cancel_adjustment')}
+        </button>
+       </ActionGuard>
+      </div>
+     </div>
+    ) : (
+     <FormFooter 
+      onCancel={() => router.push(`/adjustments`)}
+      cancelLabel={tc('actions.cancel')}
+      onSubmit={handleSaveDraft}
+      isSaving={createAdjustment.isPending || updateAdjustment.isPending}
+      isLocked={isLocked}
+      isDirty={lines.length > 0}
+      isValid={!hasNegativeStock && !hasInvalidCosts && lines.length > 0 && notes.trim().length >= 10 && !isRefreshingStock}
+      className="print-hidden"
+      actions={
+       !isNew && (
+        <div className="flex items-center gap-3">
+         <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role || ''} disabled={hasNegativeStock}>
+          <Button 
+           variant="outline"
+           onClick={() => setSubmitDialogOpen(true)}
+           className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+          >
+           <Send className="w-5 h-5 me-3" />
+           {t('submit_for_approval')}
+          </Button>
+         </ActionGuard>
+        </div>
+       )
+      }
+     />
+    )}
    </form>
 
    {/* Confirmation Dialogs */}

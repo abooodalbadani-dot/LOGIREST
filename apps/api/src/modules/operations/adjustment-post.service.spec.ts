@@ -266,7 +266,7 @@ describe('AdjustmentPostService', () => {
     );
   });
 
-  it('should throw BadRequestException if direction is IN and unitCost is zero or negative', async () => {
+  it('should throw BadRequestException if direction is IN and unitCost is negative', async () => {
     mockAdjFindUnique.mockResolvedValue({
       id: 'adj-1',
       status: 'APPROVED',
@@ -279,7 +279,7 @@ describe('AdjustmentPostService', () => {
           quantity: new Prisma.Decimal(5),
           direction: AdjustmentDirection.IN,
           reason: AdjustmentReason.CORRECTION,
-          unitCost: new Prisma.Decimal(0),
+          unitCost: new Prisma.Decimal(-5),
           item: {
             id: 'item-1',
             sku: 'SKU1',
@@ -291,7 +291,7 @@ describe('AdjustmentPostService', () => {
     });
 
     await expect(service.post('adj-1', 'user-1', Role.INV_MGR, 1)).rejects.toThrow(
-      new BadRequestException('Unit cost is required and must be greater than zero for manual Adjustment IN (Item SKU: SKU1).'),
+      new BadRequestException('Unit cost is required and must be greater than or equal to zero for manual Adjustment IN (Item SKU: SKU1).'),
     );
   });
 
@@ -320,7 +320,7 @@ describe('AdjustmentPostService', () => {
     });
 
     await expect(service.post('adj-1', 'user-1', Role.INV_MGR, 1)).rejects.toThrow(
-      new BadRequestException('Unit cost is required and must be greater than zero for manual Adjustment IN (Item SKU: SKU1).'),
+      new BadRequestException('Unit cost is required and must be greater than or equal to zero for manual Adjustment IN (Item SKU: SKU1).'),
     );
   });
 

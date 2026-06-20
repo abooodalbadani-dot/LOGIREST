@@ -201,7 +201,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
       )}
      </PermissionGate>
 
-     {['DRAFT', 'STARTED', 'COUNTING'].includes(status) && (user?.role === 'ADMIN' || user?.role === 'INV_MGR') && (
+     {['DRAFT', 'STARTED', 'COUNTING'].includes(status) && (
       <PermissionGate action="cancel" resource="operations_stocktake">
        <ActionGuard documentType="STOCKTAKE" status={status} action="CANCEL" role={user?.role || ''}>
         <Button 

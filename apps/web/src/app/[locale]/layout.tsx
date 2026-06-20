@@ -28,11 +28,11 @@ import { NetworkStatusBanner } from '@/core/network/NetworkStatusBanner';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
-    title: 'مطاعم أوتانتيك | Otantik Restuarant',
+    title: 'مطاعم أوتانتيك | Otantik Restaurant',
     description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
     robots: 'index, follow',
     openGraph: {
-        title: 'مطاعم أوتانتيك | Otantik Restuarant',
+        title: 'مطاعم أوتانتيك | Otantik Restaurant',
         description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
         type: 'website',
     },
@@ -59,7 +59,7 @@ export default async function LocaleLayout({
         return (
             <html lang="en" className="dark" suppressHydrationWarning>
                 <head>
-                    <title>Configuration Error | Otantik Restuarant</title>
+                    <title>Configuration Error | Otantik Restaurant</title>
                     <style>{`
       body {
        margin: 0;
@@ -158,7 +158,7 @@ export default async function LocaleLayout({
                             FATAL: NEXT_PUBLIC_API_URL is missing
                         </div>
                         <div className="footer">
-                            Otantik Restuarant Enterprise Engine v16.2.6
+                            Otantik Restaurant Enterprise Engine v16.2.6
                         </div>
                     </div>
                 </body>

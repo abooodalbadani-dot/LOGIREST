@@ -11,9 +11,9 @@ export declare const ROLE_CAPABILITIES: {
     readonly adjustment: {
         readonly create: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly submit: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
-        readonly approve: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
-        readonly reject: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
-        readonly post: readonly ["ADMIN", "INV_MGR"];
+        readonly approve: readonly ["ADMIN", "GM", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
+        readonly reject: readonly ["ADMIN", "GM", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
+        readonly post: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR"];
         readonly cancel: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly edit: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR"];
@@ -22,7 +22,7 @@ export declare const ROLE_CAPABILITIES: {
     readonly transfer: {
         readonly create: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly ship: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
-        readonly receive: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "BRANCH_MGR"];
+        readonly receive: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly cancel: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR"];
         readonly export: readonly ["ADMIN", "INV_MGR", "STORE_MGR", "AUDITOR", "GM", "BRANCH_MGR"];
@@ -30,7 +30,7 @@ export declare const ROLE_CAPABILITIES: {
     readonly issue: {
         readonly create: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "KITCHEN_CHIEF", "BRANCH_MGR"];
         readonly submit: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "KITCHEN_CHIEF", "BRANCH_MGR"];
-        readonly post: readonly ["ADMIN", "INV_MGR"];
+        readonly post: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR"];
         readonly cancel: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "KITCHEN_CHIEF", "BRANCH_MGR"];
         readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "KITCHEN_CHIEF", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR"];
         readonly export: readonly ["ADMIN", "INV_MGR", "STORE_MGR", "AUDITOR", "GM", "BRANCH_MGR"];
@@ -40,41 +40,42 @@ export declare const ROLE_CAPABILITIES: {
         readonly start: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly count: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly review: readonly ["ADMIN", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
-        readonly approve: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
-        readonly reject: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
-        readonly post: readonly ["ADMIN", "INV_MGR"];
-        readonly close: readonly ["ADMIN", "INV_MGR"];
+        readonly approve: readonly ["ADMIN", "GM", "APPROVER", "INV_MGR", "BRANCH_MGR"];
+        readonly reject: readonly ["ADMIN", "GM", "APPROVER", "INV_MGR", "BRANCH_MGR"];
+        readonly post: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR"];
+        readonly close: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR"];
+        readonly cancel: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR"];
         readonly export: readonly ["ADMIN", "INV_MGR", "STORE_MGR", "AUDITOR", "GM", "BRANCH_MGR"];
         readonly recount: readonly ["ADMIN", "INV_MGR"];
     };
     readonly kitchen_request: {
-        readonly create: readonly ["ADMIN", "KITCHEN_CHIEF", "INV_MGR", "STORE_MGR"];
-        readonly submit: readonly ["ADMIN", "KITCHEN_CHIEF", "INV_MGR", "STORE_MGR"];
-        readonly fulfill: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "KITCHEN_CHIEF"];
-        readonly cancel: readonly ["ADMIN", "KITCHEN_CHIEF", "INV_MGR", "STORE_MGR"];
+        readonly create: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR", "STORE_MGR", "WH_KEEPER", "KITCHEN_CHIEF"];
+        readonly submit: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR", "STORE_MGR", "WH_KEEPER", "KITCHEN_CHIEF"];
+        readonly fulfill: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR", "STORE_MGR", "WH_KEEPER"];
+        readonly cancel: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR", "STORE_MGR", "WH_KEEPER", "KITCHEN_CHIEF"];
         readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "KITCHEN_CHIEF", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR"];
     };
     readonly pr: {
-        readonly create: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly submit: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly approve: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly reject: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly cancel: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR", "PROC_MGR"];
+        readonly create: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "BRANCH_MGR", "PROC_MGR"];
+        readonly submit: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "BRANCH_MGR", "PROC_MGR"];
+        readonly approve: readonly ["ADMIN", "GM", "APPROVER", "BRANCH_MGR", "PROC_MGR"];
+        readonly reject: readonly ["ADMIN", "GM", "APPROVER", "BRANCH_MGR", "PROC_MGR"];
+        readonly cancel: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "BRANCH_MGR", "PROC_MGR"];
+        readonly view: readonly ["ADMIN", "INV_MGR", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR", "PROC_MGR"];
     };
     readonly po: {
-        readonly create: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "PROC_MGR"];
-        readonly submit: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "PROC_MGR"];
-        readonly approve: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly reject: readonly ["ADMIN", "APPROVER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly cancel: readonly ["ADMIN", "PROC_OFFICER", "INV_MGR", "PROC_MGR"];
-        readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR", "PROC_MGR"];
+        readonly create: readonly ["ADMIN", "PROC_OFFICER", "PROC_MGR", "BRANCH_MGR"];
+        readonly submit: readonly ["ADMIN", "PROC_OFFICER", "PROC_MGR", "BRANCH_MGR"];
+        readonly approve: readonly ["ADMIN", "GM", "APPROVER", "BRANCH_MGR", "PROC_MGR"];
+        readonly reject: readonly ["ADMIN", "GM", "APPROVER", "BRANCH_MGR", "PROC_MGR"];
+        readonly cancel: readonly ["ADMIN", "PROC_OFFICER", "PROC_MGR", "BRANCH_MGR"];
+        readonly view: readonly ["ADMIN", "INV_MGR", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR", "PROC_MGR"];
     };
     readonly grn: {
-        readonly create: readonly ["ADMIN", "WH_KEEPER", "INV_MGR", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
-        readonly post: readonly ["ADMIN", "INV_MGR", "PROC_MGR"];
-        readonly cancel: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR", "PROC_MGR"];
+        readonly create: readonly ["ADMIN", "WH_KEEPER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
+        readonly post: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR"];
+        readonly cancel: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR", "PROC_MGR"];
         readonly export: readonly ["ADMIN", "INV_MGR", "STORE_MGR", "AUDITOR", "GM", "BRANCH_MGR", "PROC_MGR"];
     };

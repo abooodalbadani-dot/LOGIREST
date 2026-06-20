@@ -91,7 +91,7 @@ export function ThermalReceipt({
   itemCol: isAr ? 'الصنف' : 'Item',
   qtyCol: isAr ? 'الكمية' : 'Qty',
   notes: isAr ? 'ملاحظات:' : 'Notes:',
-  systemName: 'Otantik Restuarant',
+  systemName: 'Otantik Restaurant',
  };
 
  const title = docType === 'KITCHEN_REQUEST' ? labels.kitchenRequest : labels.inventoryIssue;
@@ -250,7 +250,7 @@ export function ThermalReceipt({
     {/* Footer Audit Signature */}
     <div className="text-center mt-6 text-[8px] opacity-65 flex flex-col items-center">
      <p>{divider}</p>
-     <p className="mt-1">{isAr ? 'نظام مطاعم أوتانتيك للمخازن' : 'Otantik Restuarant Inventory System'}</p>
+     <p className="mt-1">{isAr ? 'نظام مطاعم أوتانتيك للمخازن' : 'Otantik Restaurant Inventory System'}</p>
      <p>www.logirest.app</p>
     </div>
    </div>

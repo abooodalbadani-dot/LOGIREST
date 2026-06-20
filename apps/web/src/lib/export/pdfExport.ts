@@ -179,7 +179,7 @@ export async function generatePDF(
     const brandingLeftX = branding?.logo ? 42 : 14;
 
     // Profile Text Block - Branding Name
-    const brandingName = branding?.name || 'Otantik Restuarant Enterprise';
+    const brandingName = branding?.name || 'Otantik Restaurant Enterprise';
     drawHeaderLine(brandingName, 15, 15, true, [30, 41, 59], brandingLeftX);
 
     let currentY = 20;

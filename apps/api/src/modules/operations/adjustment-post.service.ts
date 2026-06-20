@@ -82,15 +82,13 @@ export class AdjustmentPostService {
             }
 
             // 2. Validate all lines before processing
+            // null unitCost is treated as 0 (free/zero-cost item) — only explicitly negative values are invalid.
             for (const line of adj.lines) {
               if (line.direction === AdjustmentDirection.IN) {
-                if (
-                  line.unitCost === null ||
-                  line.unitCost === undefined ||
-                  Number(line.unitCost) <= 0
-                ) {
+                const cost = line.unitCost !== null && line.unitCost !== undefined ? Number(line.unitCost) : 0;
+                if (cost < 0) {
                   throw new BadRequestException(
-                    `Unit cost is required and must be greater than zero for manual Adjustment IN (Item SKU: ${line.item.sku}).`,
+                    `Unit cost must be greater than or equal to zero for manual Adjustment IN (Item SKU: ${line.item.sku}).`,
                   );
                 }
               }
@@ -187,9 +185,11 @@ export class AdjustmentPostService {
                   });
 
                   // Recalculate WAC (positive adjustment)
-                  const unitCost = line.unitCost
-                    ? Number(line.unitCost)
-                    : currentWac;
+                  // Use the stored unit cost; null/undefined defaults to 0 (free item).
+                  const unitCost =
+                    line.unitCost !== null && line.unitCost !== undefined
+                      ? Number(line.unitCost)
+                      : 0;
                   const costIdempotencyKey = `${DocumentType.ADJUSTMENT}:cost:${adj.id}:${item.id}:${line.id}`;
                   await this.wacService.handlePositiveAdjustment(
                     tx,
@@ -309,7 +309,11 @@ export class AdjustmentPostService {
                   });
 
                   // Recalculate WAC (positive adjustment)
-                  const unitCost = line.unitCost ? Number(line.unitCost) : 0;
+                  // null/undefined defaults to 0 (free item).
+                  const unitCost =
+                    line.unitCost !== null && line.unitCost !== undefined
+                      ? Number(line.unitCost)
+                      : 0;
                   const costIdempotencyKey = `${DocumentType.ADJUSTMENT}:cost:${adj.id}:${item.id}:${line.id}`;
                   await this.wacService.handlePositiveAdjustment(
                     tx,

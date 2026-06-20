@@ -1465,12 +1465,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const movements = await db.movements.findAll();
       return {
         id: 'system_settings',
-        system_name: 'Otantik Restuarant',
+        system_name: 'Otantik Restaurant',
         base_currency: 'SAR',
         branch_id: 'HQ',
         timezone: 'Asia/Riyadh',
         locale_default: 'en' as const,
-        sender_name: 'Otantik Restuarant System',
+        sender_name: 'Otantik Restaurant System',
         reply_to_email: 'no-reply@otantikrestuarant.com',
         has_transactions: movements.length > 0,
         mail_provider: 'smtp' as const,
@@ -1498,12 +1498,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       }
       return {
         id: 'system_settings',
-        system_name: newSettings.system_name || 'Otantik Restuarant',
+        system_name: newSettings.system_name || 'Otantik Restaurant',
         base_currency: newSettings.base_currency || 'SAR',
         branch_id: newSettings.branch_id || 'HQ',
         timezone: newSettings.timezone || 'Asia/Riyadh',
         locale_default: newSettings.locale_default || 'en',
-        sender_name: newSettings.sender_name || 'Otantik Restuarant System',
+        sender_name: newSettings.sender_name || 'Otantik Restaurant System',
         reply_to_email: newSettings.reply_to_email || 'no-reply@otantikrestuarant.com',
         has_transactions: movements.length > 0,
         mail_provider: newSettings.mail_provider || 'smtp',

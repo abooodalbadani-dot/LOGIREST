@@ -206,7 +206,7 @@
         "identity": "Brand Identity",
         "legal": "Legal Metadata"
       },
-      "subtitle": "Otantik Restuarant Identity & Branding",
+      "subtitle": "Otantik Restaurant Identity & Branding",
       "title": "Restaurant Profile",
       "upload_logo": "Upload Logo",
       "validation": {
@@ -401,7 +401,7 @@
       "description": "Enter your credentials to access the secure portal.",
       "hardware_token": "HARDWARE TOKEN",
       "hero_subtitle": "Precision management for high-performance kitchens. Real-time inventory tracking and automated procurement.",
-      "hero_title": "Otantik Restuarant | Smart Inventory Control",
+      "hero_title": "Otantik Restaurant | Smart Inventory Control",
       "initialize_session": "INITIALIZE SESSION",
       "operator_id": "Operator ID",
       "operator_id_placeholder": "Enter ID or Email",
@@ -415,7 +415,7 @@
       "version": "v3.1.04"
     },
     "login_failed": "Authentication Failed",
-    "logo_alt": "Otantik Restuarant Logo",
+    "logo_alt": "Otantik Restaurant Logo",
     "new_password": "New Password",
     "password": "Password",
     "password_reset_redirect": "Access key successfully synchronized. Redirecting to portal...",
@@ -510,8 +510,8 @@
     "bilingual_record": "Bilingual classification record",
     "branches": "Branches",
     "branding": {
-      "logirest_logo": "Otantik Restuarant Logo",
-      "logo_alt": "Otantik Restuarant Logo",
+      "logirest_logo": "Otantik Restaurant Logo",
+      "logo_alt": "Otantik Restaurant Logo",
       "restaurant_logo": "Restaurant Logo"
     },
     "cancel": "Cancel",
@@ -925,7 +925,7 @@
       "live_updates": "Live Updates"
     },
     "system": {
-      "name": "Otantik Restuarant",
+      "name": "Otantik Restaurant",
       "restaurant_logo": "Restaurant Logo",
       "toggle_theme": "Toggle Theme"
     },
@@ -2363,7 +2363,7 @@
   "not_found": {
     "description": "The requested resource could not be found or has been moved.",
     "go_home": "Back to Control Center",
-    "mission_description": "At Otantik Restuarant, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.",
+    "mission_description": "At Otantik Restaurant, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.",
     "mission_title": "Our Mission",
     "partners": {
       "food_logistics": "FOOD_LOGISTICS",
@@ -2720,6 +2720,21 @@
         "edit_rejected": "Edit / Resubmit"
       },
       "rejection_reason_banner": "Editing a rejected adjustment — reason: {reason}",
+      "edit_rejected": "Edit / Resubmit",
+      "cancel_adjustment": "Cancel Adjustment",
+      "cancel_confirm_desc": "Are you sure you want to cancel this adjustment? This action cannot be undone.",
+      "cancelled_success": "Adjustment cancelled successfully",
+      "submit_success": "Adjustment submitted for approval",
+      "approve_success": "Adjustment approved successfully",
+      "reject_success": "Adjustment rejected successfully",
+      "warehouse_locked_title": "Warehouse Locked",
+      "warehouse_locked_warn_desc": "This warehouse is locked for stocktake or system adjustments. Edits and scans are permitted with caution.",
+      "reason_damage": "Damage",
+      "reason_expiry": "Expiry",
+      "reason_theft": "Theft",
+      "reason_counting_error": "Counting Error",
+      "reason_correction": "Correction",
+      "reason_other": "Other",
       "home": "Home",
       "lines_section": "Adjustment Lines",
       "list_subtitle": "Stock recalibration ledger & operational corrections",

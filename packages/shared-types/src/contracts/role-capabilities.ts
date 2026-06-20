@@ -74,6 +74,7 @@ export const ROLE_CAPABILITIES = {
     reject: ['ADMIN', 'GM', 'APPROVER', 'INV_MGR', 'BRANCH_MGR'] as const,
     post: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
     close: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
+    cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'] as const,
     recount: ['ADMIN', 'INV_MGR'] as const,

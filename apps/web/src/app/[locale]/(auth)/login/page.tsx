@@ -124,14 +124,13 @@ export default function LoginPage() {
                 {/* Content Overlay */}
                 <div className="absolute bottom-0 w-full p-8 md:p-12 flex flex-col gap-6 z-20 start-0">
                     <div className="inline-flex items-center gap-4">
-                        <div className="w-16 h-16 bg-brand-gold/10 border border-brand-gold/30 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(196,162,118,0.15)] group overflow-hidden">
+                        <div className="w-30 h-30 bg-brand-gold/5 border border-brand-gold/20 rounded-2xl flex items-center justify-center p-3.5 shadow-[0_0_30px_rgba(196,162,118,0.15)] group overflow-hidden">
                             <Image
                                 src="/logoicon.svg"
                                 alt={t('logo_alt')}
-                                width={36}
-                                height={36}
-                                style={{ height: 'auto' }}
-                                className="transition-transform duration-500 group-hover:scale-110 object-contain"
+                                width={300}
+                                height={300}
+                                className="w-full h-full transition-transform duration-500 group-hover:scale-110 object-contain"
                             />
                         </div>
                         <div className="h-10 w-px bg-card/10" />
@@ -177,19 +176,20 @@ export default function LoginPage() {
                 <div className="w-full max-w-4xl mx-auto relative z-10">
                     {/* Mobile-only Branding Header */}
                     <div className="lg:hidden flex flex-col items-center mb-4 animate-in fade-in slide-in-from-top-8 duration-1000">
-                        <div className="w-12 h-12 bg-operational-cyan/10 border border-operational-cyan/30 rounded-xl flex items-center justify-center mb-4 overflow-hidden">
+                        <div className="w-30 h-30 bg-operational-cyan/5 border border-operational-cyan/20 rounded-2xl flex items-center justify-center p-3 mb-4 overflow-hidden">
                             <Image
                                 src="/logoicon.svg"
                                 alt={t('logo_alt')}
-                                width={28}
-                                height={28}
-                                style={{ height: 'auto' }}
-                                className="object-contain"
+                                width={100}
+                                height={100}
+                                className="w-full h-full object-contain"
                             />
                         </div>
-                        <p className="text-xl font-bold text-foreground text-center">
-                            {t('login.hero_title')}
-                        </p>
+                        <div className="text-xl md:text-2xl text-foreground text-center">
+                            <span className="font-bold">Otantik Restaurant</span>
+                            <span className="mx-2 text-muted-foreground/50">|</span>
+                            <span className="font-medium text-muted-foreground">Smart Inventory Control</span>
+                        </div>
                         <div className="mt-1 px-1.5 py-0.5 bg-black/5 dark:bg-card/5 border border-black/10 dark:border-white/10 rounded text-[8px] font-mono text-black/40 dark:text-white/40 uppercase">
                             {t('login.version')}
                         </div>
@@ -219,7 +219,7 @@ export default function LoginPage() {
                                     id="email"
                                     type="email"
                                     placeholder={t('login.operator_id_placeholder')}
-                                    className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-3 placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"
+                                    className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-3 placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white [input:-webkit-autofill]:shadow-[0_0_0_30px_#f7f9ff_inset] dark:[input:-webkit-autofill]:shadow-[0_0_0_30px_#050505_inset] [input:-webkit-autofill]:-webkit-text-fill-color-foreground"
                                     {...register('email')}
                                 />
                             </div>
@@ -245,7 +245,7 @@ export default function LoginPage() {
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder={t('login.password_placeholder')}
-                                    className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-9 placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"
+                                    className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-9 placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white [input:-webkit-autofill]:shadow-[0_0_0_30px_#f7f9ff_inset] dark:[input:-webkit-autofill]:shadow-[0_0_0_30px_#050505_inset] [input:-webkit-autofill]:-webkit-text-fill-color-foreground"
                                     {...register('password')}
                                 />
                                 <Button
@@ -260,23 +260,6 @@ export default function LoginPage() {
                             {errors.password && <p className="text-[10px] text-status-error font-medium ms-1 mt-0.5">{errors.password.message}</p>}
                         </div>
 
-                        {/* Advanced Security Methods */}
-                        <div className="grid grid-cols-2 gap-3 py-1">
-                            <button
-                                type="button"
-                                className="flex flex-col items-center justify-center gap-1 p-2 rounded border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-card/5 hover:bg-black/[0.05] dark:hover:bg-card/[0.08] hover:border-operational-cyan/30 transition-all group opacity-80 hover:opacity-100"
-                            >
-                                <Fingerprint className="w-4 h-4 text-black/30 dark:text-white/40 group-hover:text-operational-cyan transition-colors" />
-                                <span className="text-[7px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 group-hover:text-black/70 dark:group-hover:text-white/70">{t('login.biometric_link')}</span>
-                            </button>
-                            <button
-                                type="button"
-                                className="flex flex-col items-center justify-center gap-1 p-2 rounded border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-card/5 hover:bg-black/[0.05] dark:hover:bg-card/[0.08] hover:border-operational-cyan/30 transition-all group opacity-80 hover:opacity-100"
-                            >
-                                <Usb className="w-4 h-4 text-black/30 dark:text-white/40 group-hover:text-operational-cyan transition-colors" />
-                                <span className="text-[7px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 group-hover:text-black/70 dark:group-hover:text-white/70">{t('login.hardware_token')}</span>
-                            </button>
-                        </div>
 
                         {expiredNotice && (
                             <div className="flex items-center gap-2.5 p-3.5 rounded-lg bg-status-warning/10 text-[11px] font-medium text-status-warning border border-status-warning/20 animate-in zoom-in-95 duration-300">
@@ -291,16 +274,18 @@ export default function LoginPage() {
                             </div>
                         )}
 
-                        <Button
-                            type="submit"
-                            isLoading={isSubmitting}
-                            className="w-full h-9 text-[10px] font-bold bg-black dark:bg-card text-white dark:text-[#050505] hover:bg-operational-cyan dark:hover:bg-operational-cyan hover:text-white transition-all duration-300 rounded relative overflow-hidden group/btn shadow-[0_4px_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)] mt-0.5"
-                        >
-                            <span className="relative flex items-center justify-center gap-1.5 uppercase tracking-[0.15em] text-[10px]">
-                                <LogIn className="w-3 h-3" />
-                                {t('login.initialize_session')}
-                            </span>
-                        </Button>
+                        <div className="mt-8 w-full">
+                            <Button
+                                type="submit"
+                                isLoading={isSubmitting}
+                                className="w-full py-3 rounded-lg bg-gradient-to-r from-brand-gold/90 to-brand-gold text-brand-black font-bold uppercase tracking-widest hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-[1.01] transition-all duration-300"
+                            >
+                                <span className="relative flex items-center justify-center gap-1.5 uppercase tracking-[0.15em] text-[10px]">
+                                    <LogIn className="w-3 h-3" />
+                                    {t('login.initialize_session')}
+                                </span>
+                            </Button>
+                        </div>
                     </form>
                 </div>
             </div>

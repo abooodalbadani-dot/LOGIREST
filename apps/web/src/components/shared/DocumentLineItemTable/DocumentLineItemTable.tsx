@@ -21,6 +21,8 @@ export interface LineItem {
 export interface ExtraColumn<T extends LineItem = LineItem> {
  header: string;
  cell: (line: T) => React.ReactNode;
+ mobileOrder?: number;
+ mobileWidth?: string;
 }
 
 interface DocumentLineItemTableProps<T extends LineItem = LineItem> {
@@ -120,10 +122,10 @@ export function DocumentLineItemTable<T extends LineItem>({
    className={cn("w-full overflow-x-auto relative custom-scrollbar rounded-xl border border-border bg-card shadow-sm", dense ? "border-border/80" : "")}
    style={enableVirtualization ? { maxHeight, overflowY: 'auto' } : {}}
   >
-   <table className="w-full min-w-full md:min-w-[600px] text-start border-collapse text-sm whitespace-nowrap">
-    <thead className={cn("bg-card border-b border-border text-muted-foreground text-xs uppercase tracking-wider sticky top-0 z-20", dense ? "border-b border-border" : "")}>
+   <table className="w-full min-w-full text-start border-collapse text-sm whitespace-nowrap">
+    <thead className={cn("hidden md:table-header-group bg-card border-b border-border text-muted-foreground text-xs uppercase tracking-wider sticky top-0 z-20", dense ? "border-b border-border" : "")}>
      <tr>
-      <th className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground w-full min-w-[120px] md:min-w-[300px]", dense ? "px-4 py-2 h-9 text-[10px]" : "px-8 h-14")}>{h.name}</th>
+      <th className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground w-full min-w-[120px] md:min-w-[180px]", dense ? "px-4 py-2 h-9 text-[10px]" : "px-8 h-14")}>{h.name}</th>
       {!hideLotColumns && (
        <>
         <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.lot}</th>
@@ -160,20 +162,39 @@ export function DocumentLineItemTable<T extends LineItem>({
         return (
          <tr 
           key={line.id} 
+          ref={rowVirtualizer.measureElement}
+          data-index={virtualRow.index}
           className={cn(
            "border-b border-border last:border-0 hover:bg-muted/50 transition-colors group",
-           rowClassName?.(line, idx)
+           rowClassName?.(line, idx),
+           "flex flex-wrap gap-y-4 p-5 mb-4 border border-brand-gold/30 bg-card rounded-2xl md:table-row md:border-b md:border-border/50 md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-md md:shadow-none"
           )}
-          style={{ height: `${dense ? 48 : 64}px` }}
+          style={{ minHeight: `${dense ? 48 : 64}px` }}
          >
-          <td className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-full min-w-[120px] md:min-w-[300px]", dense ? "px-4 py-1.5" : "px-8 py-5")}>
-           <div className="flex flex-col gap-0.5 max-w-[120px] sm:max-w-[150px] md:max-w-none">
-            <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-body-md")}>
-             {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-            </span>
-            <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
-             {line.item.code}
-            </span>
+          <td className={cn("block w-full p-0 border-none bg-transparent md:table-cell md:w-auto md:align-middle order-1 md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]", dense ? "md:px-4 md:py-1.5" : "md:px-8 md:py-5")}>
+           <div className="flex justify-between items-start w-full">
+            <div className="flex flex-col gap-0.5 max-w-[120px] sm:max-w-[150px] md:max-w-none">
+             <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-body-md")}>
+              {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+             </span>
+             <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
+              {line.item.code}
+             </span>
+            </div>
+            {!isReadOnly && onRemoveLine && (
+             <div className="md:hidden">
+              <button
+               type="button"
+               onClick={() => onRemoveLine(line.id)}
+               className="p-2 md:p-3 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-red-400 rounded-lg transition-colors flex items-center justify-center"
+               aria-label={tc('actions.remove_line')}
+              >
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+               </svg>
+              </button>
+             </div>
+            )}
            </div>
           </td>
           {!hideLotColumns && (
@@ -188,29 +209,39 @@ export function DocumentLineItemTable<T extends LineItem>({
             </td>
            </>
           )}
-          <td className={cn("text-center min-w-[120px]", dense ? "px-3 py-1.5" : "px-6")}>
-           {renderQty ? (
-            renderQty(line)
-           ) : (
-            <span dir="ltr" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-body-md px-3 py-1")}>
-             {line.qty}
-            </span>
-           )}
+          <td className={cn("block w-1/3 p-0 border-none bg-transparent pr-2 md:pr-0 md:table-cell md:w-auto md:align-middle order-3 text-start md:text-center", dense ? "md:px-3 md:py-1.5" : "md:px-6")}>
+           <div className="flex flex-col md:block gap-1">
+            <span className="md:hidden block text-xs font-semibold text-muted-foreground mb-1.5 uppercase">{h.qty}</span>
+            <div className="flex items-center w-full">
+             {renderQty ? (
+              renderQty(line)
+             ) : (
+              <span dir="ltr" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-body-md px-3 py-1")}>
+               {line.qty}
+              </span>
+             )}
+            </div>
+           </div>
           </td>
-          <td className={cn(dense ? "px-3 py-1.5" : "px-6")}>
-           {renderUom ? (
-            renderUom(line)
-           ) : (
-            <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-xs font-medium uppercase text-muted-foreground" />
-           )}
+          <td className={cn("block w-2/3 p-0 border-none bg-transparent pl-2 md:pl-0 md:table-cell md:w-auto md:align-middle order-4", dense ? "md:px-3 md:py-1.5" : "md:px-6")}>
+           <div className="flex flex-col md:block gap-1">
+            <span className="md:hidden block text-xs font-semibold text-muted-foreground mb-1.5 uppercase">{h.uom}</span>
+            <div className="flex items-center w-full">
+             {renderUom ? (
+              renderUom(line)
+             ) : (
+              <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-xs font-medium uppercase text-muted-foreground" />
+             )}
+            </div>
+           </div>
           </td>
           {extraColumns.map((col, i) => (
-           <td key={i} className={cn("text-center", dense ? "px-3 py-1.5" : "px-6")}>
+           <td key={i} className={cn("block p-0 border-none bg-transparent md:table-cell md:w-auto md:align-middle text-start md:text-center", col.mobileWidth || "w-full", dense ? "md:px-3 md:py-1.5" : "md:px-6")} style={{ order: col.mobileOrder || 5 }}>
             {col.cell(line)}
            </td>
           ))}
           {!isReadOnly && onRemoveLine && (
-           <td className={cn("text-center min-w-[120px]", dense ? "px-2 py-1" : "px-6")}>
+           <td className={cn("hidden md:table-cell text-center min-w-[120px]", dense ? "px-2 py-1" : "px-6")}>
             <button
              type="button"
              onClick={() => onRemoveLine(line.id)}
@@ -238,19 +269,36 @@ export function DocumentLineItemTable<T extends LineItem>({
         key={line.id} 
         className={cn(
          "group transition-all hover:bg-primary/[0.04]",
-         dense ? "border-none" : "border-b",
-         idx % 2 === 0 ? "bg-card border border-border shadow-sm" : "bg-card border border-border shadow-sm/30",
-         rowClassName?.(line, idx)
+         dense ? "md:border-none" : "md:border-b",
+         idx % 2 === 0 ? "md:bg-card md:border md:border-border md:shadow-sm" : "md:bg-card md:border md:border-border md:shadow-sm/30",
+         rowClassName?.(line, idx),
+         "flex flex-wrap gap-y-4 p-5 mb-4 border border-brand-gold/30 bg-card rounded-2xl md:table-row md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-md md:shadow-none"
         )}
        >
-        <td className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-full min-w-[120px] md:min-w-[300px]", dense ? "px-4 py-1.5" : "px-8 py-5")}>
-         <div className="flex flex-col gap-0.5 max-w-[120px] sm:max-w-[150px] md:max-w-none">
-          <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-body-md")}>
-           {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-          </span>
-          <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
-           {line.item.code}
-          </span>
+        <td className={cn("block w-full p-0 border-none bg-transparent md:table-cell md:w-auto md:align-middle order-1 md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]", dense ? "md:px-4 md:py-1.5" : "md:px-8 md:py-5")}>
+         <div className="flex justify-between items-start w-full">
+          <div className="flex flex-col gap-0.5 max-w-[120px] sm:max-w-[150px] md:max-w-none">
+           <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-body-md")}>
+            {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+           </span>
+           <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
+            {line.item.code}
+           </span>
+          </div>
+          {!isReadOnly && onRemoveLine && (
+           <div className="md:hidden">
+            <button
+             type="button"
+             onClick={() => onRemoveLine(line.id)}
+             className="p-2 md:p-3 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-red-400 rounded-lg transition-colors flex items-center justify-center"
+             aria-label={tc('actions.remove_line')}
+            >
+             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+             </svg>
+            </button>
+           </div>
+          )}
          </div>
         </td>
         {!hideLotColumns && (
@@ -265,29 +313,39 @@ export function DocumentLineItemTable<T extends LineItem>({
           </td>
          </>
         )}
-        <td className={cn("text-center min-w-[120px]", dense ? "px-3 py-1.5" : "px-6")}>
-         {renderQty ? (
-          renderQty(line)
-         ) : (
-          <span dir="ltr" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-body-md px-3 py-1")}>
-           {line.qty}
-          </span>
-         )}
+        <td className={cn("block w-1/3 p-0 border-none bg-transparent pr-2 md:pr-0 md:table-cell md:w-auto md:align-middle order-3 text-start md:text-center", dense ? "md:px-3 md:py-1.5" : "md:px-6")}>
+         <div className="flex flex-col md:block gap-1">
+          <span className="md:hidden block text-xs font-semibold text-muted-foreground mb-1.5 uppercase">{h.qty}</span>
+          <div className="flex items-center w-full">
+           {renderQty ? (
+            renderQty(line)
+           ) : (
+            <span dir="ltr" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-body-md px-3 py-1")}>
+             {line.qty}
+            </span>
+           )}
+          </div>
+         </div>
         </td>
-        <td className={cn(dense ? "px-3 py-1.5" : "px-6")}>
-         {renderUom ? (
-          renderUom(line)
-         ) : (
-          <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-xs font-medium uppercase text-muted-foreground" />
-         )}
+        <td className={cn("block w-2/3 p-0 border-none bg-transparent pl-2 md:pl-0 md:table-cell md:w-auto md:align-middle order-4", dense ? "md:px-3 md:py-1.5" : "md:px-6")}>
+         <div className="flex flex-col md:block gap-1">
+          <span className="md:hidden block text-xs font-semibold text-muted-foreground mb-1.5 uppercase">{h.uom}</span>
+          <div className="flex items-center w-full">
+           {renderUom ? (
+            renderUom(line)
+           ) : (
+            <RelationalName name={line.item.primaryUom?.name || line.item.primaryUom?.code} rawId={line.uomId} fallback="N/A" className="text-xs font-medium uppercase text-muted-foreground" />
+           )}
+          </div>
+         </div>
         </td>
         {extraColumns.map((col, i) => (
-         <td key={i} className={cn("text-center", dense ? "px-3 py-1.5" : "px-6")}>
+         <td key={i} className={cn("block p-0 border-none bg-transparent md:table-cell md:w-auto md:align-middle text-start md:text-center", col.mobileWidth || "w-full", dense ? "md:px-3 md:py-1.5" : "md:px-6")} style={{ order: col.mobileOrder || 5 }}>
           {col.cell(line)}
          </td>
         ))}
         {!isReadOnly && onRemoveLine && (
-         <td className={cn("text-center", dense ? "px-2 py-1" : "px-6")}>
+         <td className={cn("hidden md:table-cell text-center", dense ? "px-2 py-1" : "px-6")}>
           <button
            type="button"
            onClick={() => onRemoveLine(line.id)}

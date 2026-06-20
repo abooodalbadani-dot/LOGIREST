@@ -55,10 +55,10 @@ export class AdjustmentsService {
           if (
             line.unitCost === undefined ||
             line.unitCost === null ||
-            Number(line.unitCost) <= 0
+            Number(line.unitCost) < 0
           ) {
             throw new BadRequestException(
-              `Unit cost is required and must be greater than zero for manual Adjustment IN.`,
+              `Unit cost is required and must be greater than or equal to zero for manual Adjustment IN.`,
             );
           }
         }
@@ -101,7 +101,7 @@ export class AdjustmentsService {
               quantity: line.quantity,
               direction: line.direction,
               reason: line.reason,
-              unitCost: line.unitCost || null,
+              unitCost: line.unitCost !== undefined && line.unitCost !== null ? line.unitCost : null,
             })),
           },
         },
@@ -280,10 +280,10 @@ export class AdjustmentsService {
             if (
               line.unitCost === undefined ||
               line.unitCost === null ||
-              Number(line.unitCost) <= 0
+              Number(line.unitCost) < 0
             ) {
               throw new BadRequestException(
-                `Unit cost is required and must be greater than zero for manual Adjustment IN.`,
+                `Unit cost is required and must be greater than or equal to zero for manual Adjustment IN.`,
               );
             }
           }
@@ -320,7 +320,7 @@ export class AdjustmentsService {
                     ? AdjustmentDirection.IN
                     : AdjustmentDirection.OUT,
                   reason: reason,
-                  unitCost: line.unitCost || null,
+                  unitCost: line.unitCost !== undefined && line.unitCost !== null ? line.unitCost : null,
                 };
               }),
             },

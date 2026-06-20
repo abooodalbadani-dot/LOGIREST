@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Sidebar Wrapper */}
           <div className={cn(
-            "fixed inset-y-0 start-0 z-[100] w-64 bg-background transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto print:hidden",
+            "fixed top-0 start-0 h-[100dvh] md:h-auto md:inset-y-0 z-[100] w-64 bg-background transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto print:hidden flex flex-col",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0"
           )}>
             <Sidebar onClose={() => setIsSidebarOpen(false)} />

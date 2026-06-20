@@ -206,7 +206,7 @@
         "identity": "الهوية التجارية",
         "legal": "البيانات القانونية"
       },
-      "subtitle": "مطاعم أوتانتيك | Otantik Restuarant",
+      "subtitle": "مطاعم أوتانتيك | Otantik Restaurant",
       "title": "ملف المطعم",
       "upload_logo": "رفع الشعار",
       "validation": {
@@ -401,7 +401,7 @@
       "description": "أدخل بيانات الاعتماد الخاصة بك للوصول إلى البوابة الآمنة.",
       "hardware_token": "رمز الأمان المادي",
       "hero_subtitle": "إدارة دقيقة للمطابخ عالية الأداء. تتبع المخزون في الوقت الفعلي والمشتريات المؤتمتة.",
-      "hero_title": "Otantik Restuarant | مطاعم أوتانتيك",
+      "hero_title": "Otantik Restaurant | مطاعم أوتانتيك",
       "initialize_session": "بدء الجلسة",
       "operator_id": "معرف المشغل",
       "operator_id_placeholder": "أدخل المعرف أو البريد الإلكتروني",
@@ -2363,7 +2363,7 @@
   "not_found": {
     "description": "المورد المطلوب غير موجود أو تم نقله.",
     "go_home": "العودة إلى مركز التحكم",
-    "mission_description": "في Otantik Restuarant، نؤمن بالدقة المتناهية. نظامنا مبني لضمان عدم ضياع أي جرام من المخزون في فراغ عدم الكفاءة.",
+    "mission_description": "في Otantik Restaurant، نؤمن بالدقة المتناهية. نظامنا مبني لضمان عدم ضياع أي جرام من المخزون في فراغ عدم الكفاءة.",
     "mission_title": "مهمتنا",
     "partners": {
       "food_logistics": "FOOD_LOGISTICS",
@@ -2720,6 +2720,21 @@
         "edit_rejected": "تعديل / إعادة تقديم"
       },
       "rejection_reason_banner": "تعديل تسوية مرفوضة — السبب: {reason}",
+      "edit_rejected": "تعديل / إعادة تقديم",
+      "cancel_adjustment": "إلغاء التسوية",
+      "cancel_confirm_desc": "هل أنت متأكد من إلغاء هذه التسوية؟ لا يمكن التراجع عن هذا الإجراء.",
+      "cancelled_success": "تم إلغاء التسوية بنجاح",
+      "submit_success": "تم تقديم التعديل للموافقة",
+      "approve_success": "تمت الموافقة على التعديل بنجاح",
+      "reject_success": "تم رفض التعديل بنجاح",
+      "warehouse_locked_title": "المستودع مقفل",
+      "warehouse_locked_warn_desc": "هذا المستودع مقفل للجرد أو تسويات النظام. التعديل والمسح مسموحان بحذر.",
+      "reason_damage": "تلف",
+      "reason_expiry": "انتهاء الصلاحية",
+      "reason_theft": "سرقة",
+      "reason_counting_error": "خطأ في العد",
+      "reason_correction": "تصحيح",
+      "reason_other": "أخرى",
       "home": "الرئيسية",
       "lines_section": "خطوط التعديل",
       "list_subtitle": "سجل إعادة معايرة المخزون والتصحيحات التشغيلية",
