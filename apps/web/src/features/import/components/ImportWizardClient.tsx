@@ -35,6 +35,8 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
  case 'items': return t('items');
  case 'uoms': return t('uoms');
  case 'barcodes': return t('barcodes');
+ case 'suppliers': return t('suppliers');
+ case 'openingStock': return t('openingStock');
  default: return '';
  }
  };

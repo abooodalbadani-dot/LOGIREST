@@ -40,11 +40,36 @@ const BarcodeSchema = z.object({
  Active: z.string().optional(),
 });
 
+const SupplierSchema = z.object({
+  code: z.string().optional(),
+  name: z.string().min(1, 'name is required'),
+  contactName: z.string().optional(),
+  contactEmail: z.string().optional(),
+  contactPhone: z.string().optional(),
+});
+
+const OpeningStockSchema = z.object({
+  warehouseCode: z.string().min(1, 'warehouseCode is required'),
+  itemSku: z.string().min(1, 'itemSku is required'),
+  quantity: z.union([z.number(), z.string()]).refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && num > 0;
+  }, 'quantity must be a positive number'),
+  unitCost: z.union([z.number(), z.string()]).refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && num >= 0;
+  }, 'unitCost must be a non-negative number'),
+  lotNumber: z.string().optional(),
+  expiryDate: z.union([z.string(), z.date()]).optional(),
+});
+
 const getEntitySchema = (entity: ImportEntity) => {
  switch (entity) {
  case 'items': return ItemSchema;
  case 'uoms': return UomSchema;
  case 'barcodes': return BarcodeSchema;
+ case 'suppliers': return SupplierSchema;
+ case 'openingStock': return OpeningStockSchema;
  default: return z.object({});
  }
 };

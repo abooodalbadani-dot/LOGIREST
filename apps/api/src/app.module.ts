@@ -52,6 +52,7 @@ import * as crypto from 'crypto';
 import { AlertModule } from './modules/alerts/alert.module';
 import { LandedCostModule } from './modules/procurement/landed-cost/landed-cost.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { ImportsModule } from './modules/imports/imports.module';
 
 import { CorrelationMiddleware } from './common/correlation.middleware';
 import { correlationStorage } from './common/correlation.context';
@@ -131,6 +132,7 @@ const rootDir = process.cwd().includes('apps')
     AlertModule,
     SettingsModule,
     LandedCostModule,
+    ImportsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -5,6 +5,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutboxService } from '../outbox/outbox.service';
 import {
   Prisma,
   Role,
@@ -27,7 +28,20 @@ describe('AdjustmentPostService', () => {
   const mockWarehouseItemLotUpsert = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpsert = jest.fn();
-  const mockWarehouseItemUpdate = jest.fn();
+  const mockWarehouseItemUpdate = jest.fn().mockImplementation((args) => {
+    return {
+      warehouseId: 'wh-1',
+      itemId: 'item-1',
+      qtyOnHand: new Prisma.Decimal(5),
+      item: {
+        reorderPoint: null,
+        name: 'Tomato Paste',
+        sku: 'TOM-PAS-01',
+        unitOfMeasure: { code: 'KG' },
+      },
+      warehouse: { name: 'Main Store' },
+    };
+  });
   const mockWarehouseItemFindUnique = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockStockLedgerFindFirst = jest.fn();
@@ -92,6 +106,10 @@ describe('AdjustmentPostService', () => {
     },
   } as unknown as MetricsService;
 
+  const mockOutboxService = {
+    writeEvent: jest.fn(),
+  } as unknown as OutboxService;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -100,6 +118,7 @@ describe('AdjustmentPostService', () => {
         { provide: LedgerLockService, useValue: mockLockService },
         { provide: WacService, useValue: mockWacService },
         { provide: MetricsService, useValue: mockMetricsService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 
@@ -291,13 +310,18 @@ describe('AdjustmentPostService', () => {
     });
 
     await expect(service.post('adj-1', 'user-1', Role.INV_MGR, 1)).rejects.toThrow(
-      new BadRequestException('Unit cost is required and must be greater than or equal to zero for manual Adjustment IN (Item SKU: SKU1).'),
+      new BadRequestException('Unit cost must be greater than or equal to zero for manual Adjustment IN (Item SKU: SKU1).'),
     );
   });
 
-  it('should throw BadRequestException if direction is IN and unitCost is missing', async () => {
+  it('should allow posting if direction is IN and unitCost is missing (defaults to 0)', async () => {
+    const adjId = 'adj-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
     mockAdjFindUnique.mockResolvedValue({
-      id: 'adj-1',
+      id: adjId,
+      warehouseId,
       status: 'APPROVED',
       version: 1,
       lines: [
@@ -319,8 +343,20 @@ describe('AdjustmentPostService', () => {
       ],
     });
 
-    await expect(service.post('adj-1', 'user-1', Role.INV_MGR, 1)).rejects.toThrow(
-      new BadRequestException('Unit cost is required and must be greater than or equal to zero for manual Adjustment IN (Item SKU: SKU1).'),
+    mockAdjUpdate.mockResolvedValue({ id: adjId, status: 'POSTED' });
+    mockApprovalEventCount.mockResolvedValue(1);
+
+    const result = await service.post(adjId, userId, Role.INV_MGR, 1);
+
+    expect(result).toBeDefined();
+    expect(mockWacService.handlePositiveAdjustment).toHaveBeenCalledWith(
+      mockPrismaTx,
+      warehouseId,
+      'item-1',
+      5,
+      0, // Defaults to 0
+      adjId,
+      'ADJUSTMENT:cost:adj-1:item-1:line-1',
     );
   });
 

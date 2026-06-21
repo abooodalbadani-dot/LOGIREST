@@ -14,6 +14,7 @@ import {
   Adjustment,
 } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 @Injectable()
 export class AdjustmentPostService {
@@ -22,6 +23,7 @@ export class AdjustmentPostService {
     private readonly lockService: LedgerLockService,
     private readonly wacService: WacService,
     private readonly metricsService: MetricsService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async post(
@@ -85,7 +87,10 @@ export class AdjustmentPostService {
             // null unitCost is treated as 0 (free/zero-cost item) — only explicitly negative values are invalid.
             for (const line of adj.lines) {
               if (line.direction === AdjustmentDirection.IN) {
-                const cost = line.unitCost !== null && line.unitCost !== undefined ? Number(line.unitCost) : 0;
+                const cost =
+                  line.unitCost !== null && line.unitCost !== undefined
+                    ? Number(line.unitCost)
+                    : 0;
                 if (cost < 0) {
                   throw new BadRequestException(
                     `Unit cost must be greater than or equal to zero for manual Adjustment IN (Item SKU: ${line.item.sku}).`,
@@ -254,7 +259,7 @@ export class AdjustmentPostService {
                   });
 
                   // Decrement WarehouseItem
-                  await tx.warehouseItem.update({
+                  const updatedItemBatched = await tx.warehouseItem.update({
                     where: {
                       warehouseId_itemId: {
                         warehouseId: adj.warehouseId,
@@ -264,7 +269,39 @@ export class AdjustmentPostService {
                     data: {
                       qtyOnHand: { decrement: qtyVal },
                     },
+                    include: {
+                      item: {
+                        include: {
+                          unitOfMeasure: true,
+                        },
+                      },
+                      warehouse: true,
+                    },
                   });
+
+                  if (updatedItemBatched.item.reorderPoint !== null) {
+                    const reorderPoint = Number(
+                      updatedItemBatched.item.reorderPoint,
+                    );
+                    const newQty = Number(updatedItemBatched.qtyOnHand);
+                    const prevQty = newQty + qtyVal;
+                    if (newQty < reorderPoint && prevQty >= reorderPoint) {
+                      await this.outboxService.writeEvent(
+                        tx,
+                        'LOW_STOCK_ALERT',
+                        {
+                          itemId: updatedItemBatched.itemId,
+                          itemName: updatedItemBatched.item.name,
+                          sku: updatedItemBatched.item.sku,
+                          warehouseId: updatedItemBatched.warehouseId,
+                          warehouseName: updatedItemBatched.warehouse.name,
+                          qtyOnHand: newQty,
+                          reorderPoint,
+                          uomCode: updatedItemBatched.item.unitOfMeasure.code,
+                        },
+                      );
+                    }
+                  }
 
                   // Insert StockLedger entry (negative for decrease)
                   const stockIdempotencyKey = `${DocumentType.ADJUSTMENT}:stock:${adj.id}:${item.id}:${line.id}`;
@@ -351,7 +388,7 @@ export class AdjustmentPostService {
                     item.id,
                   );
 
-                  await tx.warehouseItem.update({
+                  const updatedItemUnbatched = await tx.warehouseItem.update({
                     where: {
                       warehouseId_itemId: {
                         warehouseId: adj.warehouseId,
@@ -361,7 +398,39 @@ export class AdjustmentPostService {
                     data: {
                       qtyOnHand: { decrement: qtyVal },
                     },
+                    include: {
+                      item: {
+                        include: {
+                          unitOfMeasure: true,
+                        },
+                      },
+                      warehouse: true,
+                    },
                   });
+
+                  if (updatedItemUnbatched.item.reorderPoint !== null) {
+                    const reorderPoint = Number(
+                      updatedItemUnbatched.item.reorderPoint,
+                    );
+                    const newQty = Number(updatedItemUnbatched.qtyOnHand);
+                    const prevQty = newQty + qtyVal;
+                    if (newQty < reorderPoint && prevQty >= reorderPoint) {
+                      await this.outboxService.writeEvent(
+                        tx,
+                        'LOW_STOCK_ALERT',
+                        {
+                          itemId: updatedItemUnbatched.itemId,
+                          itemName: updatedItemUnbatched.item.name,
+                          sku: updatedItemUnbatched.item.sku,
+                          warehouseId: updatedItemUnbatched.warehouseId,
+                          warehouseName: updatedItemUnbatched.warehouse.name,
+                          qtyOnHand: newQty,
+                          reorderPoint,
+                          uomCode: updatedItemUnbatched.item.unitOfMeasure.code,
+                        },
+                      );
+                    }
+                  }
 
                   // Insert StockLedger entry (negative)
                   const stockIdempotencyKey = `${DocumentType.ADJUSTMENT}:stock:${adj.id}:${item.id}:${line.id}`;
@@ -403,6 +472,27 @@ export class AdjustmentPostService {
 
             this.metricsService.postingOperationsCounter.inc({
               document_type: 'ADJUSTMENT',
+            });
+
+            const warehouse = tx.warehouse
+              ? await tx.warehouse.findUnique({
+                  where: { id: adj.warehouseId },
+                  select: { name: true },
+                })
+              : null;
+            const user = tx.user
+              ? await tx.user.findUnique({
+                  where: { id: userId },
+                  select: { name: true },
+                })
+              : null;
+
+            await this.outboxService.writeEvent(tx, 'ADJUSTMENT_POSTED', {
+              id: adj.id,
+              documentNumber: adj.adjustmentNumber,
+              warehouseId: adj.warehouseId,
+              warehouseName: warehouse?.name || 'N/A',
+              userName: user?.name || 'N/A',
             });
 
             // 5. Record ApprovalEvent

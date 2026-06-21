@@ -1128,3 +1128,21 @@ model DocumentCounter {
   @@index([docType, branchCode, year])
   @@map("document_counters")
 }
+
+model EmailTemplate {
+  id                String   @id @default(uuid())
+  code              String   @unique
+  subjectAr         String?  @map("subject_ar")
+  subjectEn         String?  @map("subject_en")
+  bodyAr            String?  @map("body_ar")
+  bodyEn            String?  @map("body_en")
+  triggerEvent      String   @map("trigger_event")
+  isActive          Boolean  @default(true) @map("is_active")
+  allowedParameters Json?    @map("allowed_parameters")
+  version           Int      @default(1)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
+}
+

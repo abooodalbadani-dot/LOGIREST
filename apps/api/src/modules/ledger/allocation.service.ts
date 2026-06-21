@@ -8,6 +8,7 @@ import {
 import { LotStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from './ledger-lock.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 @Injectable()
 export class AllocationService {
@@ -16,6 +17,7 @@ export class AllocationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async allocate(
@@ -43,10 +45,36 @@ export class AllocationService {
 
       this.lockService.assertItemBalance(whItem, requiredQty, itemId);
 
-      await tx.warehouseItem.update({
+      const updated = await tx.warehouseItem.update({
         where: { warehouseId_itemId: { warehouseId, itemId } },
         data: { qtyOnHand: { decrement: requiredQty } },
+        include: {
+          item: {
+            include: {
+              unitOfMeasure: true,
+            },
+          },
+          warehouse: true,
+        },
       });
+
+      if (updated.item.reorderPoint !== null) {
+        const reorderPoint = Number(updated.item.reorderPoint);
+        const newQty = Number(updated.qtyOnHand);
+        const prevQty = newQty + requiredQty;
+        if (newQty < reorderPoint && prevQty >= reorderPoint) {
+          await this.outboxService.writeEvent(tx, 'LOW_STOCK_ALERT', {
+            itemId: updated.itemId,
+            itemName: updated.item.name,
+            sku: updated.item.sku,
+            warehouseId: updated.warehouseId,
+            warehouseName: updated.warehouse.name,
+            qtyOnHand: newQty,
+            reorderPoint,
+            uomCode: updated.item.unitOfMeasure.code,
+          });
+        }
+      }
 
       return [];
     }
@@ -162,10 +190,36 @@ export class AllocationService {
     }
 
     // Update WarehouseItem total balance
-    await tx.warehouseItem.update({
+    const updated = await tx.warehouseItem.update({
       where: { warehouseId_itemId: { warehouseId, itemId } },
       data: { qtyOnHand: { decrement: requiredQty } },
+      include: {
+        item: {
+          include: {
+            unitOfMeasure: true,
+          },
+        },
+        warehouse: true,
+      },
     });
+
+    if (updated.item.reorderPoint !== null) {
+      const reorderPoint = Number(updated.item.reorderPoint);
+      const newQty = Number(updated.qtyOnHand);
+      const prevQty = newQty + requiredQty;
+      if (newQty < reorderPoint && prevQty >= reorderPoint) {
+        await this.outboxService.writeEvent(tx, 'LOW_STOCK_ALERT', {
+          itemId: updated.itemId,
+          itemName: updated.item.name,
+          sku: updated.item.sku,
+          warehouseId: updated.warehouseId,
+          warehouseName: updated.warehouse.name,
+          qtyOnHand: newQty,
+          reorderPoint,
+          uomCode: updated.item.unitOfMeasure.code,
+        });
+      }
+    }
 
     return allocations;
   }

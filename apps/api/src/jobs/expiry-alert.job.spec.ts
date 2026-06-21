@@ -230,4 +230,99 @@ describe('ExpiryAlertJob', () => {
       }),
     });
   });
+
+  describe('checkExpiringLots30Days', () => {
+    it('should trigger alert if expiring lot is found within 30 days', async () => {
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 15);
+
+      const mockWhLot = {
+        warehouseId: 'wh-1',
+        lotId: 'lot-30d',
+        itemId: 'item-1',
+        qtyOnHand: 15,
+        item: {
+          sku: 'SKU-30d',
+          name: 'Butter 200g',
+          unitOfMeasure: { code: 'PCS' },
+        },
+        lot: {
+          lotNumber: 'LOT-30D-2026',
+          expiryDate,
+        },
+        warehouse: {
+          code: 'WH01',
+          name: 'Main Warehouse',
+        },
+      };
+
+      mockPrisma.warehouseItemLot.findMany.mockResolvedValue([mockWhLot]);
+
+      await job.checkExpiringLots30Days();
+
+      expect(mockOutbox.writeEvent).toHaveBeenCalledWith(
+        expect.any(Object),
+        'EXPIRY_WARNING_ALERT',
+        expect.objectContaining({
+          lotId: 'lot-30d',
+          lotNumber: 'LOT-30D-2026',
+          itemId: 'item-1',
+          itemName: 'Butter 200g',
+          sku: 'SKU-30d',
+          qtyOnHand: 15,
+          expiryDate,
+        }) as unknown,
+      );
+    });
+
+    it('should enforce 7-day debounce on 30-day lot expiry alerts', async () => {
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 15);
+
+      const mockWhLot = {
+        warehouseId: 'wh-1',
+        lotId: 'lot-30d',
+        itemId: 'item-1',
+        qtyOnHand: 15,
+        item: {
+          sku: 'SKU-30d',
+          name: 'Butter 200g',
+          unitOfMeasure: { code: 'PCS' },
+        },
+        lot: {
+          lotNumber: 'LOT-30D-2026',
+          expiryDate,
+        },
+        warehouse: {
+          code: 'WH01',
+          name: 'Main Warehouse',
+        },
+      };
+
+      mockPrisma.warehouseItemLot.findMany.mockResolvedValue([mockWhLot]);
+
+      // 1st run: Alert should be written
+      await job.checkExpiringLots30Days();
+      expect(mockOutbox.writeEvent).toHaveBeenCalledTimes(1);
+
+      // 2nd run immediately after: Alert should be debounced and NOT written again
+      await job.checkExpiringLots30Days();
+      expect(mockOutbox.writeEvent).toHaveBeenCalledTimes(1);
+
+      // Verify that Redis was called with the correct 7-day TTL (604800 seconds)
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        'expiry_alert_30d_debounce:wh-1:lot-30d',
+        '1',
+        'EX',
+        604800,
+      );
+
+      // Clear redis store to simulate TTL expiry (7 days passed)
+      redisStore.clear();
+
+      // 3rd run: Alert should be written again after 7-day debounce expires
+      await job.checkExpiringLots30Days();
+      expect(mockOutbox.writeEvent).toHaveBeenCalledTimes(2);
+    });
+  });
 });

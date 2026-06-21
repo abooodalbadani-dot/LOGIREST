@@ -5,9 +5,10 @@ import { AllocationService } from './allocation.service';
 import { WacService } from './wac.service';
 import { NotificationModule } from '../notifications/notification.module';
 import { ReconciliationJob } from './reconciliation.job';
+import { OutboxModule } from '../outbox/outbox.module';
 
 @Module({
-  imports: [PrismaModule, NotificationModule],
+  imports: [PrismaModule, NotificationModule, OutboxModule],
   providers: [
     LedgerLockService,
     AllocationService,

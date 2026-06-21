@@ -70,9 +70,25 @@ export const EntityFieldSchema = z.object({
 
 export const ParameterRegistrySchema = z.record(z.string(), z.array(EntityFieldSchema));
 
+export const EmailTemplateCodeSchema = z.enum([
+  'LOW_STOCK_ALERT',
+  'EXPIRY_WARNING_ALERT',
+  'ADJUSTMENT_POSTED',
+  'STOCKTAKE_POSTED',
+  'TRANSFER_SHIPPED',
+  'TRANSFER_RECEIVED',
+  'PR_APPROVED',
+  'PR_REJECTED',
+  'PO_PENDING_APPROVAL',
+  'PO_APPROVED',
+  'KITCHEN_REQUEST_SUBMITTED',
+  'KITCHEN_REQUEST_POSTED',
+  'GRN_POSTED',
+]);
+
 export const NotificationTemplateSchema = z.object({
   id: z.string(),
-  code: z.string(),
+  code: EmailTemplateCodeSchema,
   subjectAr: z.string(),
   subjectEn: z.string(),
   bodyAr: z.string(),

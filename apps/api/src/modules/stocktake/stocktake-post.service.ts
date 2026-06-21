@@ -13,6 +13,7 @@ import {
   StocktakeSession,
 } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 @Injectable()
 export class StocktakePostService {
@@ -20,6 +21,7 @@ export class StocktakePostService {
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
     private readonly metricsService: MetricsService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async post(
@@ -357,6 +359,29 @@ export class StocktakePostService {
 
       this.metricsService.postingOperationsCounter.inc({
         document_type: 'STOCKTAKE',
+      });
+
+      const warehouse =
+        tx.warehouse && typeof tx.warehouse.findUnique === 'function'
+          ? await tx.warehouse.findUnique({
+              where: { id: session.warehouseId },
+              select: { name: true },
+            })
+          : null;
+      const user =
+        tx.user && typeof tx.user.findUnique === 'function'
+          ? await tx.user.findUnique({
+              where: { id: userId },
+              select: { name: true },
+            })
+          : null;
+
+      await this.outboxService.writeEvent(tx, 'STOCKTAKE_POSTED', {
+        id: session.id,
+        documentNumber: session.sessionNumber,
+        warehouseId: session.warehouseId,
+        warehouseName: warehouse?.name || 'N/A',
+        userName: user?.name || 'N/A',
       });
 
       // 6. Record ApprovalEvent

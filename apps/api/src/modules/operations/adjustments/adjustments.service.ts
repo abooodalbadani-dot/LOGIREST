@@ -101,7 +101,10 @@ export class AdjustmentsService {
               quantity: line.quantity,
               direction: line.direction,
               reason: line.reason,
-              unitCost: line.unitCost !== undefined && line.unitCost !== null ? line.unitCost : null,
+              unitCost:
+                line.unitCost !== undefined && line.unitCost !== null
+                  ? line.unitCost
+                  : null,
             })),
           },
         },
@@ -320,7 +323,10 @@ export class AdjustmentsService {
                     ? AdjustmentDirection.IN
                     : AdjustmentDirection.OUT,
                   reason: reason,
-                  unitCost: line.unitCost !== undefined && line.unitCost !== null ? line.unitCost : null,
+                  unitCost:
+                    line.unitCost !== undefined && line.unitCost !== null
+                      ? line.unitCost
+                      : null,
                 };
               }),
             },

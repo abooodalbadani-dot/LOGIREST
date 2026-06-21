@@ -15,6 +15,9 @@ interface OutboxPayload {
   documentNumber?: string;
   warehouseName?: string;
   warehouseId?: string;
+  toWarehouseId?: string;
+  fromWarehouseId?: string;
+  userName?: string;
   itemName?: string;
   sku?: string;
   qtyOnHand?: number;
@@ -35,6 +38,7 @@ interface OutboxPayload {
   email?: string;
   name?: string;
   resetUrl?: string;
+  requestedById?: string;
 }
 
 @Processor('outbox')
@@ -95,7 +99,13 @@ export class OutboxWorker extends WorkerHost {
             event.payload,
           );
           // 2. Dispatch email notifications
-          const result = await this.email.sendEmail(recipients, subject, body);
+          const result = await this.email.sendEmail(
+            recipients,
+            subject,
+            body,
+            event.eventType,
+            event.payload,
+          );
 
           // 3. Handle email result
           if (!result.ok) {
@@ -214,6 +224,7 @@ export class OutboxWorker extends WorkerHost {
         targetRoles = [Role.APPROVER];
         break;
       case 'PR_APPROVED':
+      case 'PR_REJECTED':
         // Notify the creator of the PR (or PO officers)
         if (data.createdById) {
           const creator = await this.prisma.user.findUnique({
@@ -221,33 +232,120 @@ export class OutboxWorker extends WorkerHost {
           });
           if (creator) return [creator.email];
         }
-        targetRoles = [Role.PROC_OFFICER];
-        break;
-      case 'GRN_POSTED':
-      case 'ADJUSTMENT_POSTED':
-      case 'STOCKTAKE_POSTED':
-      case 'LOW_STOCK_ALERT':
-      case 'EXPIRY_WARNING':
-        targetRoles = [Role.INV_MGR];
-        if (
-          eventType === 'ADJUSTMENT_POSTED' ||
-          eventType === 'STOCKTAKE_POSTED'
-        ) {
-          targetRoles.push(Role.AUDITOR);
+        if (eventType === 'PR_APPROVED') {
+          targetRoles = [Role.PROC_OFFICER];
+        } else {
+          return [];
         }
         break;
-      case 'KITCHEN_REQUEST_SUBMITTED':
-      case 'TRANSFER_SHIPPED':
+      case 'GRN_POSTED':
+        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
+        break;
+      case 'LOW_STOCK_ALERT':
+        targetRoles = [Role.INV_MGR, Role.PROC_MGR];
+        break;
+      case 'EXPIRY_WARNING':
+        targetRoles = [Role.INV_MGR];
+        break;
+      case 'EXPIRY_WARNING_ALERT': {
+        const whId = data.warehouseId;
+        const keepers = whId
+          ? await this.prisma.user.findMany({
+              where: {
+                role: Role.WH_KEEPER,
+                isActive: true,
+                warehouseScopes: {
+                  some: { warehouseId: whId },
+                },
+              },
+              select: { email: true },
+            })
+          : [];
+        const managers = await this.prisma.user.findMany({
+          where: { role: Role.INV_MGR, isActive: true },
+          select: { email: true },
+        });
+        const emails = new Set([
+          ...keepers.map((u) => u.email),
+          ...managers.map((u) => u.email),
+        ]);
+        return Array.from(emails);
+      }
+      case 'ADJUSTMENT_POSTED':
+        targetRoles = [Role.ADMIN, Role.GM, Role.INV_MGR];
+        break;
+      case 'STOCKTAKE_POSTED':
+        targetRoles = [Role.ADMIN, Role.GM];
+        break;
+      case 'PO_APPROVED':
+        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
+        break;
+      case 'KITCHEN_REQUEST_SUBMITTED': {
+        const whId = data.warehouseId;
+        if (!whId) return [];
+        const keepers = await this.prisma.user.findMany({
+          where: {
+            role: Role.WH_KEEPER,
+            isActive: true,
+            warehouseScopes: {
+              some: { warehouseId: whId },
+            },
+          },
+          select: { email: true },
+        });
+        return keepers.map((u) => u.email);
+      }
       case 'STOCKTAKE_STARTED':
         targetRoles = [Role.WH_KEEPER];
         break;
-      case 'KITCHEN_REQUEST_POSTED':
-        targetRoles = [Role.KITCHEN_CHIEF];
-        break;
-      case 'TRANSFER_RECEIVED':
-        // Notify the source warehouse keeper
-        targetRoles = [Role.WH_KEEPER];
-        break;
+      case 'TRANSFER_SHIPPED': {
+        const receivingWhId = data.warehouseId || data.toWarehouseId;
+        if (!receivingWhId) return [];
+        const keepers = await this.prisma.user.findMany({
+          where: {
+            role: Role.WH_KEEPER,
+            isActive: true,
+            warehouseScopes: {
+              some: { warehouseId: receivingWhId },
+            },
+          },
+          select: { email: true },
+        });
+        return keepers.map((u) => u.email);
+      }
+      case 'TRANSFER_RECEIVED': {
+        const sendingWhId = data.fromWarehouseId;
+        const keepers = sendingWhId
+          ? await this.prisma.user.findMany({
+              where: {
+                role: Role.WH_KEEPER,
+                isActive: true,
+                warehouseScopes: {
+                  some: { warehouseId: sendingWhId },
+                },
+              },
+              select: { email: true },
+            })
+          : [];
+        const managers = await this.prisma.user.findMany({
+          where: { role: Role.INV_MGR, isActive: true },
+          select: { email: true },
+        });
+        const emails = new Set([
+          ...keepers.map((u) => u.email),
+          ...managers.map((u) => u.email),
+        ]);
+        return Array.from(emails);
+      }
+      case 'KITCHEN_REQUEST_POSTED': {
+        if (data.requestedById) {
+          const chief = await this.prisma.user.findUnique({
+            where: { id: data.requestedById, isActive: true },
+          });
+          if (chief) return [chief.email];
+        }
+        return [];
+      }
       case 'SUPPLIER_PO_NOTIFIED':
       case 'SUPPLIER_GRN_NOTIFIED':
         if (data.supplierEmail) {
@@ -365,6 +463,13 @@ export class OutboxWorker extends WorkerHost {
           <p>A new Kitchen Request <strong>${docNo}</strong> has been submitted. Please prepare the items for fulfillment.</p>
         `;
         break;
+      case 'KITCHEN_REQUEST_POSTED':
+        subject = `Kitchen Request ${docNo} Fulfilled`;
+        body = `
+          <p>Hello,</p>
+          <p>Kitchen Request <strong>${docNo}</strong> has been successfully fulfilled.</p>
+        `;
+        break;
       case 'TRANSFER_SHIPPED':
         subject = `Transfer ${docNo} in transit to you`;
         body = `
@@ -399,6 +504,20 @@ export class OutboxWorker extends WorkerHost {
           <p>Please take immediate action to consume or write off this stock / يرجى اتخاذ إجراء فوري لاستهلاك أو شطب هذا المخزون.</p>
         `;
         break;
+      case 'EXPIRY_WARNING_ALERT':
+        subject = `⚠️ Lot Expiry Warning (30 Days): ${data.lotNumber || 'N/A'}`;
+        body = `
+          <div class="alert-badge">
+            <strong>Expiry Warning / تحذير انتهاء الصلاحية:</strong> A lot is approaching its expiry date within 30 days!
+          </div>
+          <p><strong>Item / الصنف</strong>: ${data.itemName || 'N/A'} (SKU: ${data.sku || 'N/A'})</p>
+          <p><strong>Lot Number / رقم التشغيلة</strong>: ${data.lotNumber || 'N/A'}</p>
+          <p><strong>Warehouse / المستودع</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Qty On Hand / الكمية المتوفرة</strong>: ${data.qtyOnHand || 0} ${data.uomCode || ''}</p>
+          <p><strong>Expiry Date / تاريخ انتهاء الصلاحية</strong>: ${data.expiryDate ? new Date(data.expiryDate).toLocaleDateString() : 'N/A'}</p>
+          <p>Please take immediate action to consume or write off this stock / يرجى اتخاذ إجراء فوري لاستهلاك أو شطب هذا المخزون.</p>
+        `;
+        break;
       case 'SUPPLIER_PO_NOTIFIED':
         subject = `Purchase Order ${docNo} Approved`;
         body = `
@@ -423,6 +542,51 @@ export class OutboxWorker extends WorkerHost {
           <p>Please click the button below to choose a new password. This link is valid for 1 hour.</p>
           <p><a href="${data.resetUrl || '#'}" class="btn" style="color:#ffffff;">Reset Password</a></p>
           <p>If you did not request this, you can safely ignore this email.</p>
+        `;
+        break;
+      case 'ADJUSTMENT_POSTED':
+        subject = `Stock Adjustment Posted — ${docNo}`;
+        body = `
+          <p>Hello,</p>
+          <p>Stock Adjustment <strong>${docNo}</strong> has been posted successfully.</p>
+          <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Posted By</strong>: ${data.userName || 'N/A'}</p>
+        `;
+        break;
+      case 'STOCKTAKE_POSTED':
+        subject = `Stocktake Finalized — ${docNo}`;
+        body = `
+          <p>Hello,</p>
+          <p>Stocktake Session <strong>${docNo}</strong> has been finalized and posted.</p>
+          <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Finalized By</strong>: ${data.userName || 'N/A'}</p>
+        `;
+        break;
+      case 'TRANSFER_RECEIVED':
+        subject = `Transfer ${docNo} Received`;
+        body = `
+          <p>Hello,</p>
+          <p>Inventory Transfer <strong>${docNo}</strong> has been fully received and verified.</p>
+          <p><strong>Destination Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Received By</strong>: ${data.userName || 'N/A'}</p>
+        `;
+        break;
+      case 'PR_REJECTED':
+        subject = `Your PR ${docNo} has been rejected`;
+        body = `
+          <p>Hello,</p>
+          <p>Your Purchase Request <strong>${docNo}</strong> has been rejected by the management board.</p>
+          <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Rejected By</strong>: ${data.userName || 'N/A'}</p>
+        `;
+        break;
+      case 'PO_APPROVED':
+        subject = `Purchase Order ${docNo} Approved`;
+        body = `
+          <p>Hello,</p>
+          <p>Purchase Order <strong>${docNo}</strong> has been approved by management.</p>
+          <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Approved By</strong>: ${data.userName || 'N/A'}</p>
         `;
         break;
       default:

@@ -14,6 +14,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 @Injectable()
 export class GrnPostService {
@@ -22,6 +23,7 @@ export class GrnPostService {
     private readonly lockService: LedgerLockService,
     private readonly wacService: WacService,
     private readonly metricsService: MetricsService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async post(
@@ -413,6 +415,21 @@ export class GrnPostService {
                 }),
                 ipAddress: ipAddress || null,
               },
+            });
+
+            const user = tx.user
+              ? await tx.user.findUnique({
+                  where: { id: userId },
+                  select: { name: true },
+                })
+              : null;
+
+            await this.outboxService.writeEvent(tx, 'GRN_POSTED', {
+              id: grn.id,
+              documentNumber: grn.grnNumber,
+              warehouseId: grn.warehouseId,
+              warehouseName: updatedGrn.warehouse?.name || 'N/A',
+              userName: user?.name || 'N/A',
             });
 
             return updatedGrn;

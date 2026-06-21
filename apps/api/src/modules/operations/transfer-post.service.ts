@@ -258,6 +258,29 @@ export class TransferPostService {
             },
           });
 
+          const fromWh = tx.warehouse
+            ? await tx.warehouse.findUnique({
+                where: { id: transfer.fromWarehouseId },
+                select: { name: true },
+              })
+            : null;
+          const user = tx.user
+            ? await tx.user.findUnique({
+                where: { id: userId },
+                select: { name: true },
+              })
+            : null;
+
+          await this.outboxService.writeEvent(tx, 'TRANSFER_SHIPPED', {
+            id: transfer.id,
+            documentNumber: transfer.transferNumber || transfer.id,
+            warehouseId: transfer.toWarehouseId,
+            toWarehouseId: transfer.toWarehouseId,
+            fromWarehouseId: transfer.fromWarehouseId,
+            warehouseName: fromWh?.name || 'N/A',
+            userName: user?.name || 'N/A',
+          });
+
           return updatedTransfer;
         },
         { timeout: 30000 },
@@ -724,12 +747,27 @@ export class TransferPostService {
             },
           });
 
+          const toWh = tx.warehouse
+            ? await tx.warehouse.findUnique({
+                where: { id: transfer.toWarehouseId },
+                select: { name: true },
+              })
+            : null;
+          const user = tx.user
+            ? await tx.user.findUnique({
+                where: { id: userId },
+                select: { name: true },
+              })
+            : null;
+
           // Dispatch TRANSFER_RECEIVED outbox event
           await this.outboxService.writeEvent(tx, 'TRANSFER_RECEIVED', {
             id: transfer.id,
             documentNumber: transfer.transferNumber || transfer.id,
             fromWarehouseId: transfer.fromWarehouseId,
             toWarehouseId: transfer.toWarehouseId,
+            warehouseName: toWh?.name || 'N/A',
+            userName: user?.name || 'N/A',
           });
 
           // Notification log for source warehouse keeper

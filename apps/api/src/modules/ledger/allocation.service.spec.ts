@@ -4,13 +4,27 @@ import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from './ledger-lock.service';
 import { BadRequestException } from '@nestjs/common';
 import { Prisma, WarehouseItem, WarehouseItemLot } from '@prisma/client';
+import { OutboxService } from '../outbox/outbox.service';
 
 describe('AllocationService', () => {
   let service: AllocationService;
 
   const mockItemFindUnique = jest.fn();
   const mockWarehouseItemFindUnique = jest.fn();
-  const mockWarehouseItemUpdate = jest.fn();
+  const mockWarehouseItemUpdate = jest.fn().mockImplementation((args) => {
+    return {
+      warehouseId: 'wh-1',
+      itemId: 'item-1',
+      qtyOnHand: new Prisma.Decimal(5),
+      item: {
+        reorderPoint: null,
+        name: 'Tomato Paste',
+        sku: 'TOM-PAS-01',
+        unitOfMeasure: { code: 'KG' },
+      },
+      warehouse: { name: 'Main Kitchen' },
+    };
+  });
   const mockWarehouseItemLotFindMany = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
 
@@ -107,12 +121,17 @@ describe('AllocationService', () => {
       ),
   } as unknown as LedgerLockService;
 
+  const mockOutboxService = {
+    writeEvent: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AllocationService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: LedgerLockService, useValue: mockLockService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 
@@ -142,6 +161,14 @@ describe('AllocationService', () => {
       expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
         where: { warehouseId_itemId: { warehouseId: whId, itemId } },
         data: { qtyOnHand: { decrement: 5 } },
+        include: {
+          item: {
+            include: {
+              unitOfMeasure: true,
+            },
+          },
+          warehouse: true,
+        },
       });
     });
 
@@ -208,6 +235,14 @@ describe('AllocationService', () => {
       expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
         where: { warehouseId_itemId: { warehouseId: whId, itemId } },
         data: { qtyOnHand: { decrement: 12 } },
+        include: {
+          item: {
+            include: {
+              unitOfMeasure: true,
+            },
+          },
+          warehouse: true,
+        },
       });
     });
 
@@ -249,6 +284,14 @@ describe('AllocationService', () => {
       expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
         where: { warehouseId_itemId: { warehouseId: whId, itemId } },
         data: { qtyOnHand: { decrement: 15 } },
+        include: {
+          item: {
+            include: {
+              unitOfMeasure: true,
+            },
+          },
+          warehouse: true,
+        },
       });
     });
 
@@ -271,6 +314,43 @@ describe('AllocationService', () => {
       await expect(
         service.allocate(mockPrismaTx, whId, itemId, 10),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should trigger low stock alert when qty falls below reorderPoint', async () => {
+      mockItemFindUnique.mockResolvedValue({
+        id: itemId,
+        isBatched: false,
+        hasExpiry: false,
+      });
+      mockWarehouseItemFindUnique.mockResolvedValue({
+        warehouseId: whId,
+        itemId: itemId,
+        qtyOnHand: new Prisma.Decimal(10),
+      });
+      mockWarehouseItemUpdate.mockResolvedValue({
+        warehouseId: whId,
+        itemId: itemId,
+        qtyOnHand: new Prisma.Decimal(1),
+        item: {
+          reorderPoint: new Prisma.Decimal(3),
+          name: 'Tomato Paste',
+          sku: 'TOM-PAS-01',
+          unitOfMeasure: { code: 'KG' },
+        },
+        warehouse: { name: 'Main Kitchen' },
+      });
+
+      await service.allocate(mockPrismaTx, whId, itemId, 9);
+
+      expect(mockOutboxService.writeEvent).toHaveBeenCalledWith(
+        mockPrismaTx,
+        'LOW_STOCK_ALERT',
+        expect.objectContaining({
+          itemId,
+          qtyOnHand: 1,
+          reorderPoint: 3,
+        }),
+      );
     });
   });
 });

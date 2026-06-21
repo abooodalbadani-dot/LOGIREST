@@ -7,6 +7,7 @@ import { WacService } from '../ledger/wac.service';
 import { Prisma, Role } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 describe('GrnPostService', () => {
   let service: GrnPostService;
@@ -64,6 +65,9 @@ describe('GrnPostService', () => {
       findUnique: jest.fn().mockResolvedValue({ id: 'po-1', status: 'APPROVED' }),
       update: jest.fn().mockResolvedValue({}),
     },
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ name: 'User 1' }),
+    },
   } as unknown as Prisma.TransactionClient;
 
   const mockPrisma = {
@@ -85,6 +89,10 @@ describe('GrnPostService', () => {
     recalculate: jest.fn(),
   } as unknown as WacService;
 
+  const mockOutboxService = {
+    writeEvent: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -93,6 +101,7 @@ describe('GrnPostService', () => {
         { provide: LedgerLockService, useValue: mockLockService },
         { provide: WacService, useValue: mockWacService },
         { provide: MetricsService, useValue: mockMetricsService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 

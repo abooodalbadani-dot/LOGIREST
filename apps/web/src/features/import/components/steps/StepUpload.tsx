@@ -66,7 +66,7 @@ export function StepUpload({ wizard, locale }: StepUploadProps) {
  return;
  }
 
- wizard.setFileData(file.name, file.size, json as Record<string, unknown>[]);
+ wizard.setFileData(file.name, file.size, json as Record<string, unknown>[], file);
  } catch (error) {
  console.error('Error parsing file:', error);
  alert(t('parse_error'));
