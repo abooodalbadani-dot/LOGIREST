@@ -30,6 +30,10 @@ export class PrintSettingsDto {
   @IsBoolean()
   @IsOptional()
   autoPrintOnFulfill?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  showSystemName?: boolean;
 }
 
 export enum MailProvider {

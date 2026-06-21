@@ -19,7 +19,7 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@logirest/shared-types';
 import { useAuth } from '@/providers/AuthProvider';
-import { AlertCircle, Truck, ArrowLeft, Printer, RefreshCw } from 'lucide-react';
+import { AlertCircle, Truck, ArrowLeft, RefreshCw } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/layouts/FormLayout';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -190,18 +190,6 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
    <PageHeader
     title={t('ship_transfer')}
     subtitle={t('ship_confirm_desc')}
-    children={
-     <PermissionGate action="post" resource="transfer">
-      <Button
-       variant="outline"
-       className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
-       onClick={() => window.print()}
-      >
-       <Printer className="w-4 h-4 me-2" />
-       {tCommon('print')}
-      </Button>
-     </PermissionGate>
-    }
    />
 
    <form 

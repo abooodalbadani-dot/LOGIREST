@@ -20,6 +20,9 @@ export const RestaurantProfileSchema = z.object({
  website: z.string().optional().nullable(),
  socialLinks: z.string().optional().nullable(),
  updatedAt: z.string().optional().nullable(),
+ brandingConfig: z.object({
+  logoType: z.enum(['MARK', 'BANNER']).optional(),
+ }).optional(),
 });
 
 export type RestaurantProfile = z.infer<typeof RestaurantProfileSchema>;
@@ -43,6 +46,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
      taxNumber: profile.taxNumber || '',
      commercialRegistration: profile.commercialRegistration || '',
      updatedAt: profile.updatedAt || new Date().toISOString(),
+     brandingConfig: profile.brandingConfig || { logoType: 'MARK' },
     } as RestaurantProfile;
 
     if (typeof window !== 'undefined') {
@@ -65,6 +69,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
      taxNumber: '',
      commercialRegistration: '',
      updatedAt: new Date().toISOString(),
+     brandingConfig: { logoType: 'MARK' },
     } as RestaurantProfile;
 
     if (typeof window !== 'undefined') {

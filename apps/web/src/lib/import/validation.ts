@@ -17,40 +17,41 @@ export interface ValidationResult {
 }
 
 // Entity Schemas
+const CategorySchema = z.object({
+  Name: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Name is required'),
+  Code: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Code is required'),
+});
+
 const ItemSchema = z.object({
- Name: z.string().min(1, 'Name is required'),
- Code: z.string().min(1, 'Code is required'),
- Category: z.string().min(1, 'Category is required'),
- Unit: z.string().min(1, 'Unit is required'),
- LotTracked: z.string().optional(),
- Status: z.string().optional(),
+  Name: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Name is required'),
+  Code: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Code is required'),
+  Category: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Category is required'),
+  Unit: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Unit is required'),
+  LotTracked: z.union([z.string(), z.boolean(), z.number()]).optional(),
+  Status: z.union([z.string(), z.boolean(), z.number()]).optional(),
 });
 
 const UomSchema = z.object({
- Name: z.string().min(1, 'Name is required'),
- Code: z.string().min(1, 'Code is required'),
- Active: z.string().optional(),
+  Name: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Name is required'),
+  Code: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Code is required'),
 });
 
 const BarcodeSchema = z.object({
- ItemCode: z.string().min(1, 'ItemCode is required'),
- UoMCode: z.string().min(1, 'UoMCode is required'),
- Barcode: z.string().min(1, 'Barcode is required'),
- DefaultQty: z.number().or(z.string()).optional(),
- Active: z.string().optional(),
+  ItemCode: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'ItemCode is required'),
+  Barcode: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Barcode is required'),
 });
 
 const SupplierSchema = z.object({
-  code: z.string().optional(),
-  name: z.string().min(1, 'name is required'),
-  contactName: z.string().optional(),
-  contactEmail: z.string().optional(),
-  contactPhone: z.string().optional(),
+  code: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
+  name: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'name is required'),
+  contactName: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
+  contactEmail: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
+  contactPhone: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
 });
 
 const OpeningStockSchema = z.object({
-  warehouseCode: z.string().min(1, 'warehouseCode is required'),
-  itemSku: z.string().min(1, 'itemSku is required'),
+  warehouseCode: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'warehouseCode is required'),
+  itemSku: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'itemSku is required'),
   quantity: z.union([z.number(), z.string()]).refine((val) => {
     const num = Number(val);
     return !isNaN(num) && num > 0;
@@ -59,19 +60,20 @@ const OpeningStockSchema = z.object({
     const num = Number(val);
     return !isNaN(num) && num >= 0;
   }, 'unitCost must be a non-negative number'),
-  lotNumber: z.string().optional(),
-  expiryDate: z.union([z.string(), z.date()]).optional(),
+  lotNumber: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
+  expiryDate: z.union([z.string(), z.date(), z.number()]).optional(),
 });
 
 const getEntitySchema = (entity: ImportEntity) => {
- switch (entity) {
- case 'items': return ItemSchema;
- case 'uoms': return UomSchema;
- case 'barcodes': return BarcodeSchema;
- case 'suppliers': return SupplierSchema;
- case 'openingStock': return OpeningStockSchema;
- default: return z.object({});
- }
+  switch (entity) {
+    case 'categories': return CategorySchema;
+    case 'items': return ItemSchema;
+    case 'uoms': return UomSchema;
+    case 'barcodes': return BarcodeSchema;
+    case 'suppliers': return SupplierSchema;
+    case 'openingStock': return OpeningStockSchema;
+    default: return z.object({});
+  }
 };
 
 export const validateImportData = (entity: ImportEntity, data: Record<string, unknown>[]): ValidationResult => {

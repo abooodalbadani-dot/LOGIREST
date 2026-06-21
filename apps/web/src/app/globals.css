@@ -544,3 +544,54 @@
   ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 }
+
+@media print {
+  /* Hide the entire application UI unless a thermal receipt is present */
+  #root, body > *:not(.thermal-receipt-root) {
+    display: none !important;
+  }
+  
+  /* Make sure thermal-receipt-root is visible if present */
+  .thermal-receipt-root {
+    display: block !important;
+  }
+  
+  /* Display a professional warning message */
+  body:not(:has(.thermal-receipt-root)) {
+    background-color: white !important;
+  }
+  
+  body:not(:has(.thermal-receipt-root))::before {
+    content: 'عذراً، هذه الشاشة التفاعلية غير مخصصة للطباعة المباشرة. يرجى استخدام زر "تصدير التقرير" (Export/Generate Report) للحصول على نسخة معتمدة ومنسقة.';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #334155;
+    text-align: center;
+    padding: 2rem;
+    direction: rtl;
+    box-sizing: border-box;
+  }
+}
+
+/* إجبار عنصر الـ SVG الداخلي على التجاوب الكامل مع الحاوية في التقارير */
+.report-svg-banner svg {
+  height: 100% !important;
+  width: auto !important;
+  max-height: 100% !important;
+  overflow: visible !important; /* CRITICAL: Forces paths that slightly exceed viewBox to render */
+  padding: 4px; /* Safety margin to prevent canvas clipping */
+}
+
+.report-svg-mark svg {
+  height: 100% !important;
+  width: 100% !important;
+  max-height: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}

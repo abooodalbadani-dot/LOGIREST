@@ -2,22 +2,17 @@
 
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Download, Printer, FileText, Table } from 'lucide-react';
+import { Download, FileText, Table } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
  DropdownMenu,
  DropdownMenuTrigger,
  DropdownMenuContent,
  DropdownMenuItem,
- DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
 export function DocumentExportMenu() {
  const t = useTranslations('common');
-
- const handlePrint = () => {
-  window.print();
- };
 
  const handleExportPDF = () => {
   toast.info(t('export_pdf_coming_soon') || 'PDF export coming soon');
@@ -40,11 +35,6 @@ export function DocumentExportMenu() {
     </Button>
    </DropdownMenuTrigger>
    <DropdownMenuContent align="end">
-    <DropdownMenuItem onClick={handlePrint}>
-     <Printer className="w-4 h-4 me-2" />
-     {t('print')}
-    </DropdownMenuItem>
-    <DropdownMenuSeparator />
     <DropdownMenuItem onClick={handleExportPDF}>
      <FileText className="w-4 h-4 me-2" />
      {t('export_pdf')}

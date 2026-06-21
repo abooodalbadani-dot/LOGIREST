@@ -146,28 +146,7 @@ export class AdjustmentPostService {
                     [lotId],
                   );
 
-                  // Upsert WarehouseItemLot
-                  await tx.warehouseItemLot.upsert({
-                    where: {
-                      warehouseId_itemId_lotId: {
-                        warehouseId: adj.warehouseId,
-                        itemId: item.id,
-                        lotId,
-                      },
-                    },
-                    create: {
-                      warehouseId: adj.warehouseId,
-                      itemId: item.id,
-                      lotId,
-                      qtyOnHand: qtyVal,
-                      qtyAllocated: 0,
-                    },
-                    update: {
-                      qtyOnHand: { increment: qtyVal },
-                    },
-                  });
-
-                  // Upsert WarehouseItem
+                  // Upsert WarehouseItem first to satisfy the FK on WarehouseItemLot
                   await tx.warehouseItem.upsert({
                     where: {
                       warehouseId_itemId: {
@@ -186,6 +165,27 @@ export class AdjustmentPostService {
                     update: {
                       qtyOnHand: { increment: qtyVal },
                       isFrozen: false,
+                    },
+                  });
+
+                  // Upsert WarehouseItemLot second
+                  await tx.warehouseItemLot.upsert({
+                    where: {
+                      warehouseId_itemId_lotId: {
+                        warehouseId: adj.warehouseId,
+                        itemId: item.id,
+                        lotId,
+                      },
+                    },
+                    create: {
+                      warehouseId: adj.warehouseId,
+                      itemId: item.id,
+                      lotId,
+                      qtyOnHand: qtyVal,
+                      qtyAllocated: 0,
+                    },
+                    update: {
+                      qtyOnHand: { increment: qtyVal },
                     },
                   });
 

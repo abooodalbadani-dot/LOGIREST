@@ -12,7 +12,7 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { PermissionGate } from '@/components/shared/PermissionGate';
-import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
+import { Truck, PackageCheck, ArrowLeft } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { TRANSFER_STATUS } from '@logirest/shared-types';
@@ -80,15 +80,6 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
     children={
      <div className="flex gap-4 items-center">
       <StatusBadge status={transferStatus as BadgeStatus} />
-      
-      <Button
-       variant="outline"
-       className="bg-surface-container-high rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
-       onClick={() => window.print()}
-      >
-       <Printer className="w-4 h-4 me-2" />
-       {tCommon('print')}
-      </Button>
      </div>
     }
    />

@@ -23,6 +23,7 @@ export const AdminSettingsSchema = z.object({
     defaultPaperSize: z.enum(['A4', '80mm', '58mm']),
     thermalShowLogo: z.boolean(),
     autoPrintOnFulfill: z.boolean(),
+    showSystemName: z.boolean().optional(),
   }).optional(),
 });
 

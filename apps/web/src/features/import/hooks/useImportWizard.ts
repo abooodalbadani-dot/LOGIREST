@@ -23,6 +23,8 @@ export interface ImportState {
   errors: ValidationError[];
   idempotencyKey: string | null;
   file?: File | null;
+  successCount?: number;
+  failedCount?: number;
 }
 
 export interface WizardReturn extends ImportState {
@@ -57,6 +59,8 @@ export const useImportWizard = (initialEntity: ImportEntity): WizardReturn => {
     errors: [],
     idempotencyKey: null,
     file: null,
+    successCount: 0,
+    failedCount: 0,
   });
 
   const transitionTo = useCallback((nextStep: ImportStep) => {
@@ -115,43 +119,68 @@ export const useImportWizard = (initialEntity: ImportEntity): WizardReturn => {
 
   const commitMutation = useMutation({
     mutationFn: async ({ entity, file }: { entity: ImportEntity; file: File | null; idempotencyKey: string }) => {
-      if (entity === 'suppliers' || entity === 'openingStock') {
-        if (!file) {
-          throw new Error('No file selected for upload');
-        }
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const path = entity === 'suppliers' ? '/imports/suppliers' : '/imports/opening-stock';
-        return apiClient.post(path, ImportResponseSchema, formData);
+      if (!file) {
+        throw new Error('No file selected for upload');
       }
-      
-      // Simulate API Call for existing/other items with strict 2s delay
-      console.log(`[Import] Committing simulated import for ${entity}`);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      return { total: state.data.length, successCount: state.data.length, failedCount: 0, errors: [] };
+      const formData = new FormData();
+      formData.append('file', file);
+
+      let path = '';
+      if (entity === 'suppliers') {
+        path = '/imports/suppliers';
+      } else if (entity === 'openingStock') {
+        path = '/imports/opening-stock';
+      } else if (entity === 'categories') {
+        path = '/imports/categories';
+      } else if (entity === 'uoms') {
+        path = '/imports/uoms';
+      } else if (entity === 'barcodes') {
+        path = '/imports/barcodes';
+      } else {
+        path = '/imports/items';
+      }
+
+      return apiClient.post(path, ImportResponseSchema, formData);
     },
     onSuccess: (data, variables) => {
       // Invalidate to ensure consistency
       const queryKey = [variables.entity];
       queryClient.invalidateQueries({ queryKey });
       
-      if (data.failedCount > 0) {
-        const mappedErrors: ValidationError[] = data.errors.map((err) => ({
-          row: err.row,
-          column: 'Database',
-          severity: 'error',
-          message: err.message,
-          value: null,
-        }));
-        setState((prev) => ({
-          ...prev,
-          errors: mappedErrors,
-        }));
-        transitionTo('ERRORS');
-      } else {
-        transitionTo('SUCCESS');
-      }
+      const mappedErrors: ValidationError[] = data.errors.map((err) => ({
+        row: err.row,
+        column: 'Database',
+        severity: 'error',
+        message: err.message,
+        value: null,
+      }));
+
+      setState((prev) => ({
+        ...prev,
+        errors: mappedErrors,
+        successCount: data.successCount,
+        failedCount: data.failedCount,
+      }));
+
+      transitionTo('SUCCESS');
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Database constraint or connection failure';
+      setState((prev) => ({
+        ...prev,
+        errors: [
+          {
+            row: 0,
+            column: 'Server',
+            severity: 'error',
+            message,
+            value: null,
+          },
+        ],
+        successCount: 0,
+        failedCount: prev.metadata?.recordCount || 0,
+      }));
+      transitionTo('SUCCESS');
     },
   });
 
@@ -177,6 +206,8 @@ export const useImportWizard = (initialEntity: ImportEntity): WizardReturn => {
       errors: [],
       idempotencyKey: null,
       file: null,
+      successCount: 0,
+      failedCount: 0,
     });
   }, [initialEntity]);
 

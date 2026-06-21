@@ -15,17 +15,24 @@ interface StepValidateProps {
 export function StepValidate({ wizard, locale }: StepValidateProps) {
  const t = useTranslations('master_data.import');
 
- useEffect(() => {
- const runValidation = async () => {
- // Simulate validation delay for better UX
- await new Promise(resolve => setTimeout(resolve, 2000));
- 
- const result = validateImportData(wizard.entity, wizard.data);
- wizard.setValidationResults(result.errors);
- };
+  useEffect(() => {
+    let active = true;
+    const runValidation = async () => {
+      // Simulate validation delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!active) return;
+      
+      const result = validateImportData(wizard.entity, wizard.data);
+      if (active) {
+        wizard.setValidationResults(result.errors);
+      }
+    };
 
- runValidation();
- }, [wizard]);
+    runValidation();
+    return () => {
+      active = false;
+    };
+  }, [wizard.entity, wizard.data, wizard.setValidationResults]);
 
  return (
  <div className="flex flex-col items-center justify-center gap-12 py-20 animate-in fade-in zoom-in-95 duration-200">

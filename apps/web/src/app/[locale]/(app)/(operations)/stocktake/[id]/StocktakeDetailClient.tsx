@@ -10,7 +10,6 @@ import {
  AlertTriangle,
  ClipboardList,
  XCircle,
- Printer,
  History
 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
@@ -95,15 +94,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
    <div className="flex items-center gap-2">
     {/* Quick Tools Group */}
     <div className="flex items-center gap-1 me-1">
-     <Button 
-      variant="ghost" 
-      size="icon"
-      onClick={() => window.print()}
-      className="h-10 w-10 md:h-12 md:w-12 rounded-full text-white/50 hover:text-operational-cyan hover:bg-card/5 transition-all"
-      title={t('print_labels') || 'Print Manifest'}
-     >
-      <Printer className="w-4 h-4 md:w-5 md:h-5" />
-     </Button>
+
      <Button 
       variant="ghost" 
       size="icon"

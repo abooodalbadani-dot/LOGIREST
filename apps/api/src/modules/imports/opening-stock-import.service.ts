@@ -194,10 +194,10 @@ export class OpeningStockImportService {
         if (expiryDateRaw) {
           if (expiryDateRaw instanceof Date) {
             expiryDate = expiryDateRaw;
-          } else if (
-            typeof expiryDateRaw === 'string' ||
-            typeof expiryDateRaw === 'number'
-          ) {
+          } else if (typeof expiryDateRaw === 'number') {
+            // Excel serial date conversion (Excel base date is Dec 30, 1899)
+            expiryDate = new Date((expiryDateRaw - 25569) * 86400 * 1000);
+          } else if (typeof expiryDateRaw === 'string') {
             expiryDate = new Date(expiryDateRaw);
           } else {
             throw new BadRequestException('Invalid expiry date format');

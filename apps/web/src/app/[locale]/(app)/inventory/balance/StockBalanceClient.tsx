@@ -22,7 +22,6 @@ import {
  Plus, 
  Download, 
  Scan, 
- Printer, 
  Scale, 
  Edit2, 
  Trash2,
@@ -337,16 +336,6 @@ export default function StockBalanceClient() {
         <span className="hidden sm:inline">{t('barcode_scanner')}</span>
        </button>
       </PermissionGate>
-      
-      <div className="w-px h-6 bg-brand-gold/20 shrink-0" />
-      
-      <button 
-       onClick={() => window.print()}
-       className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:bg-brand-gold/10 hover:text-brand-gold transition-colors rounded-lg active:scale-95 group shrink-0"
-      >
-       <Printer className="w-4 h-4 md:w-5 md:h-5 text-brand-gold transition-transform group-hover:scale-110" />
-       <span className="hidden sm:inline">{t('print_labels')}</span>
-      </button>
       
       <div className="w-px h-6 bg-brand-gold/20 shrink-0" />
       
