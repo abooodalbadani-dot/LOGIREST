@@ -275,6 +275,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
        locale={locale}
        isReadOnly={true}
        hideLotColumns={true}
+       mobileLayoutPattern="variance-form"
        headers={{ qty: t('counted_qty') }}
        rowClassName={(line) => {
         const variance = (line.countedQty || 0) - (line.snapshotQty ?? 0);
@@ -342,7 +343,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
           const hasVariance = variance !== 0;
           const reasonError = hasVariance && !isReasonValid(line.id, variance);
           return hasVariance ? (
-           <div className="space-y-1.5 text-start min-w-[200px]">
+           <div className="space-y-1.5 text-start w-full md:min-w-[200px]">
             <Textarea
              value={reasons[line.id] || ""} 
              onChange={(e) => {

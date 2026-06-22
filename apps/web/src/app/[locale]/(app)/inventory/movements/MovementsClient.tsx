@@ -297,25 +297,85 @@ export default function MovementsClient() {
       Failed to load data: {(error instanceof Error ? error.message : 'Unknown error')}
      </div>
     )}
-    <DataTable
-     columns={columns}
-     data={data?.data ?? []}
-     isLoading={isLoading}
-     collectionName="inventory_operational_ledger"
-     pagination={data?.meta ? {
-      page: data.meta.page,
-      pageSize: data.meta.pageSize,
-      total: data.meta.total,
-      totalPages: data.meta.totalPages,
-      onPageChange: setPage
-     } : undefined}
-     emptyState={
-      <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-20 min-w-0">
-       <History className="w-16 h-16 text-muted-foreground/60" />
-       <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('zero_movement')}</div>
+    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+     <div className="hidden md:block w-full">
+      <DataTable
+       columns={columns}
+       data={data?.data ?? []}
+       isLoading={isLoading}
+       collectionName="inventory_operational_ledger"
+       pagination={data?.meta ? {
+        page: data.meta.page,
+        pageSize: data.meta.pageSize,
+        total: data.meta.total,
+        totalPages: data.meta.totalPages,
+        onPageChange: setPage
+       } : undefined}
+       emptyState={
+        <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-20 min-w-0">
+         <History className="w-16 h-16 text-muted-foreground/60" />
+         <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('zero_movement')}</div>
+        </div>
+       }
+      />
+     </div>
+
+     {!isLoading && (data?.data ?? []).length > 0 && (
+      <div className="flex flex-col gap-3 md:hidden mt-4 p-4">
+       {(data?.data ?? []).map((movement) => {
+        const isEntry = movement.quantity > 0;
+        return (
+        <div 
+         key={movement.id} 
+         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+        >
+         {/* TOP TIER: Identity */}
+         <div className="flex justify-between items-start">
+           <div className="flex flex-col gap-1 w-full">
+             <div className="flex justify-between items-start gap-2">
+               <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{movement.itemCode}#</span>
+               <Badge variant="secondary" className={`${getTypeStyle(movement.transactionType)} text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-sm h-auto shrink-0 border-transparent`}>
+                {t(`types.${movement.transactionType.toLowerCase()}` as any)}
+               </Badge>
+             </div>
+             <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{movement.itemName}</span>
+           </div>
+         </div>
+
+         {/* MIDDLE TIER: Financial/Qty */}
+         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+           <div className="flex flex-col">
+             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{t('qty')}</span>
+             <span dir="ltr" className={`font-mono text-sm font-bold ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
+               {isEntry ? '+' : '-'}{formatQuantity(Math.abs(movement.quantity), currentLocale as 'ar' | 'en')}
+             </span>
+           </div>
+           <div className="flex flex-col items-end">
+             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{t('direction')}</span>
+             <div className={`flex items-center gap-1 font-semibold text-[10px] uppercase ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
+              {isEntry ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {isEntry ? t('in') : t('out')}
+             </div>
+           </div>
+         </div>
+
+         {/* BOTTOM TIER: Meta */}
+         <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground tabular-nums">
+             <span dir="ltr">{formatDate(movement.timestamp, currentLocale as 'ar' | 'en')}</span>
+           </div>
+           <Link
+            href={getDocumentPath(movement)}
+            className="text-[10px] font-mono font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
+           >
+            <span dir="ltr">{movement.documentReference}</span>
+           </Link>
+         </div>
+        </div>
+       )})}
       </div>
-     }
-    />
+     )}
+    </div>
    </div>
   </div>
  );

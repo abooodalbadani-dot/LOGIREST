@@ -147,7 +147,7 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
             </div>
             
             <div className="rounded-2xl overflow-hidden bg-card border border-border shadow-sm/30 max-h-[320px] overflow-y-auto">
-              <table className="w-full text-start border-collapse">
+              <table className="w-full text-start border-collapse hidden md:table">
                 <thead>
                   <tr className="bg-card border-b border-border shadow-sm sticky top-0 z-10">
                     <th className="px-6 py-4 text-label-xs font-semibold text-muted-foreground/60 text-start">{t('row')}</th>

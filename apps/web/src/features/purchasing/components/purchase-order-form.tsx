@@ -405,8 +405,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
   if (hasMasterDataError) {
     return (
-      <div className="px-8 pt-8">
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-8 rounded-2xl shadow-xl flex items-start gap-4">
+      <div className="px-4 md:px-8 pt-4 md:pt-8">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 md:p-8 rounded-2xl shadow-xl flex items-start gap-4">
           <AlertTriangle className="w-8 h-8 shrink-0 mt-0.5" />
           <div>
             <h3 className="text-title-md font-bold uppercase mb-2">
@@ -444,16 +444,16 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         <DocumentLockBanner isLocked={isLocked} status={status} />
 
         <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-8 max-w-6xl mx-auto">
-          <div className="bg-white dark:bg-[#111927] border border-gray-200 dark:border-gray-800 shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl relative">
-            <div className="flex items-center justify-between pb-6 mb-6">
-              <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">
+          <div className="bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl relative">
+            <div className="flex flex-wrap items-center justify-between pb-6 mb-6 gap-4">
+              <h3 className="text-lg md:text-title-lg font-semibold text-operational-cyan uppercase truncate">
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
               </h3>
               <div className="flex gap-2 items-center">
                 <DocumentExportMenu />
                 <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">{/* i18n-ignore */}PO_ENGINE_V2</span>
                 {initialData?.documentNumber && (
-                  <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight">
+                  <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight truncate max-w-[120px] sm:max-w-none">
                     {initialData.documentNumber}
                   </span>
                 )}
@@ -520,7 +520,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 />
 
                 <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl w-full inset-x-0 bottom-0 mb-0 sm:mb-auto sm:bottom-auto rounded-b-none sm:rounded-b-xl">
                     <DialogHeader>
                       <DialogTitle>{t('import_from_pr') || 'Import from Purchase Request'}</DialogTitle>
                     </DialogHeader>
@@ -541,10 +541,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                               }`}
                           >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <span className="font-mono font-bold text-label-sm text-foreground">{pr.documentNumber}</span>
-                                <RelationalName name={pr.warehouseName} rawId={pr.departmentId} className="text-label-xxs text-muted-foreground/60 ms-2" />
-                              </div>
+                                <div className="min-w-0">
+                                  <span className="font-mono font-bold text-label-sm text-foreground truncate block">{pr.documentNumber}</span>
+                                  <RelationalName name={pr.warehouseName} rawId={pr.departmentId} className="text-label-xxs text-muted-foreground/60 ms-2 truncate inline-block max-w-full align-bottom" />
+                                </div>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{pr.createdAt?.split('T')[0]}</span>
                             </div>
                           </button>
@@ -667,7 +667,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               </div>
 
               <div className="pt-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-white dark:bg-[#111927] border border-gray-200 dark:border-gray-800 shadow-sm p-6 rounded-2xl">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 shadow-sm p-4 md:p-6 rounded-2xl">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-operational-cyan/10 rounded-2xl flex items-center justify-center text-operational-cyan">
                       <Package className="w-6 h-6" />

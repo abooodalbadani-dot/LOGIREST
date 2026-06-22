@@ -304,20 +304,90 @@ export default function StockBalanceClient() {
 
     {/* Data Table */}
     <div className="flex-1 w-full min-h-[400px] md:min-h-0">
-     <DataTable
-      columns={columns}
-      data={filteredItems}
-      isLoading={isLoading}
-      collectionName="inventory_orchestration_feed"
-      pagination={{
-       page,
-       pageSize: data?.meta?.pageSize ?? 15,
-       total: data?.meta?.total ?? 0,
-       totalPages: data?.meta?.totalPages ?? 0,
-       onPageChange: setPage,
-      }}
-      emptyState={<EmptyState variant="minimal" title={t('empty_title') || 'No Stock Records'} description={t('empty_description') || 'No inventory items found. Try adjusting your filters or add items via master data.'} />}
-     />
+     <div className="hidden md:block w-full">
+      <DataTable
+       columns={columns}
+       data={filteredItems}
+       isLoading={isLoading}
+       collectionName="inventory_orchestration_feed"
+       pagination={{
+        page,
+        pageSize: data?.meta?.pageSize ?? 15,
+        total: data?.meta?.total ?? 0,
+        totalPages: data?.meta?.totalPages ?? 0,
+        onPageChange: setPage,
+       }}
+       emptyState={<EmptyState variant="minimal" title={t('empty_title') || 'No Stock Records'} description={t('empty_description') || 'No inventory items found. Try adjusting your filters or add items via master data.'} />}
+      />
+     </div>
+
+     {!isLoading && filteredItems.length > 0 && (
+      <div className="flex flex-col gap-3 md:hidden mt-4">
+       {filteredItems.map((item) => {
+        const qty = item.qtyAvailable;
+        const reorderPoint = item.reorderPoint;
+        const isOutOfStock = qty === 0;
+        const isLowStock = qty <= reorderPoint;
+        
+        return (
+        <div 
+         key={`${item.itemCode}-${item.warehouseId}`} 
+         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+        >
+         {/* TOP TIER: Identity */}
+         <div className="flex justify-between items-start">
+           <div className="flex flex-col gap-1 w-full">
+             <div className="flex justify-between items-start gap-2">
+               <div className="flex items-center gap-2">
+                 <div className="w-6 h-6 rounded-md bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 shrink-0">
+                  <Package className="w-3 h-3 text-muted-foreground/60" />
+                 </div>
+                 <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{item.itemName}</span>
+               </div>
+               {isOutOfStock ? (
+                <StatusBadge status="OUT_OF_STOCK" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+               ) : isLowStock ? (
+                <StatusBadge status="LOW_STOCK" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+               ) : (
+                <StatusBadge status="HEALTHY" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+               )}
+             </div>
+             <div className="flex items-center justify-between gap-2 mt-1">
+               <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{item.itemCode}#</span>
+               <span className="text-[10px] font-bold text-muted-foreground truncate">{item.warehouseName}</span>
+             </div>
+           </div>
+         </div>
+
+         {/* MIDDLE TIER: Financial/Qty */}
+         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+           <div className="flex flex-col">
+             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tc('table_headers.available')}</span>
+             <span dir="ltr" className={`font-mono text-sm font-bold ${isOutOfStock ? 'text-status-error' : isLowStock ? 'text-status-warning' : 'text-foreground'}`}>
+               {formatNumber(qty, currentLocale as 'ar' | 'en', 2)} <span className="text-[10px] text-muted-foreground ml-1">{item.uomCode || tc('uoms.kg')}</span>
+             </span>
+           </div>
+         </div>
+
+         {/* BOTTOM TIER: Actions */}
+         <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+           <div className="flex gap-2 shrink-0">
+            <PermissionGate action="update" resource="inventory">
+             <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-operational-cyan bg-operational-cyan/10 hover:bg-operational-cyan/20">
+              <Edit2 className="w-3.5 h-3.5" />
+             </Button>
+            </PermissionGate>
+            <PermissionGate action="delete" resource="inventory">
+             <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-status-error bg-status-error/10 hover:bg-status-error/20">
+              <Trash2 className="w-3.5 h-3.5" />
+             </Button>
+            </PermissionGate>
+           </div>
+         </div>
+        </div>
+       )})}
+      </div>
+     )}
     </div>
 
     {/* Floating Quick Actions Bar */}

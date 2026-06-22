@@ -419,52 +419,140 @@ const t = useTranslations('operations.adjustment');
     </div>
    )}
 
-   <DataTable
-    columns={columns}
-    data={data?.data || []}
-    isLoading={isLoading}
-    onRowClick={(row: AdjustmentSummary) => router.push(`/adjustments/${row.id}`)}
-    collectionName="operations_adjustments"
-    sorting={sorting}
-    onSortingChange={setSorting}
-    emptyState={
-     <EmptyState
-      variant="minimal"
-      title={tCommon('datatable.no_records')} action={
-       <PermissionGate action="create" resource="adjustment">
-        <Button
-         onClick={() => router.push('/adjustments/new')}
-         className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
-        >
-         <Plus className="w-4 h-4 me-2" />
-         {t('create_new')}
-        </Button>
-       </PermissionGate>
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    <div className="hidden md:block w-full">
+     <DataTable
+      columns={columns}
+      data={data?.data || []}
+      isLoading={isLoading}
+      onRowClick={(row: AdjustmentSummary) => router.push(`/adjustments/${row.id}`)}
+      collectionName="operations_adjustments"
+      sorting={sorting}
+      onSortingChange={setSorting}
+      emptyState={
+       <EmptyState
+        variant="minimal"
+        title={tCommon('datatable.no_records')} action={
+         <PermissionGate action="create" resource="adjustment">
+          <Button
+           onClick={() => router.push('/adjustments/new')}
+           className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
+          >
+           <Plus className="w-4 h-4 me-2" />
+           {t('create_new')}
+          </Button>
+         </PermissionGate>
+        }
+       />
       }
-     />
-    }
-    pagination={data?.meta ? {
-     page: page,
-     pageSize: 10,
-     total: data.meta.total,
-     totalPages: data.meta.totalPages,
-     onPageChange: setPage
-    } : undefined}
-    filters={
-       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-         <div className="w-full sm:max-w-md">
-           <div className="relative w-full group">
-             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-             <Input
-         placeholder={tCommon('statuses.all') || "All Statuses"}
-         value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
-        />
+      pagination={data?.meta ? {
+       page: page,
+       pageSize: 10,
+       total: data.meta.total,
+       totalPages: data.meta.totalPages,
+       onPageChange: setPage
+      } : undefined}
+      filters={
+         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+           <div className="w-full sm:max-w-md">
+             <div className="relative w-full group">
+               <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+               <Input
+           placeholder={tCommon('statuses.all') || "All Statuses"}
+           value={status || 'ALL'}
+           onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
+          />
+             </div>
            </div>
          </div>
-       </div>
-      }
-   />
+        }
+     />
+    </div>
+
+    <div className="md:hidden flex flex-col gap-3 mt-4 pb-20">
+     {isLoading ? (
+      [...Array(3)].map((_, i) => (
+       <div key={i} className="bg-card border border-border rounded-xl p-4 shadow-sm animate-pulse h-28" />
+      ))
+     ) : data?.data && data.data.length > 0 ? (
+      data.data.map((row) => {
+       const reason = row.reason.toLowerCase();
+       const reasonCls = REASON_CHIP[row.reason as keyof typeof REASON_CHIP] ?? REASON_CHIP.OTHER;
+       const reasonLabel = t.has(`reasons.${reason}`) ? t(`reasons.${reason}`) : row.reason;
+       const warehouseName = warehouseMap.get(row.warehouseId) || '—';
+
+       return (
+        <div key={row.id} className="bg-card border border-border rounded-xl flex flex-col shadow-sm relative overflow-hidden">
+         {/* Identity & Status */}
+         <div className="flex justify-between items-start p-3 pb-2 border-b border-border/50">
+          <div className="flex flex-col gap-1">
+           <div className="flex items-center gap-2">
+            <span dir="ltr" className="text-xs font-mono font-bold text-operational-cyan dark:text-[#D4AF37]">{row.documentNumber}</span>
+            <StatusBadge status={row.status} />
+           </div>
+           <span className="text-xs text-muted-foreground font-medium">{warehouseName}</span>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+           <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] uppercase ${reasonCls}`}>
+            {reasonLabel}
+           </span>
+          </div>
+         </div>
+
+         {/* Meta */}
+         <div className="flex justify-between items-center p-3 py-2 bg-muted/30">
+          <div className="flex items-center gap-1.5">
+           {row.approvedBy ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-status-success">
+             <CheckCircle2 className="w-3 h-3" />
+             {row.approvedBy}
+            </span>
+           ) : (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground/50 italic">
+             <Clock className="w-3 h-3" />
+             {tCommon('statuses.pending')}
+            </span>
+           )}
+          </div>
+          <span dir="ltr" className="text-[10px] text-muted-foreground/60 font-mono">
+           <ClientOnlyTime date={row.createdAt} mode="date" />
+          </span>
+         </div>
+
+         {/* Action Footer */}
+         <div className="flex gap-2 px-3 py-2 border-t border-border/50">
+          <button
+           onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/adjustments/${row.id}`);
+           }}
+           className="flex-1 h-9 flex items-center justify-center bg-muted/50 border border-border text-foreground text-xs font-bold rounded-lg uppercase tracking-wider hover:bg-muted transition-colors"
+          >
+           {tCommon('view')}
+          </button>
+         </div>
+        </div>
+       );
+      })
+     ) : (
+      <EmptyState
+       variant="minimal"
+       title={tCommon('datatable.no_records')}
+       action={
+        <PermissionGate action="create" resource="adjustment">
+         <Button
+          onClick={() => router.push('/adjustments/new')}
+          className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
+         >
+          <Plus className="w-4 h-4 me-2" />
+          {t('create_new')}
+         </Button>
+        </PermissionGate>
+       }
+      />
+     )}
+    </div>
+   </div>
 
    <PostConfirmDialog
     open={batchConfirmAction !== null}

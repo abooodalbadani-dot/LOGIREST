@@ -188,7 +188,7 @@ export default function LotBalanceClient() {
             </div>
           ) : (
             <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-              <table className="w-full text-start border-collapse">
+              <table className="w-full text-start border-collapse hidden md:table">
                 <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
                   <tr>
                     <th className="px-6 py-4 font-medium text-start whitespace-nowrap w-1/4">

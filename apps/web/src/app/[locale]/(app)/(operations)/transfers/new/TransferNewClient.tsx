@@ -445,18 +445,18 @@ export function TransferNewClient() {
          const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
          const availableQty = balance ? balance.qtyAvailable : 0;
          const isExceeded = balance ? line.qty > availableQty : false;
-         return (
-          <span className={cn("text-[10px] font-semibold block mt-1", isExceeded ? "text-status-error font-bold animate-pulse" : "text-muted-foreground/60")}>
-           {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
-          </span>
-         );
+          return (
+           <span className={cn("text-[10px] font-medium tracking-wide block mt-1", isExceeded ? "text-status-error font-bold animate-pulse" : "text-gray-400")}>
+            {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
+           </span>
+          );
         }}
         renderQty={(line) => {
          const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
          const availableQty = balance ? balance.qtyAvailable : 0;
          const isExceeded = balance ? line.qty > availableQty : false;
          return (
-          <div className="flex items-center justify-center w-full">
+          <div className="flex items-center justify-end w-full">
             <input
              type="number"
              min="0.001"
@@ -466,10 +466,10 @@ export function TransferNewClient() {
               const val = parseFloat(e.target.value);
               setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
              }}
-             className={cn(
-              "h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center",
-              isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
-             )}
+              className={cn(
+               "h-8 w-24 text-center text-sm font-bold text-[#0B1220] bg-white border border-gray-300 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all",
+               isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
+              )}
             />
           </div>
          );

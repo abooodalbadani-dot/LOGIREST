@@ -488,7 +488,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       cell: (line: NewAdjustmentLine) => {
         const isIncrease = line.direction === 'INCREASE';
         return (
-          <div className="flex justify-center w-full">
+          <div className="flex justify-start md:justify-center w-full">
             <UnitCostInput
               value={line.unitCost}
               disabled={!isIncrease}
@@ -497,7 +497,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
               }}
               className={cn(
-                "h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center disabled:opacity-30",
+                "h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded px-2 text-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center disabled:opacity-30",
                 isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500 focus:ring-red-500/30"
               )}
             />
@@ -508,7 +508,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     {
       header: t('direction') || 'Direction',
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 rounded h-8 w-full max-w-[140px] p-0.5 mx-auto">
+        <div className="flex justify-start md:justify-center w-full">
+          <div className="flex justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 rounded h-8 w-full md:max-w-[140px] p-0.5 md:mx-auto">
           <button
             type="button"
             onClick={() => {
@@ -540,31 +541,37 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             {t('direction_decrease') || 'Dec'}
           </button>
         </div>
+        </div>
       )
     },
     {
       header: tCommon('lot_number') || 'Lot Number',
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex items-center justify-center gap-1.5 w-full max-w-[200px] mx-auto">
-          <input
-            type="text"
-            placeholder={t('lot_placeholder') || 'Lot...'}
-            value={line.lotNumber || ''}
-            onChange={(e) => {
-              const val = e.target.value;
-              setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
-            }}
-            className="h-8 w-full md:w-24 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center disabled:opacity-50"
-          />
-          {line.direction === 'INCREASE' && (
-            <button
-              type="button"
-              onClick={() => setCreatingLotForLineId(line.id)}
-              className="h-8 px-3 ml-1 text-[10px] font-bold border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 bg-transparent rounded hover:border-[#0B1220] dark:hover:border-[#D4AF37] hover:text-[#0B1220] dark:hover:text-[#D4AF37] transition-colors whitespace-nowrap"
-            >
-              + {t('new') || 'New'}
-            </button>
-          )}
+        <div className="flex justify-start md:justify-center w-full">
+          <div className="flex h-8 w-full md:max-w-[200px] md:mx-auto">
+            <input
+              type="text"
+              placeholder={t('lot_placeholder') || 'Enter lot...'}
+              value={line.lotNumber || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
+              }}
+              className={cn(
+                "flex-1 min-w-0 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 text-xs focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all disabled:opacity-50",
+                line.direction === 'INCREASE' ? "border-r-0 rounded-l" : "rounded"
+              )}
+            />
+            {line.direction === 'INCREASE' && (
+              <button
+                type="button"
+                onClick={() => setCreatingLotForLineId(line.id)}
+                className="px-3 h-full bg-transparent border border-gray-300 dark:border-[#D4AF37] border-l-0 text-gray-600 dark:text-[#D4AF37] rounded-r text-[10px] font-bold whitespace-nowrap hover:bg-gray-100 dark:hover:bg-[#D4AF37]/10 transition-colors"
+              >
+                + {t('new') || 'NEW'}
+              </button>
+            )}
+          </div>
         </div>
       )
     }

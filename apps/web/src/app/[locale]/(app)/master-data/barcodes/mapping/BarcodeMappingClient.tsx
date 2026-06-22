@@ -350,27 +350,76 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
       </div>
       
       <div className="flex-1 w-full min-h-[400px] md:min-h-0">
-       <DataTable 
-        columns={columns} 
-        data={pendingItems} 
-        isLoading={isLoadingItems}
-        collectionName="mapping_pending_items"
-        filters={
-       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-         <div className="w-full sm:w-80 md:w-96">
-           <div className="relative w-full group">
-             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-             <Input
-          placeholder={tc('search')}
-          value={search}
-          onChange={ (e) => setSearch(e.target.value) }
-          className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
-         />
-           </div>
-         </div>
+       <div className="hidden md:block w-full">
+        <DataTable 
+         columns={columns} 
+         data={pendingItems} 
+         isLoading={isLoadingItems}
+         collectionName="mapping_pending_items"
+         filters={
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <div className="w-full sm:w-80 md:w-96">
+              <div className="relative w-full group">
+                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+                <Input
+             placeholder={tc('search')}
+             value={search}
+             onChange={ (e) => setSearch(e.target.value) }
+             className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
+            />
+              </div>
+            </div>
+          </div>
+         }
+        />
        </div>
-      }
-       />
+
+       {!isLoadingItems && pendingItems.length > 0 && (
+        <div className="flex flex-col gap-3 md:hidden mt-4">
+         {pendingItems.map((item) => {
+          const isSelected = selectedItem?.id === item.id;
+          return (
+          <div 
+           key={item.id} 
+           className={cn(
+            "bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer transition-colors",
+            isSelected ? "border-amber-500/50 bg-amber-500/5 dark:bg-amber-500/10" : "hover:bg-gray-50 dark:hover:bg-[#1A2234]/80"
+           )}
+           onClick={() => setSelectedItem(item)}
+          >
+           
+           {/* TOP TIER: Identity */}
+           <div className="flex justify-between items-start">
+             <div className="flex flex-col gap-1 w-full">
+               {/* Name */}
+               <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{item.name}</span>
+               
+               {/* Category & Code Inline */}
+               <div className="flex items-center gap-2 mt-0.5">
+                 <span className="text-[11px] font-bold text-[#D4AF37] uppercase">{item.category?.name || item.categoryId || '---'}</span>
+                 <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 uppercase">• {item.code || '---'}</span>
+               </div>
+             </div>
+           </div>
+
+           {/* BOTTOM TIER: Actions */}
+           <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+             <button 
+              className={cn(
+               "h-8 px-4 flex items-center justify-center rounded-md text-xs font-bold transition-colors uppercase w-full",
+               isSelected 
+                ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20" 
+                : "bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-operational-cyan dark:text-operational-cyan hover:bg-gray-200 dark:hover:bg-gray-800"
+              )}
+              onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }}
+             >
+              {isSelected ? tc('selected') : t('actions.select_to_map')}
+             </button>
+           </div>
+          </div>
+         )})}
+        </div>
+       )}
       </div>
      </motion.div>
     </div>

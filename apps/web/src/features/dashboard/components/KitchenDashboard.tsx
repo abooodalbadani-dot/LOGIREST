@@ -53,7 +53,7 @@ export function KitchenDashboard() {
  }
 
  if (error || !stats) {
-  return <div className="p-8 text-status-error uppercase font-bold">{t('error_loading')}</div>;
+  return <div className="p-4 md:p-8 text-sm md:text-base text-status-error uppercase font-bold break-words">{t('error_loading')}</div>;
  }
 
  return (

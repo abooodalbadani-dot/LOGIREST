@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { onFormError } from '@/hooks/useFormError';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { cn } from '@/lib/utils';
 
 import {
  Form,
@@ -429,7 +430,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
    <Form {...form}>
     <form className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
      <DocumentLockWrapper isLocked={isFormDisabled}>
-      <div className="space-y-10 w-full bg-card border border-border shadow-sm p-8 rounded-2xl relative transition-all duration-200">
+      <div className="space-y-6 md:space-y-10 w-full bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl relative transition-all duration-200">
        <div className="flex items-center justify-between">
         <div className="space-y-1">
          <h3 className="text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-3">
@@ -562,6 +563,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           }) as unknown as LineItem[]}
           isReadOnly={isFormDisabled}
           hideLotColumns={true}
+          mobileLayoutPattern="issue-form"
           onRemoveLine={(id) => {
            const idx = fields.findIndex(f => f.id === id);
            if (idx >= 0) remove(idx);
@@ -573,14 +575,17 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
            const reorderPt = formLine?.item?.reorder_point;
            return (
             <div className="flex flex-col items-center gap-0.5">
-             <input
-              type="number"
-              step="0.01"
-              disabled={isFormDisabled}
-              className="w-16 md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-brand-gold/40 dark:text-white hover:border-brand-gold/70 h-7 rounded-sm font-mono font-bold text-center text-xs focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none"
-              dir="ltr"
-              {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
-             />
+              <input
+               type="number"
+               step="0.01"
+               disabled={isFormDisabled}
+               className={cn(
+                "h-8 w-24 text-center text-sm font-bold text-[#0B1220] dark:text-white bg-white dark:bg-[#0B1220] border border-gray-300 dark:border-gray-700 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all",
+                isFormDisabled && "opacity-50 cursor-not-allowed"
+               )}
+               dir="ltr"
+               {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
+              />
              {(minStock !== undefined || reorderPt !== undefined) && (
               <span className="text-label-xxs font-semibold text-muted-foreground/50 whitespace-nowrap">
                {minStock !== undefined ? `Min: ${minStock}` : ''}
@@ -591,45 +596,6 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             </div>
            );
           }}
-          extraColumns={[
-           {
-            header: tc('item'),
-            cell: (line) => {
-             const index = fields.findIndex(f => f.id === line.id);
-             if (isFormDisabled) return null; // Already shown in name column
-             
-             return (
-              <div className="min-w-[150px] md:min-w-[200px]">
-               <SmartCombobox
-                items={comboboxItems}
-                value={form.watch(`lines.${index}.item_id`)}
-                onSelect={(item) => {
-                 const matchedItem = itemsData?.data?.find((i: Item) => i.id === item.id);
-                 form.setValue(`lines.${index}.item_id`, item.id);
-                  form.setValue(`lines.${index}.item`, {
-                   id: matchedItem?.id || '',
-                   code: matchedItem?.code || '',
-                   name: matchedItem?.name || '',
-                   name_ar: matchedItem?.name || '',
-                   name_en: matchedItem?.name || '',
-                   primary_uom: { 
-                    code: matchedItem?.primaryUom?.code || 'EA',
-                    name: matchedItem?.primaryUom?.name || matchedItem?.primaryUom?.code || 'EA'
-                   },
-                   min_stock_level: matchedItem?.minStockLevel,
-                   reorder_point: matchedItem?.reorderPoint,
-                  });
-                  form.setValue(`lines.${index}.uom_id`, matchedItem?.primaryUom?.id || 'EA');
-                }}
-                placeholder={tc('select_item')}
-                className="h-7 bg-card rounded-sm text-xs font-semibold uppercase"
-                disabled={isFormDisabled}
-               />
-              </div>
-             );
-            }
-           }
-          ]}
          />
         </div>
 

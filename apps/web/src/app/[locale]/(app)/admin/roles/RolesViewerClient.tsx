@@ -134,7 +134,7 @@ export function RolesViewerClient() {
 
                         {/* Table Skeleton */}
                         <div className="w-full overflow-x-auto border-t border-border custom-scrollbar">
-                            <table className="w-full min-w-[1200px] text-start border-collapse">
+                            <table className="w-full min-w-[1200px] text-start border-collapse hidden xl:table">
                                 <thead>
                                     <tr>
                                         <th className={cn("px-6 py-4 bg-muted/30 sticky start-0 z-20 border-e border-border", shadowClass)} rowSpan={2}>
@@ -252,7 +252,7 @@ export function RolesViewerClient() {
 
                     {/* Main Matrix table scroll wrapper */}
                     <div className="w-full overflow-x-auto border-t border-border custom-scrollbar">
-                        <table className="w-full min-w-[1200px] text-start border-collapse">
+                        <table className="w-full min-w-[1200px] text-start border-collapse hidden xl:table">
                             <thead>
                                 <tr>
                                     <th className={cn("px-6 py-4 text-sm font-bold text-foreground text-start bg-muted/30 sticky start-0 z-20 border-e border-border", shadowClass)} rowSpan={2}>

@@ -805,7 +805,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                      </div>
                   </div>
 
-                  <div className="bg-card border border-border shadow-sm p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-[340px] group transition-all hover:shadow-2xl">
+                  <div className="bg-card border border-border shadow-sm p-4 md:p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-full md:min-w-[340px] group transition-all hover:shadow-2xl">
                      <div className="absolute top-0 end-0 w-1 h-full bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] group-hover:bg-primary transition-all" />
 
                      <div className="space-y-6 relative z-10">

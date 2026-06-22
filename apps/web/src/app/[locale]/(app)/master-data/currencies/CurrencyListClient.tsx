@@ -193,19 +193,21 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  />
  </div>
 
- <DataTable 
- columns={columns} 
- data={filteredCurrencies} 
- isLoading={isLoading}
- collectionName="master_data_currencies"
- onRowClick={(r: Currency) => router.push(`/master-data/currencies/${r.id}`)}
-  emptyState={
-   <EmptyState 
-    variant="minimal"
-    title={tc('no_data')}
-   />
-  }
- filters={
+ <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+  <div className="hidden md:block w-full">
+   <DataTable 
+    columns={columns} 
+    data={filteredCurrencies} 
+    isLoading={isLoading}
+    collectionName="master_data_currencies"
+    onRowClick={(r: Currency) => router.push(`/master-data/currencies/${r.id}`)}
+    emptyState={
+     <EmptyState 
+      variant="minimal"
+      title={tc('no_data')}
+     />
+    }
+    filters={
        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
          <div className="w-full sm:w-80 md:w-96">
            <div className="relative w-full group">
@@ -219,7 +221,66 @@ export function CurrencyListClient({ locale }: { locale: string }) {
          </div>
        </div>
       }
- />
+   />
+  </div>
+
+  {!isLoading && filteredCurrencies.length > 0 && (
+   <div className="flex flex-col gap-3 md:hidden mt-4">
+    {filteredCurrencies.map((currency: Currency) => (
+     <div 
+      key={currency.id} 
+      className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
+      onClick={() => router.push(`/master-data/currencies/${currency.id}`)}
+     >
+      
+      {/* TOP TIER: Identity */}
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-1 w-full">
+          {/* Name & Status Inline */}
+          <div className="flex justify-between items-start gap-2">
+            <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{currency.name}</span>
+            <StatusBadge status={currency.isActive ? 'ACTIVE' : 'INACTIVE'} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+          </div>
+          {/* Codes Inline */}
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{currency.code}</span>
+            <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 uppercase">• {currency.symbol || '---'}</span>
+            {currency.isBase && (
+             <Badge className="bg-amber-500/10 text-amber-500 border-none rounded-sm text-[9px] font-semibold uppercase px-1.5 h-4 ml-1 rtl:mr-1">
+              {t('fields.is_base')}
+             </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* BOTTOM TIER: Actions */}
+      <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+        {/* Compact Touch-Friendly Buttons */}
+        <div className="flex gap-2 shrink-0">
+         <PermissionGate action="view" resource="master_data">
+          <button 
+           className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors uppercase"
+           onClick={(e) => { e.stopPropagation(); router.push(`/master-data/currencies/${currency.id}`); }}
+          >
+           {tc('view')}
+          </button>
+         </PermissionGate>
+         <PermissionGate action="edit" resource="master_data">
+          <button 
+           className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#D4AF37] text-[#D4AF37] rounded-md text-xs font-bold hover:bg-[#D4AF37]/10 transition-colors uppercase"
+           onClick={(e) => { e.stopPropagation(); router.push(`/master-data/currencies/${currency.id}/edit`); }}
+          >
+           {t('edit')}
+          </button>
+         </PermissionGate>
+        </div>
+      </div>
+     </div>
+    ))}
+   </div>
+  )}
+ </div>
 
  {/* Quick Tips */}
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60 hover:opacity-100 transition-opacity duration-500 pb-10 pt-4 border-t border-surface-variant/5">

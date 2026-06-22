@@ -69,7 +69,7 @@ interface DocumentLineItemTableProps<T extends LineItem = LineItem> {
  /** Custom renderer for additional details in the item name column. */
  renderItemDescription?: (line: T) => React.ReactNode;
  /** Custom mobile layout pattern: e.g. 'issue-form' for side-by-side inputs and action below. */
- mobileLayoutPattern?: 'standard' | 'issue-form' | 'adjustment-form';
+ mobileLayoutPattern?: 'standard' | 'issue-form' | 'adjustment-form' | 'variance-form';
 }
 
 
@@ -695,19 +695,16 @@ export function DocumentLineItemTable<T extends LineItem>({
             </div>
 
            {/* Detail Tier (High-Density CSS Grid) */}
-           <div className="flex flex-col gap-3 p-3 bg-white dark:bg-[#1A2234] border-x border-b border-gray-200 dark:border-transparent items-center w-full rounded-b-xl">
-             {mobileLayoutPattern === 'adjustment-form' ? (
-              <>
-               {/* Row 1: Qty and Unit (UOM) side-by-side */}
-               <div className="grid grid-cols-2 gap-3 w-full">
+           {mobileLayoutPattern === 'adjustment-form' ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4 bg-white dark:bg-[#1A2234]/30 border-t border-gray-100 dark:border-gray-800 rounded-b-xl w-full">
                 {/* Col 1: Qty */}
-                <div className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{h.qty}</label>
-                 <div className="w-auto flex-1 flex justify-end">
+                <div className="flex flex-col w-full">
+                 <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">{h.qty}</label>
+                 <div className="flex h-8 w-full">
                   {renderQty ? (
                    renderQty(line)
                   ) : (
-                   <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center">
+                   <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center w-full">
                     {line.qty}
                    </div>
                   )}
@@ -715,68 +712,81 @@ export function DocumentLineItemTable<T extends LineItem>({
                 </div>
 
                 {/* Col 2: UOM */}
-                <div className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{h.uom}</label>
-                 <div className="w-auto flex-1 flex justify-end">
+                <div className="flex flex-col w-full">
+                 <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">{h.uom}</label>
+                 <div className="flex h-8 w-full">
                   {renderUom ? (
                    renderUom(line)
                   ) : (
-                   <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 uppercase flex items-center h-8 text-sm justify-center">
+                   <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 uppercase flex items-center h-8 text-sm justify-center w-full">
                     {line.item.primaryUom?.name || line.item.primaryUom?.code || 'N/A'}
                    </div>
                   )}
                  </div>
                 </div>
-               </div>
 
-               {/* Row 2: Unit Cost (extraColumns[0]) */}
-               {extraColumns[0] && (
-                <div className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{extraColumns[0].header}</label>
-                 <div className="w-auto flex-1 flex justify-end">
-                  {extraColumns[0].cell(line)}
+                {/* extraColumns */}
+                {extraColumns.map((col, idx) => (
+                 <div key={idx} className={cn("flex flex-col w-full", idx === 2 ? "col-span-2 sm:col-span-1" : "")}>
+                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">{col.header}</label>
+                  <div className="flex h-8 w-full">
+                   {col.cell(line)}
+                  </div>
+                 </div>
+                ))}
+              </div>
+           ) : mobileLayoutPattern === 'variance-form' ? (
+              <div className="grid grid-cols-2 gap-3 p-4 bg-[#1A2234]/30 rounded-b-xl border-t border-gray-800 w-full">
+                {/* Col 1: Snapshot Qty */}
+                <div className="flex flex-col w-full">
+                 <label className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{extraColumns[0]?.header}</label>
+                 <div className="flex h-8 items-center w-full">
+                  {extraColumns[0]?.cell(line)}
                  </div>
                 </div>
-               )}
 
-               {/* Row 3: Direction (extraColumns[1]) and Batch number (extraColumns[2]) side-by-side */}
-               <div className="grid grid-cols-2 gap-3 w-full">
-                {/* Col 1: Direction (extraColumns[1]) */}
-                {extraColumns[1] && (
-                 <div className="flex items-center justify-between gap-2 w-full h-8">
-                  <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{extraColumns[1].header}</label>
-                  <div className="w-auto flex-1 flex justify-end">
-                   {extraColumns[1].cell(line)}
+                {/* Col 2: Counted Qty + UOM */}
+                <div className="flex flex-col w-full">
+                 <label className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{h.qty}</label>
+                 <div className="flex h-8 items-center gap-2 w-full">
+                  {renderQty ? renderQty(line) : null}
+                  {renderUom ? renderUom(line) : null}
+                 </div>
+                </div>
+
+                {/* Col 3: Variance */}
+                <div className="flex flex-col w-full">
+                 <label className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{extraColumns[1]?.header}</label>
+                 <div className="flex h-8 items-center w-full">
+                  {extraColumns[1]?.cell(line)}
+                 </div>
+                </div>
+
+                {/* Col 4: Variance Value */}
+                <div className="flex flex-col w-full">
+                 <label className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{extraColumns[2]?.header}</label>
+                 <div className="flex h-8 items-center w-full">
+                  {extraColumns[2]?.cell(line)}
+                 </div>
+                </div>
+
+                {/* Col 5: Variance Reason (Spans 2 cols) */}
+                {extraColumns[3] && (
+                 <div className="flex flex-col w-full col-span-2 mt-2">
+                  <label className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{extraColumns[3].header}</label>
+                  <div className="flex w-full">
+                   {extraColumns[3].cell(line)}
                   </div>
                  </div>
                 )}
-
-                {/* Col 2: Batch number (extraColumns[2]) */}
-                {extraColumns[2] && (
-                 <div className="flex items-center justify-between gap-2 w-full h-8">
-                  <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{extraColumns[2].header}</label>
-                  <div className="w-auto flex-1 flex justify-end">
-                   {extraColumns[2].cell(line)}
-                  </div>
-                 </div>
-                )}
-               </div>
-
-               {/* Any remaining extra columns */}
-               {extraColumns.slice(3).map((col, i) => (
-                <div key={i} className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{col.header}</label>
-                 <div className="w-auto flex-1 flex justify-end">
-                  {col.cell(line)}
-                 </div>
-                </div>
-               ))}
-              </>
-             ) : mobileLayoutPattern === 'issue-form' ? (
+              </div>
+           ) : (
+            <div className="flex flex-col gap-3 p-3 bg-white dark:bg-[#1A2234] border-x border-b border-gray-200 dark:border-transparent items-center w-full rounded-b-xl">
+             {mobileLayoutPattern === 'issue-form' ? (
               <>
                <div className="grid grid-cols-2 gap-3 w-full">
                 <div className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{h.qty}</label>
+                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">{h.qty}</label>
                  <div className="w-auto flex-1 flex justify-end">
                   {renderQty ? (
                    renderQty(line)
@@ -816,7 +826,7 @@ export function DocumentLineItemTable<T extends LineItem>({
              ) : (
               <div className="grid grid-cols-1 gap-3 w-full">
                <div className="flex items-center justify-between gap-2 w-full h-8">
-                <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{h.qty}</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">{h.qty}</label>
                 <div className="w-auto flex-1 flex justify-end">
                  {renderQty ? (
                   renderQty(line)
@@ -853,7 +863,8 @@ export function DocumentLineItemTable<T extends LineItem>({
                ))}
               </div>
              )}
-           </div>
+            </div>
+           )}
           </td>
          )}
 

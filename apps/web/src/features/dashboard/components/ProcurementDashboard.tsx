@@ -108,7 +108,7 @@ export function ProcurementDashboard() {
     <section className="lg:col-span-2 space-y-4" aria-labelledby="procurement-pipeline-title">
      <div className="bg-card border border-border shadow-sm rounded-2xl relative overflow-hidden group transition-all duration-200">
       <div className="absolute top-0 start-0 w-2 h-full bg-operational-cyan/20 group-hover:bg-operational-cyan transition-all duration-200" />
-      <div className="p-8 pb-4">
+      <div className="p-4 md:p-8 pb-4">
        <div className="flex items-center justify-between mb-8">
         <div>
           <h3 id="procurement-pipeline-title" className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('procurement.active_pipeline')}</h3>

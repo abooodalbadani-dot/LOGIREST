@@ -167,26 +167,69 @@ export function AuditLogsClient() {
  />
  </div>
 
- <DataTable
- columns={columns}
- data={data?.data ?? []}
- isLoading={isLoading}
- collectionName="admin_audit_logs"
- emptyState={
- <EmptyState
- title={t('audit_logs.no_ledger_entries')}
- description={t('audit_logs.no_ledger_entries_desc')}
- icon={History}
- />
- }
- pagination={data?.meta ? {
- page: data.meta.page,
- pageSize: data.meta.pageSize,
- total: data.meta.total,
- totalPages: data.meta.totalPages,
- onPageChange: setPage
- } : undefined}
- />
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    <div className="hidden md:block w-full">
+     <DataTable
+     columns={columns}
+     data={data?.data ?? []}
+     isLoading={isLoading}
+     collectionName="admin_audit_logs"
+     emptyState={
+     <EmptyState
+     title={t('audit_logs.no_ledger_entries')}
+     description={t('audit_logs.no_ledger_entries_desc')}
+     icon={History}
+     />
+     }
+     pagination={data?.meta ? {
+     page: data.meta.page,
+     pageSize: data.meta.pageSize,
+     total: data.meta.total,
+     totalPages: data.meta.totalPages,
+     onPageChange: setPage
+     } : undefined}
+     />
+    </div>
+
+    {!isLoading && (data?.data ?? []).length > 0 && (
+     <div className="flex flex-col gap-3 md:hidden mt-4">
+      {(data?.data ?? []).map((log) => (
+       <div 
+        key={log.id} 
+        className={`bg-white dark:bg-[#1A2234] border rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer transition-colors ${expandedId === log.id ? 'border-brand-gold dark:border-brand-gold bg-brand-gold/5' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#1A2234]/80'}`}
+        onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
+       >
+        
+        {/* TOP TIER: Action & Identity */}
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-1 w-full">
+            {/* Entity Type & Action Inline */}
+            <div className="flex justify-between items-start gap-2">
+              <span className="font-mono text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase line-clamp-1">{log.entityType}</span>
+              <span className={`px-1.5 py-0.5 text-[9px] font-bold uppercase rounded-md h-auto shrink-0 border ${actionColors[log.action] ?? 'bg-surface-container-highest/20 text-muted-foreground border-white/5'}`}>
+               {log.action}
+              </span>
+            </div>
+            {/* Entity ID Inline */}
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[11px] font-mono font-bold text-gray-900 dark:text-white line-clamp-1 truncate" dir="ltr">{log.entityId}</span>
+            </div>
+            {/* User & Date */}
+            <div className="flex items-center justify-between gap-2 mt-1 border-t border-gray-100 dark:border-gray-800/50 pt-2">
+              <span className="text-xs font-bold text-operational-cyan line-clamp-1">{log.userName}</span>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums shrink-0">
+               <History className="w-3 h-3 opacity-50" />
+               <ClientOnlyTime date={log.createdAt} mode="datetime" showSeconds={true} locale={locale} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+       </div>
+      ))}
+     </div>
+    )}
+   </div>
 
  {expandedId && data?.data && (() => {
  const entry = data.data.find((e) => e.id === expandedId);

@@ -72,8 +72,8 @@ export function PurchaseOrderLineItems({
 
        return (
               <div className="w-full space-y-4">
-                     <div className="flex justify-between items-center mb-6 px-2">
-                            <h3 className="text-title-lg font-semibold uppercase flex items-center gap-3">
+                     <div className="flex flex-wrap justify-between items-center mb-6 px-2 gap-4">
+                            <h3 className="text-lg md:text-title-lg font-semibold uppercase flex items-center gap-3 truncate">
                                    <span className="w-2 h-2 bg-operational-cyan rounded-full animate-pulse shadow-[0_0_10px_var(--operational-cyan)]" />
                                    {t('line_items')}
                                    <span className="text-muted-foreground/30 font-mono text-label-xs ms-2">[{fields.length}]</span>
@@ -101,7 +101,7 @@ export function PurchaseOrderLineItems({
                      </div>
 
                      {/* Desktop Virtualized Grid View */}
-                     <div className="hidden md:block w-full rounded-2xl bg-white dark:bg-[#111927] border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                     <div className="hidden md:block w-full rounded-2xl bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
                             <div
                                    ref={parentRef}
                                    className="w-full h-[500px] overflow-auto scrollbar-thin"
@@ -204,62 +204,29 @@ function LineItemCard({
        const matchedItem = itemsData?.data?.find((i) => i.id === rowValues?.itemId);
 
        return (
-              <div className="bg-white dark:bg-[#111927] border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-3 shadow-sm">
-                     {/* Top Row: Item Select or Name + Trash Icon */}
-                     <div className="flex justify-between items-start gap-2">
-                            <div className="flex-1 min-w-0">
-                                   <FormField
-                                          control={form.control}
-                                          name={`lines.${index}.itemId`}
-                                          render={({ field: inputField }) => (
-                                                 <FormItem className="space-y-0 w-full">
-                                                        <FormControl>
-                                                               <SmartCombobox
-                                                                      items={comboboxItems}
-                                                                      value={inputField.value}
-                                                                      onSelect={(item) => {
-                                                                             const matchedItem = itemsData?.data?.find((i: Item) => i.id === item.id);
-                                                                             if (matchedItem) {
-                                                                                    update(index, {
-                                                                                           itemId: matchedItem.id,
-                                                                                           itemName: matchedItem.name,
-                                                                                           itemCode: matchedItem.code,
-                                                                                           uomId: matchedItem.primaryUom?.id || 'PCS',
-                                                                                           unitPrice: matchedItem.lastPurchasePrice || 0,
-                                                                                           quantity: rowValues?.quantity || 1,
-                                                                                           notes: rowValues?.notes || ''
-                                                                                    });
-                                                                             }
-                                                                      }}
-                                                                      placeholder={tc('select_item')}
-                                                                      className="h-11 w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase transition-all shadow-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
-                                                                      triggerClassName="h-11 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase shadow-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
-                                                                      disabled={isLocked}
-                                                               />
-                                                        </FormControl>
-                                                        <FormMessage className="text-[10px] mt-1" />
-                                                 </FormItem>
-                                          )}
-                                   />
+              <div className="bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden">
+                     {/* Header */}
+                     <div className="flex justify-between items-center bg-[#0B1220] px-4 py-2 border-b border-gray-800">
+                            <div className="flex flex-col">
+                                   <span className="text-sm font-bold text-white">{rowValues?.itemName || tc('select_item')}</span>
+                                   <span className="text-[10px] text-[#D4AF37] font-mono tracking-widest mt-0.5">{rowValues?.itemCode || '---'}</span>
                             </div>
                             {!isLocked && (
-                                   <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          className="text-gray-400 hover:text-status-error hover:bg-status-error/10 h-11 w-11 transition-all rounded-md border border-gray-200 dark:border-gray-800"
+                                   <button 
+                                          type="button" 
+                                          className="text-red-400 hover:text-red-300 transition-colors p-2 -mr-2" 
                                           onClick={() => remove(index)}
-                                          disabled={fieldsCount <= 1}
                                    >
-                                          <Trash2 className="h-4 w-4" />
-                                   </Button>
+                                          <Trash2 className="w-4 h-4" />
+                                   </button>
                             )}
                      </div>
 
-                     {/* Bottom Row Grid: QTY input and Unit dropdown side-by-side using grid grid-cols-2 gap-2 */}
-                     <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                   <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">
+                     {/* Body */}
+                     <div className="grid grid-cols-3 gap-3 p-3 bg-white dark:bg-[#0B1220]">
+                            {/* Quantity */}
+                            <div className="flex flex-col col-span-1">
+                                   <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1 truncate">
                                           {t('quantity')}
                                    </label>
                                    <FormField
@@ -268,14 +235,14 @@ function LineItemCard({
                                           render={({ field: inputField }) => (
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
-                                                               <Input
+                                                               <input
                                                                       type="number"
                                                                       min="1"
                                                                       disabled={isLocked}
-                                                                      className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                                                                      className="h-8 w-full text-center text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
                                                                       dir="ltr"
-                                                                      {...inputField}
-                                                                      onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
+                                                                      value={inputField.value || ''}
+                                                                      onChange={(e) => inputField.onChange(e.target.value ? Number(e.target.value) : '')}
                                                                />
                                                         </FormControl>
                                                         <FormMessage className="text-[10px] mt-1" />
@@ -284,8 +251,9 @@ function LineItemCard({
                                    />
                             </div>
 
-                            <div>
-                                   <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">
+                            {/* UOM */}
+                            <div className="flex flex-col col-span-1">
+                                   <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1 truncate">
                                           {tc('uom.label')}
                                    </label>
                                    <FormField
@@ -296,7 +264,7 @@ function LineItemCard({
                                                  return (
                                                         <FormItem className="space-y-0 w-full">
                                                                <FormControl>
-                                                                      <div className="h-11 w-full flex items-center justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md font-mono uppercase text-[11px] font-bold">
+                                                                      <div className="h-8 w-full flex items-center justify-center bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded font-mono uppercase text-[11px] font-bold">
                                                                              {uomCode}
                                                                       </div>
                                                                </FormControl>
@@ -306,12 +274,10 @@ function LineItemCard({
                                           }}
                                    />
                             </div>
-                     </div>
 
-                     {/* Third Row: Unit Price & Notes */}
-                     <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                   <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">
+                            {/* Unit Price */}
+                            <div className="flex flex-col col-span-1">
+                                   <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1 truncate">
                                           {t('unit_price')} {currency ? `(${currency})` : ''}
                                    </label>
                                    <FormField
@@ -320,15 +286,15 @@ function LineItemCard({
                                           render={({ field: inputField }) => (
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
-                                                               <Input
+                                                               <input
                                                                       type="number"
                                                                       step="0.01"
                                                                       min="0"
                                                                       disabled={isLocked}
-                                                                      className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                                                                      className="h-8 w-full text-center text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
                                                                       dir="ltr"
-                                                                      {...inputField}
-                                                                      onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
+                                                                      value={inputField.value !== undefined ? inputField.value : ''}
+                                                                      onChange={(e) => inputField.onChange(e.target.value ? Number(e.target.value) : '')}
                                                                />
                                                         </FormControl>
                                                         <FormMessage className="text-[10px] mt-1" />
@@ -337,8 +303,9 @@ function LineItemCard({
                                    />
                             </div>
 
-                            <div>
-                                   <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">
+                            {/* Notes */}
+                            <div className="flex flex-col col-span-3 pt-1 border-t border-gray-50 dark:border-gray-800 mt-1">
+                                   <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1 truncate">
                                           {tc('table_headers.notes') || t('line_notes')}
                                    </label>
                                    <FormField
@@ -347,11 +314,12 @@ function LineItemCard({
                                           render={({ field: inputField }) => (
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
-                                                               <Input
+                                                               <input
                                                                       placeholder={t('notes_placeholder')}
                                                                       disabled={isLocked}
-                                                                      className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-medium transition-all focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
-                                                                      {...inputField}
+                                                                      className="h-8 w-full px-3 text-xs font-medium text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
+                                                                      value={inputField.value || ''}
+                                                                      onChange={(e) => inputField.onChange(e.target.value)}
                                                                />
                                                         </FormControl>
                                                         <FormMessage className="text-[10px] mt-1" />
@@ -536,7 +504,6 @@ function LineItemRow({
                                           size="icon"
                                           className="text-gray-400 hover:text-status-error hover:bg-status-error/10 h-10 w-10 transition-all rounded-md"
                                           onClick={() => remove(index)}
-                                          disabled={fieldsCount <= 1}
                                    >
                                           <Trash2 className="h-4 w-4" />
                                    </Button>

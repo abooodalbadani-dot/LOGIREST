@@ -23,42 +23,40 @@ export default function OperationsError({
 
   return (
     <div className="flex-1 w-full min-w-[280px] shrink-0 flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 md:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="w-full max-w-2xl mx-auto p-8 md:p-12 bg-card border border-border/50 rounded-2xl shadow-lg text-center space-y-6 shrink-0 min-w-[280px] overflow-hidden">
-        <div className="flex flex-col items-center justify-center w-full gap-4">
-          <div className="flex justify-center">
-            <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-status-error/10 text-status-error border border-status-error/20 animate-pulse">
-              <AlertCircle className="h-8 w-8" />
-            </div>
-          </div>
-
-          <h2 className="block w-full text-center text-title-md font-bold text-foreground uppercase tracking-tight">
-            {t('operations_title')}
-          </h2>
-          <p className="w-full max-w-md mx-auto text-center text-muted-foreground whitespace-normal break-words mt-4 leading-relaxed">
-            {t('operations_desc')}
-          </p>
+      <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-8 text-center bg-[#1A2234] border border-red-500/30 rounded-xl shadow-lg">
+        <div className="flex items-center justify-center h-16 w-16 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 mb-4 animate-pulse">
+          <AlertCircle className="h-8 w-8" />
         </div>
 
-        {error.digest && (
-          <div className="bg-bg-light dark:bg-brand-black/50 border border-border/30 rounded-xl p-3 font-mono text-[10px] text-muted-foreground/60 select-all max-w-md mx-auto w-full">
+        <h2 className="text-xl font-bold text-white uppercase tracking-tight">
+          {t('operations_title')}
+        </h2>
+        <p className="text-gray-400 text-sm mt-4 leading-relaxed max-w-[250px]">
+          {t('operations_desc')}
+        </p>
+
+        <div className="mt-6 p-3 bg-[#0B1220] border border-red-500/20 rounded text-red-400 text-[10px] font-mono w-full text-left overflow-x-auto uppercase tracking-wider">
+          ERROR: {error?.message || 'FIELDS IS NOT DEFINED'}
+        </div>
+
+        {error?.digest && (
+          <div className="mt-2 p-2 bg-[#0B1220] border border-border/30 rounded text-muted-foreground/60 text-[10px] font-mono w-full text-left overflow-x-auto uppercase tracking-wider">
             DIGEST_ID: {error.digest}
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
+        <div className="flex flex-col gap-3 w-full mt-8">
           <button
             onClick={() => reset()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-gold text-brand-black font-semibold rounded-lg hover:bg-brand-gold/90 transition-colors whitespace-nowrap cursor-pointer"
+            className="w-full px-6 py-2 bg-transparent border border-[#D4AF37] text-[#D4AF37] font-medium rounded hover:bg-[#D4AF37] hover:text-[#0B1220] transition-colors uppercase tracking-widest text-xs"
           >
-            <RefreshCw className="w-4 h-4 ml-2" />
-            <span>{t('retry')}</span>
+            Reinitialize Module
           </button>
           <button
             onClick={handleGoHome}
-            className="flex items-center gap-2 px-6 py-2.5 bg-transparent border border-border/50 text-foreground font-medium rounded-lg hover:bg-white/5 transition-colors whitespace-nowrap cursor-pointer"
+            className="w-full px-6 py-2 bg-transparent border border-gray-600 text-gray-400 font-medium rounded hover:bg-gray-800 hover:text-white transition-colors uppercase tracking-widest text-xs"
           >
-            <Home className="w-4 h-4 ml-2" />
-            <span>{t('dashboard')}</span>
+            {t('dashboard') || 'Dashboard'}
           </button>
         </div>
       </div>

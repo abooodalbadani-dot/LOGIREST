@@ -130,6 +130,8 @@ export function IssueForm() {
     control: form.control,
     name: "lines",
   });
+  
+  const currentFields = fields || [];
 
   const watchedLines = useWatch({
     control: form.control,
@@ -137,14 +139,14 @@ export function IssueForm() {
   });
 
   const watchedWarehouse = useWatch({ control: form.control, name: "warehouseId" });
-  const activeItemId = activeLineIndex !== null ? fields[activeLineIndex]?.itemId : undefined;
+  const activeItemId = activeLineIndex !== null ? currentFields[activeLineIndex]?.itemId : undefined;
   const { data: availableLots } = useLotsByItem({
     itemId: activeItemId,
     warehouseId: watchedWarehouse,
   });
 
   const tableLines = React.useMemo<CustomLineItem[]>(() => {
-    return fields.map((field, index) => {
+    return currentFields.map((field, index) => {
       const lineVal = watchedLines?.[index];
       const selectedItem = items?.find(i => i.id === lineVal?.itemId);
       return {
@@ -316,7 +318,7 @@ export function IssueForm() {
               "flex flex-col",
               isAr ? "items-end" : "items-start"
             )}>
-              <h2 className="text-2xl font-bold text-white tracking-wide uppercase">
+              <h2 className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase truncate">
                 {t('title')}
               </h2>
               <p className="text-xs text-gray-400 mt-1 uppercase italic">
@@ -459,7 +461,7 @@ export function IssueForm() {
           </div>
 
           <div className="grid grid-cols-1 gap-5">
-            {fields.length === 0 ? (
+            {currentFields.length === 0 ? (
               <div className="py-24 text-center bg-card border border-border shadow-sm rounded-[3rem] border-2 border-dashed border-surface-container-high/50 animate-in fade-in duration-500">
                 <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
                   <ListFilter className="w-10 h-10" />
@@ -501,7 +503,7 @@ export function IssueForm() {
             <div>
               <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
               <div className="text-title-lg font-bold text-foreground">
-                {fields.filter(f => (f.qty ?? 0) >= (f.requestedQty ?? 0)).length} / {fields.length} {t('protocol_validations')}
+                {currentFields.filter(f => (f.qty ?? 0) >= (f.requestedQty ?? 0)).length} / {currentFields.length} {t('protocol_validations')}
               </div>
             </div>
           </div>
@@ -516,7 +518,7 @@ export function IssueForm() {
             </button>
             <Button
               type="submit"
-              disabled={createIssue.isPending || isWarehouseLocked || !allLinesAllocated || fields.length === 0}
+              disabled={createIssue.isPending || isWarehouseLocked || !allLinesAllocated || currentFields.length === 0}
               className="h-14 px-12 bg-[#D4AF37] hover:bg-[#C5922F] text-[#0B1220] text-label-xs font-bold uppercase rounded-[1.5rem] transition-all shadow-[0_0_25px_rgba(212,175,55,0.3)] hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] disabled:opacity-30 disabled:grayscale"
             >
               {createIssue.isPending ? t('finalizing_ledger') : t('authorize_protocol')}
@@ -530,8 +532,8 @@ export function IssueForm() {
         <FEFOLotAllocator
           isOpen={allocatorOpen}
           onClose={() => setAllocatorOpen(false)}
-          itemId={fields[activeLineIndex].itemId}
-          requestedQty={fields[activeLineIndex].requestedQty || 1}
+          itemId={currentFields[activeLineIndex]?.itemId || ''}
+          requestedQty={currentFields[activeLineIndex]?.requestedQty || 1}
           onAllocate={handleAllocate}
           lots={availableLots?.map(l => ({
             lotNumber: l.lotNumber,
