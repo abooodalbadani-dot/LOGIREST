@@ -56,7 +56,7 @@ export function ConfirmationDialog({
 
  return (
   <AlertDialog open={open} onOpenChange={onOpenChange}>
-   <AlertDialogContent className="sm:max-w-[600px] w-[calc(100vw-2rem)] border-none ambient-shadow p-10 bg-card border border-border shadow-sm rounded-[2rem]">
+   <AlertDialogContent className="sm:max-w-[600px] w-[calc(100vw_-_2rem)] border-none ambient-shadow p-10 bg-card border border-border shadow-sm rounded-[2rem]">
     <AlertDialogHeader className="space-y-4">
      <div className={cn(
       "w-12 h-12 rounded-2xl flex items-center justify-center mb-2",

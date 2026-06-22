@@ -49,7 +49,7 @@ export function PageHeader({
   }
 
   return (
-    <div className={cn("flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full border-b border-border/50 pb-4 mb-2 flex-wrap", className)}>
+    <div data-slot="page-header" className={cn("flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full border-b border-border/50 pb-4 mb-2 flex-wrap", className)}>
       <div className="flex flex-col items-start text-start gap-2 min-w-0">
         <div className="flex items-start sm:items-center gap-4 flex-wrap">
           {backHref && (

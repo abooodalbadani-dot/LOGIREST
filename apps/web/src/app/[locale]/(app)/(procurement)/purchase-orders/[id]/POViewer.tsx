@@ -162,6 +162,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
         isReadOnly={true}
         hideLotColumns={true}
         extraColumns={extraColumns}
+        noCollapse={false}
        />
 
        <div className="p-8 bg-card border border-border shadow-sm/30 border-t border-outline-variant/50 flex justify-end">

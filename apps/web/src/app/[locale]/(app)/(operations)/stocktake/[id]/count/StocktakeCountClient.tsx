@@ -368,10 +368,10 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                           debouncedUpdate(line.itemId, line.id, val)
                         }}
                         className={cn(
-                          "text-right font-mono tabular-nums bg-white/5 border border-border/50 text-foreground w-full h-10 focus-visible:ring-1 transition-all rounded-lg max-w-[120px] mx-auto",
+                          "text-right font-mono tabular-nums w-full h-10 focus-visible:ring-1 transition-all rounded-lg max-w-[120px] mx-auto",
                           isTouched
-                            ? "bg-emerald-500/10 focus-visible:ring-emerald-500/40 border-emerald-500/30"
-                            : "focus-visible:ring-primary/30",
+                            ? "bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-white focus-visible:ring-emerald-500/40"
+                            : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white focus-visible:ring-primary/30",
                           focusedRowIndex === index && "focus-visible:ring-primary"
                         )}
                       />

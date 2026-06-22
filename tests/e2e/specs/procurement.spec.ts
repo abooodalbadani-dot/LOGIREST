@@ -123,12 +123,12 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
           status: 200,
           contentType: 'application/json',
           headers: CORS,
-          body: JSON.stringify({ ...pr, status: 'SUBMITTED', version: 2 }),
+          body: JSON.stringify({ data: { ...pr, status: 'SUBMITTED', version: 2 } }),
         });
       }
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(pr),
+        body: JSON.stringify({ data: pr }),
       });
     });
 
@@ -147,7 +147,7 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
     await page.route(`**/api/v1/procurement/purchase-requests/${prId}`, (route) => {
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify({ ...pr, status: 'SUBMITTED', version: 2 }),
+        body: JSON.stringify({ data: { ...pr, status: 'SUBMITTED', version: 2 } }),
       });
     });
 
@@ -171,12 +171,12 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
         currentStatus = 'APPROVED';
         return route.fulfill({
           status: 200, contentType: 'application/json', headers: CORS,
-          body: JSON.stringify({ ...pr, status: 'APPROVED', version: 3 }),
+          body: JSON.stringify({ data: { ...pr, status: 'APPROVED', version: 3 } }),
         });
       }
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify({ ...pr, status: currentStatus }),
+        body: JSON.stringify({ data: { ...pr, status: currentStatus } }),
       });
     });
 
@@ -214,7 +214,7 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
       }
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makePR({ id: prId, status: 'APPROVED' })),
+        body: JSON.stringify({ data: makePR({ id: prId, status: 'APPROVED' }) }),
       });
     });
 
@@ -246,12 +246,12 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
         currentStatus = currentStatus === 'DRAFT' ? 'SUBMITTED' : 'APPROVED';
         return route.fulfill({
           status: 200, contentType: 'application/json', headers: CORS,
-          body: JSON.stringify(makePO({ id: poId, status: currentStatus })),
+          body: JSON.stringify({ data: makePO({ id: poId, status: currentStatus }) }),
         });
       }
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makePO({ id: poId, status: currentStatus })),
+        body: JSON.stringify({ data: makePO({ id: poId, status: currentStatus }) }),
       });
     });
 
@@ -286,12 +286,12 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
         callCount = Math.min(callCount + 1, statuses.length - 1);
         return route.fulfill({
           status: 200, contentType: 'application/json', headers: CORS,
-          body: JSON.stringify(makeGRN({ id: grnId, status: statuses[callCount] })),
+          body: JSON.stringify({ data: makeGRN({ id: grnId, status: statuses[callCount] }) }),
         });
       }
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makeGRN({ id: grnId, status: statuses[callCount] })),
+        body: JSON.stringify({ data: makeGRN({ id: grnId, status: statuses[callCount] }) }),
       });
     });
 
@@ -333,7 +333,7 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
       if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makeGRN({ id: grnId, status: 'RECEIVED' })),
+        body: JSON.stringify({ data: makeGRN({ id: grnId, status: 'RECEIVED' }) }),
       });
     });
 
@@ -350,6 +350,7 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
     const prId = crypto.randomUUID();
 
     await injectAuthSession(page, DEFAULT_ADMIN_SESSION);
+    await page.goto('/en/login');
 
     // Simulate the PR submit endpoint returning 409 (version mismatch)
     await page.route(`**/api/v1/procurement/purchase-requests/${prId}/submit`, (route) => {
@@ -366,21 +367,20 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
     });
 
     // Direct API call with stale version
-    const response = await page.request.post(
-      `http://localhost:3001/api/v1/procurement/purchase-requests/${prId}/submit`,
-      {
+    const response = await page.evaluate(async (url) => {
+      const res = await fetch(url, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`,
           'Content-Type': 'application/json',
         },
-        data: { version: 1 }, // stale version
-        failOnStatusCode: false,
-      },
-    );
+        body: JSON.stringify({ version: 1 }), // stale version
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, body: data };
+    }, `/api/v1/procurement/purchase-requests/${prId}/submit`);
 
-    expect(response.status()).toBe(409);
-    const body = await response.json() as { message: string };
-    expect(body.message).toContain('version mismatch');
+    expect(response.status).toBe(409);
+    expect(response.body.message).toContain('version mismatch');
   });
 
   // ─── 9. Negative: Idempotency — duplicate PR submission ───────────────
@@ -391,6 +391,7 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
     let callCount = 0;
 
     await injectAuthSession(page, DEFAULT_ADMIN_SESSION);
+    await page.goto('/en/login');
 
     // Mock: both calls return the same PR (idempotency)
     await page.route('**/api/v1/procurement/purchase-requests', (route) => {
@@ -401,7 +402,7 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
           status: callCount === 1 ? 201 : 200, // First = 201 Created, Second = 200 (idempotent)
           contentType: 'application/json',
           headers: CORS,
-          body: JSON.stringify(makePR({ id: prId, documentNumber: 'PR-2026-IDEMPOTENT' })),
+          body: JSON.stringify({ data: makePR({ id: prId, documentNumber: 'PR-2026-IDEMPOTENT' }) }),
         });
       }
       return route.fulfill({ status: 200, contentType: 'application/json', headers: CORS, body: '{}' });
@@ -414,32 +415,43 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
     };
 
     // First call
-    const res1 = await page.request.post('http://localhost:3001/api/v1/procurement/purchase-requests', {
-      headers: {
-        Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`,
-        'Content-Type': 'application/json',
-        'x-idempotency-key': idempotencyKey,
-      },
-      data: requestBody,
-      failOnStatusCode: false,
+    const res1 = await page.evaluate(async ({ url, body, key }) => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-idempotency-key': key,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, body: data };
+    }, {
+      url: '/api/v1/procurement/purchase-requests',
+      body: requestBody,
+      key: idempotencyKey,
     });
 
     // Second call with same key
-    const res2 = await page.request.post('http://localhost:3001/api/v1/procurement/purchase-requests', {
-      headers: {
-        Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`,
-        'Content-Type': 'application/json',
-        'x-idempotency-key': idempotencyKey,
-      },
-      data: requestBody,
-      failOnStatusCode: false,
+    const res2 = await page.evaluate(async ({ url, body, key }) => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-idempotency-key': key,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, body: data };
+    }, {
+      url: '/api/v1/procurement/purchase-requests',
+      body: requestBody,
+      key: idempotencyKey,
     });
 
-    const body1 = await res1.json() as { id: string };
-    const body2 = await res2.json() as { id: string };
-
     // Both responses must return the same document ID
-    expect(body1.id).toBe(body2.id);
+    expect(res1.body.data.id).toBe(res2.body.data.id);
   });
 
   // ─── 10. Negative: GRN Void only allowed for ADMIN/INV_MGR ───────────
@@ -453,7 +465,7 @@ test.describe('Procurement — Full Procure-to-Pay Workflow', () => {
       if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makeGRN({ id: grnId, status: 'POSTED' })),
+        body: JSON.stringify({ data: makeGRN({ id: grnId, status: 'POSTED' }) }),
       });
     });
 

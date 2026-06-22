@@ -138,7 +138,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'adjustment', href: '/adjustments', resource: 'adjustment', labelKey: 'adjustment', icon: Sliders, warehouseOnly: true },
         { key: 'kitchen_requests', href: '/kitchen-requests', resource: 'kitchen_requests', labelKey: 'kitchen_requests', icon: Store },
         { key: 'scan_mode', href: '/inventory/scan-mode', resource: 'inventory', labelKey: 'scan_mode', icon: Barcode, warehouseOnly: true },
-        { key: 'expired_override', href: '/inventory/expired-override', resource: 'inventory', labelKey: 'expired_override', icon: ShieldCheck, warehouseOnly: true },
+        // { key: 'expired_override', href: '/inventory/expired-override', resource: 'inventory', labelKey: 'expired_override', icon: ShieldCheck, warehouseOnly: true },
         // yield_management hidden for MVR launch — not in RFC scope
         { key: 'stocktake_archive', href: '/stocktake/archive', resource: 'stocktake', labelKey: 'stocktake_archive', icon: History, warehouseOnly: true },
         { key: 'transfer_hub', href: '/transfers/hub', resource: 'transfer', labelKey: 'transfer_hub', icon: LayoutDashboard, warehouseOnly: true },

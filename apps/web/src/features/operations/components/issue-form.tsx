@@ -482,27 +482,22 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     isReadOnly={isDocLocked}
                     onRemoveLine={removeLine}
                     dense={true}
+                    hideUomColumn={true}
                     extraColumns={[
                       {
                         header: t('qty'),
                         cell: (line) => (
-                          <div className="flex items-center gap-2">
-                            <Input
+                          <div className="flex items-center justify-center w-full">
+                            <input
                               type="number"
                               dir="ltr"
-                              className="w-20 h-8 bg-card border border-border shadow-sm border-none rounded-sm text-center font-mono text-xs shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 disabled:opacity-50 transition-all"
-                              value={line.qty as number}
                               disabled={effectiveIsLocked}
+                              className="w-16 md:w-20 h-7 rounded-sm border border-gray-600 bg-transparent text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-white focus:ring-1 focus:ring-primary focus:border-primary shadow-none"
+                              value={line.qty as number}
                               onChange={e => {
                                 const val = Number(e.target.value);
                                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
                               }}
-                            />
-                            <RelationalName
-                              name={line.item.primaryUom?.code}
-                              rawId={line.uomId}
-                              fallback="N/A"
-                              className="text-label-xs font-semibold uppercase text-primary/20"
                             />
                           </div>
                         )
@@ -535,14 +530,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`h-10 px-5 text-label-xs font-semibold uppercase rounded-xl transition-all ${isFullyAllocated ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}
+                              className={`h-7 px-2.5 text-[10px] font-bold uppercase rounded-sm border transition-all ${isFullyAllocated ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20'}`}
                               onClick={() => handleLotClick(line)}
                             >
                               {lineAllocations.length > 0
-                                ? <div className="flex items-center gap-2" dir="ltr">
+                                ? <div className="flex items-center gap-1.5" dir="ltr">
                                   <span>{totalAllocated}</span>
                                   <div className="w-1 h-1 rounded-full bg-current/30" />
-                                  <span className="opacity-50">{line.qty}</span>
+                                  <span>{line.qty}</span>
                                 </div>
                                 : t('allocate')}
                             </Button>

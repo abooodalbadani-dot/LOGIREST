@@ -881,6 +881,7 @@
       "all": "All Statuses",
       "approved": "Approved",
       "cancelled": "Cancelled",
+      "disputed": "Disputed",
       "closed": "Closed",
       "completed": "Completed",
       "counting": "Counting",

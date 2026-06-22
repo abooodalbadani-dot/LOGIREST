@@ -563,7 +563,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_supplier')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 rounded-xl uppercase"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                     disabled={isLocked || isWarehouseLocked}
                                  />
                               )}
@@ -586,7 +586,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_currency')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 rounded-xl uppercase"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                     disabled={isLocked || isWarehouseLocked}
                                  />
                               )}
@@ -612,7 +612,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                        router.replace(`/goods-received/new?po_id=${item.id}`);
                                     }}
                                     placeholder={t('select_po') || "Select Purchase Order"}
-                                    triggerClassName="w-full h-12 px-4 rounded-xl uppercase"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                  />
                               ) : (
                                  <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
@@ -632,7 +632,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_warehouse')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 rounded-xl uppercase"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                     disabled={isLocked || isWarehouseLocked}
                                  />
                               )}
@@ -649,7 +649,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                               id="notes-area"
                               {...register('notes')}
                               disabled={isLocked || isWarehouseLocked}
-                              className="mt-2 w-full min-h-[100px] placeholder:text-muted-foreground/70 rounded-xl p-4 resize-none"
+                              className="mt-2 w-full min-h-[100px] bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white placeholder:text-gray-400 dark:placeholder:text-muted-foreground/70 rounded-xl p-4 resize-none"
                               placeholder={tc('notes_placeholder')}
                            />
                         </div>
@@ -706,6 +706,12 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                               }))}
                               isReadOnly={isLocked || isWarehouseLocked}
                               dense={true}
+                              layoutMode="table"
+                              hideLotColumns={true}
+                              hideUomColumn={true}
+                              borderless={true}
+                              noCollapse={true}
+                              enableVirtualization={false}
                               rowClassName={(line) => expiredLineIds.includes(line.id) ? 'border-l-2 border-l-destructive bg-destructive/5' : ''}
                               onRemoveLine={(id) => {
                                  const idx = fields.findIndex(f => f.id === id);
@@ -723,12 +729,12 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                              dir="ltr"
                                              disabled={isLocked || isWarehouseLocked}
                                              className={cn(
-                                                "w-20 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 h-7",
+                                                "w-16 md:w-20 h-7 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50",
                                                 hasError
                                                    ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
                                                    : isOver
                                                       ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
-                                                      : "bg-background/50 border border-brand-gold/40 hover:border-brand-gold/70 text-foreground focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-muted-foreground"
+                                                      : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-background/50 dark:border-brand-gold/40 dark:text-white focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
                                              )}
                                              {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
                                           />
@@ -737,16 +743,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                  },
                                  {
                                     header: tc('table_headers.lot_allocation'),
+                                    isAction: true,
                                     cell: (field: LineItem) => {
                                        const hasLot = !!field.lot;
                                        return (
                                           <button
                                              type="button"
                                              className={cn(
-                                                'inline-flex items-center gap-1.5 text-label-xs font-semibold uppercase transition-all rounded-lg px-2.5 py-1',
+                                                'inline-flex items-center justify-center transition-all text-[10px] font-bold uppercase rounded px-2 md:px-2.5 py-0.5 md:py-1 h-7 border',
                                                 hasLot
-                                                   ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20'
-                                                   : 'text-primary underline underline-offset-4 decoration-dotted decoration-primary/40 hover:decoration-primary'
+                                                   ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 w-auto font-mono gap-1.5'
+                                                   : 'border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black w-auto'
                                              )}
                                              onClick={() => handleLotClick(field)}
                                           >
@@ -780,7 +787,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                         onChange={(e) => setOverrideReason(e.target.value)}
                         disabled={isLocked || isWarehouseLocked}
                         placeholder={t('override_reason')}
-                        className="w-full rounded-xl p-4 text-body-md font-medium min-h-[80px] resize-none placeholder:text-muted-foreground"
+                        className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl p-4 text-body-md font-medium min-h-[80px] resize-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
                      />
                   </div>
                )}

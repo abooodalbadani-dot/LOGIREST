@@ -113,11 +113,12 @@ test.describe('RBAC Penetration Tests', () => {
     await expect(adminLink).not.toBeVisible({ timeout: 3000 });
 
     // Attempting direct navigation should redirect or show 403
-    const response = await page.request.get('/api/v1/admin/users', {
-      headers: { Authorization: `Bearer ${DEFAULT_SCOPED_SESSION.token}` },
+    const status = await page.evaluate(async () => {
+      const res = await fetch('/api/v1/admin/users');
+      return res.status;
     });
     // The mock returns 403 for admin endpoints
-    expect(response.status()).toBe(403);
+    expect(status).toBe(403);
   });
 
   // ─── PT-02: Cross-Warehouse data isolation ─────────────────────────────
@@ -203,6 +204,7 @@ test.describe('RBAC Penetration Tests', () => {
     const adjId = crypto.randomUUID();
 
     await injectAuthSession(page, DEFAULT_ADMIN_SESSION); // ADMIN — has the role, but state machine blocks
+    await page.goto('/en/login');
 
     // Mock the /post endpoint to return 400 (WorkflowStateGuard rejects)
     await mockAdjustmentPost400(page, adjId);
@@ -231,27 +233,27 @@ test.describe('RBAC Penetration Tests', () => {
     });
 
     // Make a direct API request to simulate the attack
-    const response = await page.request.post(
-      `http://localhost:3001/api/v1/operations/adjustments/${adjId}/post`,
-      {
+    const response = await page.evaluate(async (url) => {
+      const res = await fetch(url, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`,
           'Content-Type': 'application/json',
           'x-warehouse-id': 'warehouse-a',
         },
-        data: { version: 1 },
-        failOnStatusCode: false,
-      },
-    );
+        body: JSON.stringify({ version: 1 }),
+      });
+      return { status: res.status };
+    }, `/api/v1/operations/adjustments/${adjId}/post`);
 
     // The mocked response (or real backend) must return 400
-    expect([400, 403]).toContain(response.status());
+    expect([400, 403]).toContain(response.status);
   });
 
   // ─── PT-05: Frozen item raises 400 on issue creation ──────────────────
 
   test('PT-05 | Frozen item: Issue creation blocked with 400', async ({ page }) => {
     await injectAuthSession(page, DEFAULT_ADMIN_SESSION);
+    await page.goto('/en/login');
 
     const frozenItemId = `frozen-item-${Date.now()}`;
 
@@ -274,28 +276,32 @@ test.describe('RBAC Penetration Tests', () => {
       return route.fulfill({ status: 200, contentType: 'application/json', headers: CORS, body: '{}' });
     });
 
+    const idempotencyKey = crypto.randomUUID();
     // Direct API call simulating a frozen-item attack
-    const response = await page.request.post(
-      'http://localhost:3001/api/v1/operations/issues',
-      {
+    const response = await page.evaluate(async ({ url, body, key }) => {
+      const res = await fetch(url, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`,
           'Content-Type': 'application/json',
           'x-warehouse-id': 'warehouse-a',
-          'x-idempotency-key': crypto.randomUUID(),
+          'x-idempotency-key': key,
         },
-        data: {
-          warehouseId: 'warehouse-a',
-          departmentId: 'dept-1',
-          lines: [{ itemId: frozenItemId, quantity: 5 }],
-        },
-        failOnStatusCode: false,
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, body: data };
+    }, {
+      url: '/api/v1/operations/issues',
+      body: {
+        warehouseId: 'warehouse-a',
+        departmentId: 'dept-1',
+        lines: [{ itemId: frozenItemId, quantity: 5 }],
       },
-    );
+      key: idempotencyKey
+    });
 
-    expect(response.status()).toBe(400);
-    const body = await response.json() as { message: string };
-    expect(body.message).toContain('frozen');
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain('frozen');
   });
 
   // ─── UI RBAC: PROC_OFFICER approve button absent on PO ────────────────
@@ -315,7 +321,7 @@ test.describe('RBAC Penetration Tests', () => {
         status: 200,
         contentType: 'application/json',
         headers: CORS,
-        body: JSON.stringify(makePO({ id: poId, status: 'SUBMITTED' })),
+        body: JSON.stringify({ data: makePO({ id: poId, status: 'SUBMITTED' }) }),
       });
     });
 
@@ -341,7 +347,7 @@ test.describe('RBAC Penetration Tests', () => {
         status: 200,
         contentType: 'application/json',
         headers: CORS,
-        body: JSON.stringify(makeGRN({ id: grnId, status: 'RECEIVED' })),
+        body: JSON.stringify({ data: makeGRN({ id: grnId, status: 'RECEIVED' }) }),
       });
     });
 

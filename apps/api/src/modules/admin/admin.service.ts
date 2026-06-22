@@ -42,7 +42,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bcrypt: BcryptService,
-  ) { }
+  ) {}
 
   private getPermissionsForRole(role: UserRole): Permission[] {
     const modules = [
@@ -384,18 +384,18 @@ export class AdminService {
       smtpEncryption: dto.smtpEncryption || 'none',
       printSettings: dto.printSettings
         ? {
-          defaultPaperSize: dto.printSettings.defaultPaperSize || 'A4',
-          thermalShowLogo: dto.printSettings.thermalShowLogo ?? true,
-          autoPrintOnFulfill: dto.printSettings.autoPrintOnFulfill ?? false,
-          showSystemName: dto.printSettings.showSystemName ?? true,
-        }
+            defaultPaperSize: dto.printSettings.defaultPaperSize || 'A4',
+            thermalShowLogo: dto.printSettings.thermalShowLogo ?? true,
+            autoPrintOnFulfill: dto.printSettings.autoPrintOnFulfill ?? false,
+            showSystemName: dto.printSettings.showSystemName ?? true,
+          }
         : (savedConfig.printSettings ??
           savedConfig.print_settings ?? {
-          defaultPaperSize: 'A4',
-          thermalShowLogo: true,
-          autoPrintOnFulfill: false,
-          showSystemName: true,
-        }),
+            defaultPaperSize: 'A4',
+            thermalShowLogo: true,
+            autoPrintOnFulfill: false,
+            showSystemName: true,
+          }),
       updatedBy: userId,
     };
 
@@ -619,15 +619,15 @@ export class AdminService {
           departmentId: null,
           warehouse: s.warehouse
             ? {
-              id: s.warehouse.id,
-              name: s.warehouse.name,
-              branch: s.warehouse.branch
-                ? {
-                  id: s.warehouse.branch.id,
-                  name: s.warehouse.branch.name,
-                }
-                : null,
-            }
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+                branch: s.warehouse.branch
+                  ? {
+                      id: s.warehouse.branch.id,
+                      name: s.warehouse.branch.name,
+                    }
+                  : null,
+              }
             : null,
           department: null,
         })),
@@ -638,15 +638,15 @@ export class AdminService {
           warehouse: null,
           branch: s.department?.branch
             ? {
-              id: s.department.branch.id,
-              name: s.department.branch.name,
-            }
+                id: s.department.branch.id,
+                name: s.department.branch.name,
+              }
             : null,
           department: s.department
             ? {
-              id: s.department.id,
-              name: s.department.name,
-            }
+                id: s.department.id,
+                name: s.department.name,
+              }
             : null,
         })),
         ...(user.branchScopes || []).map((s) => ({
@@ -657,9 +657,9 @@ export class AdminService {
           department: null,
           branch: s.branch
             ? {
-              id: s.branch.id,
-              name: s.branch.name,
-            }
+                id: s.branch.id,
+                name: s.branch.name,
+              }
             : null,
         })),
       ],
@@ -725,15 +725,15 @@ export class AdminService {
           departmentId: null,
           warehouse: s.warehouse
             ? {
-              id: s.warehouse.id,
-              name: s.warehouse.name,
-              branch: s.warehouse.branch
-                ? {
-                  id: s.warehouse.branch.id,
-                  name: s.warehouse.branch.name,
-                }
-                : null,
-            }
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+                branch: s.warehouse.branch
+                  ? {
+                      id: s.warehouse.branch.id,
+                      name: s.warehouse.branch.name,
+                    }
+                  : null,
+              }
             : null,
           department: null,
         })),
@@ -744,15 +744,15 @@ export class AdminService {
           warehouse: null,
           branch: s.department?.branch
             ? {
-              id: s.department.branch.id,
-              name: s.department.branch.name,
-            }
+                id: s.department.branch.id,
+                name: s.department.branch.name,
+              }
             : null,
           department: s.department
             ? {
-              id: s.department.id,
-              name: s.department.name,
-            }
+                id: s.department.id,
+                name: s.department.name,
+              }
             : null,
         })),
         ...(user.branchScopes || []).map((s) => ({
@@ -763,9 +763,9 @@ export class AdminService {
           department: null,
           branch: s.branch
             ? {
-              id: s.branch.id,
-              name: s.branch.name,
-            }
+                id: s.branch.id,
+                name: s.branch.name,
+              }
             : null,
         })),
       ],

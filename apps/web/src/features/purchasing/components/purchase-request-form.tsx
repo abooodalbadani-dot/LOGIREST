@@ -65,7 +65,8 @@ const lineItemSchema = z.object({
   name_ar: z.string().optional(),
   name_en: z.string().optional(),
   primary_uom: z.object({
-   code: z.string()
+   code: z.string(),
+   name: z.string().optional()
   }),
   min_stock_level: z.number().optional(),
   reorder_point: z.number().optional(),
@@ -140,24 +141,25 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
    department_id: initialData.departmentId || '',
    expected_date: initialData.expectedDate ? initialData.expectedDate.split('T')[0] : '',
    notes: initialData.notes || '',
-   lines: initialData.lines.map(l => ({
-    id: l.id,
-    item_id: l.item.id,
-    item: {
-     id: l.item.id,
-     code: l.item.code,
-     name: l.item.name || l.item.nameEn || l.item.nameAr || '',
-     name_ar: l.item.nameAr || '',
-     name_en: l.item.nameEn || '',
-     primary_uom: {
-      code: l.item.primaryUom?.code || 'EA'
+    lines: initialData.lines.map(l => ({
+     id: l.id,
+     item_id: l.item.id,
+     item: {
+      id: l.item.id,
+      code: l.item.code,
+      name: l.item.name || l.item.nameEn || l.item.nameAr || '',
+      name_ar: l.item.nameAr || '',
+      name_en: l.item.nameEn || '',
+      primary_uom: {
+       code: l.item.primaryUom?.code || 'EA',
+       name: l.item.primaryUom?.name || l.item.primaryUom?.code || 'EA'
+      },
+      min_stock_level: l.item.minStockLevel,
+      reorder_point: l.item.reorderPoint,
      },
-     min_stock_level: l.item.minStockLevel,
-     reorder_point: l.item.reorderPoint,
-    },
-    req_qty: l.reqQty || 0,
-    uom_id: l.uomId,
-   })),
+     req_qty: l.reqQty || 0,
+     uom_id: l.uomId,
+    })),
   } : {
    department_id: '',
    expected_date: new Date().toISOString().split('T')[0],
@@ -169,10 +171,12 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  const { router } = useUnsavedChangesGuard(form.formState.isDirty);
 
 
- const { fields, append, remove } = useFieldArray({
-  control: form.control,
-  name: 'lines',
- });
+  const { fields, append, remove } = useFieldArray({
+   control: form.control,
+   name: 'lines',
+  });
+
+  const watchLines = form.watch('lines') || [];
 
  const handleScan = (barcode: string) => {
   const item = itemsData?.data?.find((i: Item) => i.barcode === barcode || i.code === barcode);
@@ -188,20 +192,21 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
    } else {
     append({
      item_id: item.id,
-     item: {
-      id: item.id,
-      code: item.code,
-      name: item.name,
-      name_ar: item.name,
-      name_en: item.name,
-      primary_uom: {
-       code: item.primaryUom?.code || 'EA'
+      item: {
+       id: item.id,
+       code: item.code,
+       name: item.name,
+       name_ar: item.name,
+       name_en: item.name,
+       primary_uom: {
+        code: item.primaryUom?.code || 'EA',
+        name: item.primaryUom?.name || item.primaryUom?.code || 'EA'
+       },
+       min_stock_level: item.minStockLevel,
+       reorder_point: item.reorderPoint,
       },
-      min_stock_level: item.minStockLevel,
-      reorder_point: item.reorderPoint,
-     },
-     req_qty: 1,
-     uom_id: item.primaryUom?.id || 'EA',
+      req_qty: 1,
+      uom_id: item.primaryUom?.id || 'EA',
     });
     playSound('success');
     toast.success(tc('item_added', { name: item.name }));
@@ -535,7 +540,26 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
         <div className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden shadow-sm">
          <DocumentLineItemTable
-          lines={fields.map(f => ({ ...f, itemId: f.item_id, reqQty: f.req_qty, uomId: f.uom_id, qty: f.req_qty })) as unknown as LineItem[]}
+          lines={fields.map((f, idx) => {
+           const live = watchLines[idx] || {};
+           const item = live.item || f.item || {};
+           const primaryUom = item.primary_uom;
+           return {
+            ...f,
+            ...live,
+            itemId: live.item_id || f.item_id,
+            reqQty: live.req_qty || f.req_qty,
+            uomId: live.uom_id || f.uom_id,
+            qty: live.req_qty || f.req_qty,
+            item: {
+             ...item,
+             primaryUom: primaryUom ? {
+              code: primaryUom.code,
+              name: primaryUom.name || primaryUom.code
+             } : undefined
+            }
+           };
+          }) as unknown as LineItem[]}
           isReadOnly={isFormDisabled}
           hideLotColumns={true}
           onRemoveLine={(id) => {
@@ -553,7 +577,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               type="number"
               step="0.01"
               disabled={isFormDisabled}
-              className="w-24 bg-card border border-brand-gold/40 hover:border-brand-gold/70 h-10 rounded-xl font-mono font-bold text-center text-body-md focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none"
+              className="w-16 md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-brand-gold/40 dark:text-white hover:border-brand-gold/70 h-7 rounded-sm font-mono font-bold text-center text-xs focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none"
               dir="ltr"
               {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
              />
@@ -575,27 +599,30 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
              if (isFormDisabled) return null; // Already shown in name column
              
              return (
-              <div className="min-w-[200px]">
+              <div className="min-w-[150px] md:min-w-[200px]">
                <SmartCombobox
                 items={comboboxItems}
                 value={form.watch(`lines.${index}.item_id`)}
                 onSelect={(item) => {
                  const matchedItem = itemsData?.data?.find((i: Item) => i.id === item.id);
                  form.setValue(`lines.${index}.item_id`, item.id);
-                 form.setValue(`lines.${index}.item`, {
-                  id: matchedItem?.id || '',
-                  code: matchedItem?.code || '',
-                  name: matchedItem?.name || '',
-                  name_ar: matchedItem?.name || '',
-                  name_en: matchedItem?.name || '',
-                  primary_uom: { code: matchedItem?.primaryUom?.code || 'EA' },
-                  min_stock_level: matchedItem?.minStockLevel,
-                  reorder_point: matchedItem?.reorderPoint,
-                 });
-                 form.setValue(`lines.${index}.uom_id`, matchedItem?.primaryUom?.id || 'EA');
+                  form.setValue(`lines.${index}.item`, {
+                   id: matchedItem?.id || '',
+                   code: matchedItem?.code || '',
+                   name: matchedItem?.name || '',
+                   name_ar: matchedItem?.name || '',
+                   name_en: matchedItem?.name || '',
+                   primary_uom: { 
+                    code: matchedItem?.primaryUom?.code || 'EA',
+                    name: matchedItem?.primaryUom?.name || matchedItem?.primaryUom?.code || 'EA'
+                   },
+                   min_stock_level: matchedItem?.minStockLevel,
+                   reorder_point: matchedItem?.reorderPoint,
+                  });
+                  form.setValue(`lines.${index}.uom_id`, matchedItem?.primaryUom?.id || 'EA');
                 }}
                 placeholder={tc('select_item')}
-                className="h-10 bg-card rounded-xl text-label-xs font-semibold uppercase"
+                className="h-7 bg-card rounded-sm text-xs font-semibold uppercase"
                 disabled={isFormDisabled}
                />
               </div>

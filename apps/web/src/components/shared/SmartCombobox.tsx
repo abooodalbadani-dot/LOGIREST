@@ -275,6 +275,7 @@ export function SmartCombobox<T extends ComboboxItem>({
  const defaultFont = size === 'sm' ? 'font-semibold' : 'font-bold';
  const defaultRounded = size === 'sm' ? 'rounded-lg' : 'rounded-xl';
 
+ const isBorderNone = styleTokens.includes('border-none') || styleTokens.includes('border-transparent');
  const finalTriggerClasses = cn(
   "flex-1 w-full min-w-[200px] justify-between text-start flex items-center transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed",
   !hasHeight && defaultHeight,
@@ -284,8 +285,8 @@ export function SmartCombobox<T extends ComboboxItem>({
   !hasPadding && defaultPadding,
   !hasText && defaultText,
   !hasFont && defaultFont,
-  "transition-colors duration-200 focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold",
-  isOpen && "ring-1 ring-brand-gold/50 border-brand-gold bg-background/50",
+  !isBorderNone && "transition-colors duration-200 focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold",
+  (!isBorderNone && isOpen) && "ring-1 ring-brand-gold/50 border-brand-gold bg-background/50",
   error && "ring-1 ring-red-500/50 border-red-500",
   styleClasses,
   triggerClassName

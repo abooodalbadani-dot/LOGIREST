@@ -590,7 +590,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
          dir="ltr"
          disabled={isWriteBlocked}
          aria-label={t('fulfilling') + " " + item.itemName}
-         className="bg-surface-container-highest/50 border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30 w-full"
+         className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/50 dark:border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all dark:text-white focus:ring-1 focus:ring-operational-cyan/30 w-full"
          value={fulfillmentData.find(f => f.itemId === item.itemId)?.fulfilledQty || 0}
          onChange={(e) => {
           const val = Number(e.target.value);

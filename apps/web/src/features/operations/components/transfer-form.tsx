@@ -183,7 +183,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
            header: t('shipped_qty'),
            cell: (line: TransferLine) => (
             <div className="flex justify-center">
-             <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-xl">
+             <span dir="ltr" className="font-mono text-xs font-bold bg-surface-container-highest/50 border border-border/30 px-2 py-0.5 rounded-sm">
               {line.shippedQty ?? line.qty}
              </span>
             </div>
@@ -193,7 +193,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
            header: t('received_qty'),
            cell: (line: TransferLine) => (
             <div className="flex justify-center">
-             <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-xl ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
+             <span dir="ltr" className={`font-mono text-xs font-bold px-2 py-0.5 rounded-sm border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-surface-container-highest/50 text-muted-foreground/40 border-border/30'}`}>
               {line.receivedQty ?? '—'}
              </span>
             </div>

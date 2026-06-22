@@ -182,24 +182,6 @@ export default function ScannerClient() {
      )}
     </div>
 
-    {/* System Logs / Helper */}
-    <div className="bg-card border border-border shadow-sm/30 p-6 rounded-[2rem] border border-surface-variant/10 space-y-4">
-     <div className="flex items-center gap-3">
-      <div className="w-1.5 h-6 bg-operational-cyan rounded-full" />
-      <h3 className="text-label-sm font-semibold uppercase">{t('scanner.protocol_version')}</h3>
-     </div>
-     <div className="grid grid-cols-2 gap-4">
-      <div className="p-3 bg-card border border-border shadow-sm/50 rounded-xl border border-surface-variant/10">
-       <p className="text-label-xs font-bold text-muted-foreground/80 mb-1">{t('scanner.battery_level')}</p>
-       <p className="text-body-md font-semibold">94%</p>
-      </div>
-      <div className="p-3 bg-card border border-border shadow-sm/50 rounded-xl border border-surface-variant/10">
-       <p className="text-label-xs font-bold text-muted-foreground/80 mb-1">{t('scanner.ai_confidence')}</p>
-       <p className="text-body-md font-semibold text-operational-cyan">99.8%</p>
-      </div>
-     </div>
-    </div>
-
     {/* Exit Button */}
     <div className="flex justify-center">
      <Button 

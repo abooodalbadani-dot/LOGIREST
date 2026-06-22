@@ -292,10 +292,9 @@ export function TransferNewClient() {
     )}
    </div>
 
-   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div className="lg:col-span-1 space-y-8">
-     <div className="bg-card border border-border shadow-sm/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl">
-      <div className={`absolute top-0 inset-x-0 h-1 rounded-t-[2.5rem] ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
+    <div className="flex flex-col lg:flex-row gap-8">
+     <div className="w-full lg:w-[320px] shrink-0 space-y-8">
+      <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100">
       
       <div className="flex items-center gap-3 mb-6">
        <Warehouse className="w-4 h-4 text-foreground" />
@@ -323,7 +322,7 @@ export function TransferNewClient() {
          }}
          getPrimaryLabel={(item) => item.name}
          placeholder={t('select_warehouse') || 'Select warehouse...'}
-         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
         />
        </div>
 
@@ -344,7 +343,7 @@ export function TransferNewClient() {
          }}
          getPrimaryLabel={(item) => item.name}
          placeholder={t('select_warehouse') || 'Select warehouse...'}
-         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
         />
         {fromWarehouseId && toWarehouseId && fromWarehouseId === toWarehouseId && (
          <p className="text-label-xxs font-bold text-status-error uppercase px-1 mt-1">
@@ -367,10 +366,9 @@ export function TransferNewClient() {
       </div>
      </div>
     </div>
-
-    <div className="lg:col-span-2 space-y-6">
-     <div className="bg-card border border-border shadow-sm/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl">
-      <div className={`absolute top-0 inset-x-0 h-1 rounded-t-[2.5rem] ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-emerald-500/50 via-emerald-500/20 to-transparent`} />
+ 
+    <div className="flex-1 min-w-0 space-y-6">
+     <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100">
       
       <div className="flex items-center justify-between mb-8">
        <div className="flex items-center gap-3">
@@ -422,7 +420,7 @@ export function TransferNewClient() {
          getPrimaryLabel={(item) => item.name}
          placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
          disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
-         triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-xl text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
+         triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-md text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
         />
        </div>
       </div>
@@ -434,6 +432,8 @@ export function TransferNewClient() {
         isReadOnly={false}
         onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
         hideLotColumns={true}
+        hideUomColumn={true}
+        noCollapse={false}
         dense={true}
         headers={{
          code: tCommon('table_headers.code'),
@@ -441,15 +441,24 @@ export function TransferNewClient() {
          qty: tCommon('table_headers.qty'),
          uom: tCommon('table_headers.uom'),
         }}
+        renderItemDescription={(line) => {
+         const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
+         const availableQty = balance ? balance.qtyAvailable : 0;
+         const isExceeded = balance ? line.qty > availableQty : false;
+         return (
+          <span className={cn("text-[10px] font-semibold block mt-1", isExceeded ? "text-status-error font-bold animate-pulse" : "text-muted-foreground/60")}>
+           {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
+          </span>
+         );
+        }}
         renderQty={(line) => {
          const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
          const availableQty = balance ? balance.qtyAvailable : 0;
          const isExceeded = balance ? line.qty > availableQty : false;
          return (
-          <div className="w-full min-w-0 items-center flex-1 gap-6 flex-col flex gap-1">
-           <div className="flex justify-center">
+          <div className="flex items-center justify-center w-full">
             <input
-              type="number"
+             type="number"
              min="0.001"
              step="0.001"
              value={line.qty}
@@ -458,14 +467,10 @@ export function TransferNewClient() {
               setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
              }}
              className={cn(
-              "w-24 bg-surface-container-highest/60 border rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50",
-              isExceeded ? "border-status-error focus:ring-status-error/30" : "border-white/5"
+              "h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center",
+              isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
              )}
             />
-           </div>
-           <span className={cn("text-label-xxs font-semibold", isExceeded ? "text-status-error font-bold animate-pulse" : "text-muted-foreground")}>
-            {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
-           </span>
           </div>
          );
         }}

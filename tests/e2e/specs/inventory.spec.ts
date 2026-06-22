@@ -86,7 +86,7 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
     const session = makeStocktake({ id: sessionId, status: 'DRAFT' });
 
     await injectAuthSession(page, INV_MGR_SESSION);
-    await mockStocktakeById(page, sessionId, ['DRAFT', 'IN_PROGRESS']);
+    await mockStocktakeById(page, sessionId, ['DRAFT', 'STARTED']);
 
     const stPage = new StocktakePage(page);
     await stPage.gotoDetail(sessionId);
@@ -97,14 +97,14 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
     // Trigger start action
     await stPage.clickStart();
 
-    // After start, navigate back and verify IN_PROGRESS
+    // After start, navigate back and verify STARTED
     await stPage.gotoDetail(sessionId);
-    await stPage.expectStatus('IN_PROGRESS');
+    await stPage.expectStatus('STARTED');
   });
 
-  // ─── ST-02: Count form is accessible in IN_PROGRESS ──────────────────
+  // ─── ST-02: Count form is accessible in STARTED ──────────────────────
 
-  test('ST-02 | WH_KEEPER can access the count form in IN_PROGRESS session', async ({ page }) => {
+  test('ST-02 | WH_KEEPER can access the count form in STARTED session', async ({ page }) => {
     const sessionId = crypto.randomUUID();
 
     await injectAuthSession(page, WH_KEEPER_A_SESSION);
@@ -113,7 +113,7 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
       if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makeStocktake({ id: sessionId, status: 'IN_PROGRESS' })),
+        body: JSON.stringify(makeStocktake({ id: sessionId, status: 'STARTED' })),
       });
     });
 
@@ -131,7 +131,7 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
 
   test('ST-03 | INV_MGR: Full stocktake lifecycle DRAFT → POSTED', async ({ page }) => {
     const sessionId = crypto.randomUUID();
-    const statusSequence = ['DRAFT', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'POSTED'];
+    const statusSequence = ['DRAFT', 'STARTED', 'REVIEW', 'APPROVED', 'POSTED'];
     let callIdx = 0;
 
     await injectAuthSession(page, DEFAULT_ADMIN_SESSION);
@@ -153,27 +153,43 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
 
     const stPage = new StocktakePage(page);
 
-    // Step 1: DRAFT → IN_PROGRESS (start)
+    // Step 1: DRAFT → STARTED (start)
     await stPage.gotoDetail(sessionId);
     await stPage.expectStatus('DRAFT');
     await stPage.clickStart();
 
-    // Step 2: IN_PROGRESS → SUBMITTED (submit)
-    await stPage.gotoDetail(sessionId);
-    await stPage.expectStatus('IN_PROGRESS');
-    await stPage.clickSubmit();
+    // Step 2: STARTED → REVIEW (submit counting sheet)
+    await stPage.gotoCount(sessionId);
+    const submitBtn = page.getByRole('button', { name: /submit/i }).first();
+    await expect(submitBtn).toBeVisible({ timeout: 5000 });
+    await submitBtn.click();
 
-    // Step 3: SUBMITTED → APPROVED (approve)
+    // Step 3: REVIEW → APPROVED (approve variance)
     await stPage.gotoDetail(sessionId);
-    await stPage.expectStatus('SUBMITTED');
-    await stPage.expectApproveButtonVisible();
-    await stPage.clickApprove();
+    await stPage.expectStatus('REVIEW');
+    
+    // In REVIEW state, click "Review Approval" to approve the variance
+    const reviewApprovalBtn = page.getByRole('button', { name: /approve/i }).first();
+    await expect(reviewApprovalBtn).toBeVisible({ timeout: 5000 });
+    await reviewApprovalBtn.click();
 
     // Step 4: APPROVED → POSTED (post)
     await stPage.gotoDetail(sessionId);
     await stPage.expectStatus('APPROVED');
-    await stPage.expectPostButtonVisible();
-    await stPage.clickPost();
+    
+    // The "Proceed to Posting" button is visible
+    const proceedBtn = page.getByRole('button', { name: /proceed/i }).first();
+    await expect(proceedBtn).toBeVisible({ timeout: 5000 });
+    await proceedBtn.click();
+
+    // We are on the post confirmation page. Type confirm keyword and click Post
+    const confirmInput = page.locator('input[placeholder*="POST"]');
+    await expect(confirmInput).toBeVisible({ timeout: 5000 });
+    await confirmInput.fill('POST');
+
+    const finalPostBtn = page.getByRole('button', { name: /confirm/i }).first();
+    await expect(finalPostBtn).toBeVisible({ timeout: 5000 });
+    await finalPostBtn.click();
 
     // Final: POSTED
     await stPage.gotoDetail(sessionId);
@@ -182,7 +198,7 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
 
   // ─── ST-04: WH_KEEPER cannot approve or post ──────────────────────────
 
-  test('ST-04 | WH_KEEPER: Approve and Post buttons absent on SUBMITTED session', async ({
+  test('ST-04 | WH_KEEPER: Approve and Post buttons absent on REVIEW session', async ({
     page,
   }) => {
     const sessionId = crypto.randomUUID();
@@ -193,7 +209,7 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
       if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makeStocktake({ id: sessionId, status: 'SUBMITTED' })),
+        body: JSON.stringify(makeStocktake({ id: sessionId, status: 'REVIEW' })),
       });
     });
 
@@ -215,7 +231,7 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
       if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
       return route.fulfill({
         status: 200, contentType: 'application/json', headers: CORS,
-        body: JSON.stringify(makeStocktake({ id: sessionId, status: 'SUBMITTED' })),
+        body: JSON.stringify(makeStocktake({ id: sessionId, status: 'REVIEW' })),
       });
     });
 
@@ -230,7 +246,7 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
     await stPage.expectRecountButtonNotPresent();
   });
 
-  // ─── ST-06: Stocktake variance page accessible in SUBMITTED state ──────
+  // ─── ST-06: Stocktake variance page accessible in REVIEW state ──────
 
   test('ST-06 | INV_MGR: Variance review page renders with item rows', async ({ page }) => {
     const sessionId = crypto.randomUUID();
@@ -244,16 +260,18 @@ test.describe('Inventory — Stocktake Lifecycle', () => {
         body: JSON.stringify(
           makeStocktake({
             id: sessionId,
-            status: 'SUBMITTED',
+            status: 'REVIEW',
             items: [
               {
                 id: crypto.randomUUID(),
                 itemId: 'item-1',
-                sku: 'SKU-001',
+                barcode: 'SKU-001',
                 itemName: 'Test Tomato',
-                systemQty: 100,
+                uom: 'PCS',
+                snapshotQty: 100,
                 countedQty: 95,
                 variance: -5,
+                unitCost: 10,
               },
             ],
           }),
@@ -552,15 +570,14 @@ test.describe('Inventory — Reports & Exports', () => {
       });
     });
 
-    const response = await page.request.get(
-      'http://localhost:3001/api/v1/reports/wac-history?itemId=item-1',
-      {
-        headers: { Authorization: `Bearer ${WH_KEEPER_A_SESSION.token}` },
-        failOnStatusCode: false,
-      },
-    );
+    await page.goto('/en/login');
 
-    expect(response.status()).toBe(403);
+    const response = await page.evaluate(async () => {
+      const res = await fetch('/api/v1/reports/wac-history?itemId=item-1');
+      return { status: res.status };
+    });
+
+    expect(response.status).toBe(403);
   });
 });
 
@@ -587,18 +604,20 @@ test.describe('Inventory — Edge Cases', () => {
       });
     });
 
-    const response = await page.request.post(
-      `http://localhost:3001/api/v1/warehouses/${warehouseId}/archive`,
-      {
-        headers: { Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`, 'Content-Type': 'application/json' },
-        failOnStatusCode: false,
-      },
-    );
+    await page.goto('/en/login');
 
-    expect(response.status()).toBe(400);
-    const body = await response.json() as { message: string };
-    expect(body.message).toContain('Cannot archive warehouse');
-    expect(body.message).toContain('active inventory');
+    const response = await page.evaluate(async (url) => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, body: data };
+    }, `/api/v1/warehouses/${warehouseId}/archive`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain('Cannot archive warehouse');
+    expect(response.body.message).toContain('active inventory');
   });
 
   test('EDGE-02 | Empty GRN (no lines): create request should fail with 400', async ({ page }) => {
@@ -615,17 +634,25 @@ test.describe('Inventory — Edge Cases', () => {
       return route.fulfill({ status: 200, headers: CORS, body: '{}' });
     });
 
-    const response = await page.request.post('http://localhost:3001/api/v1/procurement/grns', {
-      headers: {
-        Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`,
-        'Content-Type': 'application/json',
-        'x-idempotency-key': crypto.randomUUID(),
-      },
-      data: { poId: 'po-test', warehouseId: 'warehouse-a', lines: [] },
-      failOnStatusCode: false,
+    await page.goto('/en/login');
+
+    const idempotencyKey = crypto.randomUUID();
+    const response = await page.evaluate(async ({ url, key }) => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-idempotency-key': key,
+        },
+        body: JSON.stringify({ poId: 'po-test', warehouseId: 'warehouse-a', lines: [] }),
+      });
+      return { status: res.status };
+    }, {
+      url: '/api/v1/procurement/grns',
+      key: idempotencyKey,
     });
 
-    expect(response.status()).toBe(400);
+    expect(response.status).toBe(400);
   });
 
   test('EDGE-03 | Issue without departmentId: returns 400', async ({ page }) => {
@@ -642,19 +669,28 @@ test.describe('Inventory — Edge Cases', () => {
       return route.fulfill({ status: 200, headers: CORS, body: '{}' });
     });
 
-    const response = await page.request.post('http://localhost:3001/api/v1/operations/issues', {
-      headers: {
-        Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}`,
-        'Content-Type': 'application/json',
-        'x-idempotency-key': crypto.randomUUID(),
-      },
-      data: { warehouseId: 'warehouse-a', lines: [{ itemId: 'item-1', quantity: 5 }] },
-      failOnStatusCode: false,
+    await page.goto('/en/login');
+
+    const idempotencyKey = crypto.randomUUID();
+    const response = await page.evaluate(async ({ url, body, key }) => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-idempotency-key': key,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, body: data };
+    }, {
+      url: '/api/v1/operations/issues',
+      body: { warehouseId: 'warehouse-a', lines: [{ itemId: 'item-1', quantity: 5 }] },
+      key: idempotencyKey,
     });
 
-    expect(response.status()).toBe(400);
-    const body = await response.json() as { message: string };
-    expect(body.message).toContain('Department ID is required');
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain('Department ID is required');
   });
 
   test('EDGE-04 | Supplier deletion with POs blocked: returns 400', async ({ page }) => {
@@ -675,16 +711,17 @@ test.describe('Inventory — Edge Cases', () => {
       return route.fulfill({ status: 200, headers: CORS, body: '{}' });
     });
 
-    const response = await page.request.delete(
-      `http://localhost:3001/api/v1/master-data/suppliers/${supplierId}`,
-      {
-        headers: { Authorization: `Bearer ${DEFAULT_ADMIN_SESSION.token}` },
-        failOnStatusCode: false,
-      },
-    );
+    await page.goto('/en/login');
 
-    expect(response.status()).toBe(400);
-    const body = await response.json() as { message: string };
-    expect(body.message).toContain('Cannot delete supplier');
+    const response = await page.evaluate(async (url) => {
+      const res = await fetch(url, {
+        method: 'DELETE',
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, body: data };
+    }, `/api/v1/master-data/suppliers/${supplierId}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain('Cannot delete supplier');
   });
 });

@@ -8,14 +8,14 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'localhost', '[::1]'],
   output: 'standalone',
 
-  typescript: {
-    // هذه التعليمة تمنع انهيار البناء بسبب الذاكرة أو أخطاء الأنواع
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    // وتلك لتجاوز فحص جودة الكود أثناء البناء لنفس السبب
-    ignoreDuringBuilds: true,
-  },
+  // typescript: {
+  //   // هذه التعليمة تمنع انهيار البناء بسبب الذاكرة أو أخطاء الأنواع
+  //   ignoreBuildErrors: true,
+  // },
+  // eslint: {
+  //   // وتلك لتجاوز فحص جودة الكود أثناء البناء لنفس السبب
+  //   ignoreDuringBuilds: true,
+  // },
 };
 
 export default withNextIntl(nextConfig);

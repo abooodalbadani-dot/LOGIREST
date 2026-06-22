@@ -109,14 +109,14 @@ export function FormFooter({
   <div className={cn("w-full flex items-center justify-end gap-4 px-6 py-4 bg-muted/30 border-t border-border mt-auto", className)}>
    {actions}
    {onCancel && (
-    <Button
-     variant="outline"
+    <button
      type="button"
      onClick={onCancel}
      disabled={saving}
+     className="px-6 py-2 bg-transparent border border-gray-300 text-gray-600 font-bold rounded-md hover:bg-gray-100 hover:text-[#0B1220] transition-colors uppercase text-sm tracking-wider"
     >
-     {cancelLabel ?? 'Cancel'}
-    </Button>
+     {cancelLabel ?? 'CANCEL'}
+    </button>
    )}
    {onSubmit && !isLocked && (
     <Button

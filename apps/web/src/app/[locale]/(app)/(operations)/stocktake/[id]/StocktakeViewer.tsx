@@ -154,7 +154,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         value={manifestSearch}
         onChange={(e) => setManifestSearch(e.target.value)}
         placeholder={t('manifest_search_placeholder')}
-        className="w-full ps-9 pe-3 py-2 rounded-xl bg-card border border-border shadow-sm border border-border/40 text-label-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+        className="w-full ps-9 pe-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-label-sm placeholder:text-gray-400 dark:placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
        />
       </div>
       {manifestSearch && (

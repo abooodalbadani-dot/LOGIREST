@@ -38,19 +38,33 @@ export function makePR(overrides: Record<string, unknown> = {}) {
   return {
     id: crypto.randomUUID(),
     documentNumber: `PR-2026-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+    type: 'PR',
     status: 'DRAFT',
     warehouseId: 'warehouse-a',
-    departmentId: 'dept-1',
+    branchId: 'BR-001',
+    notes: null,
     createdBy: 'E2E Admin',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    postedAt: null,
+    postedBy: null,
     version: 1,
+    requestedByDept: 'dept-1',
+    requiredByDate: new Date().toISOString(),
     lines: [
       {
         id: crypto.randomUUID(),
         itemId: 'item-1',
-        item: { id: 'item-1', code: 'SKU-001', nameAr: 'Test Item', nameEn: 'Test Item' },
+        item: {
+          id: 'item-1',
+          code: 'SKU-001',
+          name: 'Test Item',
+          nameAr: 'Test Item',
+          nameEn: 'Test Item',
+          primaryUom: { id: 'uom-1', code: 'PCS' },
+        },
         qty: 10,
+        reqQty: 10,
         uomId: 'uom-1',
         unitCost: null,
       },
@@ -63,12 +77,20 @@ export function makePO(overrides: Record<string, unknown> = {}) {
   return {
     id: crypto.randomUUID(),
     documentNumber: `PO-2026-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+    type: 'PO',
     status: 'DRAFT',
+    prId: null,
     supplierId: 'supplier-1',
     currencyId: 'currency-sar',
     warehouseId: 'warehouse-a',
+    branchId: 'BR-001',
+    notes: null,
+    createdBy: 'E2E Admin',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    postedAt: null,
+    postedBy: null,
+    expectedDeliveryDate: new Date().toISOString(),
     version: 1,
     lines: [],
     ...overrides,
@@ -79,11 +101,22 @@ export function makeGRN(overrides: Record<string, unknown> = {}) {
   return {
     id: crypto.randomUUID(),
     documentNumber: `GRN-2026-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+    type: 'GRN',
     status: 'DRAFT',
     poId: overrides.poId ?? 'po-1',
+    poNumber: overrides.poNumber ?? 'PO-2026-0001',
+    supplierId: 'supplier-1',
+    currencyId: 'currency-sar',
+    fxRate: 1.0,
+    fxRateCapturedAt: new Date().toISOString(),
     warehouseId: 'warehouse-a',
+    branchId: 'BR-001',
+    notes: null,
+    createdBy: 'E2E Admin',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    postedAt: null,
+    postedBy: null,
     version: 1,
     lines: [],
     ...overrides,
@@ -91,16 +124,24 @@ export function makeGRN(overrides: Record<string, unknown> = {}) {
 }
 
 export function makeTransfer(overrides: Record<string, unknown> = {}) {
+  const status = overrides.status || 'DRAFT';
   return {
     id: crypto.randomUUID(),
     documentNumber: `TRF-2026-${String(Math.floor(Math.random() * 9000) + 1000)}`,
-    status: 'DRAFT',
+    type: 'TRANSFER',
+    status,
+    transferStatus: overrides.transferStatus || status,
     fromWarehouseId: 'warehouse-a',
     fromWarehouseName: 'Warehouse A',
     toWarehouseId: 'warehouse-b',
     toWarehouseName: 'Warehouse B',
     warehouseId: 'warehouse-a',
     branchId: 'BR-001',
+    notes: null,
+    shippedAt: null,
+    receivedAt: null,
+    postedAt: null,
+    postedBy: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     version: 1,
@@ -110,25 +151,88 @@ export function makeTransfer(overrides: Record<string, unknown> = {}) {
 }
 
 export function makeStocktake(overrides: Record<string, unknown> = {}) {
+  const id = (overrides.id as string | undefined) || crypto.randomUUID();
+  const itemId = (overrides.itemId as string | undefined) || 'item-1';
+  const status = (overrides.status as string | undefined) || 'DRAFT';
+
+  // If status is DRAFT or STARTED or COUNTING, physical count hasn't been submitted yet, so countedQty is null
+  const defaultCountedQty = (status === 'DRAFT' || status === 'STARTED' || status === 'COUNTING') ? null : 100;
+  const defaultVariance = (status === 'DRAFT' || status === 'STARTED' || status === 'COUNTING') ? null : 0;
+
+  const defaultItems = [
+    {
+      id: crypto.randomUUID(),
+      itemId,
+      itemName: 'Test Item',
+      uom: 'PCS',
+      snapshotQty: 100,
+      countedQty: defaultCountedQty,
+      variance: defaultVariance,
+      varianceReason: null as string | null,
+      unitCost: 10.0,
+      barcode: undefined as string | undefined,
+      sku: undefined as string | undefined,
+      lotNumber: undefined as string | undefined,
+      expiryDate: undefined as string | undefined,
+    },
+  ];
+
+  const rawItems = Array.isArray(overrides.items) ? overrides.items : defaultItems;
+
+  const mappedItems = rawItems.map((itemNode) => {
+    const item = itemNode as Record<string, unknown>;
+    const itemSnapshotQty = typeof item.snapshotQty === 'number' ? item.snapshotQty : 100;
+    const itemCountedQty = item.countedQty !== undefined ? (item.countedQty as number | null) : defaultCountedQty;
+    const itemVariance = item.variance !== undefined ? (item.variance as number | null) : defaultVariance;
+    return {
+      id: (item.id as string | undefined) || crypto.randomUUID(),
+      itemId: (item.itemId as string | undefined) || itemId,
+      itemName: (item.itemName as string | undefined) || 'Test Item',
+      barcode: (item.barcode as string | undefined) || (item.sku as string | undefined) || 'SKU-001',
+      uom: (item.uom as string | undefined) || 'PCS',
+      snapshotQty: itemSnapshotQty,
+      countedQty: itemCountedQty,
+      variance: itemVariance,
+      varianceReason: (item.varianceReason as string | null | undefined) ?? null,
+      lotNumber: (item.lotNumber as string | undefined),
+      expiryDate: (item.expiryDate as string | undefined),
+      unitCost: typeof item.unitCost === 'number' ? item.unitCost : 10.0,
+    };
+  });
+
+  const defaultCounts = mappedItems.map(item => ({
+    id: item.id,
+    sessionId: id,
+    itemId: item.itemId,
+    item: {
+      id: item.itemId,
+      code: item.barcode,
+      nameAr: item.itemName,
+      nameEn: item.itemName,
+    },
+    lotId: null as string | null,
+    snapshotQty: item.snapshotQty,
+    countedQty: item.countedQty,
+    variance: item.variance,
+    varianceReason: item.varianceReason,
+  }));
+
   return {
-    id: crypto.randomUUID(),
+    id,
     sessionNumber: `ST-2026-${String(Math.floor(Math.random() * 9000) + 1000)}`,
-    status: 'DRAFT',
+    sessionName: (overrides.sessionName as string | undefined) || 'Test Session',
+    status,
     warehouseId: 'warehouse-a',
     warehouseName: 'Warehouse A',
+    snapshotAt: new Date().toISOString(),
+    startedBy: 'E2E Admin',
+    postedAt: null as string | null,
+    postedBy: null as string | null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     version: 1,
-    items: [
-      {
-        id: crypto.randomUUID(),
-        itemId: 'item-1',
-        itemName: 'Test Item',
-        sku: 'SKU-001',
-        systemQty: 100,
-        countedQty: null,
-      },
-    ],
+    items: mappedItems,
+    counts: defaultCounts,
     ...overrides,
   };
 }
@@ -165,11 +269,11 @@ export async function mockPRById(
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
     const body = makePR({ id: prId, status: getStatus() });
-    if (route.request().method() === 'POST') {
+    if (route.request().method() === 'POST' || route.request().method() === 'PUT') {
       callIndex++;
-      return corsPreflightOrJson(route, makePR({ id: prId, status: getStatus() }));
+      return corsPreflightOrJson(route, { data: makePR({ id: prId, status: getStatus() }) });
     }
-    return corsPreflightOrJson(route, body);
+    return corsPreflightOrJson(route, { data: body });
   });
 }
 
@@ -186,10 +290,10 @@ export async function mockPOById(
     if (route.request().method() === 'OPTIONS') {
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
-    if (route.request().method() === 'POST') {
+    if (route.request().method() === 'POST' || route.request().method() === 'PUT') {
       callIndex++;
     }
-    return corsPreflightOrJson(route, makePO({ id: poId, status: getStatus() }));
+    return corsPreflightOrJson(route, { data: makePO({ id: poId, status: getStatus() }) });
   });
 }
 
@@ -206,10 +310,10 @@ export async function mockGRNById(
     if (route.request().method() === 'OPTIONS') {
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
-    if (route.request().method() === 'POST') {
+    if (route.request().method() === 'POST' || route.request().method() === 'PUT') {
       callIndex++;
     }
-    return corsPreflightOrJson(route, makeGRN({ id: grnId, status: getStatus() }));
+    return corsPreflightOrJson(route, { data: makeGRN({ id: grnId, status: getStatus() }) });
   });
 }
 
@@ -285,7 +389,7 @@ export async function mockTransferById(
 export async function mockStocktakeById(
   page: Page,
   sessionId: string,
-  statusSequence: string[] = ['DRAFT', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'POSTED'],
+  statusSequence: string[] = ['DRAFT', 'STARTED', 'REVIEW', 'APPROVED', 'POSTED'],
 ) {
   let callIndex = 0;
   const getStatus = () => statusSequence[Math.min(callIndex, statusSequence.length - 1)];
@@ -304,15 +408,32 @@ export async function mockStocktakeById(
 /** Mock the available-inventory report */
 export async function mockAvailableInventoryReport(
   page: Page,
-  items: Array<{ sku: string; name: string; qtyPhysical: number }> = [],
+  items: Array<{
+    sku: string;
+    name: string;
+    qtyPhysical: number;
+    category?: string;
+    qtyReserved?: number;
+    qtyAvailable?: number;
+  }> = [],
 ) {
   await page.route('**/api/v1/reports/available-inventory**', (route) => {
     if (route.request().method() === 'OPTIONS') {
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
+    const mappedItems = items.map((item) => ({
+      sku: item.sku,
+      name: item.name,
+      category: item.category ?? 'General',
+      qtyPhysical: item.qtyPhysical,
+      qtyReserved: item.qtyReserved ?? 0,
+      qtyAvailable: item.qtyAvailable ?? item.qtyPhysical,
+    }));
     return corsPreflightOrJson(route, {
-      data: items,
-      meta: { total: items.length, page: 1, pageSize: 50, totalPages: 1 },
+      data: mappedItems,
+      total: mappedItems.length,
+      page: 1,
+      limit: 50,
     });
   });
 }

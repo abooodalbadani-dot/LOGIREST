@@ -485,101 +485,86 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const extraColumns = [
     {
       header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
-      mobileOrder: 3,
-      mobileWidth: 'w-full',
       cell: (line: NewAdjustmentLine) => {
         const isIncrease = line.direction === 'INCREASE';
         return (
-          <div className="flex flex-col md:block gap-2 w-full mt-2 md:mt-0">
-            <span className="md:hidden block text-xs font-semibold text-muted-foreground mb-1.5 uppercase">{locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost'}</span>
-            <div className="flex justify-center">
-              <UnitCostInput
-                value={line.unitCost}
-                disabled={!isIncrease}
-                placeholder={isIncrease ? '0' : '-'}
-                onChange={(val) => {
-                  setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
-                }}
-                className={cn(
-                  "w-24 bg-surface-container-highest/60 border border-brand-gold/40 hover:border-brand-gold/70 rounded-lg text-center h-10 md:h-9 px-2 font-mono text-label-xs font-semibold focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-30",
-                  isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
-                )}
-              />
-            </div>
+          <div className="flex justify-center w-full">
+            <UnitCostInput
+              value={line.unitCost}
+              disabled={!isIncrease}
+              placeholder={isIncrease ? '0' : '-'}
+              onChange={(val) => {
+                setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
+              }}
+              className={cn(
+                "h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center disabled:opacity-30",
+                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500 focus:ring-red-500/30"
+              )}
+            />
           </div>
         );
       }
     },
     {
       header: t('direction') || 'Direction',
-      mobileOrder: 2,
-      mobileWidth: 'w-full',
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex flex-col md:block gap-2 w-full">
-          <span className="md:hidden block text-xs font-semibold text-muted-foreground mb-1.5 uppercase">{t('direction') || 'Direction'}</span>
-          <div className="flex justify-center bg-card border border-border shadow-sm/40 rounded-lg p-0.5 h-10 md:h-9 w-full md:w-36 mx-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE' } : l));
-              }}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded-md text-[11px] md:text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-                line.direction === 'INCREASE'
-                  ? "bg-status-success/15 text-status-success shadow-sm"
-                  : "text-muted-foreground/30 hover:text-muted-foreground/60"
-              )}
-            >
-              <ArrowUp className="w-3.5 h-3.5 md:w-3 md:h-3" />
-              {t('direction_increase') || 'Inc'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE' } : l));
-              }}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded-md text-[11px] md:text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-                line.direction === 'DECREASE'
-                  ? "bg-status-error/15 text-status-error shadow-sm"
-                  : "text-muted-foreground/30 hover:text-muted-foreground/60"
-              )}
-            >
-              <ArrowDown className="w-3.5 h-3.5 md:w-3 md:h-3" />
-              {t('direction_decrease') || 'Dec'}
-            </button>
-          </div>
+        <div className="flex justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 rounded h-8 w-full max-w-[140px] p-0.5 mx-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE' } : l));
+            }}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+              line.direction === 'INCREASE'
+                ? "bg-[#D4AF37]/15 text-[#D4AF37] shadow-sm"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
+            )}
+          >
+            <ArrowUp className="w-2.5 h-2.5" />
+            {t('direction_increase') || 'Inc'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE' } : l));
+            }}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+              line.direction === 'DECREASE'
+                ? "bg-status-error/15 text-status-error shadow-sm"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
+            )}
+          >
+            <ArrowDown className="w-2.5 h-2.5" />
+            {t('direction_decrease') || 'Dec'}
+          </button>
         </div>
       )
     },
     {
       header: tCommon('lot_number') || 'Lot Number',
-      mobileOrder: 5,
-      mobileWidth: 'w-full',
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex flex-col md:flex-row md:justify-center items-start md:items-center gap-2 w-full mt-2 md:mt-0">
-          <span className="md:hidden block text-xs font-semibold text-muted-foreground mb-1.5 uppercase">{tCommon('lot_number') || 'Lot Number'}</span>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <input
-              type="text"
-              placeholder={t('lot_placeholder') || 'Lot...'}
-              value={line.lotNumber || ''}
-              onChange={(e) => {
-                const val = e.target.value;
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
-              }}
-              className="flex-1 md:flex-none w-full md:w-32 bg-surface-container-highest/60 border border-brand-gold/40 hover:border-brand-gold/70 rounded-lg text-center h-10 md:h-9 px-2 font-mono text-label-xs font-semibold focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
-            />
-            {line.direction === 'INCREASE' && (
-              <button
-                type="button"
-                onClick={() => setCreatingLotForLineId(line.id)}
-                className="bg-muted/50 text-foreground border border-cyan-500/20 hover:bg-muted/50 h-10 md:h-9 px-3 md:px-2 rounded-lg text-[11px] md:text-[10px] font-bold uppercase transition-all whitespace-nowrap shadow-sm shadow-cyan-500/10 shrink-0"
-              >
-                + {t('new') || 'New'}
-              </button>
-            )}
-          </div>
+        <div className="flex items-center justify-center gap-1.5 w-full max-w-[200px] mx-auto">
+          <input
+            type="text"
+            placeholder={t('lot_placeholder') || 'Lot...'}
+            value={line.lotNumber || ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
+            }}
+            className="h-8 w-full md:w-24 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center disabled:opacity-50"
+          />
+          {line.direction === 'INCREASE' && (
+            <button
+              type="button"
+              onClick={() => setCreatingLotForLineId(line.id)}
+              className="h-8 px-3 ml-1 text-[10px] font-bold border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 bg-transparent rounded hover:border-[#0B1220] dark:hover:border-[#D4AF37] hover:text-[#0B1220] dark:hover:text-[#D4AF37] transition-colors whitespace-nowrap"
+            >
+              + {t('new') || 'New'}
+            </button>
+          )}
         </div>
       )
     }
@@ -622,15 +607,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
       <LockBanner lockState={lockState} />
 
-      <div className={cn("grid grid-cols-1 lg:grid-cols-3 gap-8", createAdjustment.isPending && "opacity-60 pointer-events-none transition-opacity")}>
-        {/* Left Sidebar Panel - Metadata settings (30%) */}
+      <div className={cn("grid grid-cols-1 lg:grid-cols-4 gap-8", createAdjustment.isPending && "opacity-60 pointer-events-none transition-opacity")}>
+        {/* Left Sidebar Panel - Metadata settings (25%) */}
         <div className="lg:col-span-1 space-y-8">
-          <div className="bg-card border border-border shadow-sm/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl group">
-            {/* Premium Locale-Mirrored Gradient Accent */}
-            <div className={cn(
-              "absolute top-0 left-0 right-0 h-1 rounded-t-[2.5rem] from-cyan-500/50 via-cyan-500/20 to-transparent pointer-events-none",
-              locale === 'ar' ? "bg-gradient-to-l" : "bg-gradient-to-r"
-            )} />
+          <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100 group">
 
             <div className="flex items-center gap-3 mb-6">
               <Warehouse className="w-4 h-4 text-foreground" />
@@ -650,7 +630,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   value={warehouseId}
                   onSelect={(item) => setWarehouseId(item.id)}
                   placeholder={tCommon('select_warehouse') || "Select Warehouse"}
-                  triggerClassName="w-full bg-surface-container-highest/40 h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 transition-all"
+                  triggerClassName="w-full bg-gray-50 dark:bg-surface-container-highest/40 border border-gray-200 dark:border-transparent text-[#0B1220] dark:text-white h-11 px-6 text-label-sm font-bold rounded-2xl transition-all shadow-none"
                 />
               </div>
 
@@ -664,7 +644,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   value={reasonCategory}
                   onSelect={(item) => setReasonCategory(item.id)}
                   placeholder={t('reason') || "Select Reason"}
-                  triggerClassName="w-full bg-surface-container-highest/40 h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 transition-all"
+                  triggerClassName="w-full bg-gray-50 dark:bg-surface-container-highest/40 border border-gray-200 dark:border-transparent text-[#0B1220] dark:text-white h-11 px-6 text-label-sm font-bold rounded-2xl transition-all shadow-none"
                 />
               </div>
 
@@ -678,7 +658,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t('notes_placeholder')}
-                  className="w-full bg-surface-container-highest/40 rounded-2xl p-4 font-medium text-body-md transition-all outline-none resize-none min-h-[140px] hover:bg-surface-container-highest/60"
+                  className="w-full bg-gray-50 dark:bg-surface-container-highest/40 border border-gray-200 dark:border-transparent text-[#0B1220] dark:text-white rounded-2xl p-4 font-medium text-body-md transition-all outline-none resize-none min-h-[140px] placeholder:text-gray-400 dark:placeholder:text-muted-foreground/20"
                 />
                 {showNotesError && (
                   <p className="text-[10px] font-bold text-status-error uppercase px-1 mt-1">
@@ -690,14 +670,9 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           </div>
         </div>
 
-        {/* Right Operations Deck Panel - Scanning and lines table (70%) */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card border border-border shadow-sm/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl group">
-            {/* Premium Emerald Accent Gradient */}
-            <div className={cn(
-              "absolute top-0 left-0 right-0 h-1 rounded-t-[2.5rem] from-emerald-500/50 via-emerald-500/20 to-transparent pointer-events-none",
-              locale === 'ar' ? "bg-gradient-to-l" : "bg-gradient-to-r"
-            )} />
+        {/* Right Operations Deck Panel - Scanning and lines table (75%) */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100 group">
 
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
@@ -750,6 +725,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   onSelect={(item: ItemOption) => handleAddItem(item.code)}
                   placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
                   disabled={isLoadingItems}
+                  triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-md text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
                   onAddCustomItem={(query) => {
                     setCustomItemNameQuery(query);
                     setIsCustomItemDialogOpen(true);
@@ -767,6 +743,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
                 hideLotColumns={true}
                 dense={true}
+                noCollapse={false}
+                mobileLayoutPattern="adjustment-form"
                 extraColumns={extraColumns}
                 headers={{
                   code: tCommon('table_headers.code'),
@@ -775,7 +753,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   uom: tCommon('table_headers.uom'),
                 }}
                 renderQty={(line) => (
-                  <div className="flex justify-center">
+                  <div className="flex justify-center w-full">
                     <input
                       lang="en"
                       dir="ltr"
@@ -787,14 +765,13 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                         const val = parseFloat(e.target.value);
                         setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: isNaN(val) ? 0 : val } : l));
                       }}
-                      className="w-24 bg-surface-container-highest/60 border border-brand-gold/40 hover:border-brand-gold/70 rounded-lg text-right py-1.5 font-mono tabular-nums text-body-md font-semibold focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+                      className="h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center"
                     />
                   </div>
                 )}
                 renderUom={(line) => {
-                  const uomOption = activeUoMs.find(u => u.id === line.uomId);
                   return (
-                    <div className="flex items-center min-w-[120px]">
+                    <div className="flex items-center justify-center w-full">
                       <SmartCombobox
                         items={activeUoMs}
                         value={line.uomId}
@@ -802,6 +779,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                           setLines(prev => prev.map(l => l.id === line.id ? { ...l, uomId: uom.id } : l));
                         }}
                         placeholder="PCS" // i18n-ignore
+                        triggerClassName="h-8 px-2 text-sm border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0B1220] text-[#0B1220] dark:text-white text-center rounded w-full md:w-24 font-semibold"
                       />
                     </div>
                   );
@@ -828,9 +806,9 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             type="button" 
             onClick={() => router.push('/adjustments', { skipGuard: true })} 
             disabled={createAdjustment.isPending} 
-            className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-semibold transition-all flex items-center justify-center disabled:opacity-50"
+            className="px-6 py-2 bg-transparent border border-gray-300 text-gray-600 font-bold rounded-md hover:bg-gray-100 hover:text-[#0B1220] transition-colors uppercase text-sm tracking-wider"
           >
-            {tCommon('cancel') || 'Cancel'}
+            CANCEL
           </button>
 
           {/* Save Button - Solid Primary */}

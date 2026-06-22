@@ -526,7 +526,7 @@ export function AdjustmentForm({
      <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:block">
       {/* Left Column */}
-      <div className="lg:col-span-8 space-y-8 print:max-w-full">
+      <div className="lg:col-span-9 space-y-8 print:max-w-full">
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 border border-surface-variant/5">
        <div className="space-y-4">
         <div className="space-y-1.5">
@@ -620,11 +620,12 @@ export function AdjustmentForm({
          onRemoveLine={(id) => removeLine(id)}
          hideLotColumns={true}
          dense={true}
+         noCollapse={false}
          headers={{
           qty: t('qty_adjusted')
          }}
          renderQty={(line) => (
-          <div className="flex justify-center">
+          <div className="flex justify-center w-full">
            <input
             type="number"
             min="0.001"
@@ -638,7 +639,7 @@ export function AdjustmentForm({
              const val = parseFloat(e.target.value);
              updateLine(line.id, { qtyAdjusted: val || 0 });
             }}
-            className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+             className="h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center"
            />
           </div>
          )}
@@ -648,7 +649,7 @@ export function AdjustmentForm({
            cell: (line: AdjustmentLine) => {
             const isIncrease = line.direction === 'INCREASE';
             return (
-             <div className="flex justify-center">
+             <div className="flex justify-center w-full">
               <UnitCostInput
                value={line.unitCost}
                disabled={!isIncrease || !canEdit}
@@ -656,10 +657,10 @@ export function AdjustmentForm({
                onChange={(val) => {
                 updateLine(line.id, { unitCost: val });
                }}
-               className={cn(
-                "w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-30",
-                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
-               )}
+                className={cn(
+                 "h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center disabled:opacity-30",
+                 isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
+                )}
               />
              </div>
             );
@@ -668,34 +669,34 @@ export function AdjustmentForm({
           {
            header: t('direction') || 'Direction',
            cell: (line: AdjustmentLine) => (
-            <div className="flex justify-center bg-card border border-border shadow-sm/40 rounded-lg p-0.5 h-9 w-36 mx-auto">
+            <div className="flex justify-center bg-gray-50 border border-gray-200 dark:bg-[#0B1220] dark:border-gray-700 rounded h-8 w-full max-w-[140px] p-0.5 mx-auto">
              <button
               type="button"
               disabled={!canEdit}
               onClick={() => updateLine(line.id, { direction: 'INCREASE' })}
               className={cn(
-               "flex flex-1 items-center justify-center gap-1 rounded-md text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+               "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
                line.direction === 'INCREASE'
-                ? "bg-status-success/15 text-status-success shadow-sm"
-                : "text-muted-foreground/30 hover:text-muted-foreground/60"
+                ? "bg-[#D4AF37]/15 text-[#D4AF37] shadow-sm"
+                : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
               )}
              >
-              <ArrowUp className="w-3 h-3" />
-              {t('direction_increase')}
+              <ArrowUp className="w-2.5 h-2.5" />
+              {t('direction_increase') || (locale === 'ar' ? 'زيادة' : 'Inc')}
              </button>
              <button
               type="button"
               disabled={!canEdit}
               onClick={() => updateLine(line.id, { direction: 'DECREASE' })}
               className={cn(
-               "flex flex-1 items-center justify-center gap-1 rounded-md text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+               "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
                line.direction === 'DECREASE'
                 ? "bg-status-error/15 text-status-error shadow-sm"
-                : "text-muted-foreground/30 hover:text-muted-foreground/60"
+                : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
               )}
              >
-              <ArrowDown className="w-3 h-3" />
-              {t('direction_decrease')}
+              <ArrowDown className="w-2.5 h-2.5" />
+              {t('direction_decrease') || (locale === 'ar' ? 'نقص' : 'Dec')}
              </button>
             </div>
            )
@@ -736,7 +737,7 @@ export function AdjustmentForm({
      </div>
 
      {/* Right Column */}
-     <div className="lg:col-span-4 space-y-8 print-hidden">
+     <div className="lg:col-span-3 space-y-8 print-hidden">
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm relative overflow-hidden group border border-surface-variant/5">
        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
        <div className="relative space-y-8">

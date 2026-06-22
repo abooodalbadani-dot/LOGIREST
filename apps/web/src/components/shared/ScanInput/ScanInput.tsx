@@ -177,7 +177,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                 <div className={cn(variant === 'standard' ? "flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full" : "")}>
                     <div className={cn(
                         "relative flex items-center transition-all duration-200 overflow-hidden shrink-0",
-                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : "w-full bg-white/5 border border-white/10 text-foreground rounded-xl h-12 px-4 text-start focus-within:ring-1 focus-within:ring-brand-gold/50 transition-all sm:flex-1",
+                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : "flex items-center w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#D4AF37] focus-within:ring-1 focus-within:ring-[#D4AF37] overflow-hidden sm:flex-1",
                         variant === 'retro' && config.container,
                         variant === 'retro' ? (
                             scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
@@ -216,7 +216,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                                         }, 100);
                                     }}
                                     className="flex-1 w-full h-full"
-                                    triggerClassName="h-full bg-transparent border-none text-foreground w-full font-medium text-sm md:text-base"
+                                    triggerClassName="h-full bg-transparent border-none text-[#0B1220] dark:text-white w-full font-semibold text-sm md:text-base px-0 ps-0 pe-4 shadow-none outline-none focus:ring-0 focus:border-none focus-within:ring-0 focus-within:border-none hover:bg-transparent"
                                 />
                             </div>
                         ) : (
@@ -231,8 +231,8 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                                 onChange={onChangeWrapper}
                                 autoComplete="off"
                                 className={cn(
-                                    "bg-transparent border-none text-foreground w-full transition-all duration-200 outline-none z-10 h-full",
-                                    variant === 'retro' ? "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black" : "placeholder:text-muted-foreground text-sm md:text-base font-semibold px-2 pr-4 pl-12",
+                                    "bg-transparent border-none text-[#0B1220] dark:text-white w-full transition-all duration-200 outline-none z-10 h-full focus:ring-0 focus:outline-none",
+                                    variant === 'retro' ? "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black" : "placeholder:text-muted-foreground text-sm md:text-base font-semibold px-2 pr-4 pl-12 focus:ring-0 focus:outline-none",
                                     readOnly && "cursor-default select-all opacity-70",
                                     variant === 'retro' && config.input
                                 )}
@@ -316,7 +316,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                                             onManualTrigger();
                                         }
                                     }}
-                                    className="bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/20 rounded-xl font-semibold text-label-xs transition-all px-4 h-14 flex-1 sm:flex-none flex items-center justify-center gap-2 whitespace-nowrap active:scale-95 group/btn shadow-sm"
+                                    className="w-full sm:w-auto mt-2 sm:mt-0 py-2 px-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-md hover:bg-gray-50 dark:hover:bg-[#1A2234] hover:text-[#0B1220] dark:hover:text-white transition-colors text-sm text-center flex items-center justify-center gap-2 whitespace-nowrap active:scale-95 group/btn shadow-sm"
                                 >
                                     {isManual ? (
                                         <>
@@ -336,7 +336,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                                 <button
                                     type="button"
                                     onClick={onCameraActivate}
-                                    className="w-14 h-14 flex items-center justify-center text-primary hover:text-primary-foreground hover:bg-primary border border-primary/20 bg-primary/5 rounded-xl transition-all active:scale-95 shadow-sm"
+                                    className="w-14 h-11 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-[#0B1220] dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#1A2234] border border-gray-300 dark:border-gray-700 rounded-md transition-all active:scale-95 shadow-sm"
                                 >
                                     <ScanLine className="w-5 h-5" />
                                 </button>

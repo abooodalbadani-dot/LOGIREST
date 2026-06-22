@@ -183,7 +183,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         onSelect={(dept) => form.setValue('departmentId', String(dept.id), { shouldValidate: true })}
         getPrimaryLabel={(dept) => dept.name}
         placeholder={tCommon('select_department')}
-        triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
+        triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
        />
        {form.formState.errors.departmentId && (
         <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.department_required')}</p>
@@ -201,7 +201,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         onSelect={(w) => form.setValue('warehouseId', String(w.id), { shouldValidate: true })}
         getPrimaryLabel={(w) => w.name}
         placeholder={tCommon('select_warehouse')}
-        triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
+        triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
        />
        {form.formState.errors.warehouseId && (
         <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.warehouse_required')}</p>
@@ -216,7 +216,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
        <Input 
         {...form.register('notes')}
         placeholder={t('notes_placeholder')}
-        className="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20 w-full"
+        className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20 w-full"
        />
       </div>
      
@@ -251,7 +251,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         }}
         getPrimaryLabel={(item) => item.name}
         placeholder={tCommon('select_item')}
-        triggerClassName="w-full bg-background border border-input text-foreground h-12 rounded-xl px-4 shadow-sm"
+        triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white h-12 rounded-xl px-4 shadow-sm"
        />
       </div>
 
@@ -299,13 +299,13 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
          renderQty={(line) => (
           <div className="flex flex-col items-center gap-1 min-w-0">
            <div className="flex justify-center">
-            <Input 
-             type="number"
-             step="0.01"
-             dir="ltr"
-             {...form.register(`items.${line.index}.quantity`, { valueAsNumber: true })}
-             className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50 w-full h-10"
-            />
+             <Input 
+              type="number"
+              step="0.01"
+              dir="ltr"
+              {...form.register(`items.${line.index}.quantity`, { valueAsNumber: true })}
+              className="w-24 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/60 dark:border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 w-full h-10"
+             />
            </div>
            {form.formState.errors.items?.[line.index]?.quantity && (
             <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">{t('validation.qty_positive')}</p>
@@ -325,7 +325,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
              <Input 
               {...form.register(`items.${line.index}.notes`)}
               placeholder={t('line_notes_placeholder')}
-              className="w-full bg-surface-container-highest/60 border border-white/5 rounded-lg h-9 px-3 text-label-sm font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
+              className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/60 dark:border-white/5 rounded-lg h-9 px-3 text-label-sm font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
              />
             </div>
            )

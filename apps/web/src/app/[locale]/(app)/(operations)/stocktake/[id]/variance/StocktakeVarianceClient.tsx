@@ -352,8 +352,8 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
              placeholder={t('mandatory_reason')}
              maxLength={500}
              className={cn(
-              "min-h-[80px] text-body-md bg-surface-container-medium border-none resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
-              reasonError ? "bg-amber-500/10 focus-visible:ring-amber-500/50" : ""
+              "min-h-[80px] text-body-md bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-medium dark:border-none dark:text-white resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
+              reasonError ? "bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-500/10 dark:border-none dark:text-white focus-visible:ring-amber-500/50" : ""
              )}
             />
             <div className="flex items-center justify-between">
