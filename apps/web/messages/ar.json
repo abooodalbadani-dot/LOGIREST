@@ -2701,6 +2701,7 @@
       "operational_status": "الحالة التشغيلية",
       "placeholder": "البحث عن صنف، مورد، أو رقم فاتورة...",
       "recent_searches": "عمليات البحث الأخيرة",
+      "no_recent_searches": "لا توجد عمليات بحث أخيرة",
       "records": "سجلات",
       "refine": "تصفية النتائج",
       "reset": "إعادة تعيين",
