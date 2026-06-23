@@ -199,11 +199,11 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
     </div>
 
     {/* Left Side (RTL End): Action Buttons */}
-    <div className="flex items-center gap-3">
+    <div className="w-full md:w-auto flex flex-col-reverse md:flex-row items-stretch md:items-center gap-3">
       <ActionGuard documentType="STOCKTAKE" action="REJECT" status={session.status} role={user?.role || ''}>
         <Button 
           variant="outline" 
-          className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20 hover:border-destructive/30 rounded-xl font-semibold text-label-xs uppercase tracking-wide transition-all active:scale-[0.98] h-11"
+          className="w-full md:w-auto flex items-center justify-center px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20 hover:border-destructive/30 rounded-xl font-semibold text-label-xs uppercase tracking-wide transition-all active:scale-[0.98] h-11"
           onClick={() => setIsRejectDialogOpen(true)}
         >
           <XCircle className="w-4 h-4 me-2" />
@@ -216,7 +216,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
         description={t('confirm_approve_desc')}
         onConfirm={handleApprove}
         trigger={
-          <Button className="px-6 py-2 bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold text-label-xs uppercase tracking-wide transition-all active:scale-[0.98] rounded-xl shadow-lg shadow-brand-gold/10 h-11">
+          <Button className="w-full md:w-auto flex items-center justify-center px-6 py-2 bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold text-label-xs uppercase tracking-wide transition-all active:scale-[0.98] rounded-xl shadow-lg shadow-brand-gold/10 h-11">
             <CheckCircle2 className="w-4 h-4 me-2" />
             {t('approve_session_action')}
           </Button>

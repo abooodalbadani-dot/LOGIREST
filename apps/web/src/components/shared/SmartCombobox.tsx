@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useLocale } from 'next-intl';
@@ -348,7 +349,7 @@ export function SmartCombobox<T extends ComboboxItem>({
        {/* Search Header */}
        <div className="relative flex items-center">
         <Search className={cn("absolute w-4 h-4 text-muted-foreground/30", isRTL ? "right-4" : "left-4")} />
-        <input
+        <Input
          ref={inputRef}
          type="text"
          value={searchQuery}

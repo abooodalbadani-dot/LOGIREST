@@ -209,7 +209,7 @@ function LineItemCard({
                      <div className="flex justify-between items-center bg-[#0B1220] px-4 py-2 border-b border-gray-800">
                             <div className="flex flex-col">
                                    <span className="text-sm font-bold text-white">{rowValues?.itemName || tc('select_item')}</span>
-                                   <span className="text-[10px] text-[#D4AF37] font-mono tracking-widest mt-0.5">{rowValues?.itemCode || '---'}</span>
+                                   <span className="text-[10px] text-[#b48e67] font-mono tracking-widest mt-0.5">{rowValues?.itemCode || '---'}</span>
                             </div>
                             {!isLocked && (
                                    <button 
@@ -235,12 +235,11 @@ function LineItemCard({
                                           render={({ field: inputField }) => (
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
-                                                               <input
+                                                               <Input
                                                                       type="number"
                                                                       min="1"
                                                                       disabled={isLocked}
-                                                                      className="h-8 w-full text-center text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
-                                                                      dir="ltr"
+                                                                      className="h-8 w-full text-center font-sans text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
                                                                       value={inputField.value || ''}
                                                                       onChange={(e) => inputField.onChange(e.target.value ? Number(e.target.value) : '')}
                                                                />
@@ -286,13 +285,13 @@ function LineItemCard({
                                           render={({ field: inputField }) => (
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
-                                                               <input
+                                                               <Input
                                                                       type="number"
                                                                       step="0.01"
                                                                       min="0"
                                                                       disabled={isLocked}
-                                                                      className="h-8 w-full text-center text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
-                                                                      dir="ltr"
+                                                                      className="h-8 w-full text-center font-sans text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
+                                                                      
                                                                       value={inputField.value !== undefined ? inputField.value : ''}
                                                                       onChange={(e) => inputField.onChange(e.target.value ? Number(e.target.value) : '')}
                                                                />
@@ -314,10 +313,10 @@ function LineItemCard({
                                           render={({ field: inputField }) => (
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
-                                                               <input
+                                                               <Input
                                                                       placeholder={t('notes_placeholder')}
                                                                       disabled={isLocked}
-                                                                      className="h-8 w-full px-3 text-xs font-medium text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
+                                                                      className="h-8 w-full px-3 text-xs font-medium text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none"
                                                                       value={inputField.value || ''}
                                                                       onChange={(e) => inputField.onChange(e.target.value)}
                                                                />
@@ -397,8 +396,8 @@ function LineItemRow({
                                                                       }
                                                                }}
                                                                placeholder={tc('select_item')}
-                                                               className="h-11 w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase transition-all shadow-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
-                                                               triggerClassName="h-11 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase shadow-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                                                               className="h-11 w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase transition-all shadow-sm focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
+                                                               triggerClassName="h-11 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase shadow-sm focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                disabled={isLocked}
                                                         />
                                                  </FormControl>
@@ -419,7 +418,7 @@ function LineItemRow({
                                                                type="number"
                                                                min="1"
                                                                disabled={isLocked}
-                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                dir="ltr"
                                                                {...inputField}
                                                                onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -464,7 +463,7 @@ function LineItemRow({
                                                                step="0.01"
                                                                min="0"
                                                                disabled={isLocked}
-                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                dir="ltr"
                                                                {...inputField}
                                                                onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -486,7 +485,7 @@ function LineItemRow({
                                                         <Input
                                                                placeholder={t('notes_placeholder')}
                                                                disabled={isLocked}
-                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-medium transition-all focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-medium transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                {...inputField}
                                                         />
                                                  </FormControl>

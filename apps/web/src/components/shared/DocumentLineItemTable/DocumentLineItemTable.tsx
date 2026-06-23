@@ -236,10 +236,10 @@ export function DocumentLineItemTable<T extends LineItem>({
           data-index={virtualRow.index}
           className={cn(
            layoutMode === 'two-tier'
-            ? "flex flex-col md:grid md:grid-cols-12 gap-4 p-5 mb-4 border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 bg-[#0B1220] rounded-2xl shadow-lg transition-all w-full items-center"
+            ? "flex flex-col md:grid md:grid-cols-12 gap-4 p-5 mb-4 border border-[#b48e67]/20 hover:border-[#b48e67]/40 bg-[#0B1220] rounded-2xl shadow-lg transition-all w-full items-center"
             : noCollapse
               ? "border-b border-border last:border-0 hover:bg-muted/50 transition-colors group table-row"
-              : "border-b border-border last:border-0 hover:bg-muted/50 transition-colors group flex flex-col border-b border-[#D4AF37]/10 w-full md:table-row md:border-b md:border-border/50 md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none",
+              : "border-b border-border last:border-0 hover:bg-muted/50 transition-colors group flex flex-col border-b border-[#b48e67]/10 w-full md:table-row md:border-b md:border-border/50 md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none",
            rowClassName?.(line, idx)
           )}
           style={layoutMode === 'two-tier' ? {} : { minHeight: `${dense ? 48 : 64}px` }}
@@ -290,7 +290,7 @@ export function DocumentLineItemTable<T extends LineItem>({
               {renderQty ? (
                renderQty(line)
               ) : (
-               <div className="bg-transparent border border-gray-700 rounded-md p-2 text-white font-mono flex items-center h-10 select-none">
+               <div dir="ltr" data-numeric="true" className="bg-transparent border border-gray-700 rounded-md p-2 text-white font-mono flex items-center h-10 select-none">
                 {line.qty}
                </div>
               )}
@@ -405,7 +405,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                    {renderQty ? (
                     renderQty(line)
                    ) : (
-                    <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center">
+                    <div dir="ltr" className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center">
                      {line.qty}
                     </div>
                    )}
@@ -481,7 +481,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                    {renderQty ? (
                     renderQty(line)
                    ) : (
-                    <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center">
+                    <div dir="ltr" className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center">
                      {line.qty}
                     </div>
                    )}
@@ -517,44 +517,34 @@ export function DocumentLineItemTable<T extends LineItem>({
                 ))}
                </div>
               ) : (
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 p-3 bg-white dark:bg-[#1A2234] border-x border-b border-gray-200 dark:border-transparent items-center w-full rounded-b-xl">
+               <div className="grid grid-cols-2 gap-4 p-3 bg-white dark:bg-[#1A2234] border-x border-b border-gray-200 dark:border-transparent w-full rounded-b-xl">
                 {/* Col 1: QTY */}
-                <div className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-600 dark:text-gray-500 uppercase tracking-widest shrink-0">{h.qty}</label>
-                 <div className="w-auto flex-1 flex justify-end">
-                  {renderQty ? (
-                   renderQty(line)
-                  ) : (
-                   <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center">
-                    {line.qty}
-                   </div>
-                  )}
-                 </div>
+                <div className="flex flex-col items-start w-full">
+                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{h.qty}</span>
+                 {renderQty ? (
+                  renderQty(line)
+                 ) : (
+                  <span className="text-sm font-black text-[#0B1220] dark:text-white font-sans" dir="ltr" data-numeric="true">{line.qty}</span>
+                 )}
                 </div>
 
                 {/* Col 2: UOM */}
                 {!hideUomColumn && (
-                 <div className="flex items-center justify-between gap-2 w-full h-8">
-                  <label className="text-[9px] text-gray-600 dark:text-gray-500 uppercase tracking-widest shrink-0">{h.uom}</label>
-                  <div className="w-auto flex-1 flex justify-end">
-                   {renderUom ? (
-                    renderUom(line)
+                 <div className="flex flex-col items-start w-full">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{h.uom}</span>
+                  {renderUom ? (
+                   renderUom(line)
                    ) : (
-                    <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 uppercase flex items-center h-8 text-sm justify-center">
-                     {line.item.primaryUom?.name || line.item.primaryUom?.code || 'N/A'}
-                    </div>
-                   )}
-                  </div>
+                   <span className="text-sm font-black text-[#0B1220] dark:text-white uppercase">{line.item.primaryUom?.name || line.item.primaryUom?.code || 'N/A'}</span>
+                  )}
                  </div>
                 )}
 
-                {/* Col 3, 4, 5, etc.: Extra Columns */}
+                {/* Extra Columns */}
                 {extraColumns.map((col, i) => (
-                 <div key={i} className="flex items-center justify-between gap-2 w-full h-8">
-                  <label className="text-[9px] text-gray-600 dark:text-gray-500 uppercase tracking-widest shrink-0">{col.header}</label>
-                  <div className="w-auto flex-1 flex justify-end">
-                   {col.cell(line)}
-                  </div>
+                 <div key={i} className="flex flex-col items-start w-full col-span-2 sm:col-span-1 mt-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{col.header}</span>
+                  {col.cell(line)}
                  </div>
                 ))}
                </div>
@@ -573,7 +563,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                 {line.item.code}
                </span>
                {hideUomColumn && (
-                <span className="text-[9px] bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
+                <span className="text-[10px] bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
                  {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
                 </span>
                )}
@@ -598,7 +588,7 @@ export function DocumentLineItemTable<T extends LineItem>({
               {renderQty ? (
                renderQty(line)
               ) : (
-               <span dir="ltr" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-xs md:text-body-md px-2 py-0.5 md:px-3 md:py-1")}>
+               <span dir="ltr" data-numeric="true" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-xs md:text-body-md px-2 py-0.5 md:px-3 md:py-1")}>
                 {line.qty}
                </span>
               )}
@@ -656,7 +646,7 @@ export function DocumentLineItemTable<T extends LineItem>({
           rowClassName?.(line, idx),
           noCollapse
             ? "table-row"
-            : "flex flex-col border-b border-[#D4AF37]/10 w-full md:table-row md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none"
+            : "flex flex-col border-b border-[#b48e67]/10 w-full md:table-row md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none"
          )}
         >
          {/* Mobile card layout */}
@@ -704,7 +694,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   {renderQty ? (
                    renderQty(line)
                   ) : (
-                   <div className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center w-full">
+                   <div dir="ltr" data-numeric="true" className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center w-full">
                     {line.qty}
                    </div>
                   )}
@@ -791,7 +781,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   {renderQty ? (
                    renderQty(line)
                   ) : (
-                   <div className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-600 rounded-md p-2 text-[#0B1220] dark:text-white font-mono flex items-center h-8 text-sm justify-center">
+                   <div dir="ltr" data-numeric="true" className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-600 rounded-md p-2 text-[#0B1220] dark:text-white font-mono flex items-center h-8 text-sm justify-center">
                     {line.qty}
                    </div>
                   )}
@@ -824,41 +814,31 @@ export function DocumentLineItemTable<T extends LineItem>({
                ))}
               </>
              ) : (
-              <div className="grid grid-cols-1 gap-3 w-full">
-               <div className="flex items-center justify-between gap-2 w-full h-8">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">{h.qty}</label>
-                <div className="w-auto flex-1 flex justify-end">
-                 {renderQty ? (
-                  renderQty(line)
-                 ) : (
-                  <div className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md p-2 font-mono flex items-center h-8 text-sm justify-center">
-                   {line.qty}
-                  </div>
-                 )}
-                </div>
+              <div className="grid grid-cols-2 gap-4 w-full">
+               <div className="flex flex-col items-start w-full">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{h.qty}</span>
+                {renderQty ? (
+                 renderQty(line)
+                ) : (
+                 <span className="text-sm font-black text-[#0B1220] dark:text-white" dir="ltr" data-numeric="true">{line.qty}</span>
+                )}
                </div>
 
                {!hideUomColumn && (
-                <div className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{h.uom}</label>
-                 <div className="w-auto flex-1 flex justify-end">
-                  {renderUom ? (
-                   renderUom(line)
-                  ) : (
-                   <div className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md p-2 uppercase flex items-center h-8 text-sm justify-center">
-                    {line.item.primaryUom?.name || line.item.primaryUom?.code || 'N/A'}
-                   </div>
-                  )}
-                 </div>
+                <div className="flex flex-col items-start w-full">
+                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{h.uom}</span>
+                 {renderUom ? (
+                  renderUom(line)
+                 ) : (
+                  <span className="text-sm font-black text-[#0B1220] dark:text-white uppercase">{line.item.primaryUom?.name || line.item.primaryUom?.code || 'N/A'}</span>
+                 )}
                 </div>
                )}
 
                {extraColumns.map((col, i) => (
-                <div key={i} className="flex items-center justify-between gap-2 w-full h-8">
-                 <label className="text-[9px] text-gray-500 uppercase tracking-widest shrink-0">{col.header}</label>
-                 <div className="w-auto flex-1 flex justify-end">
-                  {col.cell(line)}
-                 </div>
+                <div key={i} className="flex flex-col items-start w-full col-span-2 sm:col-span-1 mt-2">
+                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{col.header}</span>
+                 {col.cell(line)}
                 </div>
                ))}
               </div>
@@ -904,7 +884,7 @@ export function DocumentLineItemTable<T extends LineItem>({
            {renderQty ? (
             renderQty(line)
            ) : (
-            <span dir="ltr" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-xs md:text-body-md px-2 py-0.5 md:px-3 md:py-1")}>
+            <span dir="ltr" data-numeric="true" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-xs md:text-body-md px-2 py-0.5 md:px-3 md:py-1")}>
              {line.qty}
             </span>
            )}

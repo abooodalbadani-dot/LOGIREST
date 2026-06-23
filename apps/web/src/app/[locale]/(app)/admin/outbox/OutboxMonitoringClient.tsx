@@ -149,14 +149,14 @@ export function OutboxMonitoringClient() {
         Outbox Event Monitoring
        </h1>
       </div>
-      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2">
        Track all transactional mail transmissions, analyze SMTP runtime exceptions, and manually trigger redeliveries.
       </p>
      </div>
     </div>
    </div>
 
-   <div className="w-full flex flex-col md:flex-row gap-6" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+   <div className="w-full flex flex-col md:flex-row gap-6">
     {/* Left Column (Empty State or Selected Event Details) */}
     <div className="w-full md:w-1/3 min-w-0 flex flex-col">
      <AnimatePresence mode="wait">

@@ -369,7 +369,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
           </div>
           <div className="relative w-48">
            <Search className="w-3 h-3 absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-           <input
+           <Input
              type="text"
              value={entitySearch}
              onChange={(e) => setEntitySearch(e.target.value)}

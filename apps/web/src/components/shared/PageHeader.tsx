@@ -51,7 +51,7 @@ export function PageHeader({
   return (
     <div data-slot="page-header" className={cn("flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full border-b border-border/50 pb-4 mb-2 flex-wrap", className)}>
       <div className="flex flex-col items-start text-start gap-2 min-w-0">
-        <div className="flex items-start sm:items-center gap-4 flex-wrap">
+        <div className="flex items-start sm:items-center gap-4 flex-wrap flex-1 min-w-0 w-full">
           {backHref && (
             <Link 
               href={backHref}
@@ -61,7 +61,7 @@ export function PageHeader({
             </Link>
           )}
           {icon && <div className="flex-shrink-0 mt-2 sm:mt-0">{icon}</div>}
-          <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight uppercase flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0 break-words">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight uppercase whitespace-nowrap truncate max-w-full block min-w-0">
             {finalTitle} {finalHighlight && <span className="text-primary font-extrabold mx-1">{finalHighlight}</span>}
           </h1>
           {showStatus && status && (

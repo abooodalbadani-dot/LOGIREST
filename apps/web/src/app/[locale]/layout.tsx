@@ -181,7 +181,7 @@ export default async function LocaleLayout({
 
 
     return (
-        <html lang={locale} dir={direction} suppressHydrationWarning>
+        <html lang={locale} dir={direction} className="force-latin-numbers" suppressHydrationWarning>
             <body
                 className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${beVietnamPro.variable} font-sans antialiased text-text-main dark:text-white bg-bg-light dark:bg-brand-black transition-colors duration-300 min-h-screen custom-scrollbar`}
                 suppressHydrationWarning

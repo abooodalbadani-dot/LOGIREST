@@ -487,7 +487,7 @@ const t = useTranslations('operations.adjustment');
          <div className="flex justify-between items-start p-3 pb-2 border-b border-border/50">
           <div className="flex flex-col gap-1">
            <div className="flex items-center gap-2">
-            <span dir="ltr" className="text-xs font-mono font-bold text-operational-cyan dark:text-[#D4AF37]">{row.documentNumber}</span>
+            <span dir="ltr" className="text-xs font-mono font-bold text-operational-cyan dark:text-[#b48e67]">{row.documentNumber}</span>
             <StatusBadge status={row.status} />
            </div>
            <span className="text-xs text-muted-foreground font-medium">{warehouseName}</span>

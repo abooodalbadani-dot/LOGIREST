@@ -72,15 +72,22 @@ export function ValuationTable({ data, isLoading, currencySymbol: propCurrency }
    {
     accessorKey: 'qtyOnHand',
     header: 'On Hand',
-    cell: ({ row }) => formatQuantity(row.original.qtyOnHand, locale),
+    cell: ({ row }) => (
+     <span dir="ltr" className="inline-block font-sans">
+      {formatQuantity(row.original.qtyOnHand, locale)}
+     </span>
+    ),
    },
    ...(showUnitCost
     ? [
       {
        accessorKey: 'unitCost',
        header: `Unit Cost (${currencySymbol})`,
-       cell: ({ row }) =>
-        formatCurrency(row.original.unitCost, currencySymbol, locale),
+       cell: ({ row }) => (
+        <span dir="ltr" className="inline-block font-sans">
+         {formatCurrency(row.original.unitCost, currencySymbol, locale)}
+        </span>
+       ),
       } as ColumnDef<ValuationRow, unknown>,
      ]
     : []),
@@ -89,8 +96,11 @@ export function ValuationTable({ data, isLoading, currencySymbol: propCurrency }
       {
        accessorKey: 'totalValue',
        header: `Total Value (${currencySymbol})`,
-       cell: ({ row }) =>
-        formatCurrency(row.original.totalValue, currencySymbol, locale),
+       cell: ({ row }) => (
+        <span dir="ltr" className="inline-block font-sans">
+         {formatCurrency(row.original.totalValue, currencySymbol, locale)}
+        </span>
+       ),
       } as ColumnDef<ValuationRow, unknown>,
      ]
     : []),

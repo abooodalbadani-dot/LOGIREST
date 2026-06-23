@@ -282,7 +282,18 @@ export class WorkflowService {
 
         fetchedDoc = doc;
 
-        // Role Validation Check
+        // 1. Transition Status check
+        const targetStatus = getNextStatusV2(
+          docType,
+          doc.status as DocumentStatus,
+          action,
+        );
+        if (!targetStatus) {
+          const errorMsg = `Invalid status transition: Action ${action} is not allowed on ${docType} in status ${doc.status}`;
+          throw new BadRequestException(errorMsg);
+        }
+
+        // 2. Role Validation Check
         const hasRolePermission = canPerformActionV2(
           docType,
           doc.status as DocumentStatus,
@@ -292,17 +303,6 @@ export class WorkflowService {
         if (!hasRolePermission) {
           const errorMsg = `User with role ${userRole} is not authorized to perform action ${action} on ${docType} in status ${doc.status}`;
           throw new ForbiddenException(errorMsg);
-        }
-
-        // Transition Status check
-        const targetStatus = getNextStatusV2(
-          docType,
-          doc.status as DocumentStatus,
-          action,
-        );
-        if (!targetStatus) {
-          const errorMsg = `Invalid status transition: Action ${action} is not allowed on ${docType} in status ${doc.status}`;
-          throw new BadRequestException(errorMsg);
         }
 
         // Check warehouse operational locks

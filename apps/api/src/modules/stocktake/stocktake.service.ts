@@ -6,12 +6,14 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { Role, StocktakeStatus, LockType, Prisma } from '@prisma/client';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 @Injectable()
 export class StocktakeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(body: { warehouseId: string }, userId: string) {
@@ -282,27 +284,84 @@ export class StocktakeService {
 
     return this.prisma.$transaction(async (tx) => {
       for (const cnt of safeCounts) {
-        await tx.stocktakeCount.upsert({
-          where: {
-            sessionId_itemId_lotId: {
+        const lotId = cnt.lotId || null;
+
+        const lotFilter =
+          lotId === null
+            ? Prisma.sql`"lotId" IS NULL`
+            : Prisma.sql`"lotId" = ${lotId}`;
+
+        const lockedRows = await tx.$queryRaw<
+          Array<{ id: string; qtyCounted: Prisma.Decimal }>
+        >(Prisma.sql`
+          SELECT id, "qtyCounted"
+          FROM "stocktake_counts"
+          WHERE "sessionId" = ${id}
+            AND "itemId" = ${cnt.itemId}
+            AND ${lotFilter}
+          FOR UPDATE
+        `);
+
+        if (lockedRows.length > 0) {
+          const existingRecord = lockedRows[0];
+          const oldQty = Number(existingRecord.qtyCounted);
+          const newQty = cnt.qtyCounted;
+
+          await tx.stocktakeCount.update({
+            where: { id: existingRecord.id },
+            data: {
+              qtyCounted: newQty,
+              countedById: userId,
+              countedAt: new Date(),
+            },
+          });
+
+          // Write Audit Log
+          await this.auditLogService.log(tx, {
+            userId,
+            action: 'STOCKTAKE_COUNT_UPDATED',
+            targetTable: 'stocktake_counts',
+            targetId: existingRecord.id,
+            beforeState: {
+              qtyCounted: oldQty,
+              itemId: cnt.itemId,
+              lotId,
+            },
+            afterState: {
+              qtyCounted: newQty,
+              itemId: cnt.itemId,
+              lotId,
+            },
+          });
+        } else {
+          const newRecord = await tx.stocktakeCount.create({
+            data: {
               sessionId: id,
               itemId: cnt.itemId,
-              lotId: (cnt.lotId || null) as unknown as string,
+              lotId,
+              qtyCounted: cnt.qtyCounted,
+              countedById: userId,
             },
-          },
-          update: {
-            qtyCounted: cnt.qtyCounted,
-            countedById: userId,
-            countedAt: new Date(),
-          },
-          create: {
-            sessionId: id,
-            itemId: cnt.itemId,
-            lotId: cnt.lotId || null,
-            qtyCounted: cnt.qtyCounted,
-            countedById: userId,
-          },
-        });
+          });
+
+          // Write Audit Log
+          await this.auditLogService.log(tx, {
+            userId,
+            action: 'STOCKTAKE_COUNT_CREATED',
+            targetTable: 'stocktake_counts',
+            targetId: newRecord.id,
+            beforeState: {
+              qtyCounted: 0,
+              itemId: cnt.itemId,
+              lotId,
+            },
+            afterState: {
+              qtyCounted: cnt.qtyCounted,
+              itemId: cnt.itemId,
+              lotId,
+            },
+          });
+        }
       }
 
       if (session.status === 'STARTED') {
@@ -333,27 +392,82 @@ export class StocktakeService {
         );
       }
 
-      await tx.stocktakeCount.upsert({
-        where: {
-          sessionId_itemId_lotId: {
+      const lotFilter =
+        snapshot.lotId === null
+          ? Prisma.sql`"lotId" IS NULL`
+          : Prisma.sql`"lotId" = ${snapshot.lotId}`;
+
+      const lockedRows = await tx.$queryRaw<
+        Array<{ id: string; qtyCounted: Prisma.Decimal }>
+      >(Prisma.sql`
+        SELECT id, "qtyCounted"
+        FROM "stocktake_counts"
+        WHERE "sessionId" = ${stocktakeId}
+          AND "itemId" = ${snapshot.itemId}
+          AND ${lotFilter}
+        FOR UPDATE
+      `);
+
+      if (lockedRows.length > 0) {
+        const existingRecord = lockedRows[0];
+        const oldQty = Number(existingRecord.qtyCounted);
+        const newQty = body.counted_qty;
+
+        await tx.stocktakeCount.update({
+          where: { id: existingRecord.id },
+          data: {
+            qtyCounted: newQty,
+            countedById: userId,
+            countedAt: new Date(),
+          },
+        });
+
+        // Write Audit Log
+        await this.auditLogService.log(tx, {
+          userId,
+          action: 'STOCKTAKE_COUNT_UPDATED',
+          targetTable: 'stocktake_counts',
+          targetId: existingRecord.id,
+          beforeState: {
+            qtyCounted: oldQty,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
+          },
+          afterState: {
+            qtyCounted: newQty,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
+          },
+        });
+      } else {
+        const newRecord = await tx.stocktakeCount.create({
+          data: {
             sessionId: stocktakeId,
             itemId: snapshot.itemId,
-            lotId: (snapshot.lotId || null) as unknown as string,
+            lotId: snapshot.lotId || null,
+            qtyCounted: body.counted_qty,
+            countedById: userId,
           },
-        },
-        update: {
-          qtyCounted: body.counted_qty,
-          countedById: userId,
-          countedAt: new Date(),
-        },
-        create: {
-          sessionId: stocktakeId,
-          itemId: snapshot.itemId,
-          lotId: snapshot.lotId || null,
-          qtyCounted: body.counted_qty,
-          countedById: userId,
-        },
-      });
+        });
+
+        // Write Audit Log
+        await this.auditLogService.log(tx, {
+          userId,
+          action: 'STOCKTAKE_COUNT_CREATED',
+          targetTable: 'stocktake_counts',
+          targetId: newRecord.id,
+          beforeState: {
+            qtyCounted: 0,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
+          },
+          afterState: {
+            qtyCounted: body.counted_qty,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
+          },
+        });
+      }
 
       // Advance status to COUNTING if not already
       const session = await tx.stocktakeSession.findUnique({
@@ -366,7 +480,7 @@ export class StocktakeService {
         });
       }
 
-      return this.findOne(stocktakeId);
+      return this.findOne(stocktakeId, tx);
     });
   }
 

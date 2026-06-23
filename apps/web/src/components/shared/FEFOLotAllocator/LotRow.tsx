@@ -1,5 +1,6 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { formatDate } from '@/utils/currency';
+import { Input } from '@/components/ui/input';
 import type { Lot } from '@/types/master-data';
 import type { UserRole } from '@/providers/AuthProvider';
 import { ExpiredOverrideInline } from './ExpiredOverrideInline';
@@ -52,7 +53,7 @@ export function LotRow({
  <span className="text-label-sm bg-status-error text-white px-2 py-1 rounded font-bold">{tc('expired_status')}</span>
  )}
  
- <input 
+ <Input 
  type="number" 
  min="0"
  max={lot.qtyAvailable}

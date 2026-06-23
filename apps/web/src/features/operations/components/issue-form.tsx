@@ -488,9 +488,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                         header: t('qty'),
                         cell: (line) => (
                           <div className="flex items-center justify-center w-full">
-                            <input
+                            <Input
                               type="number"
-                              dir="ltr"
                               disabled={effectiveIsLocked}
                               className="w-16 md:w-20 h-7 rounded-sm border border-gray-600 bg-transparent text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-white focus:ring-1 focus:ring-primary focus:border-primary shadow-none"
                               value={line.qty as number}
@@ -674,7 +673,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   type="button"
                   onClick={handleSubmitIssue}
                   disabled={submitIssue.isPending}
-                  className="h-8 md:h-10 px-4 md:px-6 rounded-full transition-all bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] md:text-label-sm font-black uppercase tracking-widest shadow-sm shadow-cyan-900/30 active:scale-95 flex items-center gap-2 shrink-0 border-none"
+                  className="w-full md:w-auto flex items-center justify-center h-8 md:h-10 px-4 md:px-6 rounded-full transition-all bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] md:text-label-sm font-black uppercase tracking-widest shadow-sm shadow-cyan-900/30 active:scale-95 gap-2 shrink-0 border-none"
                 >
                   {submitIssue.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -734,7 +733,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           setFefoOpen(true);
         }
       }}>
-        <DialogContent className="max-h-[85vh] max-w-2xl bg-card border border-border shadow-sm border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
+        <DialogContent className="max-h-[85vh] max-w-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-2xl p-0 overflow-hidden">
           <div className="p-8 bg-primary/[0.02]">
             <DialogHeader>
               <DialogTitle className="text-title-lg font-semibold uppercase italic text-foreground">

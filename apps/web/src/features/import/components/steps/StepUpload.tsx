@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Download, Upload, FileIcon, X, Loader2 } from 'lucide-react';
@@ -102,7 +103,7 @@ export function StepUpload({ wizard, locale }: StepUploadProps) {
  <p className="font-bold text-body-md mb-1">{t('click_to_upload')}</p>
  <p className="text-label-sm text-muted-foreground font-medium opacity-60">{t('upload_hint')}</p>
  </div>
- <input 
+ <Input 
  type="file" 
  ref={fileInputRef} 
  className="hidden" 

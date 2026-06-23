@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -182,7 +183,7 @@ export default function ForgotPasswordPage() {
                     {t('email')}
                   </label>
                   <div className="relative group">
-                    <input
+                    <Input
                       type="email"
                       placeholder={t('login.operator_placeholder')}
                       className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] px-4 outline-none placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"

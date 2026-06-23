@@ -95,7 +95,7 @@ export default function LotBalanceClient() {
   });
 
   return (
-    <div className="min-h-screen bg-surface text-foreground space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+    <div className="min-h-screen bg-surface text-foreground space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="max-w-[1600px] mx-auto space-y-8">
         
         {/* Premium Header */}

@@ -4,12 +4,13 @@ import { useState, useMemo } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { Pagination } from '@/components/shared/DataTable/Pagination';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { usePOList, POSummary } from '@/features/purchasing/hooks/usePOList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Truck, AlertTriangle, Trash2, X } from 'lucide-react';
+import { Plus, ClipboardList, CheckCircle2, Clock, ArrowUpRight, Search, AlertTriangle, Trash2, X } from 'lucide-react';
 import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
 
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -25,6 +26,7 @@ import { PO_STATUS } from '@logirest/shared-types';
 import { formatCurrency } from '@/utils/currency';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';
+import { cn } from '@/lib/utils';
 
 export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
@@ -58,7 +60,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       accessorKey: 'documentNumber',
       header: tc('doc_number'),
       cell: ({ row }) => (
-        <span dir="ltr" className="font-mono text-amber-500 font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">
+        <span dir="ltr" className="font-mono text-brand-gold font-bold drop-shadow-[0_0_8px_rgba(196,162,118,0.4)]">
           {row.original.documentNumber}
         </span>
       ),
@@ -125,7 +127,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-amber-500/20 text-muted-foreground/60 hover:text-amber-500 transition-all group"
+                className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-brand-gold/20 text-muted-foreground/60 hover:text-brand-gold transition-all group"
                 onClick={() => {
                   router.push(`/purchase-orders/${row.original.id}`);
                 }}
@@ -184,7 +186,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
           children={
             <PermissionGate action="create" resource="po">
               <Link href="/purchase-orders/new" className="shrink-0 w-full sm:w-auto">
-                <Button className="h-14 px-10 bg-amber-600 hover:brightness-110 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-amber-900/30 border-none">
+                <Button className="h-14 px-10 bg-brand-gold hover:bg-brand-gold-hover text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-brand-gold/30 border-none">
                   <Plus className="w-5 h-5 me-3" />
                   {t('create_new')}
                 </Button>
@@ -216,35 +218,78 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       </div>
 
       <div className="flex-1 w-full min-h-[400px] md:min-h-0">
-        <DataTable
-          columns={columns}
-          data={data?.data || []}
-          isLoading={isLoading}
-          onRowClick={(row: POSummary) => router.push(`/purchase-orders/${row.id}`)}
-          collectionName="procurement_po"
-          emptyState={
-            <EmptyState
-              variant="minimal"
-              title={tc('datatable.no_records')} action={
-                <PermissionGate action="create" resource="po">
-                  <Link href="/purchase-orders/new" className="shrink-0 w-full sm:w-auto">
-                    <Button className="h-10 px-6 bg-amber-600 hover:bg-amber-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm">
-                      <Plus className="w-3.5 h-3.5 me-2" />
-                      {t('create_new')}
+        {/* Desktop Version */}
+        <div className="hidden lg:block">
+          <DataTable
+            columns={columns}
+            data={data?.data || []}
+            isLoading={isLoading}
+            onRowClick={(row: POSummary) => router.push(`/purchase-orders/${row.id}`)}
+            collectionName="procurement_po"
+            emptyState={
+              <EmptyState
+                variant="minimal"
+                title={tc('datatable.no_records')}
+                action={
+                  <PermissionGate action="create" resource="po">
+                    <Link href="/purchase-orders/new" className="shrink-0 w-full sm:w-auto">
+                      <Button className="h-10 px-6 bg-amber-600 hover:bg-amber-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm">
+                        <Plus className="w-3.5 h-3.5 me-2" />
+                        {t('create_new')}
+                      </Button>
+                    </Link>
+                  </PermissionGate>
+                }
+              />
+            }
+            pagination={data?.meta ? {
+              page: page,
+              pageSize: 10,
+              total: data.meta.total,
+              totalPages: data.meta.totalPages,
+              onPageChange: setPage
+            } : undefined}
+            filters={
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <div className="w-full sm:w-64">
+                  <div className="relative w-full">
+                    <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      placeholder={tc('search')}
+                      value={search}
+                      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                      className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+                <div className="w-full sm:w-48 relative group">
+                  <SmartCombobox
+                    items={statusItems}
+                    value={status || 'ALL'}
+                    onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+                    placeholder={tc('statuses.all')}
+                    triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+                  />
+                  {status && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
+                    >
+                      <X className="h-4 w-4" />
                     </Button>
-                  </Link>
-                </PermissionGate>
-              }
-            />
-          }
-          pagination={data?.meta ? {
-            page: page,
-            pageSize: 10,
-            total: data.meta.total,
-            totalPages: data.meta.totalPages,
-            onPageChange: setPage
-          } : undefined}
-          filters={
+                  )}
+                </div>
+              </div>
+            }
+          />
+        </div>
+
+        {/* Mobile Version */}
+        <div className="block lg:hidden flex flex-col gap-6 w-full min-w-0">
+          {/* Filters Row */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full mb-6 min-w-0">
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
               <div className="w-full sm:w-64">
                 <div className="relative w-full">
@@ -277,8 +322,206 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
                 )}
               </div>
             </div>
-          }
-        />
+          </div>
+
+          {/* Cards or Empty/Loading State */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white dark:bg-[#1A2234] border border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm animate-pulse space-y-4"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
+                    <div className="flex gap-2">
+                      <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-16" />
+                      <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-20" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+                      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+                      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+                    </div>
+                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+                      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2">
+                    <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded-lg w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : !data || data.data.length === 0 ? (
+            <div className="py-12 px-4">
+              <EmptyState
+                variant="minimal"
+                title={tc('datatable.no_records')}
+                action={
+                  <PermissionGate action="create" resource="po">
+                    <Link href="/purchase-orders/new" className="shrink-0 w-full sm:w-auto">
+                      <Button className="h-10 px-6 bg-brand-gold hover:bg-brand-gold-hover text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm">
+                        <Plus className="w-3.5 h-3.5 me-2" />
+                        {t('create_new')}
+                      </Button>
+                    </Link>
+                  </PermissionGate>
+                }
+              />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full animate-in fade-in duration-500">
+                {data.data.map((po) => {
+                  const isOverdue = po.expectedDate && new Date(po.expectedDate) < new Date() && po.status !== 'FULFILLED';
+                  const isDraft = po.status === 'DRAFT';
+
+                  return (
+                    <div
+                      key={po.id}
+                      className="bg-white dark:bg-[#1A2234] border border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700 transition-all cursor-pointer flex flex-col justify-between"
+                      onClick={() => router.push(`/purchase-orders/${po.id}`)}
+                    >
+                      {/* Header */}
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-body-md truncate max-w-[50%]">
+                          {po.supplierName || '—'}
+                        </h3>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-mono text-brand-gold font-bold drop-shadow-[0_0_8px_rgba(196,162,118,0.2)] text-label-xs bg-brand-gold/10 px-2 py-0.5 rounded-md">
+                            {po.documentNumber}
+                          </span>
+                          <StatusBadge status={po.status as BadgeStatus} />
+                        </div>
+                      </div>
+
+                      {/* Body */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-3">
+                        <div className="flex flex-col text-start">
+                          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold tracking-wider mb-0.5">
+                            {tc('created_at')}
+                          </span>
+                          <span dir="ltr" className="font-sans [font-variant-numeric:lining-nums_tabular-nums] font-bold text-slate-900 dark:text-slate-100 text-body-sm">
+                            <ClientOnlyTime
+                              date={po.createdAt}
+                              mode="date"
+                              locale={locale}
+                              fallback="--/--/----"
+                              className="font-sans"
+                            />
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col text-start">
+                          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold tracking-wider mb-0.5">
+                            {t('expected_date')}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span dir="ltr" className="font-sans [font-variant-numeric:lining-nums_tabular-nums]">
+                              <ClientOnlyTime
+                                date={po.expectedDate}
+                                mode="date"
+                                locale={locale}
+                                fallback="--/--/----"
+                                className={cn(
+                                  "font-sans font-semibold text-body-sm",
+                                  isOverdue ? "text-status-error font-bold animate-pulse" : "text-slate-900 dark:text-slate-100"
+                                )}
+                              />
+                            </span>
+                            {isOverdue && (
+                              <span className="text-[10px] font-bold uppercase text-status-error bg-status-error/10 px-1.5 py-0.5 rounded-sm animate-pulse inline-flex items-center gap-0.5">
+                                <AlertTriangle className="w-3 h-3" />
+                                Overdue
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col text-start col-span-2 sm:col-span-1">
+                          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold tracking-wider mb-0.5">
+                            {t('total_amount')}
+                          </span>
+                          <span dir="ltr" className="font-sans [font-variant-numeric:lining-nums_tabular-nums] font-bold text-slate-900 dark:text-slate-100 text-body-sm">
+                            {formatCurrency(po.supplierTotalAmount, po.currencyCode, locale)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="pt-3 mt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+                        {isDraft && (
+                          <PermissionGate action="delete" resource="po">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={deletePO.isPending}
+                              className="h-9 px-3 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/5 transition-all text-xs font-semibold flex items-center gap-1.5"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const confirmed = window.confirm('Are you sure you want to delete this draft purchase order?');
+                                if (!confirmed) return;
+                                try {
+                                  await deletePO.mutateAsync({ id: po.id });
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              {tc('actions.delete') || 'Delete'}
+                            </Button>
+                          </PermissionGate>
+                        )}
+
+                        <PermissionGate action="view" resource="po">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 px-4 rounded-lg bg-brand-gold hover:bg-brand-gold-hover text-white hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/purchase-orders/${po.id}`);
+                            }}
+                          >
+                            {tc('actions.view_all') || 'View Details'}
+                            <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
+                          </Button>
+                        </PermissionGate>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination */}
+              {data?.meta && (
+                <div className="flex items-center justify-between mt-6 px-2">
+                  <div className={cn("text-label-xs font-bold text-muted-foreground uppercase opacity-70 whitespace-nowrap")}>
+                    {tc('datatable.showing') || 'Showing'}{' '}
+                    <span dir="ltr">{(page - 1) * 10 + 1}</span>{' '}
+                    {tc('datatable.to') || 'to'}{' '}
+                    <span dir="ltr">{Math.min(page * 10, data.meta.total)}</span>{' '}
+                    {tc('datatable.of') || 'of'}{' '}
+                    <span dir="ltr">{data.meta.total}</span>
+                  </div>
+                  <Pagination
+                    page={page}
+                    totalPages={data.meta.totalPages}
+                    onPageChange={setPage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

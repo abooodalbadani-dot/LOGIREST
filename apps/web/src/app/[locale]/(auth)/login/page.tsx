@@ -278,7 +278,7 @@ export default function LoginPage() {
                             <Button
                                 type="submit"
                                 isLoading={isSubmitting}
-                                className="w-full py-3 rounded-lg bg-gradient-to-r from-brand-gold/90 to-brand-gold text-brand-black font-bold uppercase tracking-widest hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-[1.01] transition-all duration-300"
+                                className="w-full py-3 rounded-lg bg-gradient-to-r from-brand-gold/90 to-brand-gold text-brand-black font-bold uppercase tracking-widest hover:shadow-[0_0_20px_rgba(180,142,103,0.4)] hover:scale-[1.01] transition-all duration-300"
                             >
                                 <span className="relative flex items-center justify-center gap-1.5 uppercase tracking-[0.15em] text-[10px]">
                                     <LogIn className="w-3 h-3" />

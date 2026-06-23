@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import React, { useMemo } from 'react';
@@ -211,7 +212,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
       onDragOver={handleDragOver}
       onClick={() => document.getElementById('evidence-upload')?.click()}
      >
-      <input 
+      <Input 
        type="file" 
        id="evidence-upload" 
        className="hidden" 

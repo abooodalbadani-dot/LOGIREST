@@ -48,7 +48,7 @@ export default function OperationsError({
         <div className="flex flex-col gap-3 w-full mt-8">
           <button
             onClick={() => reset()}
-            className="w-full px-6 py-2 bg-transparent border border-[#D4AF37] text-[#D4AF37] font-medium rounded hover:bg-[#D4AF37] hover:text-[#0B1220] transition-colors uppercase tracking-widest text-xs"
+            className="w-full px-6 py-2 bg-transparent border border-[#b48e67] text-[#b48e67] font-medium rounded hover:bg-[#b48e67] hover:text-[#0B1220] transition-colors uppercase tracking-widest text-xs"
           >
             Reinitialize Module
           </button>

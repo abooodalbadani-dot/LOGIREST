@@ -212,7 +212,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
             </div>
             {/* Codes Inline */}
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{supplier.code}</span>
+              <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{supplier.code}</span>
             </div>
           </div>
         </div>
@@ -244,7 +244,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
            </PermissionGate>
            <PermissionGate action="edit" resource="master_data">
             <button 
-             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#D4AF37] text-[#D4AF37] rounded-md text-xs font-bold hover:bg-[#D4AF37]/10 transition-colors"
+             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors"
              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/suppliers/${supplier.id}/edit`); }}
             >
              {t('edit')}

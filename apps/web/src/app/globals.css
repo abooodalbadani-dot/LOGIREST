@@ -14,7 +14,7 @@
   --color-bg-light: var(--background);
 
   /* Fonts */
-  --font-sans: var(--font-ibm-plex-arabic), var(--font-ibm-plex), sans-serif;
+  --font-sans: var(--font-ibm-plex), var(--font-ibm-plex-arabic), sans-serif;
   --font-display: var(--font-be-vietnam-pro), sans-serif;
 
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
@@ -344,8 +344,54 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+
   :lang(ar) * {
     letter-spacing: normal !important;
+  }
+
+  /* ============================================================
+   * ENTERPRISE NUMERAL STANDARDIZATION — LAYER 1 (FONT EXCLUSION)
+   * Prevents IBM Plex Sans Arabic from rendering Eastern Arabic-Indic
+   * numerals (٠١٢٣٤٥٦٧٨٩). Forces fallback to IBM Plex Sans (Latin).
+   * Unicode blocks excluded:
+   *   U+0660–U+0669  Arabic-Indic digits
+   *   U+06F0–U+06F9  Extended Arabic-Indic digits (Farsi/Urdu)
+   * ============================================================ */
+  @font-face {
+    font-family: var(--font-ibm-plex-arabic);
+    src: local('');  /* no-op: override trigger only */
+    unicode-range: U+0660-0669, U+06F0-06F9;
+  }
+
+  /* ============================================================
+   * ENTERPRISE NUMERAL STANDARDIZATION — LAYER 2 (CSS HARD OVERRIDE)
+   * Forces ltr direction and Latin numeral shaping on ALL data-entry
+   * and numeric display elements, regardless of inherited :lang(ar).
+   * ============================================================ */
+  :lang(ar) input[type="number"],
+  :lang(ar) input[type="tel"],
+  :lang(ar) input[type="date"],
+  :lang(ar) input[type="datetime-local"],
+  :lang(ar) input[type="time"],
+  :lang(ar) input[type="text"][inputmode="numeric"],
+  :lang(ar) input[type="text"][inputmode="decimal"],
+  :lang(ar) [data-slot="input"][type="number"],
+  :lang(ar) [data-slot="input"][type="tel"],
+  :lang(ar) [data-slot="input"][type="date"],
+  :lang(ar) [data-slot="input"][type="text"][inputmode="numeric"],
+  :lang(ar) [data-slot="input"][type="text"][inputmode="decimal"],
+  :lang(ar) [data-numeric="true"],
+  :lang(ar) [dir="ltr"] {
+    font-variant-numeric: lining-nums tabular-nums !important;
+    font-feature-settings: "lnum" 1, "tnum" 1 !important;
+  }
+
+  /* Numeric display containers (read-only data in tables, cards, etc.) */
+  [data-numeric="true"] {
+    direction: ltr;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    font-family: var(--font-mono), ui-monospace, monospace;
   }
 
   :lang(en) {
@@ -361,6 +407,51 @@
   :lang(ar) input[type="date"] {
     direction: ltr;
     text-align: right;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * ENTERPRISE NUMERIC STANDARDIZATION — ABSOLUTE LAW
+   * When lang="ar" is on <html>, browsers auto-render Eastern Arabic numerals
+   * (١٢٣). This block is a non-negotiable global override to force Western
+   * Arabic numerals (1, 2, 3) in ALL numeric and data entry contexts.
+   * ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Numeric inputs: force LTR with Western numerals */
+  input[type="number"],
+  input[type="tel"] {
+    direction: ltr !important;
+    text-align: center;
+    unicode-bidi: plaintext;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+  }
+
+  /* Text inputs that display codes, IDs, or structured data */
+  input[type="text"][dir="ltr"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    direction: ltr !important;
+    unicode-bidi: plaintext;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+  }
+
+  /* Table cells, badges, and static numeric displays */
+  td[data-numeric="true"],
+  .numeric-data,
+  [data-numeric] {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    display: inline-block;
+  }
+
+  /* Textarea: structural data entry */
+  textarea[dir="ltr"] {
+    direction: ltr !important;
+    unicode-bidi: plaintext;
   }
 
   :lang(ar) h1,
@@ -594,4 +685,18 @@
   max-height: 100% !important;
   max-width: 100% !important;
   overflow: visible !important;
+}
+
+/* Force Latin (Western) numerals globally or under specific classes */
+.force-latin-numbers,
+.force-latin-numbers * {
+  -webkit-locale: "en" !important;
+  font-variant-numeric: lining-nums !important;
+  font-feature-settings: "lnum" 1 !important;
+}
+
+input,
+textarea,
+.font-numeric {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }

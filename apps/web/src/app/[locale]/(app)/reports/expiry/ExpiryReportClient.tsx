@@ -66,14 +66,14 @@ export default function ExpiryReportClient() {
  },
  ];
 
- const exportColumns = [
- { header: t('table.sku'), key: 'sku', width: 15 },
- { header: t('table.name'), key: 'name', width: 30 },
- { header: t('table.lot_no'), key: 'lotNo', width: 15 },
- { header: t('table.expiry_date'), key: 'expiryDate', width: 20 },
- { header: t('table.qty'), key: 'qtyOnHand', width: 10 },
- { header: t('table.status'), key: 'status', width: 15 },
- ];
+  const exportColumns = [
+  { header: t('table.sku'), key: 'sku', width: 12 },
+  { header: t('table.name'), key: 'name', width: 35 },
+  { header: t('table.lot_no'), key: 'lotNo', width: 15 },
+  { header: t('table.expiry_date'), key: 'expiryDate', width: 15 },
+  { header: t('table.qty'), key: 'qtyOnHand', width: 10 },
+  { header: t('table.status'), key: 'status', width: 13 },
+  ];
 
  return (
  <div className="min-w-0 gap-6 flex-1 fade-in space-y-8 slide-in-from-bottom-4 animate-in flex-col flex duration-700 w-full">

@@ -50,10 +50,11 @@ describe('ReportsController', () => {
     },
     transfer: {
       count: jest.fn(),
-      findMany: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
     },
     adjustment: {
       groupBy: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
     },
     approvalEvent: {
       findFirst: jest.fn(),
@@ -93,6 +94,12 @@ describe('ReportsController', () => {
     },
     systemSetting: {
       findUnique: jest.fn(),
+    },
+    goodsReceivedNote: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    inventoryIssue: {
+      findMany: jest.fn().mockResolvedValue([]),
     },
   };
 

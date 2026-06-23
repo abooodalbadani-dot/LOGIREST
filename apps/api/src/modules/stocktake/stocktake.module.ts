@@ -6,9 +6,16 @@ import { StocktakeService } from './stocktake.service';
 import { StocktakeController } from './stocktake.controller';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { OutboxModule } from '../outbox/outbox.module';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
-  imports: [PrismaModule, LedgerModule, WorkflowModule, OutboxModule],
+  imports: [
+    PrismaModule,
+    LedgerModule,
+    WorkflowModule,
+    OutboxModule,
+    AuditLogModule,
+  ],
   controllers: [StocktakeController],
   providers: [StocktakePostService, StocktakeService],
   exports: [StocktakePostService, StocktakeService],

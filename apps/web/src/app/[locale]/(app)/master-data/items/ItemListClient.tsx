@@ -240,7 +240,7 @@ export function ItemListClient({ locale }: { locale: string }) {
             </div>
             {/* Codes Inline */}
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{item.code}</span>
+              <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{item.code}</span>
               <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">{item.barcode || '—'}</span>
             </div>
           </div>
@@ -253,7 +253,7 @@ export function ItemListClient({ locale }: { locale: string }) {
           <div className="flex gap-1.5 flex-wrap">
             <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#0B1220] px-2 py-1 rounded border border-gray-200 dark:border-gray-800 uppercase">{item.primaryUom.code}</span>
             {item.trackLots ? (
-              <span className="text-[10px] font-medium text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-1 rounded border border-[#D4AF37]/20 whitespace-nowrap">{t('yes')}</span>
+              <span className="text-[10px] font-medium text-[#b48e67] bg-[#b48e67]/10 px-2 py-1 rounded border border-[#b48e67]/20 whitespace-nowrap">{t('yes')}</span>
             ) : (
               <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#0B1220] px-2 py-1 rounded border border-gray-200 dark:border-gray-800 whitespace-nowrap">{t('no')}</span>
             )}
@@ -271,7 +271,7 @@ export function ItemListClient({ locale }: { locale: string }) {
            </PermissionGate>
            <PermissionGate action="edit" resource="master_data">
             <button 
-             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#D4AF37] text-[#D4AF37] rounded-md text-xs font-bold hover:bg-[#D4AF37]/10 transition-colors"
+             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors"
              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/items/${item.id}/edit`); }}
             >
              {t('edit')}

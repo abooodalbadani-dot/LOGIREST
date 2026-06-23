@@ -79,7 +79,7 @@ export function MasterDataFormLayout({
                                     type="button"
                                     variant="outline"
                                     onClick={onCancel}
-                                    className="h-10 text-label-xs font-bold uppercase rounded-lg border-border px-6 hover:bg-muted dark:hover:bg-neutral-800/50"
+                                    className="w-full md:w-auto h-10 flex items-center justify-center text-label-xs font-bold uppercase rounded-lg border-border px-6 hover:bg-muted dark:hover:bg-neutral-800/50"
                                 >
                                     {tc('cancel')}
                                 </Button>
@@ -90,7 +90,7 @@ export function MasterDataFormLayout({
                                         onSubmit();
                                     }}
                                     disabled={saveDisabled || !isDirty || isSaving}
-                                    className="h-10 text-label-xs font-bold uppercase rounded-lg bg-operational-cyan hover:bg-operational-cyan/90 text-white px-8 shadow-sm shadow-operational-cyan/20"
+                                    className="w-full md:w-auto h-10 flex items-center justify-center text-label-xs font-bold uppercase rounded-lg bg-operational-cyan hover:bg-operational-cyan/90 text-white px-8 shadow-sm shadow-operational-cyan/20"
                                 >
                                     {isSaving ? tc('saving') : tc('save')}
                                 </Button>

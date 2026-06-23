@@ -218,6 +218,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   // Workflow Integration
   const status = (initialData?.status || PO_STATUS.DRAFT) as DocumentStatus;
   const isLocked = isDocumentLocked('PO', status);
+  const isSaved = status && (
+    status.toLowerCase() === 'saved' ||
+    status.toLowerCase() === 'received' ||
+    status.toLowerCase() === 'posted' ||
+    status.toLowerCase() === 'approved' ||
+    status.toLowerCase() === 'submitted'
+  );
 
 
   async function onSubmit(values: PurchaseOrderFormValues) {
@@ -229,6 +236,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         });
         playSound('success');
         toast.success(t("edit_success"));
+        router.push('/purchase-orders', { skipGuard: true });
       } else {
         if (!currencies || currencies.length === 0) {
           playSound('error');
@@ -238,7 +246,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         const result = await createMutation.mutateAsync({ payload: values });
         playSound('success');
         toast.success(t("submit_success"));
-        router.push(`/purchase-orders/${result.id}`, { skipGuard: true });
+        router.push('/purchase-orders', { skipGuard: true });
       }
     } catch (error) {
       console.error('[PO Submit Error Details] ' + JSON.stringify(error));
@@ -271,7 +279,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const [importDialogOpen, setImportDialogOpen] = React.useState(false);
   const searchParams = useSearchParams();
   const prIdFromUrl = searchParams.get('prId') || searchParams.get('pr_id');
-  const [selectedPRId, setSelectedPRId] = React.useState<string | null>(prIdFromUrl);
+  const [selectedPRId, setSelectedPRId] = React.useState<string | null>(prIdFromUrl || initialData?.prId || null);
   const { data: approvedPRs, isLoading: loadingPRs } = usePRList({ status: 'APPROVED', unconverted: true });
   const { data: selectedPR, isLoading: loadingSelectedPR, isError: prError, error: prErrorDetail } = usePR(selectedPRId);
   const hasAutoImported = React.useRef(false);
@@ -338,7 +346,6 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         form.setValue('expectedDate', selectedPR.expectedDate.split("T")[0]);
       }
       setImportDialogOpen(false);
-      setSelectedPRId(null);
     } catch (err) {
       console.error('[PO_FORM_HYDRATION_ERROR] Failed during manual import of PR lines:', err);
       toast.error(t('errors.pr_lines_import_failed') || 'Failed to import Purchase Request lines');
@@ -445,15 +452,15 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
         <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-8 max-w-6xl mx-auto">
           <div className="bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl relative">
-            <div className="flex flex-wrap items-center justify-between pb-6 mb-6 gap-4">
-              <h3 className="text-lg md:text-title-lg font-semibold text-operational-cyan uppercase truncate">
+            <div className="flex flex-wrap items-center justify-between pb-6 mb-6 gap-4 min-w-0 w-full">
+              <h3 className="text-lg md:text-title-lg font-semibold text-operational-cyan uppercase truncate flex-1 min-w-0">
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
               </h3>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center flex-shrink-0 min-w-0 max-w-full">
                 <DocumentExportMenu />
-                <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">{/* i18n-ignore */}PO_ENGINE_V2</span>
+                <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase shrink-0">{/* i18n-ignore */}PO_ENGINE_V2</span>
                 {initialData?.documentNumber && (
-                  <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight truncate max-w-[120px] sm:max-w-none">
+                  <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight whitespace-nowrap truncate max-w-full block">
                     {initialData.documentNumber}
                   </span>
                 )}
@@ -483,7 +490,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           value={field.value}
                           onSelect={(item) => field.onChange(item.id)}
                           placeholder={t('select_supplier')}
-                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#D4AF37] focus:ring-[#D4AF37]"
+                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -500,7 +507,17 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('linked_pr')}</FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
-                          <Input placeholder={t('linked_pr_placeholder')} disabled={isLocked} className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-11 rounded-md flex-1 focus:border-[#D4AF37] focus:ring-[#D4AF37]" {...field} />
+                          <Input 
+                            placeholder={t('linked_pr_placeholder')} 
+                            disabled={isLocked} 
+                            className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-11 rounded-md flex-1 focus:border-[#b48e67] focus:ring-[#b48e67]" 
+                            value={loadingSelectedPR ? tc('loading') : (selectedPR?.documentNumber || field.value || '')}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            readOnly
+                          />
                         </FormControl>
                         {!isLocked && (
                           <Button
@@ -520,7 +537,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 />
 
                 <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-                  <DialogContent className="max-w-2xl w-full inset-x-0 bottom-0 mb-0 sm:mb-auto sm:bottom-auto rounded-b-none sm:rounded-b-xl">
+                  <DialogContent className="max-w-2xl w-full inset-x-0 bottom-0 mb-0 sm:mb-auto sm:bottom-auto rounded-b-none sm:rounded-b-xl bg-white dark:bg-[#1A2234] shadow-2xl z-50 border border-gray-200 dark:border-gray-800">
                     <DialogHeader>
                       <DialogTitle>{t('import_from_pr') || 'Import from Purchase Request'}</DialogTitle>
                     </DialogHeader>
@@ -555,7 +572,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                       <Button
                         type="button"
                         variant="ghost"
-                        onClick={() => { setImportDialogOpen(false); setSelectedPRId(null); }}
+                        onClick={() => { 
+                          setImportDialogOpen(false); 
+                          setSelectedPRId(form.getValues('prId') || null); 
+                        }}
                       >
                         {tc('cancel')}
                       </Button>
@@ -578,7 +598,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('expected_date')}</FormLabel>
                       <FormControl>
-                        <Input type="date" disabled={isLocked} className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#D4AF37] focus:ring-[#D4AF37]" {...field} />
+                        <Input type="date" disabled={isLocked} className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -597,7 +617,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           value={field.value}
                           onSelect={(item) => field.onChange(item.id)}
                           placeholder={t('select_warehouse')}
-                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#D4AF37] focus:ring-[#D4AF37]"
+                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -618,7 +638,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           value={field.value}
                           onSelect={(item) => field.onChange(item.id)}
                           placeholder={t('currency_placeholder')}
-                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase font-mono focus:border-[#D4AF37] focus:ring-[#D4AF37]"
+                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase font-mono focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -640,7 +660,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                             step="0.0001"
                             min="0"
                             disabled={isLocked}
-                            className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 ps-10 rounded-md focus:border-[#D4AF37] focus:ring-[#D4AF37]"
+                            className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 ps-10 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]"
                             dir="ltr"
                             {...field}
                             onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -658,7 +678,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <FormItem className="md:col-span-2 text-start">
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('general_notes')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#D4AF37] focus:ring-[#D4AF37]" {...field} />
+                        <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -729,6 +749,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         <FormFooter
           isLocked={isLocked}
           onCancel={() => router.push('/purchase-orders', { skipGuard: !form.formState.isDirty })}
+          cancelLabel={isSaved ? tc('back') || 'BACK' : tc('cancel') || 'CANCEL'}
           onSubmit={form.handleSubmit(onSubmit, onFormError)}
           isPending={isSubmitting}
           submitLabel={mode === "edit" ? tc('save') : t('actions.submit')}

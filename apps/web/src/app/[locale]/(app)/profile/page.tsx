@@ -238,7 +238,7 @@ export default function ProfilePage() {
           title="Change Photo"
          >
           <Camera className="w-4 h-4 stroke-[2.5px]" />
-          <input 
+          <Input 
            id="avatar-file" 
            type="file" 
            accept="image/*" 

@@ -73,7 +73,7 @@ if start_idx != -1:
                   'inline-flex items-center transition-all',
                   hasLot
                      ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 text-label-xs font-semibold uppercase rounded-md md:rounded-lg px-4 py-2 md:px-2.5 md:py-1 border border-operational-cyan/30 md:border-none w-full md:w-auto justify-center md:justify-start mt-4 md:mt-0 font-mono'
-                     : 'border border-[#D4AF37] text-[#D4AF37] px-4 py-2 rounded-md hover:bg-[#D4AF37] hover:text-black w-full text-center mt-4 md:mt-0 md:w-auto md:border-none md:text-primary md:underline md:underline-offset-4 md:decoration-dotted md:decoration-primary/40 md:hover:decoration-primary md:px-2.5 md:py-1 md:rounded-lg text-xs md:text-label-xs font-semibold uppercase'
+                     : 'border border-[#b48e67] text-[#b48e67] px-4 py-2 rounded-md hover:bg-[#b48e67] hover:text-black w-full text-center mt-4 md:mt-0 md:w-auto md:border-none md:text-primary md:underline md:underline-offset-4 md:decoration-dotted md:decoration-primary/40 md:hover:decoration-primary md:px-2.5 md:py-1 md:rounded-lg text-xs md:text-label-xs font-semibold uppercase'
                )}
                onClick={() => handleLotClick(field)}
             >

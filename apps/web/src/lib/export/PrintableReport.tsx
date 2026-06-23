@@ -100,7 +100,81 @@ const formatReportValue = (colKey: string, val: unknown, lang: 'ar' | 'en') => {
     return lang === 'ar' ? (val ? 'نعم' : 'لا') : (val ? 'Yes' : 'No');
   }
 
-  return String(val);
+  // Relational/nested object safety net: Drill down into objects before formatting
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    
+    // Check if it's an Item-like object (code/sku and name)
+    if ('name' in obj && ('sku' in obj || 'code' in obj || 'barcode' in obj)) {
+      const code = (obj.sku || obj.code || obj.barcode || '') as string;
+      const name = (obj.name || '') as string;
+      return code ? `${code} - ${name}` : name;
+    }
+    
+    // Check if it's a User-like object
+    if ('fullName' in obj || 'name' in obj || 'email' in obj) {
+      return (obj.fullName || obj.name || obj.email || '') as string;
+    }
+    
+    // Check if it's a Warehouse/Branch/Supplier/etc. (name)
+    if ('name' in obj) {
+      return (obj.name || '') as string;
+    }
+    
+    // Fallback: If it's a generic object but has an id
+    if ('id' in obj) {
+      const idVal = String(obj.id);
+      return idVal.length > 8 ? idVal.substring(0, 8).toUpperCase() : idVal;
+    }
+  }
+
+  const valStr = String(val).trim();
+  if (!valStr) return '';
+
+  // 1. Intercept and Format Dates:
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+  if (isoDateRegex.test(valStr)) {
+    try {
+      const date = new Date(valStr);
+      return format(date, 'dd/MM/yyyy HH:mm');
+    } catch {
+      return valStr;
+    }
+  }
+
+  // 2. Translate and Format Enums (for STATUS and TYPE columns)
+  const colKeyUpper = colKey.toUpperCase();
+  if (colKeyUpper.includes('STATUS') || colKeyUpper.includes('TYPE')) {
+    const valUpper = valStr.toUpperCase();
+    const exportTypeMap: Record<string, string> = {
+      'GOODS_RECEIVED_NOTE': lang === 'ar' ? 'استلام بضاعة' : 'Goods Received Note',
+      'ADJUSTMENT': lang === 'ar' ? 'تسوية مخزون' : 'Adjustment',
+      'TRANSFER': lang === 'ar' ? 'تحويل مخزني' : 'Transfer',
+      'INVENTORY_ISSUE': lang === 'ar' ? 'صرف مخزني' : 'Inventory Issue',
+      'NEAR_EXPIRY': lang === 'ar' ? 'قارب على الانتهاء' : 'Near Expiry',
+      'ACTIVE': lang === 'ar' ? 'نشط' : 'Active',
+      'INACTIVE': lang === 'ar' ? 'غير نشط' : 'Inactive',
+      'DRAFT': lang === 'ar' ? 'مسودة' : 'Draft',
+      'SUBMITTED': lang === 'ar' ? 'تم التقديم' : 'Submitted',
+      'APPROVED': lang === 'ar' ? 'تمت الموافقة' : 'Approved',
+      'REJECTED': lang === 'ar' ? 'مرفوض' : 'Rejected',
+      'FULFILLED': lang === 'ar' ? 'مكتمل' : 'Fulfilled'
+    };
+
+    if (exportTypeMap[valUpper]) {
+      return exportTypeMap[valUpper];
+    }
+  }
+
+  // 3. Truncate UUIDs:
+  if (colKeyUpper.includes('REFERENCE') || colKeyUpper.includes('REF') || colKeyUpper.includes('DOCUMENT_NUMBER') || colKeyUpper.includes('ID')) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(valStr)) {
+      return valStr.substring(0, 8).toUpperCase();
+    }
+  }
+
+  return valStr;
 };
 
 export const PrintableReport: React.FC<PrintableReportProps> = ({
@@ -145,7 +219,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
       style={{
         width: '210mm', // A4 width
         height: 'fit-content', // Only wrap actual content, prevent blank overflow
-        padding: '8mm 17mm 17mm 17mm', // Reduced top padding to maximize space
+        padding: '15mm 15mm 20mm 15mm', // Optimized margins: left/right at 15mm, top at 15mm, bottom at 20mm
         backgroundColor: '#ffffff',
         color: '#0f172a',
         fontFamily: "'Cairo', 'Tajawal', sans-serif",
@@ -169,7 +243,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             text-align: ${lang === 'ar' ? 'right' : 'left'};
             font-size: 10pt;
             font-weight: 700;
-            border-bottom: 2px solid #D4AF37;
+            border-bottom: 2px solid #c4a98d;
             background-color: #0B1220;
             color: #ffffff;
           }
@@ -181,7 +255,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             border-bottom: 1px solid #e2e8f0;
           }
           .printable-report-table tr:nth-child(even) td {
-            background-color: rgba(212, 175, 55, 0.1);
+            background-color: rgba(180, 142, 103, 0.1);
           }
           .printable-report-table tr:nth-child(odd) td {
             background-color: #ffffff;
@@ -305,9 +379,35 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
       <table className="printable-report-table">
         <thead>
           <tr>
-            {columns.map((col, idx) => (
-              <th key={idx}>{col.header}</th>
-            ))}
+            {columns.map((col, idx) => {
+              const colWidth = col.width ? `${col.width}%` : undefined;
+              const colKeyUpper = col.key.toUpperCase();
+
+              // Determine if this is compact/structured data that should be centered
+              const isCentered =
+                colKeyUpper.includes('DATE') ||
+                colKeyUpper.includes('EXPIRY') ||
+                colKeyUpper.includes('QTY') ||
+                colKeyUpper.includes('QUANTITY') ||
+                colKeyUpper.includes('VARIANCE') ||
+                colKeyUpper.includes('REFERENCE') ||
+                colKeyUpper.includes('REF') ||
+                colKeyUpper.includes('DOCUMENT_NUMBER') ||
+                colKeyUpper.includes('PONO') ||
+                colKeyUpper.includes('SKU') ||
+                colKeyUpper.includes('LOT') ||
+                colKeyUpper.includes('ID') ||
+                colKeyUpper.includes('STATUS') ||
+                colKeyUpper.includes('TYPE');
+
+              const headerAlign = isCentered ? 'center' : (lang === 'ar' ? 'right' : 'left');
+
+              return (
+                <th key={idx} style={{ width: colWidth, minWidth: colWidth, textAlign: headerAlign }}>
+                  {col.header}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -320,20 +420,39 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
                 // Truncate raw UUIDs
                 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                 if (uuidRegex.test(displayVal)) {
-                  displayVal = displayVal.substring(0, 8);
+                  displayVal = displayVal.substring(0, 8).toUpperCase();
                 }
 
-                // Identify alignment logic based on previous pdfExport
+                // Identify type/language logic
                 const isNumeric = /^\d+(\.\d+)?%?$/.test(displayVal.trim());
                 const isEnglish = !/[\u0600-\u06FF\uFE70-\uFEFC]/.test(displayVal) && displayVal.trim().length > 0;
+
+                const colKeyUpper = col.key.toUpperCase();
+                const isCentered =
+                  colKeyUpper.includes('DATE') ||
+                  colKeyUpper.includes('EXPIRY') ||
+                  colKeyUpper.includes('QTY') ||
+                  colKeyUpper.includes('QUANTITY') ||
+                  colKeyUpper.includes('VARIANCE') ||
+                  colKeyUpper.includes('REFERENCE') ||
+                  colKeyUpper.includes('REF') ||
+                  colKeyUpper.includes('DOCUMENT_NUMBER') ||
+                  colKeyUpper.includes('PONO') ||
+                  colKeyUpper.includes('SKU') ||
+                  colKeyUpper.includes('LOT') ||
+                  colKeyUpper.includes('ID') ||
+                  colKeyUpper.includes('STATUS') ||
+                  colKeyUpper.includes('TYPE');
 
                 let alignStyle: 'right' | 'left' | 'center' = lang === 'ar' ? 'right' : 'left';
                 let dirStyle: 'rtl' | 'ltr' = lang === 'ar' ? 'rtl' : 'ltr';
                 let fontStyle = 'inherit';
                 let fontVariant = 'normal';
 
-                // Data Integrity Rule (The Lock Rule): Arabic right, English left, Numerics center (ltr)
-                if (isNumeric) {
+                if (isCentered) {
+                  alignStyle = 'center';
+                  dirStyle = isEnglish || isNumeric ? 'ltr' : (lang === 'ar' ? 'rtl' : 'ltr');
+                } else if (isNumeric) {
                   alignStyle = 'center';
                   dirStyle = 'ltr';
                   fontVariant = 'tabular-nums';
@@ -346,10 +465,12 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
                   dirStyle = 'rtl';
                 }
 
+                const colWidth = col.width ? `${col.width}%` : undefined;
+
                 // CHINA Badge override
                 if (displayVal.toLowerCase() === 'china') {
                   return (
-                    <td key={cIdx} style={{ textAlign: alignStyle, direction: dirStyle, padding: '8px' }}>
+                    <td key={cIdx} style={{ textAlign: alignStyle, direction: dirStyle, padding: '8px', width: colWidth, minWidth: colWidth }}>
                       <span className="px-3 py-1 bg-gray-100 text-[#0B1220] text-xs font-bold uppercase tracking-wider rounded-md" dir="ltr">
                         CHINA
                       </span>
@@ -365,7 +486,9 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
                       direction: dirStyle,
                       fontFamily: fontStyle,
                       fontVariantNumeric: fontVariant,
-                      padding: '8px'
+                      padding: '8px',
+                      width: colWidth,
+                      minWidth: colWidth
                     }}
                   >
                     {displayVal}

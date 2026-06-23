@@ -158,7 +158,7 @@ export function ProfileFormClient({ locale: _locale }: { locale: string }) {
              </span>
             </div>
            )}
-           <input 
+           <Input 
             id="logo-upload"
             type="file" 
             accept="image/*" 

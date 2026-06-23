@@ -52,10 +52,17 @@ export class TransferPostService {
             );
           }
 
-          // 1. Centralized Role Check
+          // 1. Status Guard (Defense-in-depth)
+          if (lockedDoc.status !== 'DRAFT') {
+            throw new BadRequestException(
+              `Transfer must be in DRAFT status to be shipped`,
+            );
+          }
+
+          // 2. Centralized Role Check
           const hasRolePermission = canPerformActionV2(
             'TRANSFER',
-            lockedDoc.status as DocumentStatus,
+            lockedDoc.status,
             'SHIP',
             userRole,
           );
@@ -64,7 +71,7 @@ export class TransferPostService {
             throw new ForbiddenException(errorMsg);
           }
 
-          // 2. Strict Origin Warehouse Branch Scope Check
+          // 3. Strict Origin Warehouse Branch Scope Check
           const originScope = await tx.userWarehouseScope.findUnique({
             where: {
               userId_warehouseId: {
@@ -76,13 +83,6 @@ export class TransferPostService {
           if (!originScope) {
             const errorMsg = `User ${userId} with role ${userRole} is not authorized for the origin warehouse branch ${lockedDoc.fromWarehouseId}`;
             throw new ForbiddenException(errorMsg);
-          }
-
-          // 3. Status Guard (Defense-in-depth)
-          if (lockedDoc.status !== 'DRAFT') {
-            throw new BadRequestException(
-              `Transfer must be in DRAFT status to be shipped`,
-            );
           }
 
           // Optimistic locking version check

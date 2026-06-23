@@ -353,7 +353,7 @@ export default function StockBalanceClient() {
                )}
              </div>
              <div className="flex items-center justify-between gap-2 mt-1">
-               <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{item.itemCode}#</span>
+               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{item.itemCode}#</span>
                <span className="text-[10px] font-bold text-muted-foreground truncate">{item.warehouseName}</span>
              </div>
            </div>

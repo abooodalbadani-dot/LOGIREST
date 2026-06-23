@@ -23,6 +23,58 @@ const INFRASTRUCTURE_ERRORS = {
   }
 };
 
+function translateApiErrorMessage(message: string, lang: string): string {
+  if (!message || typeof message !== 'string') return message;
+
+  const isAr = lang === 'ar';
+
+  // 1. FX Rate Error: "No active FX rate found for YER to CNY"
+  const fxRateRegex = /No active FX rate found for (\w+) to (\w+)/i;
+  const fxMatch = message.match(fxRateRegex);
+  if (fxMatch) {
+    const [, fromCurrency, toCurrency] = fxMatch;
+    return isAr
+      ? `لم يتم العثور على سعر صرف نشط للتحويل من ${fromCurrency} إلى ${toCurrency}. يرجى تهيئة أسعار الصرف أولاً في إعدادات العملات.`
+      : `No active exchange rate found from ${fromCurrency} to ${toCurrency}. Please configure the exchange rate in currency settings.`;
+  }
+
+  // 2. PO status: "Cannot create a GRN against a Purchase Order that is not APPROVED. (Current status: ...)"
+  const poStatusRegex = /Cannot create a GRN against a Purchase Order that is not APPROVED\.\s*\(Current status:\s*(\w+)\)/i;
+  const poMatch = message.match(poStatusRegex);
+  if (poMatch) {
+    const [, status] = poMatch;
+    return isAr
+      ? `لا يمكن إنشاء إشعار استلام بضائع (GRN) لأمر شراء غير معتمد. (الحالة الحالية: ${status})`
+      : `Cannot create a Goods Received Note (GRN) against a Purchase Order that is not APPROVED. (Current status: ${status})`;
+  }
+
+  // 3. Lot number duplication: "Lot number ... is already registered to another item."
+  const lotNumberRegex = /Lot number ([\w-]+) is already registered to another item\./i;
+  const lotMatch = message.match(lotNumberRegex);
+  if (lotMatch) {
+    const [, lotNum] = lotMatch;
+    return isAr
+      ? `رقم الدفعة (${lotNum}) مسجل بالفعل لصنف آخر.`
+      : `Lot number (${lotNum}) is already registered to another item.`;
+  }
+
+  // 4. Concurrency conflict: "Concurrency conflict: The document was modified by another user."
+  if (message.includes('Concurrency conflict: The document was modified by another user')) {
+    return isAr
+      ? 'حدث تعارض: تم تعديل هذا المستند بواسطة مستخدم آخر. يرجى تحديث الصفحة وإعادة المحاولة.'
+      : 'Concurrency conflict: This document was modified by another user. Please refresh and try again.';
+  }
+
+  // 5. Database connectivity / server errors stubs
+  if (message.includes('Database connection lost') || message.includes('Database connection')) {
+    return isAr
+      ? 'فقد الاتصال بقاعدة البيانات. يرجى التحقق من الخادم والمحاولة مرة أخرى.'
+      : 'Database connection lost. Please verify server status and try again.';
+  }
+
+  return message;
+}
+
 type CamelCase<S extends string> = S extends `${infer T}_${infer U}`
   ? `${T}${Capitalize<CamelCase<U>>}`
   : S;
@@ -429,6 +481,11 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
           normalizedErr.fieldErrors = fieldErrors;
           normalizedErr.message = msgObj.errors[0]?.message || 'errors.validation';
         }
+      }
+
+      // Translate raw API error messages into user-friendly localized text
+      if (normalizedErr.message && typeof normalizedErr.message === 'string') {
+        normalizedErr.message = translateApiErrorMessage(normalizedErr.message, locale);
       }
       
       console.error(`[API Error] ${method} ${path} Details: ` + JSON.stringify({

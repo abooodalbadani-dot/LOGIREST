@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -216,7 +217,7 @@ export default function ResetPasswordPage() {
                     {t('new_password')}
                   </label>
                   <div className="relative group">
-                    <input
+                    <Input
                       type={showPassword ? 'text' : 'password'}
                       className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] ps-4 pe-10 outline-none text-black dark:text-white"
                       {...register('password')}
@@ -237,7 +238,7 @@ export default function ResetPasswordPage() {
                     {t('confirm_new_password')}
                   </label>
                   <div className="relative group">
-                    <input
+                    <Input
                       type="password"
                       className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] px-4 outline-none text-black dark:text-white"
                       {...register('confirmPassword')}

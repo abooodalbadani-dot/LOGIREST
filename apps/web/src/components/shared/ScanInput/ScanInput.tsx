@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2, ScanLine, CheckCircle2, AlertCircle, Keyboard } from 'lucide-react';
@@ -177,7 +178,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                 <div className={cn(variant === 'standard' ? "flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full" : "")}>
                     <div className={cn(
                         "relative flex items-center transition-all duration-200 overflow-hidden shrink-0",
-                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : "flex items-center w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#D4AF37] focus-within:ring-1 focus-within:ring-[#D4AF37] overflow-hidden sm:flex-1",
+                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : "flex items-center w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden sm:flex-1",
                         variant === 'retro' && config.container,
                         variant === 'retro' ? (
                             scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
@@ -220,7 +221,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                                 />
                             </div>
                         ) : (
-                            <input
+                            <Input
                                 ref={inputRef}
                                 type="text"
                                 dir="ltr"

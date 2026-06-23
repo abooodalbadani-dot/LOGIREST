@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
@@ -118,7 +119,7 @@ function UnitCostInput({
   };
 
   return (
-    <input
+    <Input
       type="text"
       inputMode="decimal"
       value={localValue}
@@ -626,7 +627,7 @@ export function AdjustmentForm({
          }}
          renderQty={(line) => (
           <div className="flex justify-center w-full">
-           <input
+           <Input
             type="number"
             min="0.001"
             step="0.001"
@@ -639,7 +640,7 @@ export function AdjustmentForm({
              const val = parseFloat(e.target.value);
              updateLine(line.id, { qtyAdjusted: val || 0 });
             }}
-             className="h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center"
+             className="h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center font-sans"
            />
           </div>
          )}
@@ -658,7 +659,7 @@ export function AdjustmentForm({
                 updateLine(line.id, { unitCost: val });
                }}
                 className={cn(
-                 "h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center disabled:opacity-30",
+                 "h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center disabled:opacity-30 font-sans",
                  isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
                 )}
               />
@@ -677,7 +678,7 @@ export function AdjustmentForm({
               className={cn(
                "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
                line.direction === 'INCREASE'
-                ? "bg-[#D4AF37]/15 text-[#D4AF37] shadow-sm"
+                ? "bg-[#b48e67]/15 text-[#b48e67] shadow-sm"
                 : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
               )}
              >

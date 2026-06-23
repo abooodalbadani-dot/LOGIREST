@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useItems } from '@/features/items/hooks/useItems';
 import { type Item } from '@/features/items/types';
@@ -457,7 +458,7 @@ export function TransferNewClient() {
          const isExceeded = balance ? line.qty > availableQty : false;
          return (
           <div className="flex items-center justify-end w-full">
-            <input
+            <Input
              type="number"
              min="0.001"
              step="0.001"
@@ -467,7 +468,7 @@ export function TransferNewClient() {
               setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
              }}
               className={cn(
-               "h-8 w-24 text-center text-sm font-bold text-[#0B1220] bg-white border border-gray-300 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all",
+               "h-8 w-24 text-center font-sans text-sm font-bold text-[#0B1220] bg-white border border-gray-300 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all",
                isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
               )}
             />

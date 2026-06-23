@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -249,7 +250,7 @@ export default function MovementsClient() {
       </span>
       <div className="relative group">
        <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-operational-cyan transition-colors" />
-       <input
+       <Input
         type="search"
         placeholder={t('search_placeholder')}
         value={searchFilter}
@@ -333,10 +334,10 @@ export default function MovementsClient() {
          <div className="flex justify-between items-start">
            <div className="flex flex-col gap-1 w-full">
              <div className="flex justify-between items-start gap-2">
-               <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{movement.itemCode}#</span>
+               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{movement.itemCode}#</span>
                <Badge variant="secondary" className={`${getTypeStyle(movement.transactionType)} text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-sm h-auto shrink-0 border-transparent`}>
-                {t(`types.${movement.transactionType.toLowerCase()}` as any)}
-               </Badge>
+                {t(`types.${movement.transactionType.toLowerCase()}` as 'types.grn' | 'types.issue' | 'types.transfer' | 'types.adjustment')}
+              </Badge>
              </div>
              <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{movement.itemName}</span>
            </div>

@@ -7,6 +7,7 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
@@ -436,9 +437,8 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
            : (line._receivedQty ?? line.qty);
           return (
            <div className="flex justify-center">
-            <input
+            <Input
              type="number"
-             dir="ltr"
              disabled={isMutationBlocked || hasLots}
              className={cn(
               "w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all",
@@ -532,9 +532,8 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
          )}
         </div>
         <Label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('qty') || 'Qty'}</Label>
-        <input
+        <Input
          type="number"
-         dir="ltr"
          disabled={isMutationBlocked}
          className="w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all text-foreground border-emerald-500/20 focus:ring-emerald-500/30"
          value={lotModalLine._lotReceives?.[la.lotId] ?? la.allocatedQty}

@@ -50,7 +50,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const { data: categories, isLoading: isLoadingCats, isError: isErrorCats } = useCategories();
   const { data: uoms, isLoading: isLoadingUoms, isError: isErrorUoms } = useMasterDataList('units-of-measure', UoMSchema);
 
-  const { data: itemsData } = useItems();
+  const { data: itemsData } = useItems({ limit: 10000 });
   const create = useCreateItem();
   const conflict = useConflictHandler('item', id ?? '');
   const update = useUpdateItem({ onConflict: conflict.triggerConflict });

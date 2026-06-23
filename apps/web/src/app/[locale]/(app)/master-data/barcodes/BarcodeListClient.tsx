@@ -205,7 +205,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
             {/* Item Inline */}
             <div className="flex items-center gap-2 mt-0.5">
               {item ? (
-               <span className="text-[11px] font-bold text-[#D4AF37] uppercase">{item.name}</span>
+               <span className="text-[11px] font-bold text-[#b48e67] uppercase">{item.name}</span>
               ) : (
                <span className="opacity-40 italic text-[11px] uppercase">---</span>
               )}
@@ -227,7 +227,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
            </PermissionGate>
            <PermissionGate action="edit" resource="master_data">
             <button 
-             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#D4AF37] text-[#D4AF37] rounded-md text-xs font-bold hover:bg-[#D4AF37]/10 transition-colors uppercase"
+             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors uppercase"
              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/barcodes/${barcode.id}/edit`); }}
             >
              {tc('actions.edit')}

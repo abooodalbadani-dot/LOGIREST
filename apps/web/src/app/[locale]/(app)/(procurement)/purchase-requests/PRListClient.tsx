@@ -9,7 +9,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { usePRList, PRSummary } from '@/features/purchasing/hooks/usePRList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import { Plus, ClipboardList, CheckCircle2, Clock, ArrowUpRight, Search, Trash2, X } from 'lucide-react';
+import { Plus, ClipboardList, CheckCircle2, Clock, ArrowUpRight, Search, Trash2, X, Building2, User } from 'lucide-react';
 import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
@@ -191,69 +191,125 @@ export function PRListClient() {
  </div>
 
  <div className="flex-1 w-full min-h-[400px] md:min-h-0">
- <DataTable 
- columns={columns}
- data={data?.data || []}
- isLoading={isLoading}
- onRowClick={(row: PRSummary) => router.push(`/purchase-requests/${row.id}`)}
- collectionName="procurement_pr"
- emptyState={
- <EmptyState 
- variant="minimal"
- title={tc('datatable.no_records')} action={
- <PermissionGate action="create" resource="pr">
- <Link href="/purchase-requests/new" className="shrink-0 w-full sm:w-auto">
- <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
- <Plus className="w-3.5 h-3.5 me-2" />
- {t('create_new')}
- </Button>
- </Link>
- </PermissionGate>
- }
- />
- }
- pagination={data?.meta ? {
- page: page,
- pageSize: 10,
- total: data.meta.total,
- totalPages: data.meta.totalPages,
- onPageChange: setPage
- } : undefined}
-  filters={
-    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-      <div className="w-full sm:w-64">
-       <div className="relative w-full">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
-         placeholder={tc('search')}
-         value={search}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} 
-         className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
-        />
-       </div>
+  <div className="hidden md:block">
+   <DataTable 
+   columns={columns}
+   data={data?.data || []}
+   isLoading={isLoading}
+   onRowClick={(row: PRSummary) => router.push(`/purchase-requests/${row.id}`)}
+   collectionName="procurement_pr"
+   emptyState={
+   <EmptyState 
+   variant="minimal"
+   title={tc('datatable.no_records')} action={
+   <PermissionGate action="create" resource="pr">
+   <Link href="/purchase-requests/new" className="shrink-0 w-full sm:w-auto">
+   <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
+   <Plus className="w-3.5 h-3.5 me-2" />
+   {t('create_new')}
+   </Button>
+   </Link>
+   </PermissionGate>
+   }
+   />
+   }
+   pagination={data?.meta ? {
+   page: page,
+   pageSize: 10,
+   total: data.meta.total,
+   totalPages: data.meta.totalPages,
+   onPageChange: setPage
+   } : undefined}
+    filters={
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <div className="w-full sm:w-64">
+         <div className="relative w-full">
+          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+           placeholder={tc('search')}
+           value={search}
+           onChange={(e) => { setSearch(e.target.value); setPage(1); }} 
+           className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+          />
+         </div>
+        </div>
+        <div className="w-full sm:w-48 relative group">
+         <SmartCombobox
+          items={statusItems}
+          value={status || 'ALL'}
+          onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+          placeholder={tc('statuses.all')}
+          triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+         />
+         {status && (
+           <Button
+             variant="ghost"
+             size="icon"
+             className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+             onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
+           >
+             <X className="h-4 w-4" />
+           </Button>
+         )}
+        </div>
       </div>
-      <div className="w-full sm:w-48 relative group">
-       <SmartCombobox
-        items={statusItems}
-        value={status || 'ALL'}
-        onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
-        placeholder={tc('statuses.all')}
-        triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
-       />
-       {status && (
-         <Button
-           variant="ghost"
-           size="icon"
-           className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
-           onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
-         >
-           <X className="h-4 w-4" />
-         </Button>
-       )}
+    }
+   />
+  </div>
+
+  <div className="flex flex-col gap-3 md:hidden">
+   {data?.data?.map((pr) => (
+    <div 
+     key={pr.id} 
+     onClick={() => router.push(`/purchase-requests/${pr.id}`)} 
+     className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer"
+    >
+     {/* TOP TIER: Document ID & Status */}
+     <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
+      <div className="flex flex-col gap-1">
+       <span className="text-sm font-black text-[#0B1220] dark:text-white uppercase tracking-tight">{pr.documentNumber}</span>
+       <span className="text-[10px] text-gray-400 uppercase tracking-widest">{tc('doc_number')}</span>
       </div>
+      <StatusBadge status={pr.status as BadgeStatus} />
+     </div>
+
+     {/* MID TIER: Audit Data */}
+     <div className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-800/50">
+      <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+       <User className="w-3.5 h-3.5 text-gray-400"/>
+       <span>{pr.createdBy || 'مسؤول مشتريات'}</span>
+      </div>
+      
+      <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-500 dark:text-gray-400" dir="ltr">
+       <Clock className="w-3.5 h-3.5 text-gray-400"/>
+       <span><ClientOnlyTime date={pr.createdAt} mode="datetime" /></span>
+      </div>
+     </div>
+
+     {/* BOTTOM TIER: Warehouse & Action */}
+     <div className="flex justify-between items-end pt-1">
+      <div className="flex flex-col">
+       <span className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">{tc('warehouse')}</span>
+       <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 flex items-center gap-1.5">
+        <Building2 className="w-3.5 h-3.5 text-[#b48e67]" />
+        {pr.warehouseName || '—'}
+       </span>
+      </div>
+      
+      {/* Standardized Touch-Friendly Action Button */}
+      <button className="h-8 px-4 flex items-center justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-[#b48e67] rounded-md text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+       {tc('view') || 'عرض'}
+      </button>
+     </div>
     </div>
-  }
- />
+   ))}
+
+   {(!data?.data || data.data.length === 0) && !isLoading && (
+    <div className="text-center p-8 text-gray-500 text-sm">
+     {tc('datatable.no_records')}
+    </div>
+   )}
+  </div>
  </div>
  </div>
  );

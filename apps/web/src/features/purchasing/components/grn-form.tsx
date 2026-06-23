@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -159,6 +160,11 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
    const status = (initialData?.status || GRN_STATUS.DRAFT) as DocumentStatus;
    const isLocked = isDocumentLocked('GRN', status);
+   const isSaved = status && (
+      status.toLowerCase() === 'saved' ||
+      status.toLowerCase() === 'received' ||
+      status.toLowerCase() === 'posted'
+   );
 
    const [isCustomItemDialogOpen, setIsCustomItemDialogOpen] = useState(false);
    const [customItemBarcode, setCustomItemBarcode] = useState('');
@@ -420,7 +426,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             const result = await createMutation.mutateAsync({ payload, headers });
             playSound('success');
             toast.success(t('create_success'));
-            router.push(`/goods-received/${result.id}`, { skipGuard: true });
+            router.push('/goods-received', { skipGuard: true });
          } else if (initialData) {
             await updateMutation.mutateAsync({
                id: initialData.id,
@@ -432,6 +438,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             });
             playSound('success');
             toast.success(t('update_success'));
+            router.push('/goods-received', { skipGuard: true });
          }
       } catch (error) {
          const isConflict = error && typeof error === 'object' && 'name' in error && error.name === 'ConflictError';
@@ -463,10 +470,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          <LockBanner lockState={warehouseLock} />
 
          <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
-            <input type="hidden" {...register('poId')} />
-            <div className="flex items-center justify-between px-2">
-               <div className="flex flex-col">
-                  <h1 className="text-2xl font-black text-foreground tracking-widest uppercase flex items-center gap-4">
+            <Input type="hidden" {...register('poId')} />
+            <div className="flex items-center justify-between px-2 gap-4">
+               <div className="flex flex-col flex-1 min-w-0">
+                  <h1 className="text-2xl font-black text-foreground tracking-widest uppercase whitespace-nowrap truncate max-w-full block">
                      {isNew ? t('create_new') : `#${initialData?.documentNumber}`}
                   </h1>
                   <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase mt-1">
@@ -725,8 +732,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                        const isOver = field.receivedQty > field.qty;
                                        const hasError = !!errors.lines?.[index]?.receivedQty;
                                        return (
-                                          <input type="number"
+                                          <Input type="number"
                                              dir="ltr"
+                                             lang="en"
+                                             style={{ WebkitLocale: '"en"' }}
                                              disabled={isLocked || isWarehouseLocked}
                                              className={cn(
                                                 "w-16 md:w-20 h-7 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50",
@@ -753,7 +762,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                                 'inline-flex items-center justify-center transition-all text-[10px] font-bold uppercase rounded px-2 md:px-2.5 py-0.5 md:py-1 h-7 border',
                                                 hasLot
                                                    ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 w-auto font-mono gap-1.5'
-                                                   : 'border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black w-auto'
+                                                   : 'border-[#b48e67] text-[#b48e67] hover:bg-[#b48e67] hover:text-black w-auto'
                                              )}
                                              onClick={() => handleLotClick(field)}
                                           >
@@ -832,6 +841,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             <FormFooter
                isLocked={isLocked || isWarehouseLocked}
                onCancel={() => router.push('/goods-received', { skipGuard: !isDirty })}
+               cancelLabel={isSaved ? tc('back') || 'BACK' : tc('cancel') || 'CANCEL'}
                actions={actions || workflowActions}
                onSubmit={handleSubmit(onSubmit, onFormError)}
                isPending={isPending}

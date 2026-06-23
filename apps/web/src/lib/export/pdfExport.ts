@@ -18,8 +18,16 @@ interface PDFExportOptions {
     logoUrl?: string;
     logoType: 'MARK' | 'BANNER';
     systemName?: string;
+    logoSvgContent?: string;
   };
 }
+
+const PrintSettingsSchema = z.object({
+  systemName: z.string().optional(),
+  printSettings: z.object({
+    showSystemName: z.boolean().optional(),
+  }).optional(),
+});
 
 export async function generatePDF(
   columns: PDFColumn[],
@@ -41,7 +49,7 @@ export async function generatePDF(
     // Override with fresh DB data directly
     const [profile, settings] = await Promise.all([
       apiClient.get('/admin/restaurant-profile', RestaurantProfileSchema.partial()),
-      apiClient.get('/admin/settings', z.unknown()),
+      apiClient.get('/admin/settings', PrintSettingsSchema.partial()),
     ]);
     branding = {
       name: profile.name || branding?.name || 'Otantik Restaurant system',
@@ -54,13 +62,12 @@ export async function generatePDF(
     };
     
     // Inject dynamic branding config
-    const rawSettings = settings as any;
-    const showSystemName = rawSettings?.printSettings?.showSystemName ?? true;
+    const showSystemName = settings.printSettings?.showSystemName ?? true;
     options = {
       ...options,
       brandingConfig: {
         logoType: profile.brandingConfig?.logoType || 'MARK',
-        systemName: showSystemName ? (rawSettings?.systemName || branding.name) : '',
+        systemName: showSystemName ? (settings.systemName || branding.name) : '',
       }
     };
   } catch (err) {
@@ -74,7 +81,7 @@ export async function generatePDF(
         const res = await fetch(branding.logo);
         const svgText = await res.text();
         if (options && options.brandingConfig) {
-          (options.brandingConfig as any).logoSvgContent = svgText;
+          options.brandingConfig.logoSvgContent = svgText;
         }
       } else {
         const res = await fetch(branding.logo);

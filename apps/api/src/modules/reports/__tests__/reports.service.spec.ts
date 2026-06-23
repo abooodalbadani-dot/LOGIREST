@@ -18,8 +18,11 @@ describe('ReportsService', () => {
     warehouseLock: { count: jest.fn() },
     purchaseRequest: { count: jest.fn() },
     purchaseOrder: { count: jest.fn(), findMany: jest.fn() },
-    transfer: { count: jest.fn(), findMany: jest.fn() },
-    adjustment: { groupBy: jest.fn() },
+    transfer: { count: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
+    adjustment: {
+      groupBy: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     approvalEvent: { findFirst: jest.fn(), findMany: jest.fn() },
     warehouseItemLot: { count: jest.fn(), findMany: jest.fn() },
     stocktakeSession: { findFirst: jest.fn() },
@@ -31,6 +34,8 @@ describe('ReportsService', () => {
     costLedger: { count: jest.fn(), findMany: jest.fn() },
     lot: { findFirst: jest.fn() },
     lotAllocation: { findMany: jest.fn() },
+    goodsReceivedNote: { findMany: jest.fn().mockResolvedValue([]) },
+    inventoryIssue: { findMany: jest.fn().mockResolvedValue([]) },
   };
 
   beforeEach(async () => {

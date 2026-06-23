@@ -184,7 +184,7 @@ export function IssueForm() {
             <div className={cn(
               "h-8 px-3 rounded flex items-center justify-between gap-2 transition-all duration-300 font-mono text-[11px] font-bold w-full md:w-auto",
               isAllocated
-                ? "bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30"
+                ? "bg-[#b48e67]/15 text-[#b48e67] border border-[#b48e67]/30"
                 : "bg-gray-50 dark:bg-[#0B1220] text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
             )}>
               <span>{line.qtyAllocated || 0} / {line.qty || 0}</span>
@@ -207,8 +207,8 @@ export function IssueForm() {
               className={cn(
                 "h-8 px-3 text-[10px] font-bold uppercase rounded transition-all whitespace-nowrap w-full md:w-auto",
                 isAllocated
-                  ? "border border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37] hover:text-[#0B1220]"
-                  : "border border-gray-600 text-gray-400 bg-transparent hover:border-[#D4AF37] hover:text-[#D4AF37]"
+                  ? "border border-[#b48e67] text-[#b48e67] bg-[#b48e67]/10 hover:bg-[#b48e67] hover:text-[#0B1220]"
+                  : "border border-gray-600 text-gray-400 bg-transparent hover:border-[#b48e67] hover:text-[#b48e67]"
               )}
               onClick={() => handleOpenAllocator(line.index)}
             >
@@ -224,12 +224,11 @@ export function IssueForm() {
   const renderQty = React.useCallback((line: CustomLineItem) => (
     <div className="flex flex-col items-center gap-1 w-full">
       <div className="flex justify-center w-full">
-        <input
+        <Input
           type="number"
           step="0.01"
-          dir="ltr"
           {...form.register(`lines.${line.index}.requestedQty`, { valueAsNumber: true })}
-          className="h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-center"
+          className="h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center"
         />
       </div>
       {form.formState.errors.lines?.[line.index]?.requestedQty && (
@@ -311,7 +310,7 @@ export function IssueForm() {
             "flex items-center gap-6 mb-10 border-b border-gray-200 dark:border-gray-800 pb-8 w-full",
             isAr ? "flex-row-reverse" : "flex-row"
           )}>
-            <div className="p-4 rounded-[1.5rem] bg-[#D4AF37]/10 border border-gray-700 hover:border-[#D4AF37] text-gray-400 hover:text-[#D4AF37] transition-all duration-300">
+            <div className="p-4 rounded-[1.5rem] bg-[#b48e67]/10 border border-gray-700 hover:border-[#b48e67] text-gray-400 hover:text-[#b48e67] transition-all duration-300">
               <Settings2 className="w-8 h-8" />
             </div>
             <div className={cn(
@@ -335,7 +334,7 @@ export function IssueForm() {
 
           {isWarehouseLocked && (
             <div className="mb-10 animate-in zoom-in-95 duration-300 w-full">
-              <LockBanner message={t('warehouse_locked')} />
+              <LockBanner message={t('validation.warehouse_locked')} />
             </div>
           )}
 
@@ -354,7 +353,7 @@ export function IssueForm() {
                   value={selectedKitchenRequestId || ""}
                   onSelect={(item) => setSelectedKitchenRequestId(item.id)}
                   placeholder={t('select_kitchen_request') || "Select Kitchen Request"}
-                  triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                  triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
                 />
               </FormControl>
             </FormItem>
@@ -375,7 +374,7 @@ export function IssueForm() {
                       onSelect={(item) => field.onChange(item.id)}
                       placeholder={tc('warehouse') || "Select Warehouse"}
                       disabled={!!selectedKitchenRequestId}
-                      triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                      triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
                     />
                   </FormControl>
                   <FormMessage className="text-label-xxs font-semibold uppercase" />
@@ -399,7 +398,7 @@ export function IssueForm() {
                       onSelect={(item) => field.onChange(item.id)}
                       placeholder={t('select_department')}
                       disabled={!!selectedKitchenRequestId}
-                      triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                      triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
                     />
                   </FormControl>
                   <FormMessage className="text-label-xxs font-semibold uppercase" />
@@ -417,7 +416,7 @@ export function IssueForm() {
                     {t('operational_notes')}
                   </FormLabel>
                   <FormControl>
-                    <Textarea placeholder={t('notes_placeholder')} className="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all min-h-[100px]" {...field} />
+                    <Textarea placeholder={t('notes_placeholder')} className="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all min-h-[100px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -430,11 +429,11 @@ export function IssueForm() {
         <div className="col-span-1 md:col-span-12 space-y-8 w-full">
           <div className="flex items-center justify-between px-6">
             <div className="flex items-center gap-5">
-              <div className="bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-lg p-2">
+              <div className="bg-[#b48e67]/10 text-[#b48e67] border border-[#b48e67]/20 rounded-lg p-2">
                 <Calculator className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-body-md font-semibold uppercase text-[#D4AF37]">{t('ledger_title')}</h3>
+                <h3 className="text-body-md font-semibold uppercase text-[#b48e67]">{t('ledger_title')}</h3>
                 <p className="text-label-xxs font-semibold text-muted-foreground/60/20 uppercase mt-1">{t('ledger_subtitle')}</p>
               </div>
             </div>
@@ -456,7 +455,7 @@ export function IssueForm() {
                 }
               }}
               placeholder={tc('select_item') || "Search and Select Item"}
-              triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+              triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
             />
           </div>
 
@@ -497,7 +496,7 @@ export function IssueForm() {
         {/* Global Fulfillment Summary */}
         <div className="p-6 md:p-10 bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 shadow-sm rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 shadow-inner w-full">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-[1.75rem] bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 shadow-sm text-[#D4AF37]">
+            <div className="w-16 h-16 rounded-[1.75rem] bg-[#b48e67]/10 flex items-center justify-center border border-[#b48e67]/20 shadow-sm text-[#b48e67]">
               <PackageCheck className="w-8 h-8" />
             </div>
             <div>
@@ -519,7 +518,7 @@ export function IssueForm() {
             <Button
               type="submit"
               disabled={createIssue.isPending || isWarehouseLocked || !allLinesAllocated || currentFields.length === 0}
-              className="h-14 px-12 bg-[#D4AF37] hover:bg-[#C5922F] text-[#0B1220] text-label-xs font-bold uppercase rounded-[1.5rem] transition-all shadow-[0_0_25px_rgba(212,175,55,0.3)] hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] disabled:opacity-30 disabled:grayscale"
+              className="h-14 px-12 bg-[#b48e67] hover:bg-[#C5922F] text-[#0B1220] text-label-xs font-bold uppercase rounded-[1.5rem] transition-all shadow-[0_0_25px_rgba(180,142,103,0.3)] hover:shadow-[0_0_40px_rgba(180,142,103,0.5)] disabled:opacity-30 disabled:grayscale"
             >
               {createIssue.isPending ? t('finalizing_ledger') : t('authorize_protocol')}
             </Button>

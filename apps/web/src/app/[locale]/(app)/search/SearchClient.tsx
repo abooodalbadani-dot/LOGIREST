@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter, Link } from '@/i18n/navigation';
@@ -143,11 +144,11 @@ export default function SearchClient() {
      <div className="absolute inset-y-0 start-0 ps-5 flex items-center pointer-events-none">
       <SearchIcon className="w-4 h-4 text-gray-500" />
      </div>
-     <input
+     <Input
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
       placeholder={t('placeholder') || 'Find item, supplier, lot, or document...'}
-      className="h-14 w-full ps-12 pe-40 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-lg text-sm font-bold text-[#0B1220] dark:text-white placeholder:text-gray-500 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all outline-none"
+      className="h-14 w-full ps-12 pe-40 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-lg text-sm font-bold text-[#0B1220] dark:text-white placeholder:text-gray-500 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] transition-all outline-none"
      />
      <div className="absolute inset-y-0 end-0 pe-2 flex items-center">
       <button type="submit" className="h-10 px-5 rounded-xl bg-[#0B1220] dark:bg-white text-white dark:text-[#0B1220] hover:bg-gray-800 dark:hover:bg-gray-100 font-bold text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm">
@@ -177,7 +178,7 @@ export default function SearchClient() {
         <div className="space-y-4">
          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t('main_category') || 'MAIN CATEGORY'}</span>
           <div className="flex flex-col gap-2">
-           <button onClick={() => setActiveCategory('ALL')} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${'ALL' === activeCategory ? 'border-[#CAAE85]' : 'border-gray-200 dark:border-gray-800 hover:border-[#D4AF37]'} transition-colors group`}>
+           <button onClick={() => setActiveCategory('ALL')} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${'ALL' === activeCategory ? 'border-[#CAAE85]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
             <span className={`text-xs font-bold uppercase transition-colors ${'ALL' === activeCategory ? 'text-[#0B1220] dark:text-white' : 'text-gray-800 dark:text-gray-400 group-hover:text-[#0B1220] dark:group-hover:text-white'}`}>ALL</span>
             <div className={`w-2 h-2 rounded-full transition-colors ${'ALL' === activeCategory ? 'bg-[#CAAE85]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#CAAE85]/50'}`} />
            </button>
@@ -192,7 +193,7 @@ export default function SearchClient() {
             dbCategories.map((category) => {
              const isActive = category.id === activeCategory;
              return (
-              <button key={category.id} onClick={() => setActiveCategory(category.id)} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${isActive ? 'border-[#CAAE85]' : 'border-gray-200 dark:border-gray-800 hover:border-[#D4AF37]'} transition-colors group`}>
+              <button key={category.id} onClick={() => setActiveCategory(category.id)} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${isActive ? 'border-[#CAAE85]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
                <span className={`text-xs font-bold uppercase transition-colors ${isActive ? 'text-[#0B1220] dark:text-white' : 'text-gray-800 dark:text-gray-400 group-hover:text-[#0B1220] dark:group-hover:text-white'}`}>{category.name}</span>
                <div className={`w-2 h-2 rounded-full transition-colors ${isActive ? 'bg-[#CAAE85]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#CAAE85]/50'}`} />
               </button>

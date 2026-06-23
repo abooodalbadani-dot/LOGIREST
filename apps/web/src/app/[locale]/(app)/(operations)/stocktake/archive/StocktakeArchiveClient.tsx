@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
@@ -153,7 +154,7 @@ export function StocktakeArchiveClient({
         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
        </div>
        <div className="relative group">
-        <input
+        <Input
          placeholder={t('search_placeholder') || 'Search Archive...'} 
          className="w-full bg-surface-container-highest/10 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-primary/20 transition-all"
         />

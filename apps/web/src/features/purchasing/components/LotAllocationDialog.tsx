@@ -102,7 +102,7 @@ export function LotAllocationDialog({
           <div
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-3xl bg-card border border-border shadow-2xl rounded-2xl overflow-hidden"
+            className="w-full max-w-3xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-2xl sm:rounded-xl overflow-hidden"
           >
             {/* Header */}
             <div className="px-6 pt-6 pb-4 border-b border-border/50">

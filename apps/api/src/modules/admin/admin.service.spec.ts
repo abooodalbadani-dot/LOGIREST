@@ -129,7 +129,7 @@ describe('AdminService', () => {
       mockIssueCount.mockResolvedValue(0);
 
       const settings = await service.getSettings();
-      expect(settings.systemName).toBe('LogiRest System');
+      expect(settings.systemName).toBe('Otantik Restaurants System');
       expect(settings.baseCurrency).toBe('SAR');
       expect(settings.smtpPassword).toBe('');
     });

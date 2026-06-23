@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
+import { useRouter } from '@/i18n/navigation';
 import { Lock, TrendingUp, History, PlusCircle, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +22,7 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 interface Props { currencyId: string; locale: 'ar' | 'en'; }
 
 export function FXRatesClient({ currencyId, locale }: Props) {
+ const router = useRouter();
  const t = useTranslations('master_data.currencies');
  const tc = useTranslations('master_data.common');
  const tv = useTranslations();
@@ -136,6 +138,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  backHref="/master-data/currencies"
  isSaving={create.isPending}
  onSubmit={onSubmit}
+ onCancel={() => router.push('/master-data/currencies')}
  >
  <div className="col-span-1 md:col-span-12 grid grid-cols-1 lg:grid-cols-3 gap-10 w-full">
  {/* Existing Rates Table */}

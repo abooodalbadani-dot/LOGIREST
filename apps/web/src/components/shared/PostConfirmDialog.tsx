@@ -14,7 +14,6 @@ import {
  AlertDialogTitle,
  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface PostConfirmDialogProps {
@@ -46,13 +45,6 @@ const VARIANT_STYLES = {
  warning: "bg-status-warning/10 text-status-warning shadow-status-warning/20",
  info: "bg-operational-cyan/10 text-operational-cyan shadow-operational-cyan/20",
  default: "bg-operational-cyan/10 text-operational-cyan shadow-operational-cyan/20",
-};
-
-const BUTTON_STYLES = {
- destructive: "bg-status-error hover:bg-status-error/90 text-white shadow-status-error/20",
- warning: "bg-status-warning hover:bg-status-warning/90 text-white shadow-status-warning/20",
- info: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
- default: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
 };
 
 const ICON_MAP = {
@@ -126,7 +118,7 @@ export function PostConfirmDialog({
  return (
   <AlertDialog open={open} onOpenChange={handleOpenChange}>
    {trigger && <AlertDialogTrigger render={trigger} />}
-   <AlertDialogContent className={cn("sm:max-w-2xl w-[95vw] sm:w-full border-none ambient-shadow p-8 bg-card border border-border shadow-sm rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
+   <AlertDialogContent className={cn("sm:max-w-2xl w-[95vw] sm:w-full p-8 bg-white dark:bg-[#1A2234] shadow-2xl border border-gray-200 dark:border-gray-800 rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
     <AlertDialogHeader className="space-y-4">
      <div className={cn(
       "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-200 hover:scale-110",
@@ -135,17 +127,17 @@ export function PostConfirmDialog({
       <Icon className="w-6 h-6" />
      </div>
      <div className="space-y-2">
-      <AlertDialogTitle className="text-headline-sm font-bold uppercase tracking-tight">
+      <AlertDialogTitle className="text-lg font-black text-[#0B1220] dark:text-white uppercase tracking-tight">
        {title}
       </AlertDialogTitle>
-      <AlertDialogDescription className="text-label-sm font-medium text-muted-foreground/60 leading-relaxed uppercase">
+      <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
        {description}
       </AlertDialogDescription>
      </div>
      {!isLoading && (
       <button
        onClick={() => handleOpenChange(false)}
-       className="absolute top-4 end-4 text-gray-400 hover:text-foreground dark:hover:text-white transition-colors bg-transparent border-none"
+       className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors bg-transparent border-none"
        aria-label={t('actions.close')}
       >
        ✕
@@ -155,17 +147,11 @@ export function PostConfirmDialog({
 
     <div className="my-6 space-y-6">
      {(warningText || t('posting_irreversible')) && (
-      <div className={cn(
-       "p-4 rounded-2xl border flex flex-col gap-1",
-       variant === 'destructive' ? "bg-status-error/5 border-status-error/10" : "bg-status-warning/5 border-status-warning/10"
-      )}>
-       <div className="flex items-center gap-2 text-label-xs font-bold uppercase">
-        <AlertTriangle className="w-3.5 h-3.5" />
-        {warningText || t('warning')}
-       </div>
-       <p className="text-label-xxs font-medium opacity-60 uppercase">
-        {t('posting_irreversible')}
-       </p>
+      <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-lg p-3 mt-4 flex items-start gap-3">
+       <AlertTriangle className="w-4 h-4 text-yellow-800 dark:text-yellow-500 shrink-0 mt-0.5" />
+       <span className="text-xs font-bold text-yellow-800 dark:text-yellow-500">
+        {warningText || t('posting_irreversible')}
+       </span>
       </div>
      )}
 
@@ -192,21 +178,26 @@ export function PostConfirmDialog({
     <AlertDialogFooter className="gap-4 mt-2">
      {!isLoading && (
       <AlertDialogCancel
-       variant="ghost"
-       className="flex-1 h-12 rounded-xl border-none bg-surface-container-high hover:bg-surface-container-highest text-label-xs font-bold uppercase transition-all"
+       render={
+        <button
+         type="button"
+         className="w-full py-2.5 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-[#0B1220] transition-colors outline-none select-none focus:outline-none"
+        />
+       }
        disabled={isLoading}
       >
        {customCancelText || t('actions.cancel')}
       </AlertDialogCancel>
      )}
-     <Button
+     <button
+      type="button"
       onClick={handleConfirm}
       disabled={isConfirmDisabled}
       aria-label={isLoading ? t('loading') : (customConfirmText || t('actions.confirm'))}
       aria-busy={isLoading}
       className={cn(
-       "flex-1 h-12 rounded-xl text-label-xs font-bold uppercase transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:grayscale",
-       BUTTON_STYLES[variant]
+       "w-full py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg hover:bg-gray-800 dark:hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2 outline-none select-none focus:outline-none disabled:opacity-40 disabled:pointer-events-none active:scale-[0.99]",
+       isLoading && "cursor-not-allowed"
       )}
      >
       {isLoading ? (
@@ -214,7 +205,7 @@ export function PostConfirmDialog({
       ) : (
        customConfirmText || t('actions.confirm')
       )}
-     </Button>
+     </button>
     </AlertDialogFooter>
    </AlertDialogContent>
   </AlertDialog>

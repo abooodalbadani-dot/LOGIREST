@@ -74,6 +74,7 @@ export declare const ROLE_CAPABILITIES: {
     };
     readonly grn: {
         readonly create: readonly ["ADMIN", "WH_KEEPER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
+        readonly submit: readonly ["ADMIN", "WH_KEEPER", "INV_MGR", "STORE_MGR", "BRANCH_MGR"];
         readonly post: readonly ["ADMIN", "INV_MGR", "BRANCH_MGR"];
         readonly cancel: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "BRANCH_MGR"];
         readonly view: readonly ["ADMIN", "INV_MGR", "WH_KEEPER", "STORE_MGR", "APPROVER", "PROC_OFFICER", "AUDITOR", "GM", "VIEWER", "BRANCH_MGR", "PROC_MGR"];

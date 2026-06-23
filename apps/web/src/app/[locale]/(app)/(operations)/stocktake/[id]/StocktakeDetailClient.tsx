@@ -91,7 +91,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  };
 
   const workflowActions = (
-   <div className="flex items-center gap-2">
+   <div className="w-full md:w-auto flex flex-col-reverse md:flex-row items-stretch md:items-center gap-3">
     {/* Quick Tools Group */}
     <div className="flex items-center gap-1 me-1">
 
@@ -112,7 +112,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <ActionGuard documentType="STOCKTAKE" status={status} action="START" role={user?.role || ''}>
         <Button 
          onClick={() => router.push(`/stocktake/${id}/start`)} 
-         className="h-10 md:h-12 px-4 md:px-8 bg-primary text-white rounded-full gap-2 shadow-sm shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-primary text-white rounded-full gap-2 shadow-sm shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
         >
          <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
          <span className="hidden xs:inline">{t('start_session')}</span>
@@ -126,7 +126,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <ActionGuard documentType="STOCKTAKE" status={status} action="COUNT" role={user?.role || ''}>
         <Button 
          onClick={() => router.push(`/stocktake/${id}/count`)} 
-         className="h-10 md:h-12 px-4 md:px-8 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
         >
          <ClipboardList className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('go_to_count')}</span>
@@ -141,7 +141,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <PermissionGate action="count" resource="operations_stocktake">
         <Button
          onClick={() => router.push(`/stocktake/${id}/count`)}
-         className="h-10 md:h-12 px-4 md:px-8 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide"
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide"
         >
          <ClipboardList className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('resume_counting')}</span>
@@ -154,7 +154,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
          <Button
           variant="outline"
           onClick={() => router.push(`/stocktake/${id}/variance`)}
-          className="h-10 md:h-12 px-4 md:px-8 border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide"
+          className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide"
          >
           <AlertTriangle className="w-4 h-4 md:w-5 md:h-5" />
           <span className="hidden xs:inline">{t('review_variance')}</span>
@@ -169,7 +169,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <ActionGuard documentType="STOCKTAKE" status={status} action="APPROVE" role={user?.role || ''}>
         <Button 
          onClick={() => router.push(`/stocktake/${id}/approve`)} 
-         className="h-10 md:h-12 px-4 md:px-8 bg-emerald-500 text-white rounded-full gap-2 shadow-sm shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-emerald-500 text-white rounded-full gap-2 shadow-sm shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
         >
          <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('review_approval')}</span>
@@ -183,7 +183,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <ActionGuard documentType="STOCKTAKE" status={status} action="POST" role={user?.role || ''}>
         <Button 
          onClick={() => router.push(`/stocktake/${id}/post`)} 
-         className="h-10 md:h-12 px-6 md:px-10 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-6 md:px-10 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
         >
          <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('go_to_post')}</span>
@@ -198,7 +198,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
         <Button 
          variant="outline"
          onClick={() => setIsCancelDialogOpen(true)} 
-         className="h-10 md:h-12 px-4 md:px-6 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide" 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-6 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide" 
         >
          <XCircle className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{tc('cancel') || 'Cancel'}</span>

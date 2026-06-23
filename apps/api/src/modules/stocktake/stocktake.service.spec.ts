@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { StocktakeService } from './stocktake.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { AuditLogService } from '../audit-log/audit-log.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
@@ -24,6 +25,7 @@ describe('StocktakeService', () => {
   const mockStocktakeCountCreate = jest.fn();
   const mockStocktakeCountUpdate = jest.fn();
   const mockStocktakeCountUpsert = jest.fn();
+  const mockQueryRaw = jest.fn();
 
   const mockPrisma = {
     stocktakeSession: {
@@ -54,11 +56,16 @@ describe('StocktakeService', () => {
       update: mockStocktakeCountUpdate,
       upsert: mockStocktakeCountUpsert,
     },
+    $queryRaw: mockQueryRaw,
     $transaction: jest.fn((callback) => callback(mockPrisma)),
   } as unknown as PrismaService;
 
   const mockWorkflowService = {
     executeTransition: jest.fn(),
+  };
+
+  const mockAuditLogService = {
+    log: jest.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(async () => {
@@ -67,6 +74,7 @@ describe('StocktakeService', () => {
         StocktakeService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        { provide: AuditLogService, useValue: mockAuditLogService },
       ],
     }).compile();
 
@@ -177,7 +185,8 @@ describe('StocktakeService', () => {
         id: 's-1',
         status: 'STARTED',
       });
-      mockStocktakeCountFindFirst.mockResolvedValue(null);
+      mockQueryRaw.mockResolvedValue([]);
+      mockStocktakeCountCreate.mockResolvedValue({ id: 'new-c-1' });
 
       const result = await service.count(
         's-1',
@@ -185,10 +194,41 @@ describe('StocktakeService', () => {
         'user-1',
       );
       expect(result).toEqual({ success: true });
-      expect(mockStocktakeCountUpsert).toHaveBeenCalled();
+      expect(mockStocktakeCountCreate).toHaveBeenCalledWith({
+        data: {
+          sessionId: 's-1',
+          itemId: 'item-1',
+          lotId: null,
+          qtyCounted: 12,
+          countedById: 'user-1',
+        },
+      });
       expect(mockStocktakeSessionUpdate).toHaveBeenCalledWith({
         where: { id: 's-1' },
         data: { status: 'COUNTING' },
+      });
+    });
+
+    it('should update existing count if it exists', async () => {
+      mockStocktakeSessionFindUnique.mockResolvedValue({
+        id: 's-1',
+        status: 'STARTED',
+      });
+      mockQueryRaw.mockResolvedValue([{ id: 'c-1', qtyCounted: 10 }]);
+
+      const result = await service.count(
+        's-1',
+        [{ itemId: 'item-1', qtyCounted: 12 }],
+        'user-1',
+      );
+      expect(result).toEqual({ success: true });
+      expect(mockStocktakeCountUpdate).toHaveBeenCalledWith({
+        where: { id: 'c-1' },
+        data: {
+          qtyCounted: 12,
+          countedById: 'user-1',
+          countedAt: expect.any(Date),
+        },
       });
     });
   });

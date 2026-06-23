@@ -57,13 +57,13 @@ export function PODetailClient({ id }: PODetailClientProps) {
 
  // Generate actions for the viewer (strictly navigation or read-only triggers)
  const actions = (
-  <div className="flex items-center gap-3">
+  <div className="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center gap-3">
    {/* APPROVED: Receive Items + Email */}
    {status === PO_STATUS.APPROVED && !isNew && (
     <>
      <Button
       onClick={() => router.push(`/goods-received/new?po_id=${id}`)}
-      className="bg-emerald-600 hover:bg-emerald-500 text-white h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs shadow-md border-none flex items-center"
+      className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs shadow-md border-none flex items-center"
      >
       <FileText className="w-4 h-4 me-2" />
       {t('actions.receive_items') || 'Receive Items (GRN)'}
@@ -78,7 +78,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
         toast.error(tCommon('error_generic') || 'Error sending email');
        }
       }}
-      className="bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-operational-cyan/20 flex items-center"
+      className="w-full md:w-auto bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-operational-cyan/20 flex items-center"
      >
       <Mail className="w-4 h-4 me-2" />
       {t('actions.email_po') || 'Email PO'}
@@ -103,7 +103,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
         }
        }}
        disabled={deletePO.isPending}
-       className="bg-red-500/10 text-red-500 hover:bg-red-500/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-red-500/20"
+       className="w-full md:w-auto bg-red-500/10 text-red-500 hover:bg-red-500/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-red-500/20 flex items-center justify-center"
       >
        <Trash2 className="w-4 h-4 me-2" />
        {tCommon('actions.delete') || 'Delete'}
@@ -123,7 +123,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
          }
         }}
         disabled={submitPO.isPending}
-        className="h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs bg-operational-cyan hover:brightness-110 text-white shadow-md shadow-operational-cyan/20 flex items-center disabled:opacity-50"
+        className="w-full md:w-auto h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs bg-operational-cyan hover:brightness-110 text-white shadow-md shadow-operational-cyan/20 flex items-center justify-center disabled:opacity-50"
        >
         <Send className="w-4 h-4 me-2" />
         {submitPO.isPending ? tCommon('saving') : (t('actions.submit_for_approval') || 'تقديم للاعتماد')}
@@ -147,7 +147,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
        }
       }}
       disabled={approvePO.isPending}
-      className="h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center disabled:opacity-50"
+      className="w-full md:w-auto h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center justify-center disabled:opacity-50"
      >
       <ShieldCheck className="w-4 h-4 me-2" />
       {approvePO.isPending ? tCommon('saving') : (t('actions.approve') || 'اعتماد')}

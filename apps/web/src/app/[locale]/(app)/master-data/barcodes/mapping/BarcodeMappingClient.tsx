@@ -396,7 +396,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                
                {/* Category & Code Inline */}
                <div className="flex items-center gap-2 mt-0.5">
-                 <span className="text-[11px] font-bold text-[#D4AF37] uppercase">{item.category?.name || item.categoryId || '---'}</span>
+                 <span className="text-[11px] font-bold text-[#b48e67] uppercase">{item.category?.name || item.categoryId || '---'}</span>
                  <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 uppercase">• {item.code || '---'}</span>
                </div>
              </div>

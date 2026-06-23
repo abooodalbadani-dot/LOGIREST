@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useEffect, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Scan, Camera, X, CheckCircle2, RefreshCw, RotateCcw, Loader2 } from 'lucide-react';
@@ -126,7 +127,7 @@ export default function ScannerClient() {
         <p className="text-label-sm font-bold text-operational-cyan/80">{t('scanner.align_tip')}</p>
         
         {/* Hidden or subtle input to capture hardware scanner keystrokes */}
-        <input 
+        <Input 
          type="text" 
          autoFocus
          value={barcodeInput}

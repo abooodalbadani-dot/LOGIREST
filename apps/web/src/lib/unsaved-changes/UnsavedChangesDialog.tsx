@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -46,7 +45,7 @@ export const UnsavedChangesDialog: React.FC<UnsavedChangesDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:w-[500px] sm:max-w-[500px] p-4 sm:p-6 bg-card text-card-foreground rounded-t-lg sm:rounded-b-lg rounded-b-none border border-border shadow-xl">
+      <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:w-[500px] sm:max-w-[500px] p-4 sm:p-6 bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-t-lg sm:rounded-b-lg rounded-b-none text-foreground">
         <DialogHeader className="flex flex-col gap-2 text-start">
           <DialogTitle className="text-lg font-bold text-foreground">{t('title')}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground text-balance">{t('description')}</DialogDescription>

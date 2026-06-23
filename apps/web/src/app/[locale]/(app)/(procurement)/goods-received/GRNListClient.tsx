@@ -325,7 +325,7 @@ export function GRNListClient({
          <div className="flex justify-between items-start">
            <div className="flex flex-col gap-1 w-full">
              <div className="flex justify-between items-start gap-2">
-               <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{grn.documentNumber}</span>
+               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{grn.documentNumber}</span>
                <StatusBadge status={grn.status as BadgeStatus} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
              </div>
              <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{grn.supplierName || '—'}</span>

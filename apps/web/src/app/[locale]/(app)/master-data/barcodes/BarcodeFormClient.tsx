@@ -227,7 +227,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
                   disabled={isReadOnly}
                   size="md"
                 />
-                <input type="hidden" {...register('code')} />
+                <Input type="hidden" {...register('code')} />
                 {errors.code && <p className="text-xs text-red-500 mt-1">{tv(errors.code.message as never)}</p>}
               </div>
             </div>

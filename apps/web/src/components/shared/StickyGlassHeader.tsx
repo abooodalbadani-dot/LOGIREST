@@ -25,12 +25,12 @@ export function StickyGlassHeader({
  return (
   <div
    className={cn(
-    'w-full bg-card border border-border/50 rounded-xl flex items-center justify-between px-6 py-4 print:hidden',
+    'flex flex-col md:flex-row justify-between items-start md:items-center p-4 gap-4 bg-white dark:bg-[#1A2234] rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden print:hidden',
     isEditing && 'border-s-4 border-s-primary',
     className,
    )}
   >
-   <div className="flex items-center gap-4 overflow-hidden">
+   <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto min-w-0">
     {onBack && (
      <Button
       variant="ghost"
@@ -41,7 +41,7 @@ export function StickyGlassHeader({
       <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
      </Button>
     )}
-    <div className="flex flex-col min-w-0">
+    <div className="flex flex-col min-w-0 flex-1">
      <h1 className="text-2xl font-extrabold text-foreground tracking-tight uppercase truncate">
       {title}
      </h1>
@@ -54,7 +54,7 @@ export function StickyGlassHeader({
    </div>
 
    {actions && (
-    <div className="flex items-center gap-3 shrink-0">
+    <div className="w-full md:w-auto shrink-0">
      {actions}
     </div>
    )}

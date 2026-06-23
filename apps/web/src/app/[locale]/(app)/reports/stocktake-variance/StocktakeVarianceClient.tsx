@@ -97,12 +97,12 @@ export default function StocktakeVarianceClient() {
  ];
 
  const exportColumns = [
-  { header: t('table.sku'), key: 'sku', width: 15 },
+  { header: t('table.sku'), key: 'sku', width: 12 },
   { header: t('table.item'), key: 'name', width: 30 },
-  { header: t('table.system_qty'), key: 'systemQty', width: 15 },
-  { header: t('table.counted_qty'), key: 'countedQty', width: 15 },
-  { header: t('table.variance'), key: 'variance', width: 15 },
-  { header: t('table.reason'), key: 'reason', width: 30 },
+  { header: t('table.system_qty'), key: 'systemQty', width: 11 },
+  { header: t('table.counted_qty'), key: 'countedQty', width: 11 },
+  { header: t('table.variance'), key: 'variance', width: 11 },
+  { header: t('table.reason'), key: 'reason', width: 25 },
  ];
 
  return (

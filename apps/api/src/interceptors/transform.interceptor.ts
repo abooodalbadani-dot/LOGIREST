@@ -6,10 +6,29 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Prisma } from '@prisma/client';
 
 export interface Response<T> {
   data: T;
   meta?: unknown;
+}
+
+interface DuckDecimal {
+  d: number[];
+  e: number;
+  s: number;
+  toString(): string;
+}
+
+function isDecimal(val: unknown): val is DuckDecimal {
+  if (!val || typeof val !== 'object') return false;
+  const obj = val as Record<string, unknown>;
+  return (
+    Array.isArray(obj.d) &&
+    typeof obj.e === 'number' &&
+    typeof obj.s === 'number' &&
+    typeof obj.toString === 'function'
+  );
 }
 
 @Injectable()
@@ -30,6 +49,11 @@ export class TransformInterceptor<T = unknown> implements NestInterceptor<
     // 3. Ignore null and undefined values
     if (data === null || data === undefined) {
       return data;
+    }
+
+    // Handle Prisma Decimals
+    if (Prisma.Decimal.isDecimal(data) || isDecimal(data)) {
+      return data.toString();
     }
 
     // 3. Ignore Date objects

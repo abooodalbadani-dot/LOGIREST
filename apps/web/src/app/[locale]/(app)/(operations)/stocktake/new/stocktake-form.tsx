@@ -174,7 +174,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
    
    {/* Form Header Info */}
    <div className="flex items-start justify-start text-start gap-6 pb-6 border-b border-border/30">
-    <div className="p-4 rounded-[1.5rem] bg-brand-gold/10 text-brand-gold border border-brand-gold/20 shadow-[0_0_20px_rgba(212,175,55,0.1)] shrink-0">
+    <div className="p-4 rounded-[1.5rem] bg-brand-gold/10 text-brand-gold border border-brand-gold/20 shadow-[0_0_20px_rgba(180,142,103,0.1)] shrink-0">
      <Settings2 className="w-8 h-8" />
     </div>
     <div className="text-start">

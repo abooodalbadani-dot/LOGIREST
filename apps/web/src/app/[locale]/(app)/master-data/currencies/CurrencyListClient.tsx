@@ -243,7 +243,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
           </div>
           {/* Codes Inline */}
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[11px] font-mono font-bold text-[#D4AF37] uppercase">{currency.code}</span>
+            <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{currency.code}</span>
             <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 uppercase">• {currency.symbol || '---'}</span>
             {currency.isBase && (
              <Badge className="bg-amber-500/10 text-amber-500 border-none rounded-sm text-[9px] font-semibold uppercase px-1.5 h-4 ml-1 rtl:mr-1">
@@ -268,7 +268,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
          </PermissionGate>
          <PermissionGate action="edit" resource="master_data">
           <button 
-           className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#D4AF37] text-[#D4AF37] rounded-md text-xs font-bold hover:bg-[#D4AF37]/10 transition-colors uppercase"
+           className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors uppercase"
            onClick={(e) => { e.stopPropagation(); router.push(`/master-data/currencies/${currency.id}/edit`); }}
           >
            {t('edit')}

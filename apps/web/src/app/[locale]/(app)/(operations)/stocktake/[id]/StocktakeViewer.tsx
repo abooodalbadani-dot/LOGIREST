@@ -1,5 +1,6 @@
 "use client"
 
+import { Input } from '@/components/ui/input';
 import * as React from "react";
 import { RelationalName } from "@/components/shared/RelationalName";
 import { useTranslations } from "next-intl";
@@ -149,7 +150,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
      <div className="px-6 pb-3 flex flex-col gap-3 print-hidden">
       <div className="relative">
        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-       <input
+       <Input
         type="text"
         value={manifestSearch}
         onChange={(e) => setManifestSearch(e.target.value)}

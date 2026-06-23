@@ -73,6 +73,7 @@ export function ConvertToPOModal({ pr, open, onOpenChange }: ConvertToPOModalPro
               value={supplierId}
               onSelect={(item) => setSupplierId(item.id)}
               placeholder={tc('select_supplier')}
+              triggerClassName="bg-gray-50 dark:bg-[#0B1220] border-gray-300 dark:border-gray-700"
             />
           </div>
           <div className="space-y-2">
@@ -82,18 +83,23 @@ export function ConvertToPOModal({ pr, open, onOpenChange }: ConvertToPOModalPro
               value={currencyId}
               onSelect={(item) => setCurrencyId(item.id)}
               placeholder={tc('select_currency')}
+              triggerClassName="bg-gray-50 dark:bg-[#0B1220] border-gray-300 dark:border-gray-700"
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="bg-transparent border border-gray-300 dark:border-gray-700 hover:bg-gray-50 text-gray-700"
+          >
             {tc('actions.cancel')}
           </Button>
           <Button
             onClick={handleConvert}
             disabled={!supplierId || !currencyId || convertMutation.isPending}
-            className="bg-brand-gold hover:bg-brand-gold-hover text-white"
+            className="bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] hover:bg-gray-800 bg-none border-none shadow-none hover:scale-100 active:scale-100"
           >
             {convertMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
             {t('convert')}
