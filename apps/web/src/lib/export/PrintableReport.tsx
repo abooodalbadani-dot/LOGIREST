@@ -103,24 +103,24 @@ const formatReportValue = (colKey: string, val: unknown, lang: 'ar' | 'en') => {
   // Relational/nested object safety net: Drill down into objects before formatting
   if (typeof val === 'object') {
     const obj = val as Record<string, unknown>;
-    
+
     // Check if it's an Item-like object (code/sku and name)
     if ('name' in obj && ('sku' in obj || 'code' in obj || 'barcode' in obj)) {
       const code = (obj.sku || obj.code || obj.barcode || '') as string;
       const name = (obj.name || '') as string;
       return code ? `${code} - ${name}` : name;
     }
-    
+
     // Check if it's a User-like object
     if ('fullName' in obj || 'name' in obj || 'email' in obj) {
       return (obj.fullName || obj.name || obj.email || '') as string;
     }
-    
+
     // Check if it's a Warehouse/Branch/Supplier/etc. (name)
     if ('name' in obj) {
       return (obj.name || '') as string;
     }
-    
+
     // Fallback: If it's a generic object but has an id
     if ('id' in obj) {
       const idVal = String(obj.id);
@@ -210,8 +210,12 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
 
   const src = brandingConfig?.logoUrl || branding?.logo || "/logo.svg";
   const type = brandingConfig?.logoType || 'MARK';
-  const sysName = brandingConfig?.systemName !== undefined ? brandingConfig.systemName : (branding?.name || 'Otantik Restaurant Enterprise');
-
+  
+  // Patching backend typo if present in database configuration
+  let sysName = brandingConfig?.systemName !== undefined ? brandingConfig.systemName : (branding?.name || 'Otantik Restaurant Enterprise');
+  if (typeof sysName === 'string') {
+    sysName = sysName.replace(/Restuarant/gi, 'Restaurant');
+  }
 
   return (
     <div
@@ -259,6 +263,13 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
           }
           .printable-report-table tr:nth-child(odd) td {
             background-color: #ffffff;
+          }
+          
+          /* Enforce SVG containment for raw injections */
+          .report-svg-mark svg, .report-svg-banner svg {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
           }
         `}
       </style>

@@ -3807,6 +3807,7 @@
       "reference": "Reference",
       "sku": "SKU",
       "status": "Status",
+      "session_number": "Session Number",
       "supplier": "Supplier",
       "system_qty": "System Qty",
       "to": "To",

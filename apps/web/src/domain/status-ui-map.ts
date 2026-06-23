@@ -5,7 +5,7 @@ import {
   ADJUSTMENT_STATUS,
 } from '@logirest/shared-types';
 
-export type BadgeVariant = 'default' | 'brand' | 'warning' | 'error' | 'success' | 'outline' | 'info';
+export type BadgeVariant = 'default' | 'brand' | 'warning' | 'error' | 'success' | 'outline' | 'info' | 'partial';
 
 interface StatusConfig {
   variant: BadgeVariant;
@@ -30,7 +30,8 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   
   // PR/PO Specific
   CLOSED: { variant: 'default', labelKey: 'statuses.closed' },
-  PARTIAL: { variant: 'info', labelKey: 'statuses.partial' },
+  PARTIAL: { variant: 'partial', labelKey: 'statuses.partial' },
+  IN_PROGRESS: { variant: 'partial', labelKey: 'statuses.in_progress' },
   FULFILLED: { variant: 'success', labelKey: 'statuses.fulfilled' },
 
   // GRN Specific
@@ -38,7 +39,7 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
 
   // Stocktake Specific
   STARTED: { variant: 'brand', labelKey: 'statuses.started' },
-  COUNTING: { variant: 'info', labelKey: 'statuses.counting' },
+  COUNTING: { variant: 'partial', labelKey: 'statuses.counting' },
   REVIEW: { variant: 'warning', labelKey: 'statuses.review' },
   
   // Transfer Specific

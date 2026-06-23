@@ -310,8 +310,8 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       return (
        <div className={cn(
         "inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold text-label-xs",
-        variance === 0 ? "bg-status-success/10 text-status-success" : 
-        variance > 0 ? "bg-status-info/10 text-status-info" : "bg-status-error/10 text-status-error"
+        variance === 0 ? "bg-slate-100 dark:bg-slate-800 text-[#0B1220] dark:text-slate-400" : 
+        variance > 0 ? "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67]" : "bg-red-500/10 text-red-800/80 dark:text-red-400/80"
        )} dir="ltr">
         {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)}
        </div>
@@ -324,7 +324,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       const variance = line.variance ?? 0;
       const varianceValue = variance * line.unitCost;
       return (
-       <span className={cn("font-mono text-label-sm font-semibold", varianceValue > 0 ? "text-status-info" : varianceValue < 0 ? "text-status-error" : "text-muted-foreground/40")}>
+       <span className={cn("font-mono text-label-sm font-semibold", varianceValue > 0 ? "text-[#b48e67]" : varianceValue < 0 ? "text-red-800/80 dark:text-red-400/80" : "text-muted-foreground/40")}>
         {formatCurrency(varianceValue, currencyCode, locale)}
        </span>
       );

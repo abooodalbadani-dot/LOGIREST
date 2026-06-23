@@ -51,8 +51,11 @@ export async function generatePDF(
       apiClient.get('/admin/restaurant-profile', RestaurantProfileSchema.partial()),
       apiClient.get('/admin/settings', PrintSettingsSchema.partial()),
     ]);
+    const isFallbackLogo = !profile.logoUrl && !profile.logo && !branding?.logo;
+    const finalLogo = profile.logoUrl || profile.logo || branding?.logo;
+
     branding = {
-      name: profile.name || branding?.name || 'Otantik Restaurant system',
+      name: profile.name || branding?.name || 'Otantik Restaurant Enterprise',
       address: profile.address || '',
       phone: profile.phone || '',
       email: profile.email || '',
@@ -60,13 +63,13 @@ export async function generatePDF(
       taxNumber: profile.taxNumber || '',
       commercialRegistration: profile.commercialRegistration || '',
     };
-    
+
     // Inject dynamic branding config
     const showSystemName = settings.printSettings?.showSystemName ?? true;
     options = {
       ...options,
       brandingConfig: {
-        logoType: profile.brandingConfig?.logoType || 'MARK',
+        logoType: profile.brandingConfig?.logoType || branding?.brandingConfig?.logoType || (isFallbackLogo ? 'BANNER' : 'MARK'),
         systemName: showSystemName ? (settings.systemName || branding.name) : '',
       }
     };
@@ -101,7 +104,7 @@ export async function generatePDF(
   const finalBranding = branding ? { ...branding, logo: base64Logo || branding.logo } : undefined;
 
   const root = createRoot(container);
-  
+
   const currentLang = typeof document !== 'undefined' ? (document.documentElement.lang === 'en' ? 'en' : 'ar') : 'ar';
 
   await new Promise<void>((resolve) => {

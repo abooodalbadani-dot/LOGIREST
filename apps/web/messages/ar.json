@@ -3807,6 +3807,7 @@
       "reference": "المرجع",
       "sku": "رمز الصنف",
       "status": "الحالة",
+      "session_number": "رقم الجلسة #",
       "supplier": "المورد",
       "system_qty": "كمية النظام",
       "to": "إلى",

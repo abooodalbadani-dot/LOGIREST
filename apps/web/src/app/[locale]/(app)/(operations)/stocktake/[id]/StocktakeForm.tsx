@@ -201,54 +201,145 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
         </div>
        </div>
       ) : (
-      <DocumentLineItemTable<StocktakeLineItem>
-       lines={tableLines}
-       locale={locale}
-       isReadOnly={true}
-       hideLotColumns={true}
-       headers={{ qty: t('counted_qty') }}
-       renderQty={(line) => {
-        const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
-        return hasCounted ? line.countedQty : common('dash');
-       }}
-       extraColumns={[
-        {
-         header: t('snapshot_qty'),
-         cell: (line) => !isCounting && line.snapshotQty !== null && line.snapshotQty !== undefined ? line.snapshotQty : common('dash')
-        },
-        {
-         header: t('variance'),
-         cell: (line) => {
+        <>
+        <div className="hidden md:block">
+          <DocumentLineItemTable<StocktakeLineItem>
+           lines={tableLines}
+           locale={locale}
+           isReadOnly={true}
+           hideLotColumns={true}
+           headers={{ qty: t('counted_qty') }}
+           renderQty={(line) => {
+            const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
+            return hasCounted ? line.countedQty : common('dash');
+           }}
+           extraColumns={[
+            {
+             header: t('snapshot_qty'),
+             cell: (line) => !isCounting && line.snapshotQty !== null && line.snapshotQty !== undefined ? line.snapshotQty : common('dash')
+            },
+            {
+             header: t('variance'),
+             cell: (line) => {
+              const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
+              const variance = line.variance ?? 0;
+              return !isCounting && hasCounted ? (
+               <div className={cn(
+                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
+                variance === 0 ? "bg-slate-100 dark:bg-slate-800 text-[#0B1220] dark:text-slate-400" : 
+                variance > 0 ? "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67]" : "bg-red-500/10 text-red-800/80 dark:text-red-400/80"
+               )} dir="ltr">
+                {variance > 0 ? '+' : ''}{variance}
+               </div>
+              ) : common('dash');
+             }
+            },
+            {
+             header: common('status_label'),
+             cell: (line) => {
+              const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
+              return hasCounted ? (
+               <Badge variant="outline" className="bg-[#0B1220] text-white dark:bg-[#1A2234] dark:text-[#B7C3E2] border border-transparent text-label-xxs font-semibold uppercase h-6">
+                {common('completed')}
+               </Badge>
+              ) : (
+               <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
+                {common('pending')}
+               </Badge>
+              );
+             }
+            }
+           ]}
+          />
+        </div>
+
+        <div className="flex flex-col gap-3 md:hidden w-full mt-4">
+         {tableLines.map((line) => {
           const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
           const variance = line.variance ?? 0;
-          return !isCounting && hasCounted ? (
-           <div className={cn(
-            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
-            variance === 0 ? "bg-muted/50 text-foreground" : 
-            variance > 0 ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
-           )} dir="ltr">
-            {variance > 0 ? '+' : ''}{variance}
-           </div>
-          ) : common('dash');
-         }
-        },
-        {
-         header: common('status_label'),
-         cell: (line) => {
-          const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
-          return hasCounted ? (
-           <Badge variant="outline" className="bg-muted/50 text-foreground border-none text-label-xxs font-semibold uppercase h-6">
-            {common('completed')}
-           </Badge>
-          ) : (
-           <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
-            {common('pending')}
-           </Badge>
+          const showVariance = !isCounting && hasCounted;
+          const snapshotVal = !isCounting && line.snapshotQty !== null && line.snapshotQty !== undefined ? line.snapshotQty : null;
+
+          return (
+            <div 
+              key={line.id} 
+              className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3 text-start"
+            >
+              {/* TOP TIER: Item Identity & Status */}
+              <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-2">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">
+                    {line.item.nameEn}
+                  </span>
+                  <span className="text-[10px] text-[#b48e67] font-mono tracking-widest mt-0.5">
+                    {line.item.code || '—'}
+                  </span>
+                </div>
+                {/* Render the COMPLETED / PENDING status badge here */}
+                <div className="scale-90 origin-top-right shrink-0">
+                  {hasCounted ? (
+                    <Badge variant="outline" className="bg-[#0B1220] text-white dark:bg-[#1A2234] dark:text-[#B7C3E2] border border-transparent text-label-xxs font-semibold uppercase h-6">
+                      {common('completed')}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
+                      {common('pending')}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* BOTTOM TIER: The Audit Grid (Snapshot vs Counted vs Variance) */}
+              <div className="grid grid-cols-3 gap-2">
+                {/* System Snapshot */}
+                <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">SNAPSHOT</span>
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 tabular-nums" dir="ltr">
+                    {snapshotVal !== null ? (
+                      <>
+                        {snapshotVal} <span className="text-[9px]">{line.uom}</span>
+                      </>
+                    ) : '—'}
+                  </span>
+                </div>
+
+                {/* Actual Counted (Highlighted) */}
+                <div className="flex flex-col bg-cyan-50 dark:bg-cyan-900/10 p-2 rounded-lg border border-cyan-100 dark:border-cyan-800/30">
+                  <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-1">COUNTED</span>
+                  <span className="text-xs font-black text-cyan-700 dark:text-cyan-300 tabular-nums" dir="ltr">
+                    {hasCounted ? (
+                      <>
+                        {line.countedQty} <span className="text-[9px]">{line.uom}</span>
+                      </>
+                    ) : '—'}
+                  </span>
+                </div>
+
+                {/* Variance */}
+                <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">VARIANCE</span>
+                  <span 
+                    className={cn(
+                      "text-xs font-bold tabular-nums",
+                      !showVariance ? 'text-[#0B1220] dark:text-white' : 
+                      variance < 0 ? 'text-red-800/80 dark:text-red-400/80' : 
+                      variance > 0 ? 'text-[#b48e67]' : 'text-[#0B1220] dark:text-slate-400'
+                    )} 
+                    dir="ltr"
+                  >
+                    {showVariance ? (
+                      <>
+                        {variance > 0 ? `+${variance}` : variance} <span className="text-[9px]">{line.uom}</span>
+                      </>
+                    ) : '—'}
+                  </span>
+                </div>
+              </div>
+            </div>
           );
-         }
-        }
-       ]}
-      />
+         })}
+        </div>
+       </>
       )}
      
      {/* Status Timeline */}

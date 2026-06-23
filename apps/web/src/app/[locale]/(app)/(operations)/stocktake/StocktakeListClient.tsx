@@ -290,6 +290,77 @@ const postedCount = summaryData?.completed ?? 0;
         containerHeight="600px"
         sorting={sorting}
         onSortingChange={setSorting}
+        renderMobileCard={(session: StocktakeSummary) => {
+          const total = session.totalItems || 0;
+          const counted = session.countedItems || 0;
+          const progressPercentage = total > 0 ? Math.round((counted / total) * 100) : 0;
+          const warehouseName = warehouseMap.get(session.warehouseId) || '—';
+
+          return (
+            <div 
+              key={session.id} 
+              className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-4 text-start"
+            >
+              {/* TOP TIER: Session ID & Status */}
+              <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-3">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-black text-[#0B1220] dark:text-white truncate max-w-[180px]" dir="ltr">
+                    {session.sessionNumber || session.id}
+                  </span>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1">
+                    Operational Audit
+                  </span>
+                </div>
+                {/* Status Badge */}
+                <div>
+                  <StatusBadge status={session.status} />
+                </div>
+              </div>
+
+              {/* MIDDLE TIER: Warehouse & Date */}
+              <div className="flex justify-between items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="p-1.5 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700 shrink-0">
+                    <Warehouse className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <span className="text-xs font-bold text-[#0B1220] dark:text-gray-300 truncate">
+                    {warehouseName}
+                  </span>
+                </div>
+                <div dir="ltr" className="shrink-0">
+                  <ClientOnlyTime 
+                    date={session.snapshotAt} 
+                    mode="datetime" 
+                    locale={locale as 'ar' | 'en'}
+                    className="text-[10px] font-medium text-gray-400"
+                  />
+                </div>
+              </div>
+
+              {/* BOTTOM TIER: Progress Bar & Action */}
+              <div className="flex flex-col gap-3 pt-3 border-t border-gray-50 dark:border-gray-800/50">
+                <div className="flex flex-col gap-1 w-full">
+                  <div className="flex justify-between text-[10px] font-bold text-gray-500">
+                    <span dir="ltr">{counted}/{total} {t('items_count') || 'Items Count'}</span>
+                    <span dir="ltr">{progressPercentage}%</span>
+                  </div>
+                  {/* Progress Bar Track */}
+                  <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-cyan-500" style={{ width: `${progressPercentage}%` }}></div>
+                  </div>
+                </div>
+                
+                {/* Full-width View Button for easy tapping */}
+                <button 
+                  onClick={() => router.push(`/stocktake/${session.id}`)}
+                  className="w-full py-2 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white text-xs font-bold rounded-lg hover:bg-gray-100 transition-colors flex justify-center items-center gap-2"
+                >
+                  {tc('view') || 'VIEW SESSION'} <span className="text-lg leading-none">+</span>
+                </button>
+              </div>
+            </div>
+          );
+        }}
         filters={
          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
            <div className="w-full sm:w-64">

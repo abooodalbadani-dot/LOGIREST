@@ -169,7 +169,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <ActionGuard documentType="STOCKTAKE" status={status} action="APPROVE" role={user?.role || ''}>
         <Button 
          onClick={() => router.push(`/stocktake/${id}/approve`)} 
-         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-emerald-500 text-white rounded-full gap-2 shadow-sm shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] hover:bg-[#1A2234] dark:hover:bg-[#cba47e] rounded-full gap-2 shadow-sm shadow-[#0B1220]/20 dark:shadow-[#b48e67]/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
         >
          <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('review_approval')}</span>

@@ -252,10 +252,11 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   return (
     <ScopeGuard warehouseId={session?.warehouseId}>
       <PermissionGate action="edit" resource="operations_stocktake">
-        <div className="flex flex-col w-full min-h-[60vh] relative" onKeyDown={handleKeyDown}>
+        <div className="flex flex-col w-full min-h-[60vh] relative pb-24 md:pb-32" onKeyDown={handleKeyDown}>
           <div className="flex flex-col gap-4 md:gap-6 w-full pb-6">
             {/* Header Section */}
-            <div className="flex flex-col items-start text-start gap-4 w-full mb-6 mt-4 relative">
+            <div className="flex flex-col gap-3 w-full mb-6 mt-4 relative text-start">
+              {/* Back Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -266,31 +267,31 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                 <MoveLeft className="h-6 w-6 text-muted-foreground ltr:hidden" />
               </Button>
 
-              <div className="flex flex-col gap-1 w-full pr-12">
-                <h1 className="text-3xl font-black uppercase tracking-tight text-foreground">
-                  STOCKTAKE
-                </h1>
-                <div className="text-xl font-bold tracking-widest text-brand-gold font-mono break-all">
-                  {session.sessionName}
-                </div>
-              </div>
-
-              <div className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-                {warehouseName}
-              </div>
-
-              <div className="flex items-center gap-4 mt-2">
-                {updateCount.isPending && (
-                  <div className="flex items-end gap-2 text-label-sm text-muted-foreground animate-pulse">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {t('autosave_active')}
+              <div className="flex flex-col gap-2 pr-12">
+                <div className="flex items-center flex-wrap gap-2.5">
+                  <h1 className="text-2xl font-black text-[#0B1220] dark:text-white uppercase tracking-tight">
+                    STOCKTAKE
+                  </h1>
+                  <span dir="ltr" className="font-mono text-sm font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg w-fit">
+                    {session.sessionName}
+                  </span>
+                  {/* Polished Counting Status Badge */}
+                  <div className="bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 font-bold px-4 py-1.5 rounded-full border border-cyan-200 dark:border-cyan-800/30 text-xs uppercase tracking-wide">
+                    {locale === 'ar' ? 'جاري العد' : 'Counting'}
                   </div>
-                )}
-                <StatusBadge
-                  status={session.status}
-                  configMap={STOCKTAKE_STATUS_UI}
-                  className="h-10 px-4 text-label-md font-semibold border-none"
-                />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-sm font-bold text-[#0B1220] dark:text-gray-300 uppercase tracking-wide">
+                    {warehouseName}
+                  </div>
+                  {updateCount.isPending && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80 animate-pulse">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>{t('autosave_active')}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -302,7 +303,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             </div>
           )}
           {wasReconnecting && (
-            <div className="bg-muted/50 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="bg-muted/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
               <span className="text-foreground font-bold uppercase tracking-wider text-sm">
                 {t('reconnected_banner', { defaultValue: 'Reconnected — saving...' })}
               </span>
@@ -325,7 +326,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             />
           </div>
 
-          <div className="w-full mb-6">
+          <div className="w-full mb-6 hidden md:block">
             <Card className="p-4 md:p-10 bg-card border border-border shadow-sm border-none shadow-none rounded-xl md:rounded-[2.5rem]">
               <DocumentLineItemTable
                 lines={tableLines}
@@ -337,7 +338,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                 virtualizerRef={rowVirtualizerRef}
                 rowClassName={(line, index) => cn(
                   focusedRowIndex === index && "bg-primary/5 ring-1 ring-primary/20",
-                  touchedItems.has(line.id) && focusedRowIndex !== index && "bg-emerald-500/[0.03]"
+                  touchedItems.has(line.id) && focusedRowIndex !== index && "bg-gray-500/[0.03]"
                 )}
                 headers={{ qty: t('counted_qty') }}
                 renderQty={(line) => {
@@ -368,21 +369,99 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                           debouncedUpdate(line.itemId, line.id, val)
                         }}
                         className={cn(
-                          "text-right font-mono tabular-nums w-full h-10 focus-visible:ring-1 transition-all rounded-lg max-w-[120px] mx-auto",
+                          "text-right font-mono tabular-nums w-full h-10 transition-all rounded-lg max-w-[120px] mx-auto focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] outline-none",
                           isTouched
-                            ? "bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-white focus-visible:ring-emerald-500/40"
-                            : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white focus-visible:ring-primary/30",
-                          focusedRowIndex === index && "focus-visible:ring-primary"
+                            ? "bg-gray-50/50 border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white"
+                            : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white",
+                          focusedRowIndex === index && "border-[#0B1220] dark:border-[#b48e67] ring-1 ring-[#0B1220] dark:ring-[#b48e67]"
                         )}
                       />
                       {isTouched && (
-                        <CheckCircle2 className="absolute -end-5 h-3 w-3 text-emerald-500/60 shrink-0" />
+                        <CheckCircle2 className="absolute -end-5 h-3 w-3 text-slate-400 dark:text-[#b48e67]/60 shrink-0" />
                       )}
                     </div>
                   );
                 }}
               />
             </Card>
+          </div>
+
+          <div className="flex flex-col gap-4 md:hidden w-full pb-24">
+            {tableLines.map((line) => {
+              const isTouched = touchedItems.has(line.id);
+              const countValue = localCounts[line.id];
+              return (
+                <div 
+                  key={line.id} 
+                  className="bg-white dark:bg-[#1A2234] border-2 border-transparent focus-within:border-[#0B1220] dark:focus-within:border-[#b48e67] rounded-xl p-4 shadow-md flex flex-col gap-3 transition-all relative text-start"
+                >
+                  {/* TOP TIER: Item Info & UOM */}
+                  <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
+                    <div className="flex flex-col w-[70%]">
+                      <span className="text-sm font-black text-[#0B1220] dark:text-white leading-tight">
+                        {line.itemName}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-mono tracking-widest mt-0.5">
+                        {line.barcode || '—'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded shrink-0">
+                      <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase">
+                        {line.uom}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* MIDDLE TIER: Tracing (LOT & Expiry) */}
+                  <div className="flex flex-col gap-1 bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-gray-500 uppercase font-bold">LOT:</span>
+                      {/* TRUNCATE long GRN references to prevent overlap */}
+                      <span className="font-mono text-[#0B1220] dark:text-gray-200" dir="ltr">
+                        {line.lotNumber && line.lotNumber.length > 15 ? line.lotNumber.slice(0, 15) + '...' : (line.lotNumber || '—')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-gray-500 uppercase font-bold">EXP:</span>
+                      <span className="font-mono text-[#0B1220] dark:text-gray-200" dir="ltr">
+                        {line.expiryDate || '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* BOTTOM TIER: The Active Input (Giant Target) */}
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">الكمية الفعلية</span>
+                    {/* Status Icon (Checkmark) to the left of the input */}
+                    <div className="flex items-center gap-2 flex-1 justify-end">
+                      {isTouched && <CheckCircle2 className="w-5 h-5 text-slate-400 dark:text-[#b48e67] shrink-0" />}
+                      <Input 
+                        type="number" 
+                        inputMode="decimal"
+                        lang="en-u-nu-latn"
+                        className={cn(
+                          "w-24 h-10 text-center font-black text-lg text-[#0B1220] dark:text-white focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none [font-variant-numeric:lining-nums_tabular-nums]",
+                          isTouched
+                            ? "bg-gray-50/50 dark:bg-[#0B1220] border-gray-200 dark:border-gray-700"
+                            : "bg-white dark:bg-[#0B1220] border-gray-200 dark:border-gray-700"
+                        )}
+                        dir="ltr"
+                        value={countValue !== null && countValue !== undefined ? String(countValue) : "0"}
+                        disabled={completeCounting.isPending || !isOnline}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                          const val = rawValue ? parseInt(rawValue, 10) : 0;
+                          setLocalCounts(prev => ({ ...prev, [line.id]: val }));
+                          setTouchedItems(prev => new Set(prev).add(line.id));
+                          debouncedUpdate(line.itemId, line.id, val);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })}
           </div>
          </div>
 
@@ -404,8 +483,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                     "h-14 w-full md:w-auto px-8 rounded-[1.25rem] text-white font-bold text-label-sm uppercase tracking-wide transition-all shrink-0",
                     "shadow-lg hover:shadow-xl active:scale-[0.98]",
                     allTouched
-                      ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/30 hover:shadow-emerald-500/50"
-                      : "bg-brand-gold hover:bg-brand-gold-hover shadow-brand-gold/20 hover:shadow-brand-gold/40"
+                      ? "bg-[#0B1220] dark:bg-[#b48e67] hover:bg-[#1A2234] dark:hover:bg-[#c59d74] text-white dark:text-[#0B1220] shadow-lg shadow-[#0B1220]/20 dark:shadow-[#b48e67]/20"
+                      : "bg-[#0B1220]/80 dark:bg-[#b48e67]/80 hover:bg-[#0B1220] dark:hover:bg-[#b48e67] text-white/90 dark:text-[#0B1220]/90 shadow-md shadow-[#b48e67]/10"
                   )}
                 >
                   {completeCounting.isPending ? (
@@ -427,7 +506,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               <span className="text-muted-foreground">{t('items_counted')}</span>
               <span className={cn(
                 "font-bold tabular-nums",
-                allTouched ? "text-emerald-400" : "text-brand-gold"
+                allTouched ? "text-[#b48e67]" : "text-slate-500"
               )}>
                 {touchedCount} / {items.length}
               </span>
@@ -437,7 +516,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-300",
-                  allTouched ? "bg-emerald-500" : "bg-brand-gold"
+                  allTouched ? "bg-[#b48e67]" : "bg-[#b48e67]/40"
                 )}
                 style={{ width: `${progressPercent}%` }}
               />

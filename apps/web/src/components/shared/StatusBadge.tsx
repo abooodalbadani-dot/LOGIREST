@@ -29,11 +29,13 @@ const statusBadgeVariants = cva(
   error:
   "bg-red-500/10 text-red-500 border-none hover:bg-red-500/20",
   success:
-  "bg-emerald-500/10 text-emerald-500 border-none hover:bg-emerald-500/20",
+  "bg-slate-100 dark:bg-[#1A2234] text-[#0B1220] dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-[#232d44]",
   outline: 
   "text-muted-foreground bg-transparent border border-border/50",
   info: 
   "bg-cyan-500/10 text-cyan-500 border-none hover:bg-cyan-500/20",
+  partial:
+  "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67] border border-[#b48e67]/30 hover:bg-amber-100/50 dark:hover:bg-amber-950/20",
   },
   },
  defaultVariants: {
@@ -42,7 +44,7 @@ const statusBadgeVariants = cva(
  }
 )
 
-export type BadgeVariant = "default" | "brand" | "warning" | "error" | "success" | "outline" | "info";
+export type BadgeVariant = "default" | "brand" | "warning" | "error" | "success" | "outline" | "info" | "partial";
 
 export interface StatusBadgeProps
  extends React.HTMLAttributes<HTMLDivElement>,

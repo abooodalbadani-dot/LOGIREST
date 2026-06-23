@@ -308,9 +308,9 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
           return (
            <div className={cn(
             "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono font-semibold text-label-xs",
-            variance === 0 ? "bg-muted/50 text-foreground" : 
-            variance > 0 ? "bg-muted/50 text-foreground" : 
-            "bg-red-500/10 text-red-500"
+            variance === 0 ? "bg-slate-100 dark:bg-slate-800 text-[#0B1220] dark:text-slate-400" : 
+            variance > 0 ? "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67]" : 
+            "bg-red-500/10 text-red-800/80 dark:text-red-400/80"
            )} dir="ltr">
             {variance === 0 ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
             {variance > 0 ? '+' : ''}{formatQuantity(variance, locale)}
@@ -328,7 +328,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
            <div className={cn(
             "font-mono text-label-sm font-semibold",
             varianceValue === 0 ? "text-muted-foreground/40" : 
-            varianceValue > 0 ? "text-foreground" : "text-red-500"
+            varianceValue > 0 ? "text-[#b48e67]" : "text-red-800/80 dark:text-red-400/80"
            )} dir="ltr">
             {formatCurrency(varianceValue, currencyCode, locale)}
            </div>

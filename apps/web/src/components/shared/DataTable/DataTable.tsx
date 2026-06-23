@@ -63,6 +63,7 @@ interface DataTableProps<T> {
  containerHeight?: string | number;
  sorting?: SortingState;
  onSortingChange?: (sorting: SortingState) => void;
+ renderMobileCard?: (item: T) => React.ReactNode;
 }
 
 export function DataTable<T>({
@@ -89,6 +90,7 @@ export function DataTable<T>({
  containerHeight = '600px',
  sorting: controlledSorting,
  onSortingChange: controlledOnSortingChange,
+ renderMobileCard,
 }: DataTableProps<T>) {
  const t = useTranslations('common.datatable');
  const locale = useLocale();
@@ -221,7 +223,10 @@ export function DataTable<T>({
   ) : (
      <div 
       ref={parentRef}
-      className="w-full min-w-0 -mx-4 px-4 md:mx-0 md:px-0 md:border md:border-border/50 md:rounded-xl overflow-x-auto bg-card md:bg-transparent custom-scrollbar"
+      className={cn(
+       "w-full min-w-0 -mx-4 px-4 md:mx-0 md:px-0 md:border md:border-border/50 md:rounded-xl overflow-x-auto bg-card md:bg-transparent custom-scrollbar",
+       renderMobileCard ? "hidden md:block" : ""
+      )}
       style={enableVirtualization ? { height: containerHeight } : {}}
      >
       <table 
@@ -339,6 +344,15 @@ export function DataTable<T>({
        )}
       </tbody>
      </table>
+    </div>
+  )}
+  {renderMobileCard && !isLoading && data.length > 0 && (
+    <div className="flex flex-col gap-4 md:hidden w-full mt-4">
+      {data.map((item, idx) => (
+      <React.Fragment key={idx}>
+        {renderMobileCard(item)}
+      </React.Fragment>
+      ))}
     </div>
   )}
 
