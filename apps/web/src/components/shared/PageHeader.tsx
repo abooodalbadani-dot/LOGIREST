@@ -61,15 +61,15 @@ export function PageHeader({
             </Link>
           )}
           {icon && <div className="flex-shrink-0 mt-2 sm:mt-0">{icon}</div>}
-          <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight uppercase whitespace-nowrap truncate max-w-full block min-w-0">
-            {finalTitle} {finalHighlight && <span className="text-primary font-extrabold mx-1">{finalHighlight}</span>}
+          <h1 className="text-2xl font-black text-[#0B1220] dark:text-white tracking-tight uppercase whitespace-nowrap truncate max-w-full block min-w-0">
+            {finalTitle} {finalHighlight && <span className="text-[#b48e67] font-black mx-1">{finalHighlight}</span>}
           </h1>
           {showStatus && status && (
             <StatusBadge status={status as BadgeStatus} className="mt-1 sm:mt-0" />
           )}
         </div>
         {actualSubtitle && (
-          <div className="text-sm font-bold text-muted-foreground tracking-widest uppercase mt-2 break-words">
+          <div className="text-sm font-bold text-[#b48e67] tracking-widest uppercase mt-2 break-words">
             {actualSubtitle}
           </div>
         )}

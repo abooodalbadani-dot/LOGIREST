@@ -43,7 +43,7 @@ export function ProcurementDashboard() {
      <>
       <span className="text-label-xs font-semibold uppercase text-operational-cyan block mb-2 opacity-80">{t('procurement.supply_chain')}</span>
       <div className="flex items-center gap-3">
-       <div className="h-[2px] w-12 bg-operational-cyan" />
+       <div className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" />
        <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('procurement.central_procurement_unit')}</p>
       </div>
      </>
@@ -52,7 +52,7 @@ export function ProcurementDashboard() {
     <div className="flex gap-4">
      <PermissionGate action="create" resource="procurement_pr">
       <Link href="/purchase-requests/new" className="contents">
-       <Button variant="outline" className="bg-card border border-border shadow-sm rounded-xl h-14 px-8 font-semibold uppercase text-label-xs hover:bg-operational-cyan hover:text-black transition-all">
+       <Button variant="outline" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
         <PlusCircle className="w-4 h-4 me-2" />
         {t('procurement.new_request')}
        </Button>
@@ -181,7 +181,7 @@ export function ProcurementDashboard() {
        ))}
        <PermissionGate action="view" resource="master_data_suppliers">
         <Link href="/master-data/suppliers" className="w-full">
-         <Button className="w-full bg-muted hover:bg-operational-cyan hover:text-black border-none rounded-2xl text-label-xs font-semibold uppercase h-14 mt-6 transition-all hover:scale-[0.98] hover:brightness-110 active:scale-95">
+         <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
           {t('procurement.manage_vendors')}
          </Button>
         </Link>

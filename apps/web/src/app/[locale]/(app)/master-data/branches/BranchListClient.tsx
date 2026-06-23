@@ -130,7 +130,7 @@ export function BranchListClient({ locale }: { locale: string }) {
      children={
       <PermissionGate action="create" resource="master_data">
        <Link href={`/master-data/branches/new`} className="shrink-0 w-full sm:w-auto">
-        <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
+        <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
          <Plus className="w-3.5 h-3.5 me-2" />
          {tc('create')}
         </Button>

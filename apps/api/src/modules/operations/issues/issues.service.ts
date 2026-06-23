@@ -255,7 +255,7 @@ export class IssuesService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'inventoryIssue',
       'SUBMIT',
@@ -265,6 +265,7 @@ export class IssuesService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async cancel(
@@ -273,7 +274,7 @@ export class IssuesService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'inventoryIssue',
       'CANCEL',
@@ -283,5 +284,6 @@ export class IssuesService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 }

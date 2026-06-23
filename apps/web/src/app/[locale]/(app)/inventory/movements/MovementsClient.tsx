@@ -285,7 +285,7 @@ export default function MovementsClient() {
     <Button
      variant="default"
      onClick={handleExport}
-     className="h-12 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl shadow-sm shadow-operational-cyan/20 transition-all border-none group"
+     className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
     >
      <Download className="w-4 h-4 me-3 text-white transition-transform group-hover:-translate-y-0.5" />
      {t('export_manifest')}

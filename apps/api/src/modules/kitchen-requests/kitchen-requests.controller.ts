@@ -48,7 +48,7 @@ function mapKitchenRequestDetail(
       itemName: (it?.name as string) || '',
       uom: (unitOfMeasure?.code as string) || 'PCS',
       quantity: Number(item.quantityRequested),
-      notes: '',
+      notes: (item.notes as string) || '',
       fulfilledQuantity: Number(item.quantityFulfilled),
     };
   });
@@ -108,7 +108,12 @@ export class KitchenRequestsController {
     body: {
       departmentId: string;
       warehouseId: string;
-      items: Array<{ itemId: string; quantityRequested: number }>;
+      notes?: string;
+      items: Array<{
+        itemId: string;
+        quantityRequested: number;
+        notes?: string;
+      }>;
     },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,

@@ -10,7 +10,7 @@ export function useVoidIssue(issueId: string, options?: { onConflict?: () => voi
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ version, signal, headers }: { version: number; signal?: AbortSignal; headers?: Record<string, string> }) =>
-      apiClient.post(`/operations/issues/${issueId}/void`, successSchema, { version }, { signal, headers }),
+      apiClient.post(`/operations/issues/${issueId}/void`, successSchema, { version }, { signal, headers, isRetry: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] });
       queryClient.invalidateQueries({ queryKey: ['issues', issueId] });

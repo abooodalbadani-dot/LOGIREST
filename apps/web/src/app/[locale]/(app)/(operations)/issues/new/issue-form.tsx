@@ -70,6 +70,63 @@ interface CustomLineItem extends LineItem {
 
 
 
+interface QuantityInputProps {
+  value: number | string;
+  onChange: (val: number | "") => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+function QuantityInput({ value, onChange, disabled, className }: QuantityInputProps) {
+  const [localValue, setLocalValue] = useState(value !== undefined && value !== null ? String(value) : "");
+
+  useEffect(() => {
+    setLocalValue(value !== undefined && value !== null ? String(value) : "");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+      setLocalValue(rawVal);
+      if (rawVal === '' || rawVal === '.') {
+        onChange('');
+      } else {
+        const parsed = parseFloat(rawVal);
+        onChange(isNaN(parsed) ? '' : parsed);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    let finalVal = 1;
+    if (localValue === '' || localValue === '.') {
+      finalVal = 1;
+    } else {
+      const parsed = parseFloat(localValue);
+      if (isNaN(parsed) || parsed <= 0) {
+        finalVal = 1;
+      } else {
+        finalVal = parsed;
+      }
+    }
+    setLocalValue(String(finalVal));
+    onChange(finalVal);
+  };
+
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      value={localValue}
+      disabled={disabled}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={className}
+      dir="ltr"
+    />
+  );
+}
+
 export function IssueForm() {
   const t = useTranslations("operations.issue");
   const tc = useTranslations("common");
@@ -224,11 +281,13 @@ export function IssueForm() {
   const renderQty = React.useCallback((line: CustomLineItem) => (
     <div className="flex flex-col items-center gap-1 w-full">
       <div className="flex justify-center w-full">
-        <Input
-          type="number"
-          step="0.01"
-          {...form.register(`lines.${line.index}.requestedQty`, { valueAsNumber: true })}
-          className="h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center"
+        <QuantityInput
+          value={form.watch(`lines.${line.index}.requestedQty`)}
+          onChange={(val) => {
+            form.setValue(`lines.${line.index}.requestedQty`, val as any, { shouldDirty: true, shouldValidate: true });
+          }}
+          disabled={form.formState.isSubmitting}
+          className="w-24 text-center font-black text-lg bg-white border border-[#b48e67]/40 text-[#0B1220] focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
         />
       </div>
       {form.formState.errors.lines?.[line.index]?.requestedQty && (

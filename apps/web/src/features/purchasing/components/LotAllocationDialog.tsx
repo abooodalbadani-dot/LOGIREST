@@ -227,7 +227,7 @@ export function LotAllocationDialog({
                 <Button
                   type="button"
                   onClick={handleConfirm}
-                  className="w-full sm:w-auto shrink-0 bg-operational-cyan hover:brightness-110 text-white text-xs font-bold uppercase shadow-md shadow-operational-cyan/20 disabled:opacity-50"
+                  className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   disabled={touched && !isFormValid}
                 >
                   <CheckCircle2 className="w-4 h-4 me-2" />

@@ -126,7 +126,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <ActionGuard documentType="STOCKTAKE" status={status} action="COUNT" role={user?.role || ''}>
         <Button 
          onClick={() => router.push(`/stocktake/${id}/count`)} 
-         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+         className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" 
         >
          <ClipboardList className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('go_to_count')}</span>
@@ -141,7 +141,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <PermissionGate action="count" resource="operations_stocktake">
         <Button
          onClick={() => router.push(`/stocktake/${id}/count`)}
-         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide"
+         className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
         >
          <ClipboardList className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('resume_counting')}</span>
@@ -183,7 +183,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
        <ActionGuard documentType="STOCKTAKE" status={status} action="POST" role={user?.role || ''}>
         <Button 
          onClick={() => router.push(`/stocktake/${id}/post`)} 
-         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-6 md:px-10 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+         className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" 
         >
          <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
          <span className="hidden xs:inline">{t('go_to_post')}</span>

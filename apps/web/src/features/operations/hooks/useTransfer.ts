@@ -46,6 +46,7 @@ export const TransferLineSchema = z.object({
  receivedQty: z.number().nullable(),
  uomId: z.string(),
  lotAllocations: z.array(TransferLineLotAllocationSchema).default([]),
+ notes: z.string().nullable().optional(),
 });
 
 export const TransferDetailSchema = z.object({

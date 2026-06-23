@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { formatTime, formatDate, formatDateTime } from '@/utils/currency';
+import React from 'react';
+import { ClientDate } from './ClientDate';
 
 interface ClientOnlyTimeProps {
  date?: Date | string | null;
@@ -14,7 +14,7 @@ interface ClientOnlyTimeProps {
 
 /**
  * A component that renders date/time only on the client side to prevent hydration mismatches.
- * Use this whenever you need to display "now" or relative times that differ between server and client.
+ * Delegates to the timezone-safe ClientDate component.
  */
 export function ClientOnlyTime({ 
  date, 
@@ -24,27 +24,21 @@ export function ClientOnlyTime({
  fallback = '...', 
  className 
 }: ClientOnlyTimeProps) {
- const [mounted, setMounted] = useState(false);
+  let format = 'DD/MM/YYYY HH:mm';
+  if (mode === 'time') {
+    format = showSeconds ? 'HH:mm:ss' : 'HH:mm';
+  } else if (mode === 'date') {
+    format = 'DD/MM/YYYY';
+  } else if (mode === 'datetime') {
+    format = showSeconds ? 'DD/MM/YYYY HH:mm:ss' : 'DD/MM/YYYY HH:mm';
+  }
 
- useEffect(() => {
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  setMounted(true);
- }, []);
-
- if (!mounted) {
-  return <span className={className}>{fallback}</span>;
- }
-
- const d = date ? (typeof date === 'string' ? new Date(date) : date) : new Date();
- 
- let displayValue = '';
- if (mode === 'time') {
-  displayValue = formatTime(d, locale as 'ar' | 'en');
- } else if (mode === 'datetime') {
-  displayValue = formatDateTime(d, locale as 'ar' | 'en', showSeconds);
- } else {
-  displayValue = formatDate(d, locale as 'ar' | 'en');
- }
-
- return <span className={className}>{displayValue}</span>;
+  return (
+    <ClientDate
+      dateString={date}
+      format={format}
+      className={className}
+      fallback={fallback}
+    />
+  );
 }

@@ -240,7 +240,7 @@ const postedCount = summaryData?.completed ?? 0;
  </div>
  <PermissionGate action="create" resource="stocktake">
  <Link href={`/stocktake/new`} className="shrink-0 w-full sm:w-auto">
- <Button className="h-12 px-10 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-xl shadow-cyan-900/20 group">
+ <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
  <Plus className="w-4 h-4 me-2 group-hover:rotate-90 transition-transform" />
  {t('create_new')}
  </Button>
@@ -346,7 +346,7 @@ const postedCount = summaryData?.completed ?? 0;
                   </div>
                   {/* Progress Bar Track */}
                   <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-500" style={{ width: `${progressPercentage}%` }}></div>
+                    <div className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" style={{ width: `${progressPercentage}%` }}></div>
                   </div>
                 </div>
                 

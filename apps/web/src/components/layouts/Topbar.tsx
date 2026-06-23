@@ -58,7 +58,7 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
           onClick={onMenuClick}
           aria-label="Menu"
           aria-expanded={isSidebarOpen}
-          className="p-2 -ms-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-lg md:hidden transition-all"
+          className="md:hidden px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -66,7 +66,7 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 shrink-0 cursor-pointer select-none">
           <div className="flex items-center h-full">
             <img
-              src="/Otantik Restuarant logo B.svg"
+              src="/Otantik%20Restaurant%20logo%20B.svg"
               alt="Otantik Corporate Identity"
               className="h-14 md:h-[70px] w-auto object-contain cursor-pointer transition-opacity duration-200 hover:opacity-90"
             />
@@ -108,11 +108,17 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
       <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         <Link
           href="/search"
-          className="p-1 sm:p-1.5 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all flex"
+          className="p-1 sm:p-1.5 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all hidden md:flex"
           title={tc('search')}
         >
           <Search className="w-5 h-5 sm:w-4 sm:h-4" />
         </Link>
+
+        {user && (
+          <div className="md:hidden flex">
+            <NotificationBell />
+          </div>
+        )}
 
         <div className="flex items-center gap-1 sm:gap-2">
           {user && <div className="hidden md:block"><NotificationBell /></div>}

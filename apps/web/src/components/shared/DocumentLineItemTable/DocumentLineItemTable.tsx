@@ -555,12 +555,12 @@ export function DocumentLineItemTable<T extends LineItem>({
             {/* Desktop Layout cells (hidden on mobile) */}
             <td className={cn(noCollapse ? "table-cell align-middle sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[130px] md:min-w-[180px]" : "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]", noCollapse ? (dense ? "px-3 py-1 text-xs" : "px-4 py-2") : (dense ? "md:px-4 md:py-1.5" : "md:px-8 md:py-5"))}>
              <div className="flex flex-col gap-0.5">
-              <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-xs md:text-body-md")}>
+              <span className="text-sm font-black text-[#0B1220] dark:text-white truncate block">
                {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
               </span>
               <div className="flex items-center gap-2">
-               <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
-                {line.item.code}
+               <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 tracking-wider uppercase" dir="ltr">
+                {line.item.code || 'N/A'}
                </span>
                {hideUomColumn && (
                 <span className="text-[10px] bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
@@ -851,12 +851,12 @@ export function DocumentLineItemTable<T extends LineItem>({
          {/* Desktop Layout cells (hidden on mobile) */}
          <td className={cn(noCollapse ? "table-cell align-middle sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[130px] md:min-w-[180px]" : "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]", noCollapse ? (dense ? "px-3 py-1 text-xs" : "px-4 py-2") : (dense ? "md:px-4 md:py-1.5" : "md:px-8 md:py-5"))}>
           <div className="flex flex-col gap-0.5">
-           <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors truncate block", dense ? "text-xs" : "text-xs md:text-body-md")}>
+           <span className="text-sm font-black text-[#0B1220] dark:text-white truncate block">
             {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
            </span>
            <div className="flex items-center gap-2">
-            <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
-             {line.item.code}
+            <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 tracking-wider uppercase" dir="ltr">
+             {line.item.code || 'N/A'}
             </span>
             {hideUomColumn && (
              <span className="text-[9.5px] bg-[#1F2937] text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">

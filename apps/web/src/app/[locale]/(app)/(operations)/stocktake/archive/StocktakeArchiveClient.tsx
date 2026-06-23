@@ -166,7 +166,7 @@ export function StocktakeArchiveClient({
        {tc('filters_button')}
       </Button>
       <Button 
-       className="h-12 px-8 bg-operational-cyan/10 hover:bg-operational-cyan/20 text-operational-cyan text-label-xs font-semibold uppercase rounded-md transition-all border border-operational-cyan/20"
+       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        onClick={async () => {
         try {
          const res = await apiClient.get('/operations/stocktakes/variance-export', z.unknown());

@@ -3295,6 +3295,7 @@
       "completed": "Completed",
       "confirm_receipt": "Confirm Receipt",
       "confirm_shipment": "Confirm Shipment",
+      "scanning_required_hint": "Please scan all items and verify their quantities via barcode to enable the confirm shipment option.",
       "create_new": "New Transfer",
       "new_description": "Create a new stock transfer between warehouses",
       "created_success": "Stock Transfer created successfully",

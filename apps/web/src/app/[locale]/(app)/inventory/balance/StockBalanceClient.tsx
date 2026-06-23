@@ -235,7 +235,7 @@ export default function StockBalanceClient() {
        <Button 
         variant="default" 
         onClick={handleExport}
-        className="w-full sm:w-auto h-12 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl shadow-sm shadow-operational-cyan/20 transition-all border-none group"
+        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        >
         <Download className="w-4 h-4 text-white me-3 transition-transform group-hover:-translate-y-0.5" />
         <span className="text-label-xs font-semibold uppercase">{t('export')}</span>
@@ -373,7 +373,7 @@ export default function StockBalanceClient() {
          <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
            <div className="flex gap-2 shrink-0">
             <PermissionGate action="update" resource="inventory">
-             <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-operational-cyan bg-operational-cyan/10 hover:bg-operational-cyan/20">
+             <Button variant="ghost" size="sm" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
               <Edit2 className="w-3.5 h-3.5" />
              </Button>
             </PermissionGate>

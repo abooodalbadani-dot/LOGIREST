@@ -17,7 +17,8 @@ export class TransfersService {
     body: {
       fromWarehouseId: string;
       toWarehouseId: string;
-      lines: Array<{ itemId: string; quantityShipped: number }>;
+      notes?: string;
+      lines: Array<{ itemId: string; quantityShipped: number; notes?: string }>;
     },
     userId: string,
   ) {
@@ -43,11 +44,13 @@ export class TransfersService {
           transferNumber,
           fromWarehouseId: body.fromWarehouseId,
           toWarehouseId: body.toWarehouseId,
+          notes: body.notes || null,
           status: 'DRAFT',
           lines: {
             create: body.lines.map((line) => ({
               itemId: line.itemId,
               quantityShipped: line.quantityShipped,
+              notes: line.notes || null,
             })),
           },
         },
@@ -234,7 +237,7 @@ export class TransfersService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'transfer',
       'CANCEL',
@@ -244,6 +247,7 @@ export class TransfersService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async postToLedger(
@@ -252,7 +256,7 @@ export class TransfersService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'transfer',
       'POST',
@@ -262,6 +266,7 @@ export class TransfersService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async dispute(
@@ -294,7 +299,7 @@ export class TransfersService {
         });
       }
 
-      return this.workflowService.executeTransition(
+      await this.workflowService.executeTransition(
         id,
         'transfer',
         'DISPUTE',
@@ -305,6 +310,33 @@ export class TransfersService {
         body.ipAddress,
         tx,
       );
+
+      const updatedTransfer = await tx.transfer.findFirst({
+        where: { id },
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                  category: true,
+                  barcodeMappings: true,
+                },
+              },
+            },
+          },
+          fromWarehouse: true,
+          toWarehouse: true,
+        },
+      });
+
+      if (!updatedTransfer) {
+        throw new NotFoundException(
+          `Transfer with ID ${id} not found after dispute`,
+        );
+      }
+
+      return updatedTransfer;
     });
   }
 }

@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
       </p>
       <Button
         onClick={() => router.push('/login')}
-        className="w-full h-10 flex items-center justify-center gap-2 text-[10px] font-bold bg-black dark:bg-card text-white dark:text-[#050505] hover:bg-operational-cyan transition-all rounded-lg uppercase tracking-widest shadow-sm shadow-black/5 dark:shadow-white/5 border-none"
+        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
         {t('back_to_login')}
       </Button>
@@ -105,7 +105,7 @@ export default function ResetPasswordPage() {
       </p>
       <Button
         onClick={() => router.push('/forgot-password')}
-        className="w-full h-10 flex items-center justify-center gap-2 text-[10px] font-bold bg-black dark:bg-card text-white dark:text-[#050505] hover:bg-operational-cyan transition-all rounded-lg uppercase tracking-widest shadow-sm shadow-black/5 dark:shadow-white/5 border-none"
+        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
         {t('forgot_password')}
       </Button>

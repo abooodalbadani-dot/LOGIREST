@@ -159,7 +159,7 @@ export function PRListClient() {
  children={
  <PermissionGate action="create" resource="pr">
  <Link href="/purchase-requests/new" className="shrink-0 w-full sm:w-auto">
-       <Button className="h-14 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-operational-cyan/30 border-none">
+       <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
         <Plus className="w-5 h-5 me-3" />
         {t('create_new')}
        </Button>
@@ -204,7 +204,7 @@ export function PRListClient() {
    title={tc('datatable.no_records')} action={
    <PermissionGate action="create" resource="pr">
    <Link href="/purchase-requests/new" className="shrink-0 w-full sm:w-auto">
-   <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
+   <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
    <Plus className="w-3.5 h-3.5 me-2" />
    {t('create_new')}
    </Button>

@@ -56,7 +56,7 @@ export function GlassModal({
     {(title || description) && (
      <DialogHeader className="p-6 pb-2">
       {title && <DialogTitle className="text-title-lg font-bold">{title}</DialogTitle>}
-      {description && <DialogDescription className="text-body-md text-muted-foreground/70">{description}</DialogDescription>}
+      {description && <DialogDescription className="text-body-md text-[#b48e67] font-medium">{description}</DialogDescription>}
      </DialogHeader>
     )}
     

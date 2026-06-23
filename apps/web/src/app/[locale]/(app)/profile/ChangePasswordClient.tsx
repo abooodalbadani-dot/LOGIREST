@@ -158,7 +158,7 @@ export default function ChangePasswordClient({ onDirtyChange }: ChangePasswordCl
 
  <Button 
  type="submit" 
- className="w-full bg-operational-cyan text-white font-semibold uppercase transition-all h-12 rounded-xl shadow-[0_12px_24px_-8px_rgba(var(--operational-cyan-rgb),0.4)] hover:brightness-110 active:scale-[0.98] text-label-xs" 
+ className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" 
  disabled={isSubmitting}
  >
  {isSubmitting ? (

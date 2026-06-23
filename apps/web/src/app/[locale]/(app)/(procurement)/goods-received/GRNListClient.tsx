@@ -211,7 +211,7 @@ export function GRNListClient({
  <div className="flex items-center gap-6">
  <PermissionGate action="create" resource="grn">
   <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
- <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm shadow-cyan-900/10 border-none">
+ <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
  </Button>
@@ -277,7 +277,7 @@ export function GRNListClient({
          action={
           <PermissionGate action="create" resource="grn">
            <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
-            <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-label-xs font-semibold uppercase rounded-md transition-all">
+            <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
              <Plus className="w-3.5 h-3.5 me-2" />
              {t('create_new')}
             </Button>

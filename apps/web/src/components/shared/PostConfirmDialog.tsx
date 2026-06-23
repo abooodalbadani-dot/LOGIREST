@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Loader2, AlertTriangle, Trash2, XCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -77,13 +77,17 @@ export function PostConfirmDialog({
  const locale = useLocale();
  const [internalOpen, setInternalOpen] = useState(false);
  const [confirmInput, setConfirmInput] = useState('');
+ const [localLoading, setLocalLoading] = useState(false);
+ // Synchronous ref-based guard — prevents double-submission between renders.
+ // useState updates are async and can let a second click through before re-render.
+ const isSubmittingRef = useRef(false);
 
  const open = controlledOpen ?? internalOpen;
  const rawOnOpenChange = controlledOnOpenChange ?? setInternalOpen;
 
  const handleOpenChange = (newOpen: boolean, event?: { cancel?: () => void }) => {
   // Prevent closing via Escape key or backdrop click if loading
-  if (!newOpen && isLoading) {
+  if (!newOpen && (isLoading || localLoading)) {
    if (event?.cancel) {
     event.cancel();
    }
@@ -97,19 +101,28 @@ export function PostConfirmDialog({
  const requiredWord = confirmKeyword || defaultKeyword;
  const isConfirmDisabled =
   isLoading ||
+  localLoading ||
   disabled ||
   (requiresTextConfirmation &&
    confirmInput.trim().toLowerCase() !== requiredWord.trim().toLowerCase());
 
  const handleConfirm = async (e: React.MouseEvent) => {
   e.preventDefault();
+  // Synchronous ref check first — blocks second click before React re-renders
+  if (isSubmittingRef.current || localLoading || isLoading || disabled) return;
+  isSubmittingRef.current = true;
+  setLocalLoading(true);
   try {
    await onConfirm();
-  } catch (error) {
-   console.error('[PostConfirmDialog] onConfirm error:', error);
-  } finally {
-   handleOpenChange(false);
+   // Only close and reset on success
+   rawOnOpenChange(false);
    setConfirmInput('');
+  } catch {
+   // Error is already surfaced via toast from useSafeMutation / caller.
+   // Keep the dialog open so the user can see the failure and retry or dismiss manually.
+  } finally {
+   isSubmittingRef.current = false;
+   setLocalLoading(false);
   }
  };
 
@@ -134,7 +147,7 @@ export function PostConfirmDialog({
        {description}
       </AlertDialogDescription>
      </div>
-     {!isLoading && (
+     {!(isLoading || localLoading) && (
       <button
        onClick={() => handleOpenChange(false)}
        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors bg-transparent border-none"
@@ -166,7 +179,7 @@ export function PostConfirmDialog({
         type="text"
         value={confirmInput}
         onChange={(e) => setConfirmInput(e.target.value)}
-        disabled={isLoading}
+        disabled={isLoading || localLoading}
         className="h-12 bg-surface-container-high/40 border-none rounded-xl px-4 text-foreground outline-none focus:ring-2 focus:ring-operational-cyan/20 transition-all font-mono font-bold uppercase tracking-widest placeholder:opacity-20"
         placeholder={requiredWord}
         autoFocus
@@ -176,7 +189,7 @@ export function PostConfirmDialog({
     </div>
 
     <AlertDialogFooter className="gap-4 mt-2">
-     {!isLoading && (
+     {!(isLoading || localLoading) && (
       <AlertDialogCancel
        render={
         <button
@@ -184,7 +197,7 @@ export function PostConfirmDialog({
          className="w-full py-2.5 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-[#0B1220] transition-colors outline-none select-none focus:outline-none"
         />
        }
-       disabled={isLoading}
+       disabled={isLoading || localLoading}
       >
        {customCancelText || t('actions.cancel')}
       </AlertDialogCancel>
@@ -193,14 +206,14 @@ export function PostConfirmDialog({
       type="button"
       onClick={handleConfirm}
       disabled={isConfirmDisabled}
-      aria-label={isLoading ? t('loading') : (customConfirmText || t('actions.confirm'))}
-      aria-busy={isLoading}
+      aria-label={(isLoading || localLoading) ? t('loading') : (customConfirmText || t('actions.confirm'))}
+      aria-busy={isLoading || localLoading}
       className={cn(
        "w-full py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg hover:bg-gray-800 dark:hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2 outline-none select-none focus:outline-none disabled:opacity-40 disabled:pointer-events-none active:scale-[0.99]",
-       isLoading && "cursor-not-allowed"
+       (isLoading || localLoading) && "cursor-not-allowed"
       )}
      >
-      {isLoading ? (
+      {(isLoading || localLoading) ? (
        <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
        customConfirmText || t('actions.confirm')

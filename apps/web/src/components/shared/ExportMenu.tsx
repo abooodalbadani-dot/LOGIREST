@@ -124,7 +124,7 @@ export function ExportMenu({ data, columns, filename, title }: ExportMenuProps) 
     <Button
      variant="default"
      disabled={isExporting || isLoadingSettings}
-     className="w-full sm:w-auto flex items-center justify-center gap-2 h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white dark:text-white font-bold uppercase rounded-xl shadow-sm shadow-operational-cyan/20 transition-all text-xs"
+     className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
     >
      {isExporting || isLoadingSettings ? (
       <Loader2 className="h-4 w-4 animate-spin" />

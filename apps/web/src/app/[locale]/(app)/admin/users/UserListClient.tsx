@@ -112,7 +112,7 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
       <Button 
        variant="ghost" 
        size="sm" 
-       className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
+       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        onClick={(e) => {
         e.stopPropagation();
         router.push(`/admin/users/${row.original.id}/edit`);
@@ -246,7 +246,7 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
             <Button 
              variant="ghost" 
              size="sm" 
-             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-operational-cyan text-operational-cyan rounded-md text-xs font-bold hover:bg-operational-cyan/10 transition-colors uppercase"
+             className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
              onClick={(e) => { e.stopPropagation(); router.push(`/admin/users/${user.id}/edit`); }}
             >
              <Edit className="w-3.5 h-3.5 me-1.5" />

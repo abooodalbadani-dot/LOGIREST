@@ -277,7 +277,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   <h2 className="text-lg font-semibold text-foreground text-start w-full mb-4">
     {t('variance_details_table')}
   </h2>
-  <Card className="bg-card border border-border shadow-sm border-none shadow-none rounded-[2rem] overflow-hidden">
+  <Card className="hidden md:block bg-card border border-border shadow-sm border-none shadow-none rounded-[2rem] overflow-hidden">
   <DocumentLineItemTable<StocktakeLineItem>
    lines={tableLines}
    locale={locale}
@@ -285,7 +285,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
    hideLotColumns={true}
    headers={{ qty: t('counted_qty') }}
    renderQty={(line) => (
-    <span className="font-mono text-label-sm font-semibold text-foreground">
+    <span className="font-mono text-label-sm font-semibold text-foreground tabular-nums">
      {formatNumber(line.countedQty, locale, 3)}
     </span>
    )}
@@ -298,7 +298,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
     {
      header: t('snapshot_qty'),
      cell: (line) => (
-      <span className="font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
+      <span className="font-mono text-label-sm font-bold text-muted-foreground/60 tabular-nums" dir="ltr">
        {formatNumber(line.snapshotQty, locale, 3)}
       </span>
      )
@@ -309,7 +309,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       const variance = line.variance ?? 0;
       return (
        <div className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold text-label-xs",
+        "inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold text-label-xs tabular-nums",
         variance === 0 ? "bg-slate-100 dark:bg-slate-800 text-[#0B1220] dark:text-slate-400" : 
         variance > 0 ? "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67]" : "bg-red-500/10 text-red-800/80 dark:text-red-400/80"
        )} dir="ltr">
@@ -324,7 +324,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       const variance = line.variance ?? 0;
       const varianceValue = variance * line.unitCost;
       return (
-       <span className={cn("font-mono text-label-sm font-semibold", varianceValue > 0 ? "text-[#b48e67]" : varianceValue < 0 ? "text-red-800/80 dark:text-red-400/80" : "text-muted-foreground/40")}>
+       <span className={cn("font-mono text-label-sm font-semibold tabular-nums", varianceValue > 0 ? "text-[#b48e67]" : varianceValue < 0 ? "text-red-800/80 dark:text-red-400/80" : "text-muted-foreground/40")}>
         {formatCurrency(varianceValue, currencyCode, locale)}
        </span>
       );
@@ -340,7 +340,63 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
     }
    ]}
   />
- </Card>
+  </Card>
+
+  {/* Variance Cards for Mobile */}
+  <div className="flex flex-col gap-3 md:hidden w-full mt-4">
+    {tableLines.map(item => {
+      const variance = item.variance ?? 0;
+      const varianceValue = variance * item.unitCost;
+      
+      return (
+        <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+          
+          {/* TOP: Item Identity */}
+          <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
+            <div className="flex flex-col">
+              <span className="text-sm font-black text-[#0B1220] dark:text-white leading-tight">
+                {locale === 'ar' ? item.item.nameAr || item.item.nameEn : item.item.nameEn}
+              </span>
+              <span className="text-[10px] text-gray-400 font-mono tracking-widest uppercase tabular-nums">{item.item.code}</span>
+            </div>
+          </div>
+
+          {/* MIDDLE: Variance Metrics (The Audit Grid) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('snapshot_qty') || 'SYS QTY'}</span>
+              <p className="text-xs font-bold text-[#0B1220] dark:text-gray-200 font-mono tabular-nums" dir="ltr">
+                {formatNumber(item.snapshotQty, locale, 3)} {item.uom}
+              </p>
+            </div>
+            <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('counted_qty') || 'COUNTED'}</span>
+              <p className="text-xs font-bold text-[#0B1220] dark:text-gray-200 font-mono tabular-nums" dir="ltr">
+                {formatNumber(item.countedQty, locale, 3)} {item.uom}
+              </p>
+            </div>
+          </div>
+
+          {/* BOTTOM: Variance Result & Reason */}
+          <div className={`p-3 rounded-lg border ${variance === 0 ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800' : 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30'}`}>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('variance') || 'VARIANCE'}</span>
+              <span className={`text-xs font-black font-mono tabular-nums ${variance !== 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600'}`} dir="ltr">
+                 {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)} ({formatCurrency(varianceValue, currencyCode, locale)})
+              </span>
+            </div>
+            {/* Variance Reason Display */}
+            {variance !== 0 && (
+              <div className="w-full mt-2 text-xs p-2 bg-white dark:bg-[#0B1220] border border-gray-300 dark:border-gray-700 rounded-md text-muted-foreground/80 outline-none block text-start min-h-[36px]">
+                {item.varianceReason || "—"}
+              </div>
+            )}
+          </div>
+
+        </div>
+      );
+    })}
+  </div>
 
  {/* Rejection Dialog */}
  <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>

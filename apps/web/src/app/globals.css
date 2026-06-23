@@ -153,11 +153,16 @@
   --status-info: #535f76;
 
   /* Client proposed semantic variables */
-  --background: #F9FAFB; /* bg-light */
-  --card-bg: #FFFFFF; /* card-bg */
-  --text-main: #1A1A1A; /* text-main */
-  --muted-bg: #E5E7EB; /* muted-bg */
-  --border-color: #E5E7EB; /* border-color */
+  --background: #F9FAFB;
+  /* bg-light */
+  --card-bg: #FFFFFF;
+  /* card-bg */
+  --text-main: #1A1A1A;
+  /* text-main */
+  --muted-bg: #E5E7EB;
+  /* muted-bg */
+  --border-color: #E5E7EB;
+  /* border-color */
 
   /* Surface Foundation */
   --foreground: #1A1A1A;
@@ -174,7 +179,8 @@
   --tertiary-fixed-dim: #bbc7e2;
 
   --muted: #E5E7EB;
-  --muted-foreground: #2C2C2C; /* Darkened from #544C42 for high readability and contrast */
+  --muted-foreground: #2C2C2C;
+  /* Darkened from #544C42 for high readability and contrast */
 
   --accent: #CAAE85;
   --accent-foreground: #ffffff;
@@ -195,13 +201,14 @@
   --surface-container-high: #eee7e2;
   --surface-container-highest: #e8e1dc;
   --surface-variant: #e8e1dc;
-  --on-surface-variant: #1A1A1A; /* Darkened from #2F3130 for clarity */
+  --on-surface-variant: #1A1A1A;
+  /* Darkened from #2F3130 for clarity */
 
   /* No-Line Rule: Section borders are transparent/subtle in Light Mode */
-  --border: #E5E7EB;
-  --border-surface: #E5E7EB;
-  --border-muted: #f4ede7;
-  --input: rgba(196, 162, 118, 0.3);
+  --border: #E6D5C1;
+  --border-surface: #E6D5C1;
+  --border-muted: #F0E6D8;
+  --input: #E6D5C1;
   --ring: #caae85;
 
   --outline-low: rgba(113, 91, 56, 0.05);
@@ -217,7 +224,8 @@
   --status-warning-rgb: 245, 158, 11;
   --status-error-rgb: 186, 26, 26;
   --on-surface-rgb: 30, 27, 24;
-  --foreground-ar-muted: #2C2C2C; /* Darkened from #4d463c for high readability and contrast */
+  --foreground-ar-muted: #2C2C2C;
+  /* Darkened from #4d463c for high readability and contrast */
   --radius: 0.25rem;
 }
 
@@ -233,11 +241,16 @@
   --status-info: #a6b2cd;
 
   /* Client proposed semantic variables */
-  --background: #111827; /* sidebar-dark */
-  --card-bg: #18181B; /* card-dark */
-  --text-main: #F9FAFB; /* text-main reverse */
-  --muted-bg: #374151; /* muted-bg */
-  --border-color: #3F3F46; /* border-color */
+  --background: #111827;
+  /* sidebar-dark */
+  --card-bg: #18181B;
+  /* card-dark */
+  --text-main: #F9FAFB;
+  /* text-main reverse */
+  --muted-bg: #374151;
+  /* muted-bg */
+  --border-color: #3F3F46;
+  /* border-color */
 
   --surface: #18181B;
   --foreground: #F9FAFB;
@@ -278,10 +291,10 @@
   --surface-variant: #1e1e1e;
   --on-surface-variant: #fcfbf8;
 
-  --border: #3F3F46;
-  --border-surface: #3F3F46;
-  --border-muted: rgba(255, 255, 255, 0.05);
-  --input: rgba(196, 162, 118, 0.2);
+  --border: #524433;
+  --border-surface: #524433;
+  --border-muted: #3D3326;
+  --input: #524433;
   --ring: #caae85;
 
   --outline-low: rgba(202, 174, 133, 0.05);
@@ -359,7 +372,8 @@
    * ============================================================ */
   @font-face {
     font-family: var(--font-ibm-plex-arabic);
-    src: local('');  /* no-op: override trigger only */
+    src: local('');
+    /* no-op: override trigger only */
     unicode-range: U+0660-0669, U+06F0-06F9;
   }
 
@@ -419,6 +433,7 @@
   /* Numeric inputs: force LTR with Western numerals */
   input[type="number"],
   input[type="tel"] {
+    -webkit-locale: "en" !important;
     direction: ltr !important;
     text-align: center;
     unicode-bidi: plaintext;
@@ -623,35 +638,63 @@
 }
 
 @layer utilities {
-  .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
 @layer base {
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
 @media print {
+
   /* Hide the entire application UI unless a thermal receipt is present */
-  #root, body > *:not(.thermal-receipt-root) {
+  #root,
+  body>*:not(.thermal-receipt-root) {
     display: none !important;
   }
-  
+
   /* Make sure thermal-receipt-root is visible if present */
   .thermal-receipt-root {
     display: block !important;
   }
-  
+
   /* Display a professional warning message */
   body:not(:has(.thermal-receipt-root)) {
     background-color: white !important;
   }
-  
+
   body:not(:has(.thermal-receipt-root))::before {
     content: 'عذراً، هذه الشاشة التفاعلية غير مخصصة للطباعة المباشرة. يرجى استخدام زر "تصدير التقرير" (Export/Generate Report) للحصول على نسخة معتمدة ومنسقة.';
     display: flex;
@@ -675,8 +718,10 @@
   height: 100% !important;
   width: auto !important;
   max-height: 100% !important;
-  overflow: visible !important; /* CRITICAL: Forces paths that slightly exceed viewBox to render */
-  padding: 4px; /* Safety margin to prevent canvas clipping */
+  overflow: visible !important;
+  /* CRITICAL: Forces paths that slightly exceed viewBox to render */
+  padding: 4px;
+  /* Safety margin to prevent canvas clipping */
 }
 
 .report-svg-mark svg {

@@ -73,7 +73,7 @@ function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen:
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose} className="text-label-sm uppercase font-semibold text-muted-foreground hover:text-foreground">{tCommon('cancel')}</Button>
-          <Button onClick={handleSave} className="bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-sm uppercase font-bold px-6">{tCommon('save')}</Button>
+          <Button onClick={handleSave} className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">{tCommon('save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

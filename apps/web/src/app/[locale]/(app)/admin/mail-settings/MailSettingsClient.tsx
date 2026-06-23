@@ -262,7 +262,7 @@ export function MailSettingsClient() {
             <span className="font-bold text-sm tracking-tight">{provider.name}</span>
            </div>
            {watchedProvider === provider.id && (
-            <motion.div layoutId="provider-check" className="p-1 bg-operational-cyan rounded-full">
+            <motion.div layoutId="provider-check" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
              <CheckCircle2 className="w-4 h-4 text-white" />
             </motion.div>
            )}
@@ -403,7 +403,7 @@ export function MailSettingsClient() {
        <Button
         type="submit"
         disabled={isPending || !isDirty}
-        className="h-14 px-10 bg-operational-cyan text-white hover:bg-operational-cyan/90 transition-all font-bold uppercase text-[10px] tracking-widest gap-3 rounded-2xl shadow-[0_10px_20px_rgba(var(--operational-cyan-rgb),0.2)] disabled:opacity-50 disabled:shadow-none"
+        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        >
         {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {tCommon('save')}

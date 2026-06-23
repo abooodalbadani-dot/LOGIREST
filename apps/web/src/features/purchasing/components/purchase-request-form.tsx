@@ -90,6 +90,63 @@ interface PurchaseRequestFormProps {
   onConflict?: () => void;
 }
 
+interface QuantityInputProps {
+  value: number | string;
+  onChange: (val: number | "") => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+function QuantityInput({ value, onChange, disabled, className }: QuantityInputProps) {
+  const [localValue, setLocalValue] = React.useState(value !== undefined && value !== null ? String(value) : "");
+
+  React.useEffect(() => {
+    setLocalValue(value !== undefined && value !== null ? String(value) : "");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+      setLocalValue(rawVal);
+      if (rawVal === '' || rawVal === '.') {
+        onChange('');
+      } else {
+        const parsed = parseFloat(rawVal);
+        onChange(isNaN(parsed) ? '' : parsed);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    let finalVal = 1;
+    if (localValue === '' || localValue === '.') {
+      finalVal = 1;
+    } else {
+      const parsed = parseFloat(localValue);
+      if (isNaN(parsed) || parsed <= 0) {
+        finalVal = 1;
+      } else {
+        finalVal = parsed;
+      }
+    }
+    setLocalValue(String(finalVal));
+    onChange(finalVal);
+  };
+
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      value={localValue}
+      disabled={disabled}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={className}
+      dir="ltr"
+    />
+  );
+}
+
 export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequestFormProps) {
   const t = useTranslations('procurement.pr');
   const tc = useTranslations('common');
@@ -580,11 +637,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                               {line.qty}
                             </span>
                           ) : (
-                            <Input
-                              type="number"
-                              step="0.50"
-                              className="h-8 w-24 text-center font-sans text-sm font-bold text-[#0B1220] dark:text-white bg-white dark:bg-[#0B1220] border border-gray-300 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
-                              {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
+                            <QuantityInput
+                              value={form.watch(`lines.${index}.req_qty`)}
+                              onChange={(val) => {
+                                form.setValue(`lines.${index}.req_qty`, val as any, { shouldDirty: true, shouldValidate: true });
+                              }}
+                              disabled={isFormDisabled || isSubmitting}
+                              className="w-24 text-center font-black text-lg bg-white border border-[#b48e67]/40 text-[#0B1220] focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
                             />
                           )}
                           {(minStock !== undefined || reorderPt !== undefined) && (

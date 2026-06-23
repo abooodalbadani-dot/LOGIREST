@@ -260,7 +260,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  {t('save_draft')}
  </Button>
  <Button
- className="flex-1 bg-operational-cyan text-white hover:bg-operational-cyan/80"
+ className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
  disabled={isLocked || lines.length === 0}
  onClick={() => setIsPostDialogOpen(true)}
  >

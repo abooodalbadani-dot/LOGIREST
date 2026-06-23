@@ -45,6 +45,7 @@ interface NewTransferLine {
  };
  qty: number;
  uomId: string;
+ notes?: string;
 }
 
 export function TransferNewClient() {
@@ -150,18 +151,19 @@ export function TransferNewClient() {
    if (existingLine) {
     return prev.map(l => l.itemId === item.id ? { ...l, qty: l.qty + 1 } : l);
    }
-   return [...prev, {
-    id: `temp-${item.id}-${Date.now()}`,
-    itemId: item.id,
-    item: {
-     id: item.id,
-     code: item.code,
-     name: item.name,
-     primaryUom: { code: item.primaryUom.code }
-     },
-    qty: 1,
-    uomId: item.primaryUom.id
-   }];
+    return [...prev, {
+     id: `temp-${item.id}-${Date.now()}`,
+     itemId: item.id,
+     item: {
+      id: item.id,
+      code: item.code,
+      name: item.name,
+      primaryUom: { code: item.primaryUom.code }
+      },
+     qty: 1,
+     uomId: item.primaryUom.id,
+     notes: ''
+    }];
   });
  };
 
@@ -459,6 +461,7 @@ export function TransferNewClient() {
          return (
           <div className="flex items-center justify-end w-full">
             <Input
+             dir="ltr"
              type="number"
              min="0.001"
              step="0.001"
@@ -468,13 +471,31 @@ export function TransferNewClient() {
               setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
              }}
               className={cn(
-               "h-8 w-24 text-center font-sans text-sm font-bold text-[#0B1220] bg-white border border-gray-300 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all",
+               "w-full text-center font-black text-lg bg-white dark:bg-[#0B1220] text-[#0B1220] dark:text-white border border-gray-300 dark:border-gray-700 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none transition-colors [font-variant-numeric:lining-nums_tabular-nums]",
                isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
               )}
             />
           </div>
          );
         }}
+        extraColumns={[
+         {
+          header: tCommon('notes'),
+          cell: (line) => (
+           <div className="flex justify-center min-w-[200px] w-full">
+            <Input
+             value={line.notes || ''}
+             onChange={(e) => {
+              const val = e.target.value;
+              setLines(prev => prev.map(l => l.id === line.id ? { ...l, notes: val } : l));
+             }}
+             placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
+             className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 rounded-lg h-9 px-3 text-label-sm font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
+            />
+           </div>
+          )
+         }
+        ]}
        />
       </div>
      </div>

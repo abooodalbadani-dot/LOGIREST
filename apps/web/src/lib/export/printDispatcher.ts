@@ -114,7 +114,7 @@ export async function dispatchPrintJob({
       : `Inventory Issue - ${doc.documentNumber}`;
 
     await generatePDF(pdfCols, pdfRows, `InventoryIssue_${doc.documentNumber}`, pdfTitle, {
-      scope: doc.destinationDeptId || doc.warehouseId,
+      scope: doc.destinationDepartmentName || doc.departmentName || doc.warehouseName || doc.destinationDeptId || doc.warehouseId,
       generatedBy: doc.createdBy || doc.requestedBy || '',
     });
   } else if (columns && data && filename && title) {

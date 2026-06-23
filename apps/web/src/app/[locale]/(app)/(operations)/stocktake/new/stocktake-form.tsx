@@ -271,7 +271,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
      <Button
       type="submit"
       disabled={createStocktake.isPending || isWarehouseLocked}
-      className="flex-[2] md:flex-none h-14 px-12 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-[1.5rem] transition-all shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] disabled:opacity-30 disabled:grayscale group"
+      className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
      >
       {createStocktake.isPending ? tc('saving') : (
        <>

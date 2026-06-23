@@ -153,7 +153,7 @@ async function hydrateIssue(doc: Record<string, unknown>): Promise<Record<string
     const item = await db.items.findById(itemId);
     const lotId = l.lotId ? String(l.lotId) : null;
     const lot = lotId ? await db.lots.findById(lotId) : null;
-    
+
     const lotAllocationsList = (l.lotAllocations || []) as Record<string, unknown>[];
     const lotAllocations = await Promise.all(lotAllocationsList.map(async (alloc) => {
       const allocLotId = String(alloc.lotId || '');
@@ -216,7 +216,7 @@ async function hydrateTransfer(doc: Record<string, unknown>): Promise<Record<str
   const lines = await Promise.all(docLines.map(async (l) => {
     const itemId = String(l.itemId || l.item_id || '');
     const item = await db.items.findById(itemId);
-    
+
     const lotAllocationsList = (l.lotAllocations || l.lot_allocations || []) as Record<string, unknown>[];
     const lotAllocations = await Promise.all(lotAllocationsList.map(async (alloc) => {
       const allocLotId = String(alloc.lotId || alloc.lot_id || '');
@@ -280,10 +280,12 @@ async function hydrateKitchenRequest(doc: Record<string, unknown>): Promise<Reco
       id: String(l.id || `item-${Math.random().toString(36).substring(7)}`),
       itemId,
       itemName: item ? item.name : 'Custom Item',
+      itemCode: item ? item.code : 'CUSTOM',
       uom: item ? item.primaryUom.code : 'PCS',
       quantity: Number(l.quantity ?? 0),
       notes: l.notes ? String(l.notes) : '',
-      fulfilled_quantity: Number(l.fulfilled_quantity ?? 0)
+      fulfilled_quantity: Number(l.fulfilled_quantity ?? l.fulfilledQuantity ?? 0),
+      fulfilledQuantity: Number(l.fulfilledQuantity ?? l.fulfilled_quantity ?? 0)
     };
   }));
   return { ...doc, items };
@@ -299,7 +301,7 @@ async function hydrateGRN(doc: Record<string, unknown>): Promise<Record<string, 
   const lines = await Promise.all(docLines.map(async (l) => {
     const itemId = String(l.itemId || l.item_id || '');
     const item = await db.items.findById(itemId);
-    
+
     let lotVal = null;
     const lLot = l.lot as Record<string, unknown> | null;
     if (lLot) {
@@ -543,7 +545,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       return db.items.save(payload);
     }
   }
-  
+
   if (normalizedPath === '/master-data/barcodes/check-duplicate') {
     if (method === 'GET') {
       const barcode = searchParams.get('barcode');
@@ -835,7 +837,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         return hydrateTransfer(saved as unknown as Record<string, unknown>);
       }
     }
-    
+
     // Transfer Dispute Action endpoint check
     if (parts.length === 5 && parts[4] === 'dispute') {
       if (method === 'POST') {
@@ -1053,7 +1055,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const id = normalizedPath.split('/')[3];
     const session = await db.stocktake.findById(id);
     if (!session) return undefined;
-    
+
     if (method === 'GET') {
       // Simulate CSV Export
       let csv = 'Item Code,Item Name,Expected Qty,Counted Qty,Variance,Reason\n';
@@ -1300,7 +1302,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      
+
       if (action === 'EMAIL') {
         // Simulate email dispatch
         return { success: true, message: 'PO dispatched via email successfully' };
@@ -1466,9 +1468,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       return {
         id: 'system_settings',
         system_name: 'Otantik Restaurant',
-        base_currency: 'SAR',
+        base_currency: 'USD',
         branch_id: 'HQ',
-        timezone: 'Asia/Riyadh',
+        timezone: 'Asia/Shanghai',
         locale_default: 'en' as const,
         sender_name: 'Otantik Restaurant System',
         reply_to_email: 'no-reply@otantikrestuarant.com',
@@ -1501,7 +1503,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         system_name: newSettings.system_name || 'Otantik Restaurant',
         base_currency: newSettings.base_currency || 'SAR',
         branch_id: newSettings.branch_id || 'HQ',
-        timezone: newSettings.timezone || 'Asia/Riyadh',
+        timezone: newSettings.timezone || 'Asia/Shanghai',
         locale_default: newSettings.locale_default || 'en',
         sender_name: newSettings.sender_name || 'Otantik Restaurant System',
         reply_to_email: newSettings.reply_to_email || 'no-reply@otantikrestuarant.com',

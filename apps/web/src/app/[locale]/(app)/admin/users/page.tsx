@@ -20,7 +20,7 @@ export default async function UsersPage(props: { params: Promise<{ locale: strin
      children={
       <ProtectedRoute requiredAction="create" requiredResource="admin">
        <Link href="/admin/users/new">
-        <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm shadow-cyan-900/20">
+        <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
          <Plus className="w-3.5 h-3.5 me-2" />
          {t('create_user')}
         </Button>

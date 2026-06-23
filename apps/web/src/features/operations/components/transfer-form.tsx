@@ -165,91 +165,95 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
       </div>
 
       <div className="w-full max-w-full min-w-0 overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
-       <DocumentReadOnlyOverlay isPosted={transferStatus === 'POSTED' || transferStatus === 'CANCELLED'}>
-        <DocumentLineItemTable<TransferLine>
-         lines={(transfer?.lines ?? []) as unknown as TransferLine[]}
-         isReadOnly={true}
-         onRemoveLine={() => {}}
-         hideLotColumns={true}
-         dense={true}
-         headers={{
-          code: tCommon('table_headers.code'),
-          name: tCommon('table_headers.name'),
-          qty: t('transfer_qty'),
-          uom: tCommon('table_headers.uom'),
-         }}
-         extraColumns={[
-          {
-           header: t('shipped_qty'),
-           cell: (line: TransferLine) => (
-            <div className="flex justify-center">
-             <span dir="ltr" className="font-mono text-xs font-bold bg-surface-container-highest/50 border border-border/30 px-2 py-0.5 rounded-sm">
-              {line.shippedQty ?? line.qty}
-             </span>
+        <DocumentReadOnlyOverlay isPosted={transferStatus === 'POSTED' || transferStatus === 'CANCELLED'}>
+         <DocumentLineItemTable<TransferLine>
+          lines={(transfer?.lines ?? []) as unknown as TransferLine[]}
+          isReadOnly={true}
+          onRemoveLine={() => {}}
+          hideLotColumns={true}
+          dense={true}
+          headers={{
+           code: tCommon('table_headers.code'),
+           name: tCommon('table_headers.name'),
+           qty: t('transfer_qty'),
+           uom: tCommon('table_headers.uom'),
+          }}
+          renderQty={(line) => (
+           <div className="flex justify-center">
+            <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+             {line.qty}
             </div>
-           ),
-          },
-          {
-           header: t('received_qty'),
-           cell: (line: TransferLine) => (
-            <div className="flex justify-center">
-             <span dir="ltr" className={`font-mono text-xs font-bold px-2 py-0.5 rounded-sm border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-surface-container-highest/50 text-muted-foreground/40 border-border/30'}`}>
-              {line.receivedQty ?? '—'}
-             </span>
-            </div>
-           ),
-          },
-         ]}
-        />
-       </DocumentReadOnlyOverlay>
+           </div>
+          )}
+          extraColumns={[
+           {
+            header: t('shipped_qty'),
+            cell: (line: TransferLine) => (
+             <div className="flex justify-center">
+              <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] px-3 py-1 rounded-lg">
+               {line.shippedQty ?? line.qty}
+              </span>
+             </div>
+            ),
+           },
+           {
+            header: t('received_qty'),
+            cell: (line: TransferLine) => (
+             <div className="flex justify-center">
+              <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]'}`}>
+               {line.receivedQty ?? '—'}
+              </span>
+             </div>
+            ),
+           },
+          ]}
+         />
+        </DocumentReadOnlyOverlay>
       </div>
      </div>
     </DocumentLockWrapper>
 
-    <FormFooter 
-     onCancel={() => router.push(`/transfers`)}
-     isSaving={false}
-     isLocked={isLockedState}
-     isDirty={false}
-     isValid={true}
-     children={
-      <div className="flex items-center gap-2">
-       {transferStatus === TRANSFER_STATUS.DRAFT && (
-        <PermissionGate action="ship" resource="operations_transfers">
-         <ActionGuard documentType="TRANSFER" status={transferStatus} action="SHIP" role={user?.role}>
-          <div>
-           <Link href={`/transfers/${id}/ship`}>
-            <Button
-             className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-sm shadow-cyan-900/20 active:scale-95"
-            >
-             <Truck className="w-4 h-4 md:w-5 md:h-5 me-2" />
-             {t('ship')}
-            </Button>
-           </Link>
-          </div>
-         </ActionGuard>
-        </PermissionGate>
-       )}
+    <div className="flex flex-col-reverse md:flex-row justify-end items-center gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 w-full">
+     <Button
+      type="button"
+      onClick={() => router.push('/transfers')}
+      className="w-full md:w-auto px-6 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+     >
+      {tCommon('cancel') || 'Cancel'}
+     </Button>
 
-       {transferStatus === TRANSFER_STATUS.IN_TRANSIT && (
-        <PermissionGate action="receive" resource="operations_transfers">
-         <ActionGuard documentType="TRANSFER" status={transferStatus} action="RECEIVE" role={user?.role}>
-          <div>
-           <Link href={`/transfers/${id}/receive`}>
-            <Button
-             className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-sm shadow-emerald-900/20 active:scale-95"
-            >
-             <PackageCheck className="w-4 h-4 md:w-5 md:h-5 me-2" />
-             {t('confirm_receipt')}
-            </Button>
-           </Link>
-          </div>
-         </ActionGuard>
-        </PermissionGate>
-       )}
-      </div>
-     }
-    />
+     <div className="flex items-center gap-2 w-full md:w-auto flex-col md:flex-row">
+      {transferStatus === TRANSFER_STATUS.DRAFT && (
+       <PermissionGate action="ship" resource="operations_transfers">
+        <ActionGuard documentType="TRANSFER" status={transferStatus} action="SHIP" role={user?.role}>
+         <Link href={`/transfers/${id}/ship`} className="w-full md:w-auto block">
+          <Button
+           className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-sm"
+          >
+           <Truck className="w-5 h-5" />
+           {t('ship')}
+          </Button>
+         </Link>
+        </ActionGuard>
+       </PermissionGate>
+      )}
+
+      {transferStatus === TRANSFER_STATUS.IN_TRANSIT && (
+       <PermissionGate action="receive" resource="operations_transfers">
+        <ActionGuard documentType="TRANSFER" status={transferStatus} action="RECEIVE" role={user?.role}>
+         <Link href={`/transfers/${id}/receive`} className="w-full md:w-auto block">
+          <Button
+           className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-sm"
+          >
+           <PackageCheck className="w-5 h-5" />
+           {t('confirm_receipt')}
+          </Button>
+         </Link>
+        </ActionGuard>
+       </PermissionGate>
+      )}
+     </div>
+    </div>
 
    </form>
   </div>

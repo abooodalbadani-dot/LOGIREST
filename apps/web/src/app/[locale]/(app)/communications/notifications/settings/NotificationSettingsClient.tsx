@@ -60,7 +60,7 @@ export function NotificationSettingsClient() {
      <Button
       onClick={handleSave}
       disabled={isSaving}
-      className="h-12 px-8 bg-operational-cyan text-white hover:bg-operational-cyan/90 transition-all font-semibold uppercase text-label-xs gap-2 rounded-sm"
+      className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
      >
       {isSaving ? (
        <Loader2 className="w-4 h-4 animate-spin" />

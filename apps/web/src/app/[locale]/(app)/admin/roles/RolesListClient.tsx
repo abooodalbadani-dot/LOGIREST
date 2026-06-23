@@ -96,7 +96,7 @@ export function RolesListClient({ locale: _locale }: { locale: string }) {
           <Button
            asChild
            variant="default"
-           className="h-9 px-4 bg-cyan-500 text-black hover:bg-cyan-400 transition-all font-bold uppercase text-[10px] gap-2 tracking-wider border-none shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]"
+           className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
           >
            <Link href={`/admin/roles/${role.id}/edit`}>
             <Edit2 className="w-3.5 h-3.5" />

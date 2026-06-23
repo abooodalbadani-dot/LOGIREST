@@ -85,6 +85,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
         uomId: (item?.uomId as string) || '',
         unitCost: item?.wac ? Number(item.wac) : null,
         lotAllocations: [],
+        notes: (line.notes as string) || '',
       };
     },
   );
@@ -113,7 +114,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
     toWarehouseName: (toWarehouse?.name as string) || '',
     warehouseId: transfer.fromWarehouseId as string,
     branchId: (fromWarehouse?.branchId as string) || '',
-    notes: '',
+    notes: (transfer.notes as string) || '',
     shippedAt: isShipped ? createdAtIso : null,
     receivedAt: isReceived ? createdAtIso : null,
     varianceReason: null,
@@ -153,7 +154,8 @@ export class TransfersController {
     body: {
       fromWarehouseId: string;
       toWarehouseId: string;
-      lines: Array<{ itemId: string; quantityShipped: number }>;
+      notes?: string;
+      lines: Array<{ itemId: string; quantityShipped: number; notes?: string }>;
     },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,

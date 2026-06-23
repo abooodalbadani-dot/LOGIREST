@@ -187,7 +187,7 @@ export function KitchenDashboard() {
        ))}
        <PermissionGate action="create" resource="operations_kitchen_requests">
         <Link href="/kitchen-requests/new" className="w-full">
-         <Button variant="outline" className="w-full bg-card border border-border shadow-sm text-label-xs font-semibold uppercase h-10 hover:bg-operational-cyan/20 hover:text-operational-cyan transition-all duration-140 ease-industrial">
+         <Button variant="outline" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
           {t('kitchen.quick_record')} <ArrowUpRight className="w-3 h-3 ms-2" />
          </Button>
         </Link>

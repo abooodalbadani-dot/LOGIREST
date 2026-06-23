@@ -2,14 +2,17 @@
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCreateKitchenRequest } from '@/features/operations/hooks/useKitchenRequests';
+import { 
+ useCreateKitchenRequest,
+ useUpdateKitchenRequestStatus
+} from '@/features/operations/hooks/useKitchenRequests';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useItems } from '@/features/items/hooks/useItems';
@@ -30,6 +33,7 @@ import {
  CreateKitchenRequestDTO 
 } from '@/features/operations/types/kitchen-request';
 import { type Item } from '@/types/master-data';
+
 import { mapWarehouseToCombobox, mapItemToCombobox } from '@/utils/mappers';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -37,6 +41,63 @@ import { useAuth } from '@/providers/AuthProvider';
 import { onFormError } from '@/hooks/useFormError';
 
 type KitchenRequestFormValues = CreateKitchenRequestDTO;
+
+interface QuantityInputProps {
+ value: number | string;
+ onChange: (val: number | '') => void;
+ disabled?: boolean;
+ className?: string;
+}
+
+function QuantityInput({ value, onChange, disabled, className }: QuantityInputProps) {
+ const [localValue, setLocalValue] = useState(value !== undefined && value !== null ? String(value) : '');
+
+ useEffect(() => {
+  setLocalValue(value !== undefined && value !== null ? String(value) : '');
+ }, [value]);
+
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const rawVal = e.target.value;
+  if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+   setLocalValue(rawVal);
+   if (rawVal === '' || rawVal === '.') {
+    onChange('');
+   } else {
+    const parsed = parseFloat(rawVal);
+    onChange(isNaN(parsed) ? '' : parsed);
+   }
+  }
+ };
+
+ const handleBlur = () => {
+  let finalVal = 1;
+  if (localValue === '' || localValue === '.') {
+   finalVal = 1;
+  } else {
+   const parsed = parseFloat(localValue);
+   if (isNaN(parsed) || parsed <= 0) {
+    finalVal = 1;
+   } else {
+    finalVal = parsed;
+   }
+  }
+  setLocalValue(String(finalVal));
+  onChange(finalVal);
+ };
+
+ return (
+  <Input
+   type="text"
+   inputMode="decimal"
+   value={localValue}
+   disabled={disabled}
+   onChange={handleChange}
+   onBlur={handleBlur}
+   className={className}
+   dir="ltr"
+  />
+ );
+}
 
 interface KitchenRequestFormLineItem extends LineItem {
  index: number;
@@ -68,6 +129,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  const items = useMemo(() => itemsData?.data || [], [itemsData]);
 
  const createRequest = useCreateKitchenRequest();
+ const updateStatus = useUpdateKitchenRequestStatus();
  
  const { fields, append, remove } = useFieldArray({
  control: form.control,
@@ -126,13 +188,22 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   return items.map(item => mapItemToCombobox(item));
  }, [items]);
 
- const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
-  createRequest.mutate({ data: { ...values, isDraft } }, {
-   onSuccess: (data) => {
-    form.reset(values);
-    guardedRouter.push(`/kitchen-requests/${data.id}`, { skipGuard: true });
+ const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
+  try {
+   const data = await createRequest.mutateAsync({ data: { ...values, isDraft } });
+   if (!isDraft) {
+    await updateStatus.mutateAsync({
+     id: data.id,
+     status: 'SUBMITTED',
+     version: data.version ?? 0,
+     headers: { 'X-Idempotency-Key': crypto.randomUUID() },
+    });
    }
-  });
+   form.reset(values);
+   guardedRouter.push(`/kitchen-requests/${data.id}`, { skipGuard: true });
+  } catch (error) {
+   console.error('Failed to submit kitchen request:', error);
+  }
  };
 
  if (isLoadingWarehouses || isLoadingDepartments || isLoadingItems) {
@@ -262,77 +333,133 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('validation.items_required')}</p>
        </div>
       ) : (
-       <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 overflow-hidden">
-        <DocumentLineItemTable<KitchenRequestFormLineItem>
-         lines={fields.map((field, index) => {
+       <>
+        <div className="hidden md:block bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 overflow-hidden">
+         <DocumentLineItemTable<KitchenRequestFormLineItem>
+          lines={fields.map((field, index) => {
+           const selectedItemId = watchedItems?.[index]?.itemId;
+           const selectedItem = items?.find(i => i.id === selectedItemId);
+           return {
+            id: field.id,
+            item: {
+             id: selectedItemId || '',
+             code: selectedItem?.barcode || '',
+             name: selectedItem?.name || '',
+             primaryUom: { code: selectedItem?.primaryUom?.code || '' }
+            },
+            qty: watchedItems?.[index]?.quantity ?? 1,
+            uomId: '',
+            lot: null,
+            index,
+            selectedItem,
+           };
+          })}
+          locale={locale}
+          isReadOnly={false}
+          onRemoveLine={(id) => {
+           const idx = fields.findIndex(f => f.id === id);
+           if (idx !== -1) remove(idx);
+          }}
+          hideLotColumns={true}
+          dense={true}
+          headers={{
+           code: tCommon('table_headers.code'),
+           name: tCommon('table_headers.name'),
+           qty: tCommon('table_headers.qty'),
+           uom: tCommon('table_headers.uom'),
+          }}
+          renderQty={(line) => (
+           <div className="flex flex-col items-center gap-1 min-w-0">
+            <div className="flex justify-center">
+              <QuantityInput 
+               value={form.watch(`items.${line.index}.quantity`)}
+               onChange={(val) => {
+                form.setValue(`items.${line.index}.quantity`, val as any, { shouldDirty: true, shouldValidate: true });
+               }}
+               disabled={form.formState.isSubmitting}
+               className="w-24 text-center font-black text-lg bg-white border border-[#b48e67]/40 text-[#0B1220] focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+              />
+            </div>
+            {form.formState.errors.items?.[line.index]?.quantity && (
+             <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">{t('validation.qty_positive')}</p>
+            )}
+           </div>
+          )}
+          renderUom={(line) => (
+           <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+            {line.selectedItem?.primaryUom?.code || '---'}
+           </span>
+          )}
+          extraColumns={[
+           {
+            header: tCommon('notes'),
+            cell: (line) => (
+             <div className="flex justify-center min-w-[200px]">
+              <Input 
+               {...form.register(`items.${line.index}.notes`)}
+               placeholder={t('line_notes_placeholder')}
+               className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/60 dark:border-white/5 rounded-lg h-9 px-3 text-label-sm font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
+              />
+             </div>
+            )
+           }
+          ]}
+         />
+        </div>
+
+        {/* Mobile Card Protocol */}
+        <div className="flex flex-col gap-3 md:hidden">
+         {fields.map((field, index) => {
           const selectedItemId = watchedItems?.[index]?.itemId;
           const selectedItem = items?.find(i => i.id === selectedItemId);
-          return {
-           id: field.id,
-           item: {
-            id: selectedItemId || '',
-            code: selectedItem?.barcode || '',
-            name: selectedItem?.name || '',
-            primaryUom: { code: selectedItem?.primaryUom?.code || '' }
-           },
-           qty: watchedItems?.[index]?.quantity ?? 1,
-           uomId: '',
-           lot: null,
-           index,
-           selectedItem,
-          };
-         })}
-         locale={locale}
-         isReadOnly={false}
-         onRemoveLine={(id) => {
-          const idx = fields.findIndex(f => f.id === id);
-          if (idx !== -1) remove(idx);
-         }}
-         hideLotColumns={true}
-         dense={true}
-         headers={{
-          code: tCommon('table_headers.code'),
-          name: tCommon('table_headers.name'),
-          qty: tCommon('table_headers.qty'),
-          uom: tCommon('table_headers.uom'),
-         }}
-         renderQty={(line) => (
-          <div className="flex flex-col items-center gap-1 min-w-0">
-           <div className="flex justify-center">
+          if (!selectedItem) return null;
+          return (
+           <div key={field.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm relative animate-in fade-in duration-200">
+            <button 
+             type="button"
+             onClick={() => remove(index)}
+             className="absolute top-3 left-3 rtl:left-auto rtl:right-3 p-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-md hover:bg-red-100 transition-colors"
+            >
+             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+             </svg>
+            </button>
+            <div className="pl-8 rtl:pl-0 rtl:pr-8 border-b border-gray-100 dark:border-gray-800 pb-2 mb-2">
+             <span className="text-sm font-black text-[#0B1220] dark:text-white">{selectedItem.name}</span>
+             <span className="text-[10px] text-gray-400 font-mono tracking-widest block">{selectedItem.code || '---'}</span>
+            </div>
+            <div className="flex items-center gap-3 mb-2">
+             <div className="flex-1">
+              <label className="text-[10px] font-bold text-gray-500 mb-1 block">الكمية</label>
+              <div className="flex items-center gap-2">
+               <QuantityInput 
+                value={form.watch(`items.${index}.quantity`)}
+                onChange={(val) => {
+                 form.setValue(`items.${index}.quantity`, val as any, { shouldDirty: true, shouldValidate: true });
+                }}
+                disabled={form.formState.isSubmitting}
+                className="w-full text-center font-black text-lg bg-white dark:bg-[#0B1220] text-[#0B1220] dark:text-white border border-gray-300 dark:border-gray-700 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none transition-colors h-10 [font-variant-numeric:lining-nums_tabular-nums]" 
+               />
+               <span className="text-xs font-bold text-gray-500 px-2">{selectedItem.primaryUom?.code || '---'}</span>
+              </div>
+              {form.formState.errors.items?.[index]?.quantity && (
+               <p className="text-label-xxs font-bold text-red-500 uppercase mt-1">{t('validation.qty_positive')}</p>
+              )}
+             </div>
+            </div>
+            <div>
              <Input 
-              type="number"
-              step="0.01"
-              dir="ltr"
-              {...form.register(`items.${line.index}.quantity`, { valueAsNumber: true })}
-              className="w-24 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/60 dark:border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 w-full h-10"
-             />
-           </div>
-           {form.formState.errors.items?.[line.index]?.quantity && (
-            <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">{t('validation.qty_positive')}</p>
-           )}
-          </div>
-         )}
-         renderUom={(line) => (
-          <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-           {line.selectedItem?.primaryUom?.code || '---'}
-          </span>
-         )}
-         extraColumns={[
-          {
-           header: tCommon('notes'),
-           cell: (line) => (
-            <div className="flex justify-center min-w-[200px]">
-             <Input 
-              {...form.register(`items.${line.index}.notes`)}
-              placeholder={t('line_notes_placeholder')}
-              className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/60 dark:border-white/5 rounded-lg h-9 px-3 text-label-sm font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
+              type="text" 
+              placeholder="ملاحظات السطر..." 
+              {...form.register(`items.${index}.notes`)}
+              className="w-full text-xs p-2 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 rounded-md focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-foreground placeholder:text-muted-foreground/50"
              />
             </div>
-           )
-          }
-         ]}
-        />
-       </div>
+           </div>
+          );
+         })}
+        </div>
+       </>
       )}
      </div>
     </div>
@@ -343,20 +470,21 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       variant="outline"
       onClick={form.handleSubmit((data) => onSubmit(data, true), onFormError)} 
       isLoading={createRequest.isPending}
+      disabled={updateStatus.isPending}
       className="h-10 px-8 bg-transparent border border-border text-foreground text-label-xs font-semibold uppercase rounded-md hover:bg-muted dark:hover:bg-neutral-900 transition-all shadow-sm"
      >
       <Save className="w-4 h-4 me-2" />
       {t('save_draft')}
      </Button>
-     <Button 
-      type="button"
-      onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)} 
-      isLoading={createRequest.isPending}
-      className="h-10 px-8 bg-brand-gold hover:bg-brand-gold-hover text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm focus-visible:ring-1 focus-visible:ring-brand-gold"
-     >
-      <Send className="w-4 h-4 me-2" />
-      {t('submit')}
-     </Button>
+      <Button 
+       type="button"
+       onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)} 
+       isLoading={createRequest.isPending || updateStatus.isPending}
+       className="h-10 px-8 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center gap-2 transition-opacity"
+      >
+       <Send className="w-4 h-4 me-2" />
+       {t('submit')}
+      </Button>
     </div>
    </form>
   </div>

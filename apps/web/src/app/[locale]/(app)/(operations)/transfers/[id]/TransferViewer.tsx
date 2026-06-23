@@ -132,43 +132,58 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     )}
    </div>
 
-   <div className="w-full max-w-full min-w-0 overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
-    <DocumentLineItemTable
-     lines={transfer?.lines ?? []}
-     locale={locale as 'ar' | 'en'} 
-     isReadOnly={true}
-     onRemoveLine={() => {}}
-     hideLotColumns={true}
-     headers={{
-      code: tCommon('table_headers.code'),
-      name: tCommon('table_headers.name'),
-      qty: t('transfer_qty'),
-      uom: tCommon('table_headers.uom'),
-     }}
-     extraColumns={[
-      {
-       header: t('shipped_qty'),
-       cell: (line: TransferLine) => (
-        <div className="flex justify-center">
-         <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
-          {line.shippedQty ?? line.qty}
-         </span>
+    <div className="w-full max-w-full min-w-0 overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
+     <DocumentLineItemTable
+      lines={transfer?.lines ?? []}
+      locale={locale as 'ar' | 'en'} 
+      isReadOnly={true}
+      onRemoveLine={() => {}}
+      hideLotColumns={true}
+      headers={{
+       code: tCommon('table_headers.code'),
+       name: tCommon('table_headers.name'),
+       qty: t('transfer_qty'),
+       uom: tCommon('table_headers.uom'),
+      }}
+      renderQty={(line) => (
+       <div className="flex justify-center">
+        <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+         {line.qty}
         </div>
-       ),
-      },
-      {
-       header: t('received_qty'),
-       cell: (line: TransferLine) => (
-        <div className="flex justify-center">
-         <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.receivedQty ? 'bg-muted/50 text-foreground border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
-          {line.receivedQty ?? '—'}
-         </span>
-        </div>
-       ),
-      },
-     ]}
-    />
-   </div>
+       </div>
+      )}
+      extraColumns={[
+       {
+        header: t('shipped_qty'),
+        cell: (line: TransferLine) => (
+         <div className="flex justify-center">
+          <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] px-3 py-1 rounded-lg">
+           {line.shippedQty ?? line.qty}
+          </span>
+         </div>
+        ),
+       },
+       {
+        header: t('received_qty'),
+        cell: (line: TransferLine) => (
+         <div className="flex justify-center">
+          <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]'}`}>
+           {line.receivedQty ?? '—'}
+          </span>
+         </div>
+        ),
+       },
+       {
+        header: tCommon('notes'),
+        cell: (line: TransferLine) => (
+         <div className="flex justify-center">
+          <span className="text-xs text-[#0B1220] dark:text-gray-300">{line.notes || '—'}</span>
+         </div>
+        ),
+       },
+      ]}
+     />
+    </div>
 
    {/* Audit Trail */}
    <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl border border-white/5 shadow-sm transition-all overflow-x-auto">

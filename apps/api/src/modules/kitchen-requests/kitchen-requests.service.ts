@@ -23,7 +23,12 @@ export class KitchenRequestsService {
     body: {
       departmentId: string;
       warehouseId: string;
-      items: Array<{ itemId: string; quantityRequested: number }>;
+      notes?: string;
+      items: Array<{
+        itemId: string;
+        quantityRequested: number;
+        notes?: string;
+      }>;
     },
     userId: string,
   ) {
@@ -50,6 +55,7 @@ export class KitchenRequestsService {
           requestNumber,
           departmentId: body.departmentId,
           warehouseId: body.warehouseId,
+          notes: body.notes || null,
           status: 'DRAFT',
           requestedById: userId,
           items: {
@@ -57,6 +63,7 @@ export class KitchenRequestsService {
               itemId: item.itemId,
               quantityRequested: item.quantityRequested,
               quantityFulfilled: 0,
+              notes: item.notes || null,
             })),
           },
         },
@@ -229,7 +236,7 @@ export class KitchenRequestsService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'kitchenRequest',
       'SUBMIT',
@@ -239,6 +246,7 @@ export class KitchenRequestsService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async fulfill(
@@ -376,7 +384,10 @@ export class KitchenRequestsService {
         data: { issueId: issue.id },
       });
 
-      // Post the inventory issue atomically (deduct stock, write ledger, update status to POSTED)
+      // Post the inventory issue atomically (deduct stock, write ledger, update status to POSTED).
+      // issuePostService.post() detects the linked kitchenRequest (via issueId set above) and
+      // transitions it to FULFILLED internally. A second executeTransition call here would
+      // cause a double-FULFILL error within the same transaction.
       await this.issuePostService.post(
         issue.id,
         userId,
@@ -386,18 +397,30 @@ export class KitchenRequestsService {
         tx,
       );
 
-      // Execute the FULFILL transition on the KitchenRequest itself
-      return this.workflowService.executeTransition(
-        id,
-        'kitchenRequest',
-        'FULFILL',
-        userId,
-        userRole,
-        body.comments,
-        body.version,
-        body.ipAddress,
-        tx,
-      );
+      // Fetch and return the now-FULFILLED kitchen request with its full relation set
+      const fulfilledKr = await tx.kitchenRequest.findUnique({
+        where: { id },
+        include: {
+          items: {
+            include: {
+              item: {
+                include: { unitOfMeasure: true },
+              },
+            },
+          },
+          department: true,
+          warehouse: true,
+          requestedBy: true,
+        },
+      });
+
+      if (!fulfilledKr) {
+        throw new NotFoundException(
+          `KitchenRequest with ID ${id} not found after fulfillment`,
+        );
+      }
+
+      return fulfilledKr;
     });
   }
 
@@ -407,7 +430,7 @@ export class KitchenRequestsService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'kitchenRequest',
       'CANCEL',
@@ -417,6 +440,7 @@ export class KitchenRequestsService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async update(
@@ -469,6 +493,7 @@ export class KitchenRequestsService {
         data: {
           departmentId: dto.departmentId || kr.departmentId,
           warehouseId: dto.warehouseId || kr.warehouseId,
+          notes: dto.notes !== undefined ? dto.notes : kr.notes,
           version: { increment: 1 },
           items: dto.items
             ? {
@@ -476,6 +501,7 @@ export class KitchenRequestsService {
                   itemId: item.itemId,
                   quantityRequested: item.quantityRequested,
                   quantityFulfilled: 0,
+                  notes: item.notes || null,
                 })),
               }
             : undefined,

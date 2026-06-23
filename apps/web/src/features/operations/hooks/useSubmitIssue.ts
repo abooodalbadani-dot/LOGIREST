@@ -14,7 +14,7 @@ export function useSubmitIssue(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) =>
-   apiClient.post(`/operations/issues/${id}/submit`, successSchema, { version }, { signal }),
+   apiClient.post(`/operations/issues/${id}/submit`, successSchema, { version }, { signal, isRetry: true }),
   onSuccess: (_, { id }) => {
    queryClient.setQueryData(['issues', id], (old: Record<string, unknown> | undefined) => {
     if (!old) return old;

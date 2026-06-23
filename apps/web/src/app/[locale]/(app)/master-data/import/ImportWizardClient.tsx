@@ -202,7 +202,7 @@ export function ImportWizardClient({ type, locale }: ImportWizardClientProps) {
                 <div className="flex justify-end gap-4 mt-6">
                   <button 
                     onClick={() => wizard.reset()}
-                    className="px-8 py-4 bg-cyan-500 text-white rounded-2xl font-bold hover:bg-cyan-600 transition-colors shadow-sm shadow-cyan-500/20"
+                    className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   >
                     {tc('actions.done')}
                   </button>

@@ -188,6 +188,10 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
 }) => {
   const dateStr = format(new Date(), 'yyyy-MM-dd HH:mm');
 
+  const isEnglishText = (text: string) => !/[\u0600-\u06FF\uFE70-\uFEFC]/.test(text) && text.trim().length > 0;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const hasValidScope = options?.scope && !uuidRegex.test(options.scope);
+
   const t = (key: string) => {
     const safeKey = key.trim();
     if (dictionary[lang] && dictionary[lang][safeKey]) return dictionary[lang][safeKey];
@@ -327,7 +331,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
           <div style={{ textAlign: lang === 'ar' ? 'left' : 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
             <h2 style={{ margin: 0, fontSize: '14pt', fontWeight: 700, color: '#0B1220', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{displayTitle}</h2>
             <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '4px' }}>{labels.date}: {dateStr}</span>
-            {options?.scope && <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '2px' }}>{labels.scope}: {options.scope}</span>}
+            {hasValidScope && <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '2px' }}>{labels.scope}: {options.scope}</span>}
           </div>
         </div>
 
@@ -355,10 +359,29 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             lineHeight: '1.625',
             textAlign: lang === 'ar' ? 'right' : 'left'
           }}>
-            <span style={{ fontWeight: 600, color: '#6b7280' }}>
+            <span 
+              dir={isEnglishText(sysName) ? "ltr" : undefined} 
+              style={{ 
+                fontWeight: 600, 
+                color: '#6b7280',
+                display: isEnglishText(sysName) ? 'inline-block' : 'inline'
+              }}
+            >
               {sysName}
             </span>
-            {branding?.address && <span> - {branding.address}</span>}
+            {branding?.address && (
+              <>
+                {" - "}
+                <span 
+                  dir={isEnglishText(branding.address) ? "ltr" : undefined} 
+                  style={{ 
+                    display: isEnglishText(branding.address) ? 'inline-block' : 'inline' 
+                  }}
+                >
+                  {branding.address}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Right Side: Legal & Contact (Right Aligned) */}
@@ -414,7 +437,20 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
               const headerAlign = isCentered ? 'center' : (lang === 'ar' ? 'right' : 'left');
 
               return (
-                <th key={idx} style={{ width: colWidth, minWidth: colWidth, textAlign: headerAlign }}>
+                <th 
+                  key={idx} 
+                  style={{ 
+                    width: colWidth, 
+                    minWidth: colWidth, 
+                    textAlign: headerAlign,
+                    backgroundColor: '#0B1220',
+                    color: '#ffffff',
+                    padding: '8px',
+                    fontSize: '10pt',
+                    fontWeight: 700,
+                    borderBottom: '2px solid #c4a98d'
+                  }}
+                >
                   {col.header}
                 </th>
               );
@@ -515,8 +551,8 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
       <div style={{ marginTop: '10mm', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: '5mm', color: '#94a3b8', fontSize: '8.5pt' }}>
         <span style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
           {options?.generatedBy ? `${labels.generatedBy}: ${options.generatedBy}` : ''}
-          {options?.generatedBy && options?.scope ? ' | ' : ''}
-          {options?.scope ? `${labels.scope}: ${options.scope}` : ''}
+          {options?.generatedBy && hasValidScope ? ' | ' : ''}
+          {hasValidScope ? `${labels.scope}: ${options.scope}` : ''}
         </span>
         <span style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>{labels.internalDoc}</span>
       </div>

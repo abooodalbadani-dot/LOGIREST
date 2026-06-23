@@ -89,7 +89,7 @@ export function RoleAssignmentModal({ trigger }: Props) {
   <Dialog open={open} onOpenChange={handleOpenChange}>
    <DialogTrigger asChild>
     {trigger ?? (
-     <Button className="h-11 px-8 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500 hover:text-black hover:border-cyan-500 transition-all font-semibold uppercase text-label-xs gap-2">
+     <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
       <Shield className="w-4 h-4" />
       {t('assign_role')}
      </Button>

@@ -14,7 +14,7 @@ export function useCancelIssue(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: async ({ id, reason, version, signal }: { id: string; reason?: string; version: number; signal?: AbortSignal }) => {
-   return apiClient.post(`/operations/issues/${id}/cancel`, successSchema, { reason, version }, { signal });
+   return apiClient.post(`/operations/issues/${id}/cancel`, successSchema, { reason, version }, { signal, isRetry: true });
   },
   onSuccess: (_, { id }) => {
    queryClient.setQueryData(['issues', id], (old: Record<string, unknown> | undefined) => {

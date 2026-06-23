@@ -36,6 +36,7 @@ export interface LineItemForPayload {
   itemId: string;
   qty: number;
   uomId: string;
+  notes?: string;
 }
 
 export function mapLineToPayload(line: LineItemForPayload) {
@@ -49,5 +50,6 @@ export function mapLineToPayload(line: LineItemForPayload) {
     itemId: line.itemId,
     quantityShipped: line.qty,
     uomId: line.uomId,
+    notes: line.notes || null,
   };
 }

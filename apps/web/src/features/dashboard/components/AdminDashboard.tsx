@@ -192,7 +192,7 @@ export function AdminDashboard() {
        </div>
        <PermissionGate action="view" resource="reports">
         <Link href="/reports">
-         <Button variant="outline" size="sm" className="bg-card border border-border shadow-sm/10 text-label-xs font-semibold uppercase px-4 h-8 rounded-xl hover:bg-operational-cyan hover:text-black hover:border-operational-cyan transition-all duration-140 ease-industrial">
+         <Button variant="outline" size="sm" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
           {t('analytics.full_report')} <TrendingUp className="w-3 h-3 ms-2" />
          </Button>
         </Link>

@@ -15,7 +15,7 @@ export function useCancelTransfer(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: async ({ id, reason, version, signal }: { id: string; reason?: string; version: number; signal?: AbortSignal }) => {
-   return apiClient.post(`/operations/transfers/${id}/cancel`, successSchema, { reason, version }, { signal });
+   return apiClient.post(`/operations/transfers/${id}/cancel`, successSchema, { reason, version }, { signal, isRetry: true });
   },
   onSuccess: (_, { id }) => {
    queryClient.setQueryData(['transfers', id], (old: TransferDetail | undefined) => {

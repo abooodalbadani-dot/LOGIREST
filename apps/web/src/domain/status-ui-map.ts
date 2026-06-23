@@ -43,7 +43,7 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   REVIEW: { variant: 'warning', labelKey: 'statuses.review' },
   
   // Transfer Specific
-  IN_TRANSIT: { variant: 'warning', labelKey: 'statuses.in_transit' },
+  IN_TRANSIT: { variant: 'partial', labelKey: 'statuses.in_transit' },
   DISPUTED: { variant: 'error', labelKey: 'statuses.disputed' },
 
   // Specialized / Missing
@@ -76,7 +76,7 @@ export const STOCKTAKE_STATUS_UI: Record<string, StatusConfig> = {
 
 export const TRANSFER_STATUS_UI: Record<string, StatusConfig> = {
   ...STATUS_UI_CONFIG,
-  [TRANSFER_STATUS.IN_TRANSIT]: { variant: 'warning', labelKey: 'statuses.in_transit' },
+  [TRANSFER_STATUS.IN_TRANSIT]: { variant: 'partial', labelKey: 'statuses.in_transit' },
 };
 
 /**

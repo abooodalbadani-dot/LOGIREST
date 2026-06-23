@@ -314,7 +314,7 @@ export function PRApprovalClient({ id }: Props) {
         {pr.status === 'APPROVED' && (
          <Button
           onClick={() => router.push(`/purchase-orders/new?pr_id=${pr.id}`)}
-          className="w-full bg-operational-cyan/10 text-operational-cyan border border-operational-cyan/20 hover:bg-operational-cyan/20 h-14 rounded-2xl transition-all font-black uppercase text-label-xs tracking-widest shadow-sm mt-4"
+          className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
          >
           <ClipboardCheck className="w-5 h-5 me-3" />
           {t('approval.generate_po') || 'Generate PO'}

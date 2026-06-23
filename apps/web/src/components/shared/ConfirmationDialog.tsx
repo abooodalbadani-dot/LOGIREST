@@ -70,7 +70,7 @@ export function ConfirmationDialog({
       <AlertDialogTitle className="text-headline-sm font-bold uppercase tracking-tight">
        {title}
       </AlertDialogTitle>
-      <AlertDialogDescription className="text-label-sm font-medium text-muted-foreground/60 leading-relaxed uppercase">
+      <AlertDialogDescription className="text-label-sm font-medium text-[#b48e67] leading-relaxed uppercase">
        {description}
       </AlertDialogDescription>
      </div>

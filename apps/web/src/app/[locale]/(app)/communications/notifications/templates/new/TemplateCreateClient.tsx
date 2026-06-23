@@ -201,7 +201,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
 
  return (
   <div className="min-w-0 gap-6 flex-1 max-w-4xl space-y-8 mx-auto relative flex-col flex w-full">
-   <div className="absolute top-0 end-1/4 w-96 h-96 bg-operational-cyan/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+   <div className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" />
 
    {/* Header section */}
    <div className="space-y-4">
@@ -659,7 +659,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
        type="button"
        onClick={executeCreate}
        disabled={createMutation.isPending}
-       className="h-12 px-8 bg-operational-cyan text-black hover:brightness-110 font-bold uppercase text-[10px] tracking-widest gap-2 rounded-none transition-all duration-300"
+       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
        {createMutation.isPending ? 'CREATING...' : 'CREATE TEMPLATE'}
        <Check className="w-4 h-4 stroke-[3px]" />

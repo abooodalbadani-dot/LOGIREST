@@ -82,6 +82,7 @@ export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {
     items: data.items.map(item => ({
      itemId: item.itemId,
      quantityRequested: item.quantity,
+     notes: item.notes || null,
     }))
    };
    return apiClient.post('/operations/kitchen-requests', z.object({ data: KitchenRequestDetailSchema }), payload, { signal }).then(r => r.data);
@@ -127,7 +128,7 @@ export function useUpdateKitchenRequestStatus(options?: { onConflict?: () => voi
     endpoint,
     z.object({ data: KitchenRequestDetailSchema }),
     { comments: reason, version },
-    { headers, signal }
+    { headers, signal, isRetry: true }
    ).then(r => r.data);
   },
   onSuccess: (_, variables) => {
@@ -149,17 +150,25 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
     if (fulfillments.some(f => f.fulfilledQty <= 0)) {
      throw new Error("Fulfilled quantity must be greater than zero");
     }
-    return apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, z.object({ data: KitchenRequestDetailSchema }), { fulfillments, version }, { headers, signal }).then(r => r.data);
+    return apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, z.object({ data: KitchenRequestDetailSchema }), { fulfillments, version }, { headers, signal, isRetry: true }).then(r => r.data);
    },
- onSuccess: (_, variables) => {
- queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
- queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
- queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
+ onSuccess: (data, variables) => {
+  // Immediately reflect the new FULFILLED status in the detail view cache.
+  // This eliminates the refetch latency window where the FULFILL button could be
+  // clicked again on a document that is already FULFILLED in the database.
+  queryClient.setQueryData(['kitchen-requests', variables.id], data);
+  // Background-refresh list views and inventory balance
+  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
+  queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
  },
  onError: (error: AxiosLikeError) => {
   console.error('Failed to fulfill kitchen request:', error);
   const errorMsg = error.message || error.response?.data?.message || '';
-  if (errorMsg.includes('Insufficient stock')) {
+  if (errorMsg.includes('Invalid status transition') || errorMsg.includes('status FULFILLED')) {
+   // Document was already fulfilled (stale UI). Refresh cache and inform the user.
+   toast.error('تم صرف هذا الطلب بالفعل. يتم تحديث البيانات... / This request was already fulfilled. Refreshing...');
+   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
+  } else if (errorMsg.includes('Insufficient stock')) {
    const match = /Requested:\s*([\d.]+),\s*Available\s*\(net\s*of\s*allocations\):\s*([\d.]+)/i.exec(errorMsg);
    if (match) {
     const requested = match[1];

@@ -29,6 +29,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { ClientDate } from '@/components/shared/ClientDate';
 
 interface MappingEntry {
  id: string;
@@ -478,7 +479,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
              </div>
             </div>
             <span className="text-[9px] font-bold text-muted-foreground/30 uppercase whitespace-nowrap pt-0.5">
-             {new Date(entry.timestamp).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+             <ClientDate dateString={entry.timestamp} format="HH:mm" />
             </span>
            </div>
           </motion.div>

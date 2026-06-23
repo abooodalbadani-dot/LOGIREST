@@ -662,6 +662,7 @@ model Transfer {
   toWarehouseId   String
   status          String   @default("DRAFT")
   version         Int      @default(1)
+  notes           String?
   createdAt       DateTime @default(now())
 
   fromWarehouse Warehouse      @relation("TransferFrom", fields: [fromWarehouseId], references: [id], onDelete: Restrict)
@@ -679,6 +680,7 @@ model TransferLine {
   quantityReceived Decimal? @db.Decimal(18, 4)
   unitCost         Decimal? @db.Decimal(18, 4)
   varianceReason   String?
+  notes            String?
 
   transfer       Transfer        @relation(fields: [transferId], references: [id], onDelete: Cascade)
   item           Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -731,6 +733,7 @@ model KitchenRequest {
   version       Int      @default(1)
   issueId       String?  @unique @map("issue_id")
   requestedById String?  @map("requested_by_id")
+  notes         String?
   createdAt     DateTime @default(now())
 
   department     Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
@@ -767,6 +770,7 @@ model KitchenRequestItem {
   itemId            String
   quantityRequested Decimal @db.Decimal(18, 4)
   quantityFulfilled Decimal @db.Decimal(18, 4)
+  notes             String?
 
   kitchenRequest KitchenRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   item           Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)

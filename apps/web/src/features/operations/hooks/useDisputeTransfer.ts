@@ -24,7 +24,7 @@ export function useDisputeTransfer(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ id, body, signal, headers }: { id: string; body: DisputePayload; signal?: AbortSignal; headers?: Record<string, string> }) =>
-      apiClient.post(`/operations/transfers/${id}/dispute`, successSchema, DisputePayloadSchema.parse(body), { signal, headers }),
+      apiClient.post(`/operations/transfers/${id}/dispute`, successSchema, DisputePayloadSchema.parse(body), { signal, headers, isRetry: true }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transfers', id] });
