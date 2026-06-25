@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { useInventoryLots } from '@/features/inventory/hooks/useInventoryLots';
 import { useAuth } from '@/providers/AuthProvider';
 import { 
@@ -39,9 +40,12 @@ export default function LotBalanceClient() {
   const { playSound } = useAudioFeedback();
   const queryClient = useQueryClient();
 
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get('search') || searchParams.get('sku') || '';
+
   const [page, setPage] = useState(1);
   const [includeExpired, setIncludeExpired] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
 
   const { data: lotData, isLoading, isPlaceholderData } = useInventoryLots({
@@ -188,8 +192,8 @@ export default function LotBalanceClient() {
             </div>
           ) : (
             <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-              <table className="w-full text-start border-collapse hidden md:table">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
+              <table className="w-full text-start border-collapse block md:table">
+                <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider hidden md:table-header-group">
                   <tr>
                     <th className="px-6 py-4 font-medium text-start whitespace-nowrap w-1/4">
                       Lot Identity
@@ -213,19 +217,52 @@ export default function LotBalanceClient() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-card divide-y divide-border">
+                <tbody className="bg-card divide-y divide-border block md:table-row-group md:divide-y-0">
                   {filteredLots.map((lot) => {
                     const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
                     return (
-                      <tr key={lot.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors group">
-                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap">
+                      <tr 
+                        key={lot.id} 
+                        className="flex flex-col md:table-row border-b border-slate-800 p-4 md:p-0 gap-3 md:gap-0 hover:bg-muted/50 transition-colors group"
+                      >
+                        {/* Mobile Only: Top Row (Flex Between) */}
+                        <td className="block md:hidden w-full">
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
+                              {lot.lotNumber}
+                            </span>
+                            <div>
+                              {status === 'QUARANTINE' ? (
+                                <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                                  <ShieldAlert className="w-3 h-3" />
+                                  Quarantined
+                                </Badge>
+                              ) : status === 'EXPIRED' ? (
+                                <Badge className="bg-amber-500/15 text-amber-500 hover:bg-amber-500/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                                  <Clock className="w-3 h-3" />
+                                  Expired
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-status-active/15 text-status-active hover:bg-status-active/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                                  <ShieldCheck className="w-3 h-3" />
+                                  Active
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Desktop Only: Lot Identity */}
+                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap">
                           <div className="space-y-1">
                             <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
                               {lot.lotNumber}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap">
+
+                        {/* Middle Row: Inventory Item SKU */}
+                        <td className="block md:table-cell px-0 md:px-6 py-0 md:py-4 text-sm text-foreground whitespace-nowrap">
                           <div className="space-y-0.5">
                             <span className="text-[10px] font-mono text-muted-foreground">
                               {lot.itemCode}
@@ -235,18 +272,49 @@ export default function LotBalanceClient() {
                             </p>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-end" dir="ltr">
+
+                        {/* Desktop Only: Available Stock with UoM */}
+                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap text-end" dir="ltr">
                           <span className="text-xs font-bold font-mono text-foreground tabular-nums">
-                            {Number(lot.qtyAvailable).toLocaleString('en-US')}
+                            {Number(lot.qtyAvailable).toLocaleString('en-US')} {lot.uomCode || ''}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
+
+                        {/* Desktop Only: Expiration Date */}
+                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
                           <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <Calendar className="w-3.5 h-3.5" />
                             {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
+
+                        {/* Mobile Only: Data Row (Grid cols-2) */}
+                        <td className="block md:hidden w-full">
+                          <div className="grid grid-cols-2 gap-4 w-full">
+                            {/* Left: Available Stock */}
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                Available Stock
+                              </span>
+                              <span className="text-xs font-bold font-mono text-foreground">
+                                {Number(lot.qtyAvailable).toLocaleString('en-US')} {lot.uomCode || ''}
+                              </span>
+                            </div>
+                            {/* Right: Expiration Date */}
+                            <div className="flex flex-col gap-1 text-end">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                Expiration Date
+                              </span>
+                              <div className="inline-flex items-center justify-end gap-1.5 text-xs font-medium text-muted-foreground">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Desktop Only: Status State */}
+                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
                           <div className="flex justify-center">
                             {status === 'QUARANTINE' ? (
                               <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
@@ -266,9 +334,11 @@ export default function LotBalanceClient() {
                             )}
                           </div>
                         </td>
+
+                        {/* Override Actions */}
                         {canManageLots && (
-                          <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
-                            <div className="flex justify-center">
+                          <td className="block md:table-cell px-0 md:px-6 py-0 md:py-4 text-sm text-foreground whitespace-nowrap">
+                            <div className="flex justify-end md:justify-center w-full">
                               {status === 'QUARANTINE' ? (
                                 <Button
                                   size="sm"

@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { VoidConfirmationModal } from '@/components/shared/VoidConfirmationModal';
 import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { useGRN } from '@/features/purchasing/hooks/useGRN';
@@ -43,6 +45,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
     const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('goods-received', id);
     const submitGRN = useSubmitGRN({ onConflict: triggerConflict });
     const voidGRN = useVoidGRN(id);
+    const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
 
     const isNew = id === 'new';
     const { data: grn, isLoading, error } = useGRN(isNew ? null : id);
@@ -140,9 +143,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                     disabled={voidGRN.isPending}
                     className="w-full md:w-auto h-10 px-6 text-label-xs font-semibold uppercase rounded-lg transition-all flex items-center justify-center"
                     onClick={() => {
-                        if (window.confirm(tCommon('void_warning_description') || 'Are you sure you want to void this document?')) {
-                            voidGRN.mutate({ version: grn?.version ?? 1 });
-                        }
+                        setIsVoidModalOpen(true);
                     }}
                 >
                     <Ban className="w-4 h-4 me-2" />
@@ -206,6 +207,19 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                     onReload={handleReload}
                     onClose={handleClose}
                 />
+                <VoidConfirmationModal
+                    isOpen={isVoidModalOpen}
+                    onOpenChange={setIsVoidModalOpen}
+                    onConfirm={async () => {
+                        try {
+                            await voidGRN.mutateAsync({ version: grn?.version ?? 1 });
+                            toast.success(tCommon('void_success') || 'Document voided successfully.');
+                        } catch (err) {
+                            // Error is handled & toasted by useVoidGRN hook
+                        }
+                    }}
+                    isLoading={voidGRN.isPending}
+                />
             </>
         );
     }
@@ -222,6 +236,19 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                 open={open}
                 onReload={handleReload}
                 onClose={handleClose}
+            />
+            <VoidConfirmationModal
+                isOpen={isVoidModalOpen}
+                onOpenChange={setIsVoidModalOpen}
+                onConfirm={async () => {
+                    try {
+                        await voidGRN.mutateAsync({ version: grn?.version ?? 1 });
+                        toast.success(tCommon('void_success') || 'Document voided successfully.');
+                    } catch (err) {
+                        // Error is handled & toasted by useVoidGRN hook
+                    }
+                }}
+                isLoading={voidGRN.isPending}
             />
         </>
     );

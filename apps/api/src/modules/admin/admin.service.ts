@@ -17,7 +17,7 @@ import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { BcryptService } from '../../auth/bcrypt.service';
-import { OutboxEvent, WarehouseItem } from '@prisma/client';
+import { OutboxEvent, WarehouseItem, Prisma } from '@prisma/client';
 
 export interface FrozenItem {
   warehouseId: string;
@@ -568,12 +568,22 @@ export class AdminService {
     return updated;
   }
 
-  async getUsers(page: number = 1, limit: number = 50) {
+  async getUsers(page: number = 1, limit: number = 50, search?: string) {
     const skip = (page - 1) * limit;
 
+    const where: Prisma.UserWhereInput = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {};
+
     const [total, users] = await Promise.all([
-      this.prisma.user.count(),
+      this.prisma.user.count({ where }),
       this.prisma.user.findMany({
+        where,
         include: {
           warehouseScopes: {
             include: {

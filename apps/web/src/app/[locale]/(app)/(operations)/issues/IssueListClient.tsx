@@ -11,6 +11,7 @@ import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useAuth } from '@/providers/AuthProvider';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -37,6 +38,9 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
  const { user } = useAuth();
  const { warehouseId } = useOperationalScope();
  const { data: warehousesData } = useWarehouses();
+
+ const [search, setSearch] = useState('');
+ const debouncedSearch = useDebounce(search, 400);
 
  const [warehouseFilter, setWarehouseFilter] = useState('');
  const isWarehouseLocked = user?.role === 'WH_KEEPER' || user?.role === 'STORE_MGR';
@@ -72,7 +76,8 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
  const { data, isLoading } = useIssueList({
   status: initialStatus,
   warehouse_id: effectiveWarehouseId || undefined,
-  page: initialPage
+  page: initialPage,
+  search: debouncedSearch || undefined,
  });
 
  const handleStatusChange = (val: string | null) => {
@@ -265,6 +270,8 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       </div>
       <Input
        placeholder={t('search_placeholder')}
+       value={search}
+       onChange={(e) => setSearch(e.target.value)}
        className="w-full bg-card border border-border/50 h-11 ps-12 pe-4 text-label-xs font-semibold rounded-xl shadow-sm focus-visible:ring-1 focus-visible:ring-cyan-500/30 transition-all"
       />
      </div>

@@ -21,16 +21,17 @@ export const IssueSummarySchema = z.object({
 
 export type IssueSummary = z.infer<typeof IssueSummarySchema>;
 
-export function useIssueList({ status, warehouse_id, page = 1 }: { status?: string; warehouse_id?: string; page?: number } = {}) {
+export function useIssueList({ status, warehouse_id, page = 1, search }: { status?: string; warehouse_id?: string; page?: number; search?: string } = {}) {
  const { warehouseId, branchId } = useOperationalScope();
  const scopeWarehouseId = warehouse_id ?? warehouseId ?? undefined;
  return useQuery({
-  queryKey: ['issues', { status, warehouse_id: scopeWarehouseId, branchId, page }],
+  queryKey: ['issues', { status, warehouse_id: scopeWarehouseId, branchId, page, search }],
   queryFn: async ({ signal }) => {
    const qs = new URLSearchParams();
    if (status) qs.append('status', status);
    if (scopeWarehouseId) qs.append('warehouse_id', scopeWarehouseId);
    if (branchId) qs.append('branch_id', branchId);
+   if (search) qs.append('search', search);
    qs.append('page', page.toString());
 
    return apiClient.get(`/operations/issues?${qs.toString()}`, paginatedSchema(IssueSummarySchema), { signal });

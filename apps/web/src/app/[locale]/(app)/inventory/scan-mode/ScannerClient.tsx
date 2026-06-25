@@ -68,7 +68,7 @@ export default function ScannerClient() {
 
  const handleLoadData = () => {
   startTransition(() => {
-   router.push('/inventory/lots');
+   router.push(`/inventory/lots?search=${encodeURIComponent(result || '')}`);
   });
  };
 

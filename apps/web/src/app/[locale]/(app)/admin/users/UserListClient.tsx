@@ -14,6 +14,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const roleVariants: Record<string, string> = {
  ADMIN: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
@@ -31,8 +32,9 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
  const router = useRouter();
  const [page, setPage] = useState(1);
  const [search, setSearch] = useState('');
+ const debouncedSearch = useDebounce(search, 400);
 
- const { data, isLoading } = useAdminUsers({ page });
+ const { data, isLoading } = useAdminUsers({ page, search: debouncedSearch || undefined });
 
  const stats = useMemo(() => {
   const users = data?.data || [];

@@ -154,7 +154,11 @@ describe('InventoryService', () => {
           lotId: 'lot-1',
           itemId: 'item-1',
           qtyOnHand: 50.0,
-          item: { sku: 'ITEM-001', name: 'Fresh Tomato' },
+          item: {
+            sku: 'ITEM-001',
+            name: 'Fresh Tomato',
+            unitOfMeasure: { code: 'KG' },
+          },
           lot: {
             lotNumber: 'LOT-01',
             expiryDate: mockExpiry,
@@ -186,6 +190,7 @@ describe('InventoryService', () => {
             status: 'AVAILABLE',
             is_expired: true,
             is_near_expiry: false,
+            uom_code: 'KG',
           },
         ],
         meta: {
@@ -203,7 +208,11 @@ describe('InventoryService', () => {
           lot: { status: 'AVAILABLE' },
         },
         include: {
-          item: true,
+          item: {
+            include: {
+              unitOfMeasure: true,
+            },
+          },
           lot: true,
         },
         skip: 0,

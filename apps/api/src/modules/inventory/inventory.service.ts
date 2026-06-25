@@ -109,7 +109,11 @@ export class InventoryService {
       this.prisma.warehouseItemLot.findMany({
         where: whereClause,
         include: {
-          item: true,
+          item: {
+            include: {
+              unitOfMeasure: true,
+            },
+          },
           lot: true,
         },
         skip,
@@ -152,6 +156,7 @@ export class InventoryService {
         status: wLot.lot.status,
         is_expired: isExpired,
         is_near_expiry: isNearExpiry,
+        uom_code: wLot.item.unitOfMeasure?.code || '',
       };
     });
 

@@ -168,10 +168,14 @@ export class AdminController {
   }
 
   @Get('users')
-  async getUsers(@Query('page') page?: string, @Query('limit') limit?: string) {
+  async getUsers(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
     const pageNum = Math.max(1, parseInt(page || '1', 10));
     const limitNum = Math.max(1, parseInt(limit || '50', 10));
-    return this.adminService.getUsers(pageNum, limitNum);
+    return this.adminService.getUsers(pageNum, limitNum, search);
   }
 
   @Get('users/:id')

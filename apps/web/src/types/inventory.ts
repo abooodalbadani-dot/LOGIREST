@@ -27,6 +27,7 @@ export const InventoryLotSchema = z.object({
  isExpired: z.boolean(),
  isNearExpiry: z.boolean(),
  status: z.string().optional(),
+ uomCode: z.string().optional().nullable(),
 });
 
 export type InventoryLot = z.infer<typeof InventoryLotSchema>;

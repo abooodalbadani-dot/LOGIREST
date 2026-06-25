@@ -14,9 +14,12 @@ export type AdminUserRow = z.infer<typeof AuthUserSchema>;
 
 export const UserFormSchema = CreateUserSchema;
 
-export function useAdminUsers(filters: { page?: number } = {}) {
+export function useAdminUsers(filters: { page?: number; search?: string } = {}) {
  const params = new URLSearchParams();
  params.set('page', String(filters.page ?? 1));
+ if (filters.search) {
+  params.set('search', filters.search);
+ }
  return useQuery({
   queryKey: ['admin/users', filters],
   queryFn: ({ signal }) => apiClient.get(`/admin/users?${params.toString()}`, paginatedSchema(AuthUserSchema), { signal }),
