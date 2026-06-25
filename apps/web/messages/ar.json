@@ -3416,6 +3416,7 @@
       "errors": {
         "no_currencies_available": "لا توجد عملات متاحة للاختيار."
       },
+      "exchange_rate": "سعر الصرف",
       "expiry_date": "تاريخ الانتهاء",
       "expiry_required": "تاريخ الانتهاء مطلوب",
       "fefo_allocation": "تخصيص الحصة حسب FEFO",

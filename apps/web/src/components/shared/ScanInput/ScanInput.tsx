@@ -9,7 +9,7 @@ import { useAlwaysFocused } from '@/hooks/useAlwaysFocused';
 import { useScannerWedge } from '@/hooks/useScannerWedge';
 import { SmartCombobox, type ComboboxItem } from '../SmartCombobox';
 
-interface ScanInputProps {
+interface ScanInputProps<T extends ComboboxItem = ComboboxItem> {
     onScan: (barcode: string) => void | Promise<void>;
     onError?: (barcode: string) => void;
     disabled?: boolean;
@@ -29,12 +29,21 @@ interface ScanInputProps {
     label?: string;
     autoFocus?: boolean;
     latencyThreshold?: number;
-    items?: ComboboxItem[];
+    items?: T[];
+    getPrimaryLabel?: (item: T) => string;
+    getSecondaryLabel?: (item: T) => string | undefined;
     value?: string;
 }
 
-export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
-    function ScanInput(
+interface ScanInputComponent {
+    <T extends ComboboxItem = ComboboxItem>(
+        props: ScanInputProps<T> & { ref?: React.Ref<HTMLInputElement> }
+    ): React.ReactElement | null;
+    displayName?: string;
+}
+
+export const ScanInput = forwardRef(
+    function ScanInput<T extends ComboboxItem = ComboboxItem>(
         {
             onScan,
             disabled,
@@ -55,9 +64,11 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
             label,
             autoFocus = true,
             latencyThreshold,
-            items
-        },
-        ref
+            items,
+            getPrimaryLabel,
+            getSecondaryLabel
+        }: ScanInputProps<T>,
+        ref: React.ForwardedRef<HTMLInputElement>
     ) {
         const tc = useTranslations('common');
         const inputRef = useRef<HTMLInputElement>(null);
@@ -208,6 +219,8 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
                                 <SmartCombobox
                                     items={items || []}
                                     placeholder={placeholder || tc('search_placeholder') || 'Search item...'}
+                                    getPrimaryLabel={getPrimaryLabel}
+                                    getSecondaryLabel={getSecondaryLabel}
                                     onSelect={(item) => {
                                         const identifier = item.barcode || item.code || String(item.id);
                                         onScan(identifier);
@@ -357,7 +370,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
             </div>
         );
     }
-);
+) as unknown as ScanInputComponent;
 
 ScanInput.displayName = 'ScanInput';
 

@@ -59,7 +59,7 @@ export function useFXRates(fromCurr?: string, toCurr?: string) {
  return useQuery({
   queryKey: ['fx-rates', fromCurr, toCurr],
   queryFn: ({ signal }) => {
-   const qs = `?from=${encodeURIComponent(fromCurr!)}&to=${encodeURIComponent(toCurr!)}`;
+   const qs = `?from=${encodeURIComponent(fromCurr!)}&to=${encodeURIComponent(toCurr!)}&isActive=true`;
    return apiClient.get(`/currencies/fx-rates${qs}`, z.array(FXRateSchema), { signal });
   },
   enabled: !!fromCurr && !!toCurr,

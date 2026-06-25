@@ -391,6 +391,7 @@ model FXRate {
   toCurrencyId   String
   rate           Decimal  @db.Decimal(18, 6)
   effectiveFrom  DateTime
+  isActive       Boolean  @default(true)
   version        Int      @default(1)
 
   fromCurrency Currency @relation("FXFrom", fields: [fromCurrencyId], references: [id], onDelete: Restrict)

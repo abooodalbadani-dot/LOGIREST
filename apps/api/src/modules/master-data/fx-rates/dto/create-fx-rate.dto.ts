@@ -5,6 +5,7 @@ import {
   IsDateString,
   IsUUID,
   IsOptional,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateFXRateDto {
@@ -23,6 +24,10 @@ export class CreateFXRateDto {
     { message: 'effectiveFrom must be a valid ISO date string' },
   )
   effectiveFrom!: string;
+
+  @IsOptional()
+  @IsBoolean({ message: 'isActive must be a boolean' })
+  isActive?: boolean;
 }
 
 export class UpdateFXRateDto extends CreateFXRateDto {

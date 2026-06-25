@@ -74,22 +74,22 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
 
     <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30">
-     <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('from_warehouse')}</label>
-     <div className="font-semibold text-body-md text-foreground break-words">
+     <label className="text-xs font-bold uppercase text-muted-foreground">{t('from_warehouse')}</label>
+     <div className="font-bold text-body-md text-foreground break-words not-italic">
       {transfer?.fromWarehouseName}
      </div>
     </div>
 
     <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30">
-     <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('to_warehouse')}</label>
-     <div className="font-semibold text-body-md text-foreground break-words">
+     <label className="text-xs font-bold uppercase text-muted-foreground">{t('to_warehouse')}</label>
+     <div className="font-bold text-body-md text-foreground break-words not-italic">
       {transfer?.toWarehouseName}
      </div>
     </div>
 
     {transfer?.shippedAt && (
      <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30 relative overflow-hidden group">
-      <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('shipped_at')}</label>
+      <label className="text-xs font-bold uppercase text-muted-foreground">{t('shipped_at')}</label>
       <div className="font-medium text-body-md text-foreground flex items-center justify-between">
        <ClientOnlyTime 
         date={transfer.shippedAt} 
@@ -103,7 +103,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
 
     {transfer?.receivedAt && (
      <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30 relative overflow-hidden group">
-      <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('received_at')}</label>
+      <label className="text-xs font-bold uppercase text-muted-foreground">{t('received_at')}</label>
       <div className="font-medium text-body-md text-foreground flex items-center justify-between">
        <ClientOnlyTime 
         date={transfer.receivedAt} 
@@ -116,16 +116,16 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     )}
 
     <div className="col-span-1 md:col-span-4 flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30">
-     <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{tCommon('notes')}</label>
-     <div className="font-medium text-body-md text-foreground/80 min-h-[40px] break-words">
+     <label className="text-xs font-bold uppercase text-muted-foreground">{tCommon('notes')}</label>
+     <div className="font-bold text-body-md text-foreground min-h-[40px] break-words not-italic">
       {transfer?.notes || '—'}
      </div>
     </div>
 
     {transfer?.varianceReason && (
      <div className="col-span-1 md:col-span-4 flex flex-col gap-1.5 p-4 rounded-xl bg-status-warning/5 border border-status-warning/20">
-      <label className="text-[10px] font-semibold uppercase text-status-warning/80">{t('variance_reason')}</label>
-      <div className="font-medium text-body-md text-status-warning break-words">
+      <label className="text-xs font-bold uppercase text-status-warning">{t('variance_reason')}</label>
+      <div className="font-bold text-body-md text-status-warning break-words not-italic">
        {transfer.varianceReason}
       </div>
      </div>
@@ -189,7 +189,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
    <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl border border-white/5 shadow-sm transition-all overflow-x-auto">
     <div className="flex items-center gap-3 mb-6 sm:mb-10">
      <History className="w-4 h-4 text-primary opacity-20 shrink-0" />
-     <h3 className="text-label-xs font-semibold uppercase text-primary/30">{tCommon('audit_trail')}</h3>
+     <h3 className="text-xs font-bold uppercase text-primary">{tCommon('audit_trail')}</h3>
     </div>
     <StatusTimeline entries={timelineEntries} />
    </div>

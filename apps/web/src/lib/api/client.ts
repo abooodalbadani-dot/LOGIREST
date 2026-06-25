@@ -72,6 +72,13 @@ function translateApiErrorMessage(message: string, lang: string): string {
       : 'Database connection lost. Please verify server status and try again.';
   }
 
+  // 6. Insufficient stock
+  if (message.includes('INSUFFICIENT_STOCK')) {
+    return isAr
+      ? 'الرصيد غير كافٍ لإتمام هذه العملية.'
+      : 'Insufficient stock available to complete this operation.';
+  }
+
   return message;
 }
 

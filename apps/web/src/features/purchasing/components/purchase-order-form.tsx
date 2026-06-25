@@ -9,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle } from "lucide-react";
+import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { onFormError } from "@/hooks/useFormError";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -18,6 +18,7 @@ import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { type ComboboxItem } from "@/components/shared/SmartCombobox";
 import { Item, ItemSchema } from "@/types/master-data";
 
+import { cn } from "@/lib/utils";
 import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
 import { RelationalName } from "@/components/shared/RelationalName";
 import { Button } from "@/components/ui/button";
@@ -62,8 +63,8 @@ export const lineItemSchema = z.object({
   itemId: z.string().min(1),
   itemName: z.string().optional(),
   itemCode: z.string().optional(),
-  quantity: z.number().positive(),
-  unitPrice: z.number().nonnegative(),
+  quantity: z.coerce.number().min(0),
+  unitPrice: z.coerce.number().min(0),
   uomId: z.string().min(1),
   notes: z.string().optional(),
 });
@@ -72,7 +73,7 @@ export const formSchema = z.object({
   supplierId: z.string().min(1),
   prId: z.string().optional(),
   currencyId: z.string().min(1),
-  exchangeRate: z.number().min(0.0001),
+  exchangeRate: z.coerce.number().positive().min(0.000001),
   expectedDate: z.string().min(1),
   targetWarehouseId: z.string().min(1),
   notes: z.string().optional(),
@@ -283,6 +284,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const { data: approvedPRs, isLoading: loadingPRs } = usePRList({ status: 'APPROVED', unconverted: true });
   const { data: selectedPR, isLoading: loadingSelectedPR, isError: prError, error: prErrorDetail } = usePR(selectedPRId);
   const hasAutoImported = React.useRef(false);
+  const initialCurrencyId = React.useRef(initialData?.currencyId || "");
+  const lastCurrencyIdRef = React.useRef(currencyId);
 
   React.useEffect(() => {
     if (prError && prErrorDetail) {
@@ -357,7 +360,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   }, [currencies, currencyId]);
 
   const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
-  const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
+  const { data: fxRates, isLoading: loadingFXRates } = useFXRates(selectedCurrencyCode, baseCurrency);
 
   const supplierItems = React.useMemo(() => {
     return suppliers?.map(s => {
@@ -393,17 +396,44 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   }, [currencies]);
 
   React.useEffect(() => {
-    if (fxRates?.[0]?.rate && !initialData) {
-      form.setValue("exchangeRate", fxRates[0].rate);
+    if (selectedCurrencyCode) {
+      const isUserChange = currencyId !== initialCurrencyId.current;
+      const shouldAutoPopulate = !initialData || isUserChange;
+
+      if (shouldAutoPopulate) {
+        if (selectedCurrencyCode === baseCurrency) {
+          form.setValue("exchangeRate", 1, { shouldValidate: true, shouldDirty: true });
+        } else if (fxRates && fxRates.length > 0) {
+          const fetchedRate = fxRates[0]?.rate;
+          if (fetchedRate && !Number.isNaN(fetchedRate)) {
+            form.setValue("exchangeRate", fetchedRate, { shouldValidate: true, shouldDirty: true });
+          }
+        }
+      }
     }
-  }, [fxRates, form, initialData]);
+  }, [fxRates, form, initialData, selectedCurrencyCode, baseCurrency, currencyId]);
+
+  React.useEffect(() => {
+    if (currencyId !== lastCurrencyIdRef.current) {
+      const nextCode = currencies?.find(c => c.id === currencyId)?.code || '';
+      lastCurrencyIdRef.current = currencyId;
+
+      if (currencyId) {
+        if (nextCode === baseCurrency) {
+          form.setValue("exchangeRate", 1, { shouldValidate: true, shouldDirty: true });
+        } else {
+          form.setValue("exchangeRate", undefined as unknown as number, { shouldValidate: true, shouldDirty: true });
+        }
+      }
+    }
+  }, [currencyId, currencies, baseCurrency, form]);
 
   React.useEffect(() => {
     if (currencies && baseCurrency && !form.getValues('currencyId') && !initialData) {
       const baseCurr = currencies.find(c => c.code === baseCurrency);
       if (baseCurr) {
-        form.setValue('currencyId', baseCurr.id);
-        form.setValue('exchangeRate', 1);
+        form.setValue('currencyId', baseCurr.id, { shouldValidate: true, shouldDirty: true });
+        form.setValue('exchangeRate', 1, { shouldValidate: true, shouldDirty: true });
       }
     }
   }, [currencies, baseCurrency, form, initialData]);
@@ -450,18 +480,18 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-0 w-full min-h-screen flex flex-col pb-32">
         <DocumentLockBanner isLocked={isLocked} status={status} />
 
-        <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-8 max-w-6xl mx-auto">
-          <div className="bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl relative">
+        <div className="px-0 sm:px-6 md:px-8 pt-0 sm:pt-6 md:pt-8 max-w-6xl mx-auto w-full">
+          <div className="bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative">
             <div className="flex flex-wrap items-center justify-between pb-6 mb-6 gap-4 min-w-0 w-full">
               <h3 className="text-lg md:text-title-lg font-semibold text-operational-cyan uppercase truncate flex-1 min-w-0">
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
               </h3>
               <div className="flex gap-2 items-center flex-shrink-0 min-w-0 max-w-full">
                 {initialData?.id && (
-                  <DocumentExportMenu 
-                    documentType="PO" 
-                    documentId={initialData.id} 
-                    documentNumber={initialData.documentNumber} 
+                  <DocumentExportMenu
+                    documentType="PO"
+                    documentId={initialData.id}
+                    documentNumber={initialData.documentNumber}
                   />
                 )}
                 <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase shrink-0">{/* i18n-ignore */}PO_ENGINE_V2</span>
@@ -513,10 +543,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('linked_pr')}</FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
-                          <Input 
-                            placeholder={t('linked_pr_placeholder')} 
-                            disabled={isLocked} 
-                            className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-11 rounded-md flex-1 focus:border-[#b48e67] focus:ring-[#b48e67]" 
+                          <Input
+                            placeholder={t('linked_pr_placeholder')}
+                            disabled={isLocked}
+                            className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-11 rounded-md flex-1 focus:border-[#b48e67] focus:ring-[#b48e67]"
                             value={loadingSelectedPR ? tc('loading') : (selectedPR?.documentNumber || field.value || '')}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
@@ -564,10 +594,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                               }`}
                           >
                             <div className="flex items-center justify-between">
-                                <div className="min-w-0">
-                                  <span className="font-mono font-bold text-label-sm text-foreground truncate block">{pr.documentNumber}</span>
-                                  <RelationalName name={pr.warehouseName} rawId={pr.departmentId} className="text-label-xxs text-muted-foreground/60 ms-2 truncate inline-block max-w-full align-bottom" />
-                                </div>
+                              <div className="min-w-0">
+                                <span className="font-mono font-bold text-label-sm text-foreground truncate block">{pr.documentNumber}</span>
+                                <RelationalName name={pr.warehouseName} rawId={pr.departmentId} className="text-label-xxs text-muted-foreground/60 ms-2 truncate inline-block max-w-full align-bottom" />
+                              </div>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{pr.createdAt?.split('T')[0]}</span>
                             </div>
                           </button>
@@ -578,9 +608,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                       <Button
                         type="button"
                         variant="ghost"
-                        onClick={() => { 
-                          setImportDialogOpen(false); 
-                          setSelectedPRId(form.getValues('prId') || null); 
+                        onClick={() => {
+                          setImportDialogOpen(false);
+                          setSelectedPRId(form.getValues('prId') || null);
                         }}
                       >
                         {tc('cancel')}
@@ -659,17 +689,32 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('fx_rate', { currency: baseCurrency })}</FormLabel>
                       <div className="relative">
-                        <ArrowRightLeft className="absolute start-3 top-3.5 h-4 w-4 text-muted-foreground/40" />
+                        {loadingFXRates ? (
+                          <Loader2 className="absolute start-3 top-3.5 h-4 w-4 text-operational-cyan animate-spin" />
+                        ) : (
+                          <ArrowRightLeft className="absolute start-3 top-3.5 h-4 w-4 text-muted-foreground/40" />
+                        )}
                         <FormControl>
                           <Input
-                            type="number"
-                            step="0.0001"
-                            min="0"
+                            type="text"
+                            inputMode="decimal"
                             disabled={isLocked}
-                            className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 ps-10 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]"
+                            readOnly={selectedCurrencyCode === baseCurrency}
+                            className={cn(
+                              "bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 ps-10 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]",
+                              selectedCurrencyCode === baseCurrency && "opacity-80 cursor-not-allowed bg-gray-100 dark:bg-[#1A2234]"
+                            )}
                             dir="ltr"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                            value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/[^0-9.]/g, '');
+                              const parts = val.split('.');
+                              if (parts.length > 2) {
+                                val = parts[0] + '.' + parts.slice(1).join('');
+                              }
+                              field.onChange(val);
+                            }}
                           />
                         </FormControl>
                       </div>

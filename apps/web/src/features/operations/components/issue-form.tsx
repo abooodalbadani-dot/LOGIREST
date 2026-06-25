@@ -40,7 +40,7 @@ import { useAbortController } from '@/hooks/useAbortController';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { SmartCombobox, ComboboxItem } from '@/components/shared/SmartCombobox';
-import { useItems } from '@/features/items/hooks/useItems';
+import { useWarehouseInventory } from '@/features/inventory/hooks/useWarehouseInventory';
 import { RelationalName } from '@/components/shared/RelationalName';
 
 interface IssueFormProps {
@@ -55,15 +55,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const locale = useLocale();
   const { user, activeScope } = useAuth();
   const abortController = useAbortController();
-
-  const postIssue = usePostIssue({ onConflict });
-  const isPostPending = postIssue.isPending;
-  const submitIssue = useSubmitIssue({ onConflict });
-  const cancelIssue = useCancelIssue({ onConflict });
-  const { playSound } = useAudioFeedback();
-
-  const { data: itemsData } = useItems(); const items = itemsData?.data || [];
-
   const toLineItem = (l: IssueLineItem): LineItem => ({
     id: l.id,
     item: {
@@ -78,12 +69,34 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     lotAllocations: l.lotAllocations,
   });
 
+  const [warehouseId] = useState(() => issue?.warehouseId || activeScope.warehouseId || '');
   const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []).map(toLineItem));
   const [destinationId, setDestinationId] = useState(() => issue?.destinationDeptId ?? '');
-  const [warehouseId] = useState(() => issue?.warehouseId || activeScope.warehouseId || '');
   const [notes, setNotes] = useState(() => issue?.notes || '');
   const [scanError, setScanError] = useState('');
   const [requestedBy, setRequestedBy] = useState(() => issue?.requestedBy ?? '');
+
+  const postIssue = usePostIssue({ onConflict });
+  const isPostPending = postIssue.isPending;
+  const submitIssue = useSubmitIssue({ onConflict });
+  const cancelIssue = useCancelIssue({ onConflict });
+  const { playSound } = useAudioFeedback();
+
+  const { data: inventoryData } = useWarehouseInventory(warehouseId, { enabled: !!warehouseId });
+  const inventoryItems = inventoryData?.data || [];
+
+  const items = useMemo(() => {
+    return inventoryItems
+      .filter((inv) => inv.qtyAvailable > 0)
+      .map((inv) => ({
+        id: inv.itemId,
+        code: inv.itemCode,
+        barcode: inv.itemCode,
+        name: inv.itemName,
+        qtyAvailable: inv.qtyAvailable,
+        uomCode: inv.uomCode,
+      }));
+  }, [inventoryItems]);
 
   const lastResetId = useRef<string | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
@@ -432,8 +445,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       </div>
                       <ScanInput
                         onScan={handleScan}
-                        disabled={effectiveIsLocked || fefoOpen}
-                        placeholder={t('scan_placeholder')}
+                        disabled={effectiveIsLocked || fefoOpen || !warehouseId}
+                        placeholder={!warehouseId ? (locale === 'ar' ? 'يرجى تحديد المستودع أولاً...' : 'Please select a Warehouse first...') : t('scan_placeholder')}
                         onError={(bc) => {
                           audioAlerts.playScanInvalid();
                           setScanError(t('not_found_prefix') + bc);
@@ -441,6 +454,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                         size="lg"
                         scannerMode={true}
                         items={items}
+                        getPrimaryLabel={(item) => typeof item.name === 'string' ? item.name : ''}
+                        getSecondaryLabel={(item) => {
+                          const availText = locale === 'ar' ? 'المتاح' : 'Available';
+                          const qty = typeof item.qtyAvailable === 'number' ? item.qtyAvailable : 0;
+                          const uom = typeof item.uomCode === 'string' ? item.uomCode : '';
+                          return `${item.code || ''} | ${availText}: ${qty} ${uom}`;
+                        }}
                       />
 
                       {scanError && (

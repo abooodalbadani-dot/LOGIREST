@@ -9,7 +9,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
-import { useItems } from '@/features/items/hooks/useItems';
+import { useWarehouseInventory } from '@/features/inventory/hooks/useWarehouseInventory';
 import { type Item } from '@/features/items/types';
 import { useCreateTransfer } from '@/features/operations/hooks/useCreateTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -143,16 +143,22 @@ export function TransferNewClient() {
  const tCommon = useTranslations('common');
  const abortController = useAbortController();
  const { user } = useAuth();
- const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
- const { data: itemsData, isLoading: isLoadingItems, error: errorItems } = useItems(); const items = itemsData?.data || [];
- const createTransfer = useCreateTransfer();
- const { playSound } = useAudioFeedback();
 
  const [fromWarehouseId, setFromWarehouseId] = useState('');
  const [toWarehouseId, setToWarehouseId] = useState('');
  const [notes, setNotes] = useState('');
  const [lines, setLines] = useState<NewTransferLine[]>([]);
  const [idempotencyKey] = useState(() => crypto.randomUUID());
+ const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
+
+ const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
+ const warehouses = warehousesData?.data || [];
+
+ const { data: inventoryData, isLoading: isLoadingItems, error: errorItems } = useWarehouseInventory(fromWarehouseId, { enabled: !!fromWarehouseId });
+ const inventoryItems = inventoryData?.data || [];
+
+ const createTransfer = useCreateTransfer();
+ const { playSound } = useAudioFeedback();
 
  // Inventory balance hook enabled when fromWarehouseId is active
  const { data: inventoryBalances, isError: isBalanceError, isLoading: isBalanceLoading } = useInventoryBalance(
@@ -166,8 +172,20 @@ export function TransferNewClient() {
   }
  }, [isBalanceError, locale]);
 
- // Filter out inactive items
- const allItems = useMemo(() => (items || []).filter((item: Item) => item.isActive !== false), [items]);
+ // Filter out inactive items and map from warehouse inventory
+ const allItems = useMemo(() => {
+  return inventoryItems
+   .filter((inv) => inv.qtyAvailable > 0)
+   .map((inv) => ({
+    id: inv.itemId,
+    code: inv.itemCode,
+    barcode: inv.itemCode,
+    name: inv.itemName,
+    qtyAvailable: inv.qtyAvailable,
+    primaryUom: { id: inv.uomCode || '', code: inv.uomCode || '' },
+    isActive: true,
+   }));
+ }, [inventoryItems]);
 
  // Derive assigned warehouses from user scopes
  const assignedWarehouseIds = useMemo(() => {
@@ -201,7 +219,7 @@ export function TransferNewClient() {
    throw new Error('NoSourceWarehouse');
   }
 
-  const item = allItems?.find((i: Item) => i.barcode === barcode || i.code === barcode);
+  const item = allItems?.find((i) => i.barcode === barcode || i.code === barcode);
   if (!item) {
    toast.error(`${tCommon('no_item_found') || "Item not found"}: "${barcode}"`);
    throw new Error('ItemNotFound');
@@ -254,8 +272,6 @@ export function TransferNewClient() {
     }];
   });
  };
-
- const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
 
  const handleSuggestFIFO = async () => {
   if (lines.length === 0) {
@@ -378,7 +394,7 @@ export function TransferNewClient() {
   !hasQuantityErrors
  );
 
- if (isLoadingWarehouses || isLoadingItems) return <PageSkeleton />;
+ if (isLoadingWarehouses) return <PageSkeleton />;
  if (errorWarehouses || errorItems) return <ErrorState onRetry={() => window.location.reload()} />;
 
  if (hasNoScope) {
@@ -530,11 +546,24 @@ export function TransferNewClient() {
         </label>
         <ScanInput 
          onScan={handleAddItem}
-         placeholder={t('scan_item_placeholder') || "Scan item barcode..."} 
+         placeholder={
+          !fromWarehouseId
+           ? (locale === 'ar' ? 'يرجى تحديد مستودع المصدر أولاً...' : 'Please select a Source Warehouse first...')
+           : (t('scan_item_placeholder') || "Scan item barcode...")
+         } 
          className="w-full"
          variant="standard"
          scannerMode={true}
          disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
+         items={allItems}
+         getPrimaryLabel={(item) => item.name || ''}
+         getSecondaryLabel={(item) => {
+          if (typeof item.qtyAvailable === 'number') {
+           const uom = typeof item.primaryUom === 'object' && item.primaryUom !== null && 'code' in item.primaryUom ? String(item.primaryUom.code) : '';
+           return locale === 'ar' ? `المتوفر: ${item.qtyAvailable} ${uom}` : `Available: ${item.qtyAvailable} ${uom}`;
+          }
+          return undefined;
+         }}
         />
        </div>
        <div className="space-y-2">
@@ -544,8 +573,19 @@ export function TransferNewClient() {
         <SmartCombobox
          items={allItems}
          onSelect={(item) => handleAddItem(item.code)}
-         getPrimaryLabel={(item) => item.name}
-         placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
+         getPrimaryLabel={(item) => item.name || ''}
+         getSecondaryLabel={(item) => {
+          if (typeof item.qtyAvailable === 'number') {
+           const uom = typeof item.primaryUom === 'object' && item.primaryUom !== null && 'code' in item.primaryUom ? String(item.primaryUom.code) : '';
+           return locale === 'ar' ? `المتوفر: ${item.qtyAvailable} ${uom}` : `Available: ${item.qtyAvailable} ${uom}`;
+          }
+          return undefined;
+         }}
+         placeholder={
+          !fromWarehouseId
+           ? (locale === 'ar' ? 'يرجى تحديد مستودع المصدر أولاً...' : 'Please select a Source Warehouse first...')
+           : (locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...')
+         }
          disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
          triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-md text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
         />

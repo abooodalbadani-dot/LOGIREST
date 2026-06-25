@@ -15,7 +15,8 @@ import {
  User,
  FileText,
  MapPin,
- Printer
+ Printer,
+ Warehouse
 } from 'lucide-react';
 import { useSystemPrintSettings } from '@/features/admin/hooks/useSystemPrintSettings';
 import { dispatchPrintJob } from '@/lib/export/printDispatcher';
@@ -121,14 +122,14 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
           <h1 className="text-2xl font-extrabold text-foreground tracking-tight uppercase">
            {issue?.documentNumber || '...'}
           </h1>
-         <div className="flex items-center gap-2 mt-0.5">
-          <StatusBadge status={issueStatus} />
-          <ClientOnlyTime 
-           date={issue?.createdAt || new Date()} 
-           mode="date"
-           className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
-          />
-         </div>
+          <div className="flex items-center gap-2 mt-0.5">
+           <StatusBadge status={issueStatus} />
+           <ClientOnlyTime 
+            date={issue?.createdAt || new Date()} 
+            mode="date"
+            className="text-xs font-bold uppercase text-muted-foreground shrink-0"
+           />
+          </div>
         </div>
        </div>
        <div className="flex items-center gap-3 shrink-0">
@@ -155,9 +156,9 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       {/* 2. The Summary Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
        <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
-        <div className="flex items-center gap-2 text-primary/40">
+        <div className="flex items-center gap-2 text-primary">
          <MapPin className="w-4 h-4" />
-         <span className="text-label-xs font-semibold uppercase">{t('destination')}</span>
+         <span className="text-xs font-bold uppercase">{t('destination')}</span>
         </div>
          <p className="font-bold text-body-md">
           <RelationalName 
@@ -170,16 +171,16 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
          </p>
        </div>
        <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
-        <div className="flex items-center gap-2 text-primary/40">
+        <div className="flex items-center gap-2 text-primary">
          <User className="w-4 h-4" />
-         <span className="text-label-xs font-semibold uppercase">{t('requested_by')}</span>
+         <span className="text-xs font-bold uppercase">{t('requested_by')}</span>
         </div>
         <p className="font-bold text-body-md">{issue.requestedBy || '—'}</p>
        </div>
        <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
-        <div className="flex items-center gap-2 text-primary/40">
-         <Clock className="w-4 h-4" />
-         <span className="text-label-xs font-semibold uppercase">{tCommon('warehouse')}</span>
+        <div className="flex items-center gap-2 text-primary">
+         <Warehouse className="w-4 h-4" />
+         <span className="text-xs font-bold uppercase">{tCommon('warehouse')}</span>
         </div>
          <p className="font-bold text-body-md">
           <RelationalName 
@@ -192,14 +193,14 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       </div>
 
       {/* 3. The Line Items Table */}
-      <div className="w-full bg-card border border-border shadow-sm rounded-lg overflow-hidden">
-       <div className="p-8 flex justify-between items-center border-b border-outline-variant/5">
-        <div className="flex items-center gap-4">
-         <div className="w-1.5 h-6 bg-primary rounded-full" />
-         <h3 className="text-label-sm font-semibold uppercase">{t('line_items')}</h3>
+      <div className="w-full bg-card dark:bg-[#0B1220] border border-border dark:border-[#b48e67]/40 shadow-sm rounded-xl overflow-hidden mt-6">
+       <div className="p-4 md:p-6 flex justify-between items-center border-b border-border dark:border-[#b48e67]/20">
+        <div className="flex items-center gap-3">
+         <div className="w-1 h-5 bg-primary dark:bg-[#b48e67] rounded-sm" />
+         <h3 className="text-sm md:text-base font-bold text-foreground dark:text-white uppercase">{t('line_items')}</h3>
         </div>
-        <div className="px-4 py-2 bg-card border border-border shadow-sm rounded-lg text-label-xs font-mono text-primary/40">
-         {lines.length} {t('entries').toUpperCase()}
+        <div className="px-4 py-1.5 bg-transparent border border-border dark:border-[#b48e67]/60 shadow-sm rounded-lg text-xs font-medium text-muted-foreground dark:text-[#b48e67]">
+         {lines.length} {t('entries')}
         </div>
        </div>
        <DocumentReadOnlyOverlay isPosted={issue.status === 'POSTED'}>
@@ -207,21 +208,10 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
          lines={lines} 
          locale={locale} 
          isReadOnly={true}
+         noCollapse={false}
+         borderless={true}
+         mobileLayoutPattern="elegant"
          extraColumns={[
-          {
-           header: t('qty'),
-           cell: (line) => (
-            <div className="flex items-center gap-2 tabular-nums">
-             <span className="text-body-md font-bold text-foreground">{line.qty}</span>
-             <RelationalName 
-              name={line.item.primaryUom?.code} 
-              rawId={line.uomId} 
-              fallback="N/A" 
-              className="text-label-xs font-semibold uppercase text-primary/20" 
-             />
-            </div>
-           )
-          },
           {
            header: t('allocate'),
            cell: (line: LineItem) => {
@@ -250,12 +240,12 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       {/* Notes Section */}
       {issue.notes && (
        <div className="bg-card border border-border shadow-sm p-8 rounded-lg space-y-4">
-        <div className="flex items-center gap-3 text-primary/30">
+        <div className="flex items-center gap-3 text-primary">
          <FileText className="w-4 h-4" />
-         <h3 className="text-label-xs font-semibold uppercase">{t('operational_notes')}</h3>
+         <h3 className="text-xs font-bold uppercase">{t('operational_notes')}</h3>
         </div>
         <div className="bg-card border border-border shadow-sm p-6 rounded-xl border border-outline-variant/5">
-         <p className="text-body-md text-foreground/70 italic leading-relaxed">
+         <p className="text-body-md text-foreground font-bold not-italic leading-relaxed">
           {issue.notes}
          </p>
         </div>
@@ -287,33 +277,33 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
         <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
          <Info className="w-5 h-5 text-foreground" />
         </div>
-        <h4 className="text-label-xs font-semibold uppercase">{tCommon('audit_trail')}</h4>
+        <h4 className="text-xs font-bold uppercase">{tCommon('audit_trail')}</h4>
        </div>
        <div className="space-y-4">
         <div className="flex justify-between items-center py-2">
-         <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('created_by')}</span>
-         <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.createdBy || tCommon('system_user')}</span>
+         <span className="text-xs font-bold uppercase text-muted-foreground">{t('created_by')}</span>
+         <span className="text-xs font-mono font-bold text-foreground">{issue.createdBy || tCommon('system_user')}</span>
         </div>
         <div className="flex justify-between items-center py-2">
-         <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('created_at')}</span>
+         <span className="text-xs font-bold uppercase text-muted-foreground">{t('created_at')}</span>
          <ClientOnlyTime 
           date={issue.createdAt || new Date()} 
           mode="datetime"
-          className="text-label-xs font-mono font-bold text-foreground/60"
+          className="text-xs font-mono font-bold text-foreground"
          />
         </div>
         {issue.postedAt && (
          <>
           <div className="flex justify-between items-center py-2 pt-4 border-t border-outline-variant/5">
-           <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('posted_by')}</span>
-           <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.postedBy || tCommon('system_user')}</span>
+           <span className="text-xs font-bold uppercase text-muted-foreground">{t('posted_by')}</span>
+           <span className="text-xs font-mono font-bold text-foreground">{issue.postedBy || tCommon('system_user')}</span>
           </div>
           <div className="flex justify-between items-center py-2">
-           <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('posted_at')}</span>
+           <span className="text-xs font-bold uppercase text-muted-foreground">{t('posted_at')}</span>
            <ClientOnlyTime 
             date={issue.postedAt} 
             mode="datetime"
-            className="text-label-xs font-mono font-bold text-foreground/60"
+            className="text-xs font-mono font-bold text-foreground"
            />
           </div>
          </>

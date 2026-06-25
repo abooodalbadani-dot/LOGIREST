@@ -61,6 +61,7 @@ const grnFormSchema = z.object({
    poId: z.string().min(1, 'Required'),
    supplierId: z.string().min(1, 'Required'),
    currencyId: z.string().min(1, 'Required'),
+   exchangeRate: z.coerce.number().positive().min(0.000001).optional().or(z.literal('')),
    warehouseId: z.string().min(1, 'Required'),
    notes: z.string().optional(),
    lines: z.array(LineItemSchema)
@@ -156,8 +157,24 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
    const searchParams = useSearchParams();
    const queryPoId = searchParams ? searchParams.get('po_id') : null;
-   const { data: poResponse, isLoading: isLoadingPO } = usePO(queryPoId || '');
+
+   const { handleSubmit, reset, control, register, getValues, setValue, formState: { errors, isDirty } } = useForm<GRNFormValues>({
+      resolver: zodResolver(grnFormSchema),
+      defaultValues: {
+         poId: initialData?.poId || queryPoId || '',
+         supplierId: initialData?.supplierId || '',
+         currencyId: initialData?.currencyId || '',
+         exchangeRate: initialData?.fxRate || '',
+         warehouseId: initialData?.warehouseId || '',
+         notes: initialData?.notes || '',
+         lines: initialData?.lines || []
+      }
+   });
+
+   const watchedPoId = useWatch({ control, name: 'poId' });
+   const { data: poResponse, isLoading: isLoadingPO } = usePO(watchedPoId || queryPoId || '');
    const poData = poResponse;
+   const hasPo = !!watchedPoId;
 
    const isNew = id === 'new';
    const lastResetId = useRef<string | null>(null);
@@ -240,18 +257,6 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    const [isCustomItemDialogOpen, setIsCustomItemDialogOpen] = useState(false);
    const [customItemBarcode, setCustomItemBarcode] = useState('');
 
-   const { handleSubmit, reset, control, register, getValues, formState: { errors, isDirty } } = useForm<GRNFormValues>({
-      resolver: zodResolver(grnFormSchema),
-      defaultValues: {
-         poId: initialData?.poId || queryPoId || '',
-         supplierId: initialData?.supplierId || '',
-         currencyId: initialData?.currencyId || '',
-         warehouseId: initialData?.warehouseId || '',
-         notes: initialData?.notes || '',
-         lines: initialData?.lines || []
-      }
-   });
-
    const { fields, append, remove, update } = useFieldArray({
       control,
       name: "lines"
@@ -320,9 +325,14 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       return currencies?.find(c => c.id === currencyId)?.code || '';
    }, [currencies, currencyId]);
 
-   const { currency: baseCurrency } = useBaseCurrency();
-   const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
-   const currentFxRate = fxRates?.[0]?.rate || 1;
+    const { currency: baseCurrency } = useBaseCurrency();
+    const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
+    const watchedExchangeRate = useWatch({ control, name: 'exchangeRate' });
+    const currentFxRate = typeof watchedExchangeRate === 'number'
+       ? watchedExchangeRate
+       : (watchedExchangeRate && !isNaN(parseFloat(watchedExchangeRate)))
+          ? parseFloat(watchedExchangeRate)
+          : (fxRates?.[0]?.rate || 1);
 
    const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
 
@@ -337,6 +347,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             poId: initialData.poId || '',
             supplierId: initialData.supplierId || '',
             currencyId: initialData.currencyId || '',
+            exchangeRate: initialData.fxRate || '',
             warehouseId: initialData.warehouseId || '',
             notes: initialData.notes || '',
             lines: initialData.lines || []
@@ -354,6 +365,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             poId: poData.id,
             supplierId: poData.supplierId || '',
             currencyId: poData.currencyId || '',
+            exchangeRate: poData.exchangeRate || 1,
             warehouseId: poData.targetWarehouseId || '',
             notes: poData.notes || '',
             lines: poData.lines.map(line => {
@@ -390,6 +402,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          setIdempotencyKey(crypto.randomUUID());
       }
    }, [isNew, poData, reset]);
+
+   useEffect(() => {
+      if (isNew && !initialData && !watchedPoId) {
+         setValue('supplierId', '');
+         const defaultCurrency = currencies?.find(c => c.isBase || c.code === baseCurrency);
+         setValue('currencyId', defaultCurrency?.id || '');
+         setValue('exchangeRate', 1);
+         setValue('lines', []);
+      }
+   }, [isNew, initialData, watchedPoId, currencies, baseCurrency, setValue]);
 
    useEffect(() => {
       const expired = (watchedLines || [])
@@ -666,7 +688,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             <DocumentLockWrapper isLocked={isLocked || isWarehouseLocked}>
                <DocumentReadOnlyOverlay isPosted={isLocked || isWarehouseLocked}>
                   <div className="space-y-10">
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                         <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
                            <Label htmlFor="supplier-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('supplier')}</Label>
                            <Controller
@@ -679,8 +701,11 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_supplier')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
-                                    disabled={isLocked || isWarehouseLocked}
+                                    triggerClassName={cn(
+                                       "w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase",
+                                       hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                    )}
+                                    disabled={isLocked || isWarehouseLocked || hasPo}
                                  />
                               )}
                            />
@@ -702,12 +727,52 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_currency')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
-                                    disabled={isLocked || isWarehouseLocked}
+                                    triggerClassName={cn(
+                                       "w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase",
+                                       hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                    )}
+                                    disabled={isLocked || isWarehouseLocked || hasPo}
                                  />
                               )}
                            />
                            {errors.currencyId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currencyId.message}</span>}
+                        </div>
+
+                        <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
+                           <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+                              <TrendingUp className="w-12 h-12" />
+                           </div>
+                           <Label htmlFor="exchange-rate-input" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                              {t('exchange_rate') || 'Exchange Rate'}
+                           </Label>
+                           <Controller
+                              name="exchangeRate"
+                              control={control}
+                              render={({ field }) => (
+                                 <Input
+                                    id="exchange-rate-input"
+                                    type="text"
+                                    inputMode="decimal"
+                                    disabled={isLocked || isWarehouseLocked || hasPo}
+                                    className={cn(
+                                       "w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl font-mono mt-2",
+                                       hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                    )}
+                                    placeholder="1.00"
+                                    {...field}
+                                    value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
+                                    onChange={(e) => {
+                                       let val = e.target.value.replace(/[^0-9.]/g, '');
+                                       const parts = val.split('.');
+                                       if (parts.length > 2) {
+                                          val = parts[0] + '.' + parts.slice(1).join('');
+                                       }
+                                       field.onChange(val);
+                                    }}
+                                 />
+                              )}
+                           />
+                           {errors.exchangeRate && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.exchangeRate.message}</span>}
                         </div>
 
                         <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
@@ -717,9 +782,25 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('ref_document')}</p>
                            <div className="mt-2">
                               {initialData?.poNumber || poData?.documentNumber ? (
-                                 <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
-                                    <span dir="ltr" className="font-mono">{initialData?.poNumber || poData?.documentNumber}</span>
-                                 </Badge>
+                                 <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
+                                       <span dir="ltr" className="font-mono">{initialData?.poNumber || poData?.documentNumber}</span>
+                                    </Badge>
+                                    {isNew && !initialData && (
+                                       <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive text-xs"
+                                          onClick={() => {
+                                             setValue('poId', '');
+                                             router.replace('/goods-received/new');
+                                          }}
+                                       >
+                                          ✕
+                                       </Button>
+                                    )}
+                                 </div>
                               ) : isNew ? (
                                  <SmartCombobox
                                     items={poItems}

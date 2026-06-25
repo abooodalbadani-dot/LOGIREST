@@ -144,7 +144,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
     </div>
    </div>
    <StickyGlassHeader
-    title={<span className="italic">{document?.documentNumber || '...'}</span>}
+    title={<span className="not-italic font-bold">{document?.documentNumber || '...'}</span>}
     statusBadge={
      <>
       <StatusBadge status={adjustmentStatus as BadgeStatus} />
@@ -171,26 +171,26 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
      {/* Left Column */}
      <div className="lg:col-span-8 space-y-8 print:max-w-full">
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 border border-surface-variant/5">
-       <div className="space-y-4">
-        <div className="space-y-1.5">
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('warehouse')}</label>
-          <div className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase italic">
+        <div className="space-y-4">
+         <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase text-muted-foreground">{tc('warehouse')}</label>
+          <div className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase not-italic">
            <RelationalName name={document.warehouseName} rawId={document.warehouseId} />
           </div>
+         </div>
+
+         <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase text-muted-foreground">{t('reason')}</label>
+          <p className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase not-italic">{t(`reason_${document.reason.toLowerCase()}`)}</p>
+         </div>
         </div>
 
         <div className="space-y-1.5">
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('reason')}</label>
-         <p className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase italic">{t(`reason_${document.reason.toLowerCase()}`)}</p>
+         <label className="text-xs font-bold uppercase text-muted-foreground">{tc('notes')}</label>
+         <div className="bg-card border border-border shadow-sm rounded-lg min-h-[120px] p-4 text-body-md not-italic font-bold text-foreground">
+          {document.notes || tc('no_notes')}
+         </div>
         </div>
-       </div>
-
-       <div className="space-y-1.5">
-        <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('notes')}</label>
-        <div className="bg-card border border-border shadow-sm rounded-lg min-h-[120px] p-4 text-body-md italic text-foreground/70">
-         {document.notes || tc('no_notes')}
-        </div>
-       </div>
       </div>
 
       {/* Items Table */}
@@ -231,7 +231,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
           <History className="w-5 h-5 text-primary" />
          </div>
-         <h4 className="text-label-xs font-semibold uppercase">{tc('audit_trail')}</h4>
+         <h4 className="text-xs font-bold uppercase">{tc('audit_trail')}</h4>
         </div>
         {timelineEntries.length > 0 ? (
          <div className="ps-2">
@@ -240,7 +240,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
         ) : (
          <div className="flex flex-col items-center justify-center py-8 opacity-20 gap-3">
           <Clock className="w-10 h-10" />
-          <p className="text-label-xs font-semibold uppercase">{t('no_history')}</p>
+          <p className="text-xs font-bold uppercase">{t('no_history')}</p>
          </div>
         )}
        </div>

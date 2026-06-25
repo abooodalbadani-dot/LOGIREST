@@ -99,10 +99,10 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
         <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
        </Button>
        <div>
-        <h1 className="text-headline-lg font-semibold uppercase italic">{request.requestNumber}</h1>
+        <h1 className="text-headline-lg font-bold uppercase not-italic">{request.requestNumber}</h1>
         <div className="flex items-center gap-3 mt-1">
          <StatusBadge status={request.status} />
-         <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
+         <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
           <Clock className="w-3 h-3" />
           <ClientOnlyTime date={request.createdAt} mode="date" locale={locale} className="tabular-nums" />
          </span>
@@ -137,33 +137,33 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
      <div className="lg:col-span-8 space-y-8">
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
        <div className="space-y-1">
-        <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+        <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
          <Building2 className="w-3.5 h-3.5" />
          {t('department')}
         </span>
-        <p className="text-body-md font-bold">{request.departmentName}</p>
+        <p className="text-body-md font-bold not-italic">{request.departmentName}</p>
        </div>
        <div className="space-y-1">
-        <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+        <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
          <Warehouse className="w-3.5 h-3.5" />
          {t('warehouse')}
         </span>
-        <p className="text-body-md font-bold">{request.warehouseName}</p>
+        <p className="text-body-md font-bold not-italic">{request.warehouseName}</p>
        </div>
        <div className="space-y-1">
-        <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+        <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
          <User className="w-3.5 h-3.5" />
          {t('requested_by')}
         </span>
-        <p className="text-body-md font-bold">{request.requestedBy}</p>
+        <p className="text-body-md font-bold not-italic">{request.requestedBy}</p>
        </div>
        {request.notes && (
         <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
-         <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+         <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
           <FileText className="w-3.5 h-3.5" />
           {tCommon('notes')}
          </span>
-         <p className="text-label-sm text-muted-foreground italic leading-relaxed">&quot;{request.notes}&quot;</p>
+         <p className="text-label-sm text-muted-foreground font-bold not-italic leading-relaxed">&quot;{request.notes}&quot;</p>
         </div>
        )}
       </div>
@@ -212,7 +212,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
          {
           header: tCommon('notes') || 'Notes',
           cell: (line) => (
-           <p className="text-label-xs font-medium text-muted-foreground/60 max-w-[200px] line-clamp-2 italic">
+           <p className="text-xs font-bold text-muted-foreground max-w-[200px] line-clamp-2 not-italic">
             {line.notes || '—'}
            </p>
           )

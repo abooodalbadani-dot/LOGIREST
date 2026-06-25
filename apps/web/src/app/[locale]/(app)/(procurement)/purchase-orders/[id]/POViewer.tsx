@@ -135,10 +135,10 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
          <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center", item.color)}>
           <item.icon className="w-5 h-5" />
          </div>
-         <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{item.label}</span>
+         <span className="text-xs font-bold text-muted-foreground uppercase">{item.label}</span>
         </div>
         <div className="flex flex-col relative z-10">
-         <span className="text-title-sm font-semibold text-foreground line-clamp-1">{item.value}</span>
+          <span className="text-title-sm font-bold text-foreground line-clamp-1 not-italic">{item.value}</span>
         </div>
        </Card>
       ))}
@@ -151,8 +151,8 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
         <FileText className="w-4 h-4" />
        </div>
        <div>
-        <h3 className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tCommon('items')}</h3>
-        <p className="text-label-xxs font-semibold text-muted-foreground/30 uppercase mt-0.5">{tCommon('order_details')}</p>
+        <h3 className="text-xs font-bold uppercase text-muted-foreground">{tCommon('items')}</h3>
+        <p className="text-xs font-bold text-muted-foreground uppercase mt-0.5">{tCommon('order_details')}</p>
        </div>
       </div>
 
@@ -168,7 +168,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
        <div className="p-8 bg-card border border-border shadow-sm/30 border-t border-outline-variant/50 flex justify-end">
         <div className="flex items-center gap-10">
          <div className="flex flex-col items-end">
-          <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('order_total')}</p>
+          <p className="text-xs font-bold uppercase text-muted-foreground">{t('order_total')}</p>
           <p dir="ltr" className="text-headline-lg font-semibold text-primary">
            {formatCurrency(document?.total || 0, currencyCode, locale)}
           </p>
@@ -186,7 +186,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
      <div className="bg-card border border-border shadow-sm p-8 rounded-[2rem] shadow-sm border border-surface-variant/5 transition-all">
       <div className="flex items-center gap-3 mb-10">
        <History className="w-4 h-4 text-primary opacity-20" />
-       <h3 className="text-label-xs font-semibold uppercase text-primary/30">{tCommon('audit_trail')}</h3>
+       <h3 className="text-xs font-bold uppercase text-primary">{tCommon('audit_trail')}</h3>
       </div>
       <StatusTimeline entries={timeline} />
      </div>

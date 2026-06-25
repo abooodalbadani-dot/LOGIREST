@@ -236,12 +236,19 @@ function LineItemCard({
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
                                                                <Input
-                                                                      type="number"
-                                                                      min="1"
+                                                                      type="text"
+                                                                      inputMode="decimal"
                                                                       disabled={isLocked}
                                                                       className="h-8 w-full text-center font-sans text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
-                                                                      value={inputField.value || ''}
-                                                                      onChange={(e) => inputField.onChange(e.target.value ? Number(e.target.value) : '')}
+                                                                      value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
+                                                                      onChange={(e) => {
+                                                                             let val = e.target.value.replace(/[^0-9.]/g, '');
+                                                                             const parts = val.split('.');
+                                                                             if (parts.length > 2) {
+                                                                                    val = parts[0] + '.' + parts.slice(1).join('');
+                                                                             }
+                                                                             inputField.onChange(val);
+                                                                      }}
                                                                />
                                                         </FormControl>
                                                         <FormMessage className="text-[10px] mt-1" />
@@ -286,14 +293,19 @@ function LineItemCard({
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
                                                                <Input
-                                                                      type="number"
-                                                                      step="0.01"
-                                                                      min="0"
+                                                                      type="text"
+                                                                      inputMode="decimal"
                                                                       disabled={isLocked}
                                                                       className="h-8 w-full text-center font-sans text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
-                                                                      
-                                                                      value={inputField.value !== undefined ? inputField.value : ''}
-                                                                      onChange={(e) => inputField.onChange(e.target.value ? Number(e.target.value) : '')}
+                                                                      value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
+                                                                      onChange={(e) => {
+                                                                             let val = e.target.value.replace(/[^0-9.]/g, '');
+                                                                             const parts = val.split('.');
+                                                                             if (parts.length > 2) {
+                                                                                    val = parts[0] + '.' + parts.slice(1).join('');
+                                                                             }
+                                                                             inputField.onChange(val);
+                                                                      }}
                                                                />
                                                         </FormControl>
                                                         <FormMessage className="text-[10px] mt-1" />
@@ -384,12 +396,15 @@ function LineItemRow({
                                                                onSelect={(item) => {
                                                                       const matchedItem = itemsData?.data?.find((i: Item) => i.id === item.id);
                                                                       if (matchedItem) {
+                                                                             const rawPrice = matchedItem.lastPurchasePrice;
+                                                                             const safePrice = (rawPrice === undefined || rawPrice === null || Number.isNaN(rawPrice)) ? "" : rawPrice;
+
                                                                              update(index, {
                                                                                     itemId: matchedItem.id,
                                                                                     itemName: matchedItem.name,
                                                                                     itemCode: matchedItem.code,
                                                                                     uomId: matchedItem.primaryUom?.id || 'PCS',
-                                                                                    unitPrice: matchedItem.lastPurchasePrice || 0,
+                                                                                    unitPrice: safePrice as unknown as number,
                                                                                     quantity: rowValues?.quantity || 1,
                                                                                     notes: rowValues?.notes || ''
                                                                              });
@@ -415,13 +430,21 @@ function LineItemRow({
                                           <FormItem className="space-y-0 w-full">
                                                  <FormControl>
                                                         <Input
-                                                               type="number"
-                                                               min="1"
+                                                               {...inputField}
+                                                               type="text"
+                                                               inputMode="decimal"
                                                                disabled={isLocked}
                                                                className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                dir="ltr"
-                                                               {...inputField}
-                                                               onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
+                                                               value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
+                                                               onChange={(e) => {
+                                                                      let val = e.target.value.replace(/[^0-9.]/g, '');
+                                                                      const parts = val.split('.');
+                                                                      if (parts.length > 2) {
+                                                                             val = parts[0] + '.' + parts.slice(1).join('');
+                                                                      }
+                                                                      inputField.onChange(val);
+                                                               }}
                                                         />
                                                  </FormControl>
                                                  <FormMessage className="text-[10px] mt-1" />
@@ -459,14 +482,21 @@ function LineItemRow({
                                           <FormItem className="space-y-0 w-full">
                                                  <FormControl>
                                                         <Input
-                                                               type="number"
-                                                               step="0.01"
-                                                               min="0"
+                                                               {...inputField}
+                                                               type="text"
+                                                               inputMode="decimal"
                                                                disabled={isLocked}
                                                                className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                dir="ltr"
-                                                               {...inputField}
-                                                               onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
+                                                               value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
+                                                               onChange={(e) => {
+                                                                      let val = e.target.value.replace(/[^0-9.]/g, '');
+                                                                      const parts = val.split('.');
+                                                                      if (parts.length > 2) {
+                                                                             val = parts[0] + '.' + parts.slice(1).join('');
+                                                                      }
+                                                                      inputField.onChange(val);
+                                                               }}
                                                         />
                                                  </FormControl>
                                                  <FormMessage className="text-[10px] mt-1" />

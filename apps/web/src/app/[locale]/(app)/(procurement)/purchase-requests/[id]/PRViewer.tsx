@@ -76,29 +76,29 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
      {/* Header Info */}
      <div className="bg-card border border-border shadow-sm p-8 rounded-[2rem] border border-surface-variant/5 print:p-0 print:border-none print:bg-transparent">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-       <div className="flex flex-col gap-2">
-        <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2 ps-1">
-         <Building2 className="w-3 h-3" />
-         {t('department')}
-        </label>
-        <div className="bg-card border border-border shadow-sm h-11 px-4 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground/80 border border-surface-variant/5">
+        <div className="flex flex-col gap-2">
+         <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 ps-1">
+          <Building2 className="w-3 h-3" />
+          {t('department')}
+         </label>
+         <div className="bg-card border border-border shadow-sm h-11 px-4 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground/80 border border-surface-variant/5">
          <RelationalName name={document.warehouseName} rawId={document.departmentId} />
         </div>
        </div>
 
-       <div className="flex flex-col gap-2">
-        <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2 ps-1">
-         <Calendar className="w-3 h-3" />
-         {t('expected_date')}
-        </label>
-        <div className="bg-card border border-border shadow-sm h-11 px-4 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground/80 border border-surface-variant/5 font-mono">
+        <div className="flex flex-col gap-2">
+         <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 ps-1">
+          <Calendar className="w-3 h-3" />
+          {t('expected_date')}
+         </label>
+         <div className="bg-card border border-border shadow-sm h-11 px-4 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground/80 border border-surface-variant/5 font-mono">
          {document.expectedDate.split('T')[0]}
         </div>
        </div>
 
-       <div className="flex flex-col gap-2 lg:col-span-3">
-        <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ps-1">{tc('notes')}</label>
-        <div className="bg-card border border-border shadow-sm min-h-[44px] px-4 py-3 rounded-xl flex items-center text-label-xs font-medium uppercase text-foreground/60 border border-surface-variant/5 italic">
+        <div className="flex flex-col gap-2 lg:col-span-3">
+         <label className="text-xs font-bold uppercase text-muted-foreground ps-1">{tc('notes')}</label>
+         <div className="bg-card border border-border shadow-sm min-h-[44px] px-4 py-3 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground border border-surface-variant/5 not-italic">
          {document.notes || tc('no_notes')}
         </div>
        </div>
@@ -145,10 +145,10 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
    <div className="space-y-10">
     {timelineEntries.length > 0 && (
      <div className="bg-card border border-border shadow-sm p-8 rounded-[2rem] shadow-sm border border-surface-variant/5 transition-all">
-      <div className="flex items-center gap-3 mb-10">
-       <History className="w-4 h-4 text-primary opacity-20" />
-       <h3 className="text-label-xs font-semibold uppercase text-primary/30">{tc('audit_trail')}</h3>
-      </div>
+       <div className="flex items-center gap-3 mb-10">
+        <History className="w-4 h-4 text-primary opacity-20" />
+        <h3 className="text-xs font-bold uppercase text-primary">{tc('audit_trail')}</h3>
+       </div>
       <StatusTimeline entries={timelineEntries} />
      </div>
     )}

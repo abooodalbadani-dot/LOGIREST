@@ -130,10 +130,10 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center", item.color)}>
          <item.icon className="w-5 h-5" />
         </div>
-        <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{item.label}</span>
+        <span className="text-xs font-bold text-muted-foreground uppercase">{item.label}</span>
        </div>
        <div className="flex flex-col relative z-10">
-        <span className="text-title-sm font-semibold text-foreground line-clamp-1">{item.value}</span>
+        <span className="text-title-sm font-bold text-foreground line-clamp-1 not-italic">{item.value}</span>
        </div>
       </Card>
      ))}
@@ -144,7 +144,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
      <div className="p-6 flex items-center justify-between print:px-0">
       <div className="space-y-1">
        <h3 className="text-body-md font-semibold text-foreground">{t('inventory_manifest')}</h3>
-       <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('items_to_audit')}</p>
+       <p className="text-xs font-bold uppercase text-muted-foreground">{t('items_to_audit')}</p>
       </div>
      </div>
      <div className="px-6 pb-3 flex flex-col gap-3 print-hidden">
@@ -254,10 +254,10 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
     
     {/* Status Timeline */}
     <div className="bg-card border border-border shadow-sm p-8 rounded-2xl shadow-sm transition-all hover:bg-card border border-border shadow-sm/50 print-hidden">
-     <div className="flex items-center gap-3 mb-10">
-      <History className="w-4 h-4 text-primary opacity-20" />
-      <h3 className="text-label-xs font-semibold uppercase text-primary/30">{common('audit_trail') || 'Audit Trail'}</h3>
-     </div>
+      <div className="flex items-center gap-3 mb-10">
+       <History className="w-4 h-4 text-primary" />
+       <h3 className="text-xs font-bold uppercase text-primary">{common('audit_trail') || 'Audit Trail'}</h3>
+      </div>
      {(() => {
        const timeline = (session.auditLog ?? []).map(log => ({
         status: log.status.toLowerCase() as Status,
