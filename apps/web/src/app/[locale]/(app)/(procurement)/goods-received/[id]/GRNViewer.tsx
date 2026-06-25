@@ -76,7 +76,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
   }
 
   return (
-    <div className="space-y-10 w-full bg-card border border-border shadow-sm min-h-screen p-6 lg:p-10 animate-in fade-in duration-500">
+    <div className="space-y-10 w-full min-h-screen px-0 py-6 sm:p-6 lg:p-10 bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl animate-in fade-in duration-500">
       <StickyGlassHeader
         title={
           <div className="flex items-center gap-3">
@@ -110,7 +110,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
       <div className="max-w-[1400px] mx-auto space-y-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Supplier Info */}
-          <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group border border-surface-variant/5">
+          <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group border border-surface-variant/5">
             <p className="text-xs font-bold uppercase text-primary group-hover:text-primary transition-colors">{tc('supplier')}</p>
             <p className="font-bold text-title-sm mt-2 not-italic uppercase text-foreground">
               <RelationalName name={document?.supplierName} rawId={document?.supplierId} fallback="Supply Co" />
@@ -118,7 +118,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
           </div>
 
           {/* Currency Info */}
-          <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02]">
               <Wallet className="w-12 h-12" />
             </div>
@@ -129,7 +129,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
           </div>
 
           {/* Linked PO */}
-          <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02]">
               <PackageSearch className="w-12 h-12" />
             </div>
@@ -146,7 +146,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
           </div>
 
           {/* Warehouse */}
-          <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02]">
               <Warehouse className="w-12 h-12" />
             </div>
@@ -157,7 +157,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
           </div>
 
           {/* Notes */}
-          <div className="col-span-full bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="col-span-full bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02]">
               <MessageSquare className="w-12 h-12" />
             </div>
@@ -170,7 +170,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
 
         {/* Lines Table */}
         <DocumentReadOnlyOverlay isPosted={document?.status === 'POSTED'}>
-          <div className="hidden md:block bg-card border border-border shadow-sm rounded-[2rem] overflow-hidden shadow-sm border border-surface-variant/5">
+          <div className="hidden md:block bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-[2rem] overflow-hidden shadow-sm border border-surface-variant/5">
             <DocumentLineItemTable
               lines={document?.lines || []}
               locale={locale}
@@ -197,7 +197,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
           {/* Mobile Cards View */}
           <div className="flex flex-col gap-3 md:hidden w-full">
             {document?.lines?.map((line, idx) => (
-              <div key={line.id || idx} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
+              <div key={line.id || idx} className="bg-white dark:bg-[#1A2234] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 rounded-none sm:rounded-xl p-3 shadow-sm flex flex-col gap-3">
 
                 <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-2">
                   <div className="flex flex-col">
@@ -259,7 +259,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             </div>
           </div>
 
-          <Card className="bg-card border border-border shadow-sm p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-[340px] group border border-surface-variant/5">
+          <Card className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl shadow-xl relative overflow-hidden w-full md:min-w-[340px] group border-surface-variant/5">
             <div className="absolute top-0 end-0 w-1 h-full bg-muted/50 group-hover:bg-emerald-500 transition-all" />
             <div className="space-y-6 relative z-10">
               <div className="flex justify-between items-baseline gap-10">
@@ -278,7 +278,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
         </div>
 
         {/* Audit Trail */}
-        <div className="bg-card border border-border shadow-sm p-8 rounded-[2rem] shadow-sm border border-surface-variant/5">
+        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-[2rem] shadow-sm border border-surface-variant/5">
           <div className="flex items-center gap-3 mb-10">
             <History className="w-4 h-4 text-primary opacity-20" />
             <h3 className="text-xs font-bold uppercase text-primary">{tc('audit_trail')}</h3>

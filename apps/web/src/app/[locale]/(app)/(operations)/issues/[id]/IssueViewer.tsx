@@ -102,12 +102,12 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
  return (
   <div className="min-h-screen bg-background">
    {/* Main Content */}
-   <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="max-w-[1400px] mx-auto px-0 sm:px-6 lg:px-10 py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
      {/* Left Column */}
      <div className="lg:col-span-2 flex flex-col gap-6 w-full">
       {/* 1. The Header block (Normal Flow) */}
-      <div className="flex items-center justify-between w-full bg-card p-4 rounded-xl border border-border/50">
+       <div className="flex items-center justify-between w-full bg-card px-4 py-3 sm:p-4 rounded-none sm:rounded-xl border-y border-x-0 sm:border border-border/50">
        <div className="flex items-center gap-4 overflow-hidden">
         <Button 
          variant="ghost" 
@@ -154,8 +154,8 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       </div>
 
       {/* 2. The Summary Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-       <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 sm:gap-4 w-full">
+       <div className="bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-lg space-y-3">
         <div className="flex items-center gap-2 text-primary">
          <MapPin className="w-4 h-4" />
          <span className="text-xs font-bold uppercase">{t('destination')}</span>
@@ -170,14 +170,14 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
           />
          </p>
        </div>
-       <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
+       <div className="bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-lg space-y-3">
         <div className="flex items-center gap-2 text-primary">
          <User className="w-4 h-4" />
          <span className="text-xs font-bold uppercase">{t('requested_by')}</span>
         </div>
         <p className="font-bold text-body-md">{issue.requestedBy || '—'}</p>
        </div>
-       <div className="bg-card border border-border shadow-sm p-6 rounded-lg space-y-3">
+       <div className="bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-lg space-y-3">
         <div className="flex items-center gap-2 text-primary">
          <Warehouse className="w-4 h-4" />
          <span className="text-xs font-bold uppercase">{tCommon('warehouse')}</span>
@@ -193,7 +193,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       </div>
 
       {/* 3. The Line Items Table */}
-      <div className="w-full bg-card dark:bg-[#0B1220] border border-border dark:border-[#b48e67]/40 shadow-sm rounded-xl overflow-hidden mt-6">
+       <div className="w-full bg-card dark:bg-[#0B1220] border-y border-x-0 sm:border border-border dark:border-[#b48e67]/40 shadow-sm rounded-none sm:rounded-xl overflow-hidden mt-0 sm:mt-6">
        <div className="p-4 md:p-6 flex justify-between items-center border-b border-border dark:border-[#b48e67]/20">
         <div className="flex items-center gap-3">
          <div className="w-1 h-5 bg-primary dark:bg-[#b48e67] rounded-sm" />
@@ -239,7 +239,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
 
       {/* Notes Section */}
       {issue.notes && (
-       <div className="bg-card border border-border shadow-sm p-8 rounded-lg space-y-4">
+        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-lg space-y-4">
         <div className="flex items-center gap-3 text-primary">
          <FileText className="w-4 h-4" />
          <h3 className="text-xs font-bold uppercase">{t('operational_notes')}</h3>
@@ -256,7 +256,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
      {/* Right Column */}
      <div className="lg:col-span-1 space-y-6">
       {/* History Section */}
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg relative overflow-hidden group">
+       <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-lg relative overflow-hidden group">
        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
        <div className="relative space-y-8">
         <div className="flex items-center gap-4">
@@ -272,7 +272,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       </div>
 
       {/* Audit Info */}
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg space-y-6">
+       <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-lg space-y-6">
        <div className="flex items-center gap-4 border-b border-outline-variant/5 pb-4">
         <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
          <Info className="w-5 h-5 text-foreground" />

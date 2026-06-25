@@ -407,26 +407,28 @@ export function TransferNewClient() {
   );
  }
 
- return (
-  <form 
-   onSubmit={(e) => {
-    e.preventDefault();
-    handleSave();
-   }}
-   className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-32"
-  >
-   <Breadcrumb 
-    items={[
-     { label: tCommon('modules.operations'), href: `/transfers` },
-     { label: t('title'), href: `/transfers` },
-     { label: t('create_new') }
-    ]} 
-   />
+  return (
+   <form 
+    onSubmit={(e) => {
+     e.preventDefault();
+     handleSave();
+    }}
+    className="px-0 py-6 sm:p-8 pt-6 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-32"
+   >
+    <div className="px-4 sm:px-0 space-y-4">
+     <Breadcrumb 
+      items={[
+       { label: tCommon('modules.operations'), href: `/transfers` },
+       { label: t('title'), href: `/transfers` },
+       { label: t('create_new') }
+      ]} 
+     />
 
-   <PageHeader
-    title={t('create_new')}
-    subtitle={t('description')}
-   />
+     <PageHeader
+      title={t('create_new')}
+      subtitle={t('description')}
+     />
+    </div>
 
    <div className="space-y-2">
     {fromLockState?.isLocked && <LockBanner lockState={fromLockState} />}
@@ -437,7 +439,7 @@ export function TransferNewClient() {
 
     <div className="flex flex-col lg:flex-row gap-8">
      <div className="w-full lg:w-[320px] shrink-0 space-y-8">
-      <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100">
+      <div className="bg-card px-4 py-6 sm:p-8 rounded-none sm:rounded-[2.5rem] relative overflow-visible shadow-sm border-y border-x-0 sm:border border-gray-200 dark:border-gray-800">
       
       <div className="flex items-center gap-3 mb-6">
        <Warehouse className="w-4 h-4 text-foreground" />
@@ -511,7 +513,7 @@ export function TransferNewClient() {
     </div>
  
     <div className="flex-1 min-w-0 space-y-6">
-     <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100">
+      <div className="bg-card px-4 py-6 sm:p-8 rounded-none sm:rounded-[2.5rem] relative overflow-visible shadow-sm border-y border-x-0 sm:border border-gray-200 dark:border-gray-800">
       
       <div className="flex items-center justify-between mb-8">
        <div className="flex items-center gap-3">
@@ -592,7 +594,7 @@ export function TransferNewClient() {
        </div>
       </div>
 
-      <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 overflow-hidden">
+      <div className="bg-card border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm rounded-none sm:rounded-[2rem] overflow-hidden">
        <DocumentLineItemTable
         lines={lines}
         locale={locale}

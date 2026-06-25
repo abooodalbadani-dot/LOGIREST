@@ -600,9 +600,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          <DocumentLockBanner status={status} isLocked={isLocked} />
          <LockBanner lockState={warehouseLock} />
 
-         <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
+         <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex-1 w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-8 py-4 md:py-8 space-y-8">
             <Input type="hidden" {...register('poId')} />
-            <div className="flex items-center justify-between px-2 gap-4">
+            <div className="flex items-center justify-between px-4 sm:px-2 gap-4">
                <div className="flex flex-col flex-1 min-w-0">
                   <h1 className="text-2xl font-black text-foreground tracking-widest uppercase whitespace-nowrap truncate max-w-full block">
                      {isNew ? t('create_new') : `#${initialData?.documentNumber}`}
@@ -689,7 +689,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                <DocumentReadOnlyOverlay isPosted={isLocked || isWarehouseLocked}>
                   <div className="space-y-10">
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                        <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
+                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
                            <Label htmlFor="supplier-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('supplier')}</Label>
                            <Controller
                               name="supplierId"
@@ -712,7 +712,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            {errors.supplierId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplierId.message}</span>}
                         </div>
 
-                        <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
+                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
                            <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                               <Wallet className="w-12 h-12" />
                            </div>
@@ -738,7 +738,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            {errors.currencyId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currencyId.message}</span>}
                         </div>
 
-                        <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
+                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
                            <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                               <TrendingUp className="w-12 h-12" />
                            </div>
@@ -775,7 +775,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            {errors.exchangeRate && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.exchangeRate.message}</span>}
                         </div>
 
-                        <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden">
                            <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                               <PackageSearch className="w-12 h-12" />
                            </div>
@@ -817,7 +817,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            </div>
                         </div>
 
-                        <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
+                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
                            <Label htmlFor="warehouse-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('warehouse')}</Label>
                            <Controller
                               name="warehouseId"
@@ -837,7 +837,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            {errors.warehouseId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouseId.message}</span>}
                         </div>
 
-                        <div className="col-span-full bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                        <div className="col-span-full bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden">
                            <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                               <MessageSquare className="w-12 h-12" />
                            </div>
@@ -853,7 +853,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                      </div>
 
                      <div className="space-y-6">
-                        <div className="bg-operational-cyan/[0.02] p-8 rounded-2xl">
+                        <div className="bg-operational-cyan/[0.02] px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl border-y border-x-0 sm:border border-operational-cyan/10">
                            <div className="flex items-center gap-6 mb-6">
                               <div className="p-3 bg-operational-cyan/10 rounded-xl text-operational-cyan">
                                  <PackageSearch className="w-6 h-6" />
@@ -879,7 +879,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            </div>}
                         </div>
 
-                        <div className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden shadow-sm">
+                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
                            <DocumentLineItemTable<LineItem>
                               lines={fields.map(f => ({
                                  id: f.id,

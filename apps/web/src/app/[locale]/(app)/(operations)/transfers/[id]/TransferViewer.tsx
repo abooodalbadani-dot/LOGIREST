@@ -35,42 +35,44 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
  ];
 
  return (
-  <div className="flex flex-col flex-1 w-full max-w-full min-w-0 overflow-x-hidden p-4 sm:p-6 md:p-8 pb-32 md:pb-8 mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-   <div className="flex flex-wrap items-center justify-between gap-4 w-full max-w-full min-w-0">
-    <Breadcrumb 
-     items={[
-      { label: tCommon('modules.operations'), href: `/transfers` },
-      { label: t('title'), href: `/transfers` },
-      { label: t('detail_title') }
-     ]} 
+  <div className="flex flex-col flex-1 w-full max-w-full min-w-0 overflow-x-hidden px-0 py-6 sm:p-6 md:p-8 pb-32 md:pb-8 mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+   <div className="px-4 sm:px-0 space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-4 w-full max-w-full min-w-0">
+     <Breadcrumb 
+      items={[
+       { label: tCommon('modules.operations'), href: `/transfers` },
+       { label: t('title'), href: `/transfers` },
+       { label: t('detail_title') }
+      ]} 
+     />
+     <Button
+      variant="ghost"
+      onClick={() => router.back()}
+      className="text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors border border-border/50 rounded-lg px-4 bg-muted/20 hover:bg-muted/40"
+     >
+      <ArrowLeft className="w-3 h-3 me-2" />
+      {tCommon('back')}
+     </Button>
+    </div>
+
+    <PageHeader
+     title={t('detail_title')}
+     subtitle={
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+       <span className="font-semibold">{tCommon('doc_number')}</span>
+       <span dir="ltr" className="font-mono text-foreground/80 font-bold">{transfer?.documentNumber}</span>
+      </div>
+     }
+     children={
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
+       <StatusBadge status={transferStatus as BadgeStatus} />
+        <DocumentExportMenu documentType="TRANSFER" documentId={transfer.id} documentNumber={transfer.documentNumber} />
+      </div>
+     }
     />
-    <Button
-     variant="ghost"
-     onClick={() => router.back()}
-     className="text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors border border-border/50 rounded-lg px-4 bg-muted/20 hover:bg-muted/40"
-    >
-     <ArrowLeft className="w-3 h-3 me-2" />
-     {tCommon('back')}
-    </Button>
    </div>
 
-   <PageHeader
-    title={t('detail_title')}
-    subtitle={
-     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
-      <span>{tCommon('doc_number')}</span>
-      <span dir="ltr" className="font-mono text-foreground/80">{transfer?.documentNumber}</span>
-     </div>
-    }
-    children={
-     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
-      <StatusBadge status={transferStatus as BadgeStatus} />
-       <DocumentExportMenu documentType="TRANSFER" documentId={transfer.id} documentNumber={transfer.documentNumber} />
-     </div>
-    }
-   />
-
-   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 bg-card border border-border shadow-sm/50 p-4 sm:p-6 md:p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-2xl">
+   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 bg-card border-y border-x-0 sm:border border-border shadow-sm/50 px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative overflow-hidden shadow-2xl">
     <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
 
     <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30">
@@ -132,7 +134,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     )}
    </div>
 
-    <div className="w-full max-w-full min-w-0 overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
+    <div className="w-full max-w-full min-w-0 overflow-x-auto border-y border-x-0 sm:border border-border/50 rounded-none sm:rounded-lg custom-scrollbar">
      <DocumentLineItemTable
       lines={transfer?.lines ?? []}
       locale={locale as 'ar' | 'en'} 
@@ -186,7 +188,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     </div>
 
    {/* Audit Trail */}
-   <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl border border-white/5 shadow-sm transition-all overflow-x-auto">
+    <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl transition-all overflow-x-auto">
     <div className="flex items-center gap-3 mb-6 sm:mb-10">
      <History className="w-4 h-4 text-primary opacity-20 shrink-0" />
      <h3 className="text-xs font-bold uppercase text-primary">{tCommon('audit_trail')}</h3>

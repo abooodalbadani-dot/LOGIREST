@@ -362,7 +362,7 @@ export function IssueForm() {
 
         {/* Fulfillment Orchestration Header */}
         <div className={cn(
-          "bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 shadow-sm p-10 rounded-[2.5rem] shadow-2xl shadow-primary/5 flex flex-col w-full text-left items-start",
+          "bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-700 shadow-sm px-4 py-6 sm:p-10 rounded-none sm:rounded-[2.5rem] shadow-2xl shadow-primary/5 flex flex-col w-full text-left items-start",
           isAr && "text-right items-start"
         )}>
           <div className={cn(
@@ -553,7 +553,7 @@ export function IssueForm() {
         </div>
 
         {/* Global Fulfillment Summary */}
-        <div className="p-6 md:p-10 bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 shadow-sm rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 shadow-inner w-full">
+        <div className="px-4 py-6 sm:p-10 bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-700 shadow-sm rounded-none sm:rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 shadow-inner w-full">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 rounded-[1.75rem] bg-[#b48e67]/10 flex items-center justify-center border border-[#b48e67]/20 shadow-sm text-[#b48e67]">
               <PackageCheck className="w-8 h-8" />

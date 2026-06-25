@@ -51,24 +51,24 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
   const tc = useTranslations('common');
 
   return (
-    <header className="min-h-[72px] py-2 bg-card border-b border-border shadow-sm flex items-center justify-between px-4 sticky top-0 z-40">
-      <div className="flex items-center gap-3 sm:gap-6 md:gap-8 shrink min-w-0">
+    <header className="min-h-[72px] py-2 bg-card border-b border-border shadow-sm flex items-center justify-between gap-2 md:gap-4 lg:gap-6 px-4 sticky top-0 z-40">
+      <div className="flex items-center gap-2 md:gap-4 lg:gap-6 shrink min-w-0">
         {/* Mobile Menu Button */}
         <button
           onClick={onMenuClick}
           aria-label="Menu"
           aria-expanded={isSidebarOpen}
-          className="md:hidden px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          className="md:hidden shrink-0 px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 shrink-0 cursor-pointer select-none">
-          <div className="flex items-center h-full">
+          <div className="flex items-center h-full shrink-0 w-[110px] md:w-[140px]">
             <img
               src="/Otantik%20Restaurant%20logo%20B.svg"
               alt="Otantik Corporate Identity"
-              className="h-14 md:h-[70px] w-auto object-contain cursor-pointer transition-opacity duration-200 hover:opacity-90"
+              className="h-14 md:h-[70px] w-full shrink-0 object-contain cursor-pointer transition-opacity duration-200 hover:opacity-90"
             />
           </div>
         </div>
@@ -115,15 +115,15 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
         </Link>
 
         {user && (
-          <div className="md:hidden flex">
+          <div className="md:hidden flex shrink-0">
             <NotificationBell />
           </div>
         )}
 
-        <div className="flex items-center gap-1 sm:gap-2">
-          {user && <div className="hidden md:block"><NotificationBell /></div>}
-          {user && <div className="scale-90 sm:scale-100 transform origin-center flex"><ThemeToggle /></div>}
-          <div className="scale-90 sm:scale-100 transform origin-center flex"><LocaleSwitcher /></div>
+        <div className="flex items-center gap-1.5 md:gap-3 lg:gap-4 shrink-0">
+          {user && <div className="hidden md:block shrink-0"><NotificationBell /></div>}
+          {user && <div className="scale-90 sm:scale-100 transform origin-center flex shrink-0"><ThemeToggle /></div>}
+          <div className="scale-90 sm:scale-100 transform origin-center flex shrink-0"><LocaleSwitcher /></div>
         </div>
 
         {user ? (
@@ -131,9 +131,9 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
             <Link
               href="/profile"
               aria-label="User Profile"
-              className="flex items-center gap-3 pe-2 md:pe-4 group"
+              className="flex items-center gap-3 pe-2 md:pe-4 group shrink-0"
             >
-              <div className="hidden sm:flex flex-col items-end leading-tight text-end">
+              <div className="hidden lg:flex flex-col items-end leading-tight text-end">
                 <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors">{displayName || user.name}</span>
                 <span className="text-label-xs text-operational-cyan font-semibold uppercase">{user.role}</span>
               </div>

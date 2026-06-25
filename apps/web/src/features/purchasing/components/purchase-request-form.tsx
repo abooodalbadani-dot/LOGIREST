@@ -481,13 +481,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   );
 
   return (
-    <div className="flex flex-col w-full bg-card border border-border shadow-sm pb-32 h-fit min-h-full shrink-0">
+    <div className="flex flex-col w-full pb-32 h-fit min-h-full shrink-0">
       <DocumentLockBanner status={status} isLocked={isFormDisabled} />
 
       <Form {...form}>
-        <form className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
+        <form className="flex-1 w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-8 py-4 md:py-8 space-y-8">
           <DocumentLockWrapper isLocked={isFormDisabled}>
-            <div className="space-y-6 md:space-y-10 w-full bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl relative transition-all duration-200">
+            <div className="space-y-6 md:space-y-10 w-full bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <h3 className="text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-3">
@@ -503,7 +503,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               </div>
 
               {/* Step 1: Request Header */}
-              <div className="bg-card border border-border shadow-sm p-8 rounded-2xl relative">
+              <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative">
                 <div className="flex items-center gap-4 mb-8 pb-6 border-none">
                   <div className="p-3 rounded-xl bg-operational-cyan/10 text-operational-cyan">
                     <Building2 className="w-5 h-5" />
@@ -596,7 +596,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   )}
                 </div>
 
-                <div className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
                   <DocumentLineItemTable
                     lines={fields.map((f, idx) => {
                       const live = watchLines[idx] || {};
@@ -660,7 +660,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                 </div>
 
                 {/* Summary */}
-                <div className="flex items-center justify-end p-8 bg-card border border-border shadow-sm rounded-xl">
+                <div className="flex items-center justify-end px-4 py-6 sm:p-8 bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-xl">
                   <div className="flex items-center gap-6">
                     <div className="text-right">
                       <div className="text-label-xs font-semibold uppercase text-muted-foreground/30">{tc('total_items')}</div>

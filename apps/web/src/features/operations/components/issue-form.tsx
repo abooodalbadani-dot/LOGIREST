@@ -400,13 +400,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   }, [issue]);
 
   return (
-    <div className="flex-1 w-full bg-card border border-border shadow-sm flex flex-col animate-in fade-in duration-200">
+    <div className="flex-1 w-full sm:bg-card sm:border sm:border-border sm:shadow-sm flex flex-col animate-in fade-in duration-200">
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 w-full pb-6">
         <DocumentLockBanner isLocked={isDocLocked} status={status} />
         {isWarehouseLocked && <div className="px-6 lg:px-10 pt-4"><LockBanner lockState={lockState} /></div>}
 
         <DocumentLockWrapper isLocked={effectiveIsLocked} className="flex-1 flex flex-col">
-          <div className="flex-1 w-full min-h-[calc(100vh-280px)] bg-card border border-border shadow-sm rounded-2xl p-6 mb-6">
+          <div className="flex-1 w-full min-h-[calc(100vh-280px)] bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl mb-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
               {/* Left side (Table) */}
               <div className="lg:col-span-2 flex flex-col gap-6 w-full">
@@ -435,7 +435,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   </div>
                 </div>
                 {!isDocLocked && (
-                  <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                  <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
                     <div className="relative space-y-4 sm:space-y-6">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -473,7 +473,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   </div>
                 )}
 
-                <div className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
                   <div className="p-4 sm:p-6 md:p-8 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="w-1 h-6 bg-primary/20 rounded-full" />
@@ -570,7 +570,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
               {/* Right side (Sidebar) */}
               <div className="h-fit flex flex-col gap-6">
-                <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
                   <div className="relative space-y-6 sm:space-y-10">
                     <div className="flex items-center gap-4 pb-4 sm:pb-6">
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -635,7 +635,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   </div>
                 </div>
 
-                <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
                   <div className="flex items-center gap-4 mb-6 sm:mb-8">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <History className="w-5 h-5 text-primary" />
