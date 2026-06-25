@@ -20,6 +20,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Filter, Search, ArrowUpRight, LayoutGrid, List as ListIcon, Activity, FileText, ClipboardCheck } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 import { Input } from '@/components/ui/input';
 import { isIssueDraft, isIssuePosted } from '@/domain/status-guards';
@@ -181,12 +182,20 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
   },
  ], [t, tc, router]);
 
- const meta = data?.meta;
- const totalItemsCount = meta?.total || 0;
- const postedCount = data?.data?.filter(i => isIssuePosted(i.status)).length || 0;
- const draftCount = data?.data?.filter(i => isIssueDraft(i.status)).length || 0;
+  const meta = data?.meta;
+  const totalItemsCount = meta?.total || 0;
+  const postedCount = data?.data?.filter(i => isIssuePosted(i.status)).length || 0;
+  const draftCount = data?.data?.filter(i => isIssueDraft(i.status)).length || 0;
 
- return (
+  const exportColumns = React.useMemo(() => [
+   { header: t('doc_number') || 'Voucher #', key: 'documentNumber' },
+   { header: t('destination') || 'Destination', key: 'destinationDepartmentName' },
+   { header: tc('warehouse') || 'Warehouse', key: 'warehouseName' },
+   { header: tc('created_at') || 'Date', key: 'createdAt' },
+   { header: tc('status_label') || 'Status', key: 'status' }
+  ], [t, tc]);
+
+  return (
   <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex w-full">
    <PageHeader
     title="STOCK"
@@ -207,12 +216,13 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
    />
 
    {/* Fulfillment Status Ribbon */}
-   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+   <div className="flex flex-row md:grid md:grid-cols-4 overflow-x-auto md:overflow-x-visible gap-4 md:gap-6 pb-4 md:pb-0 snap-x hide-scrollbar">
     <MetricCard
      label={t('throughput_volume')}
      value={totalItemsCount}
      icon={Activity}
      trend="active"
+     className="min-w-[85vw] sm:min-w-[250px] snap-center flex-shrink-0 md:min-w-0"
     />
     <MetricCard
      label={t('pending_selection')}
@@ -220,6 +230,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
      icon={FileText}
      trend="active"
      color="amber"
+     className="min-w-[85vw] sm:min-w-[250px] snap-center flex-shrink-0 md:min-w-0"
     />
     <MetricCard
      label={t('finalized_issues')}
@@ -227,8 +238,9 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
      icon={ClipboardCheck}
      trend="active"
      color="emerald"
+     className="min-w-[85vw] sm:min-w-[250px] snap-center flex-shrink-0 md:min-w-0"
     />
-    <div className="bg-card border border-border shadow-sm p-6 flex flex-col gap-2 transition-all hover:bg-card border border-border shadow-sm/50 justify-center rounded-2xl ambient-shadow hover:scale-[1.01] duration-200 min-w-0">
+    <div className="hidden sm:flex min-w-[250px] snap-center flex-shrink-0 md:min-w-0 bg-card border border-border shadow-sm p-6 flex-col gap-2 transition-all hover:bg-card border border-border shadow-sm/50 justify-center rounded-2xl ambient-shadow hover:scale-[1.01] duration-200">
      <div className="flex items-center gap-3">
       <div className="flex -space-x-2 rtl:space-x-reverse">
        {[1, 2, 3].map(i => (
@@ -237,7 +249,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
         </div>
        ))}
       </div>
-      <div className="text-label-xxs font-semibold text-muted-foreground/40 leading-tight whitespace-nowrap">
+      <div className="text-xs font-semibold text-muted-foreground/40 leading-tight whitespace-nowrap">
        <span className="text-foreground">{t('operators_count', { count: 3 })}</span> {t('operators_active')} • {t('fulfillment_stream')}
       </div>
      </div>
@@ -288,11 +300,15 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
        <ListIcon className="w-4 h-4" />
       </Button>
      </div>
-     
-     <Button variant="outline" className="h-11 px-6 bg-card border border-border/50 rounded-xl shadow-sm hover:bg-surface-container-low">
-      <FileText className="w-4 h-4 me-2 text-muted-foreground" />
-      <span className="text-label-xs font-semibold uppercase">{tc('export') || 'Export'}</span>
-     </Button>
+     <PermissionGate action="export" resource="issue">
+      <ExportMenu
+       data={data?.data || []}
+       columns={exportColumns}
+       filename="operations_issues"
+       title="Stock Issues Report"
+       isCompactMobile={true}
+      />
+     </PermissionGate>
     </div>
    </div>
 
@@ -306,6 +322,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
      collectionName="operations_issues"
      enableVirtualization={true}
      containerHeight="600px"
+     enableExport={false}
      emptyState={
       <EmptyState
        variant="minimal"

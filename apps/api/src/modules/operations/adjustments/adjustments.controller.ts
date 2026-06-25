@@ -33,24 +33,67 @@ import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import type { Request, Response } from 'express';
 
-function mapAdjustmentDetail(adj: Record<string, unknown>) {
-  const rawLines = (adj.lines as Record<string, unknown>[]) || [];
-  const lines = rawLines.map((line: Record<string, unknown>) => {
-    const item = line.item as Record<string, unknown> | undefined;
+interface UomDetail {
+  id: string;
+  code: string;
+}
+
+interface ItemDetail {
+  id: string;
+  sku: string;
+  name: string;
+  uomId?: string | null;
+  unitOfMeasure?: UomDetail | null;
+}
+
+interface AdjustmentLineWithRelations {
+  id: string;
+  itemId: string;
+  lotId?: string | null;
+  quantity: number | string | unknown;
+  direction: string;
+  reason: string;
+  unitCost?: number | string | unknown | null;
+  item?: ItemDetail | null;
+}
+
+interface ApprovalEventDetail {
+  actionPerformed: string;
+  userRole: string;
+  user?: { name: string } | null;
+}
+
+interface AdjustmentWithRelations {
+  id?: string | null;
+  adjustmentNumber?: string | null;
+  status?: string | null;
+  warehouseId?: string | null;
+  notes?: string | null;
+  version?: number | null;
+  createdAt?: Date | string | number | null;
+  postedAt?: Date | string | number | null;
+  createdBy?: { name: string; email: string } | null;
+  warehouse?: { name: string } | null;
+  lines?: AdjustmentLineWithRelations[];
+  approvalEvents?: ApprovalEventDetail[];
+}
+
+function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
+  const rawLines = adj.lines || [];
+  const lines = rawLines.map((line) => {
+    const item = line.item;
     return {
-      id: line.id as string,
+      id: line.id,
       item: item
         ? {
-            id: item.id as string,
-            code: item.sku as string,
-            nameAr: item.name as string,
-            nameEn: item.name as string,
+            id: item.id,
+            code: item.sku,
+            nameAr: item.name,
+            nameEn: item.name,
             primaryUom: item.unitOfMeasure
               ? {
-                  id: (item.unitOfMeasure as Record<string, unknown>)
-                    .id as string,
-                  code: (item.unitOfMeasure as Record<string, unknown>)
-                    .code as string,
+                  id: item.unitOfMeasure.id,
+                  code: item.unitOfMeasure.code,
                 }
               : { id: '', code: '' },
           }
@@ -64,17 +107,17 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
       direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
       qtyBefore: 0,
       qtyAdjusted: Number(line.quantity),
-      uomId: (item?.uomId as string) || '',
+      uomId: item?.uomId || '',
       unitCost: line.unitCost ? Number(line.unitCost) : null,
-      reasonNotes: (line.reason as string) || '',
+      reasonNotes: line.reason || '',
       lotAllocations: line.lotId
-        ? [{ lotId: line.lotId as string, qty: Number(line.quantity) }]
+        ? [{ lotId: line.lotId, qty: Number(line.quantity) }]
         : [],
     };
   });
 
-  const mainReason = (rawLines[0]?.reason as string) || 'CORRECTION';
-  const createdAtVal = adj.createdAt as Date | string | number | undefined;
+  const mainReason = rawLines[0]?.reason || 'CORRECTION';
+  const createdAtVal = adj.createdAt;
   const createdAtIso = createdAtVal
     ? (createdAtVal instanceof Date
         ? createdAtVal
@@ -82,30 +125,35 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
       ).toISOString()
     : new Date().toISOString();
 
-  const warehouse = adj.warehouse as Record<string, unknown> | null;
+  const warehouse = adj.warehouse;
 
   return {
-    id: adj.id as string,
-    documentNumber: adj.adjustmentNumber as string,
-    status: adj.status as string,
-    warehouseId: adj.warehouseId as string,
-    warehouseName: (warehouse?.name as string) || '',
+    id: adj.id || '',
+    documentNumber: adj.adjustmentNumber || '',
+    status: adj.status || '',
+    warehouseId: adj.warehouseId || '',
+    warehouseName: warehouse?.name || '',
     reason: mainReason,
-    notes: (adj.notes as string) || '',
-    createdBy:
-      ((adj.createdBy as Record<string, unknown>)?.name as string) || 'System',
+    notes: adj.notes || '',
+    createdBy: adj.createdBy?.name || 'System',
     reject: null,
     movementId: null,
-    approvedBy: null,
+    approvedBy: (() => {
+      const events = adj.approvalEvents || [];
+      const approvalEvent = events.find(
+        (e) => e.actionPerformed === 'APPROVE' || e.actionPerformed === 'POST',
+      );
+      return approvalEvent?.user?.name || approvalEvent?.userRole || null;
+    })(),
     postedAt: adj.postedAt
       ? (adj.postedAt instanceof Date
           ? adj.postedAt
-          : new Date(adj.postedAt as string | number)
+          : new Date(adj.postedAt)
         ).toISOString()
       : null,
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
-    version: adj.version as number,
+    version: adj.version || 1,
     lines,
     timeline: [],
   };
@@ -173,8 +221,27 @@ export class AdjustmentsController {
       warehouseId,
     );
 
+    const adjustmentIds = result.data.map((item) => item.id);
+    const events = await this.prisma.approvalEvent.findMany({
+      where: {
+        documentType: 'ADJUSTMENT',
+        documentId: { in: adjustmentIds },
+        actionPerformed: { in: ['APPROVE', 'POST'] },
+      },
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const mappedData = result.data.map((item) => {
+      const itemEvents = events.filter((e) => e.documentId === item.id);
+      return mapAdjustmentDetail({
+        ...item,
+        approvalEvents: itemEvents,
+      });
+    });
+
     return {
-      data: result.data.map(mapAdjustmentDetail),
+      data: mappedData,
       meta: result.meta,
     };
   }

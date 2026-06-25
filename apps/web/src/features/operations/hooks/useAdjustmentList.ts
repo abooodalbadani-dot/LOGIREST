@@ -13,11 +13,13 @@ export const AdjustmentSummarySchema = z.object({
  documentNumber: z.string(),
  status: BadgeStatusSchema,
  warehouseId: z.string(),
+ warehouseName: z.string().optional(),
  reason: AdjustmentReasonSchema.or(z.string()),
  approvedBy: z.string().nullable().optional(),
  createdBy: z.string(),
  createdAt: z.string(),
  postedAt: z.string().nullable().optional(),
+ rawReason: z.string().optional(),
 });
 
 export type AdjustmentSummary = z.infer<typeof AdjustmentSummarySchema>;

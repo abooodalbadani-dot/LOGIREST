@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import { getDocumentTitle } from '@logirest/shared-types';
 
 export interface PDFColumn {
   header: string;
@@ -68,28 +69,6 @@ const dictionary: Record<string, Record<string, string>> = {
   }
 };
 
-const titleDictionary: Record<string, Record<string, string>> = {
-  ar: {
-    'master_data_items': 'تقرير الأصناف الرئيسية',
-    'inventory_balance': 'تقرير رصيد المخزون',
-    'stock_movements': 'تقرير حركات المخزون',
-    'procurement_status': 'تقرير حالة المشتريات',
-    'stocktake_variance': 'تقرير فروقات الجرد',
-    'expiry_report': 'تقرير صلاحية المواد',
-    'items': 'الأصناف',
-    'operations_stocktake': 'بيان جرد - Stocktake Manifest',
-  },
-  en: {
-    'master_data_items': 'Master Data Items Report',
-    'inventory_balance': 'Inventory Balance Report',
-    'stock_movements': 'Stock Movements Report',
-    'procurement_status': 'Procurement Status Report',
-    'stocktake_variance': 'Stocktake Variance Report',
-    'expiry_report': 'Expiry Report',
-    'items': 'Items',
-    'operations_stocktake': 'بيان جرد - Stocktake Manifest',
-  }
-};
 
 const formatReportValue = (colKey: string, val: unknown, lang: 'ar' | 'en') => {
   if (val === null || val === undefined) return '';
@@ -201,7 +180,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
     return safeKey;
   };
 
-  const displayTitle = ((titleDictionary[lang] && titleDictionary[lang][title.toLowerCase()]) || title).replace(/_/g, ' ');
+  const displayTitle = getDocumentTitle(title, lang);
 
   const labels = {
     phone: lang === 'ar' ? 'هاتف' : 'Tel',

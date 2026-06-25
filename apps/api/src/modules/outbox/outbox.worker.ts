@@ -39,6 +39,8 @@ interface OutboxPayload {
   name?: string;
   resetUrl?: string;
   requestedById?: string;
+  postedByName?: string;
+  formattedDate?: string;
 }
 
 @Processor('outbox')
@@ -94,9 +96,15 @@ export class OutboxWorker extends WorkerHost {
             `No active recipients resolved for event ${eventId}. Skipping dispatch.`,
           );
         } else {
-          const { subject, body } = this.renderTemplate(
+          // Resolve presentation-ready payload
+          const enrichedPayload = await this.enrichPayload(
             event.eventType,
             event.payload,
+          );
+
+          const { subject, body } = await this.renderTemplate(
+            event.eventType,
+            enrichedPayload,
           );
           // 2. Dispatch email notifications
           const result = await this.email.sendEmail(
@@ -104,7 +112,7 @@ export class OutboxWorker extends WorkerHost {
             subject,
             body,
             event.eventType,
-            event.payload,
+            enrichedPayload,
           );
 
           // 3. Handle email result
@@ -397,10 +405,10 @@ export class OutboxWorker extends WorkerHost {
   /**
    * Renders the dynamic email body elements and template lines.
    */
-  private renderTemplate(
+  private async renderTemplate(
     eventType: string,
     payload: unknown,
-  ): { subject: string; body: string } {
+  ): Promise<{ subject: string; body: string }> {
     let subject = '';
     let body = '';
     const data = (payload || {}) as OutboxPayload;
@@ -427,9 +435,9 @@ export class OutboxWorker extends WorkerHost {
           <p>تم ترحيل مستند الصرف رقم <strong>${data.issueNumber || docNo}</strong> بنجاح في النظام.</p>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <p><strong>Total Lines / إجمالي البنود:</strong> ${data.totalLines || 0}</p>
-          <p><strong>Warehouse ID / معرف المستودع:</strong> ${data.warehouseId || 'N/A'}</p>
-          <p><strong>Posted By / تم الترحيل بواسطة:</strong> ${data.postedByUserId || 'N/A'}</p>
-          <p><strong>Timestamp / وقت الترحيل:</strong> ${data.timestamp || 'N/A'}</p>
+          <p><strong>Warehouse / المستودع:</strong> ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Posted By / تم الترحيل بواسطة:</strong> ${data.postedByName || 'N/A'}</p>
+          <p><strong>Timestamp / وقت الترحيل:</strong> ${data.formattedDate || 'N/A'}</p>
         `;
         break;
       case 'PR_SUBMITTED':
@@ -596,5 +604,82 @@ export class OutboxWorker extends WorkerHost {
     }
 
     return { subject, body };
+  }
+
+  private formatTimestamp(isoString?: string): string {
+    if (!isoString) return 'N/A';
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) return 'N/A';
+
+      const formatter = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Riyadh',
+      });
+      const formatted = formatter.format(date);
+      return formatted.replace(/\//g, '-').replace(',', '');
+    } catch {
+      return 'N/A';
+    }
+  }
+
+  private async enrichPayload(
+    eventType: string,
+    payload: unknown,
+  ): Promise<unknown> {
+    if (!payload || typeof payload !== 'object') {
+      return payload;
+    }
+
+    const data = payload as Record<string, unknown>;
+
+    if (eventType === 'ISSUE_POSTED') {
+      const whId = data.warehouseId as string | undefined;
+      const userId = data.postedByUserId as string | undefined;
+
+      let warehouseName = 'N/A';
+      let postedByName = 'N/A';
+
+      if (whId) {
+        const wh = await this.prisma.warehouse.findUnique({
+          where: { id: whId },
+          select: { name: true },
+        });
+        if (wh) {
+          warehouseName = wh.name;
+        }
+      }
+
+      if (userId) {
+        const u = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true, email: true },
+        });
+        if (u) {
+          postedByName = u.name || u.email;
+        }
+      }
+
+      const formattedDate = this.formatTimestamp(
+        data.timestamp as string | undefined,
+      );
+
+      return {
+        ...data,
+        warehouseName,
+        postedByName,
+        formattedDate,
+        warehouseId: warehouseName,
+        postedByUserId: postedByName,
+        timestamp: formattedDate,
+      };
+    }
+
+    return payload;
   }
 }

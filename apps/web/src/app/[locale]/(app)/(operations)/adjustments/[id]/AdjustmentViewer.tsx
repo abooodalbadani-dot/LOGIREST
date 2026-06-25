@@ -48,60 +48,86 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
   by: e.by
  })) || [];
 
- interface MappedAdjustmentLine extends LineItem {
-  direction: AdjustmentLine['direction'];
-  qtyBefore: number;
-  qtyAdjusted: number;
- }
-
- const documentLines = document?.lines;
- const mappedLines = useMemo(() => {
-  return documentLines?.map((line: AdjustmentLine) => ({
-   id: line.id,
-   item: line.item,
-   qty: line.qtyAdjusted,
-   uomId: line.uomId,
-   direction: line.direction,
-   qtyBefore: line.qtyBefore,
-   qtyAdjusted: line.qtyAdjusted,
-  })) || [];
- }, [documentLines]);
-
- const extraColumns = useMemo(() => [
-  {
-   header: t('direction'),
-   cell: (line: MappedAdjustmentLine) => (
-    <div className={cn(
-     "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-xs font-semibold uppercase",
-     line.direction === 'INCREASE' ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
-    )}>
-     {line.direction === 'INCREASE' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-     {t(`direction_${line.direction.toLowerCase()}`)}
-    </div>
-   )
-  },
-  {
-   header: t('qty_before'),
-   cell: (line: MappedAdjustmentLine) => (
-    <span className="text-body-md font-bold text-muted-foreground/40">
-     {formatQuantity(line.qtyBefore, locale as 'ar' | 'en')}
-    </span>
-   )
-  },
-  {
-   header: t('qty_after'),
-   cell: (line: MappedAdjustmentLine) => {
-    const afterVal = line.direction === 'INCREASE' 
-     ? line.qtyBefore + line.qtyAdjusted 
-     : line.qtyBefore - line.qtyAdjusted;
-    return (
-     <span className={cn("text-body-md font-bold", afterVal < 0 ? "text-red-500" : "text-foreground")}>
-      {formatQuantity(afterVal, locale as 'ar' | 'en')}
-     </span>
-    );
-   }
+  interface MappedAdjustmentLine extends LineItem {
+   direction: AdjustmentLine['direction'];
+   qtyBefore: number;
+   qtyAdjusted: number;
+   unitCost?: number | null;
   }
- ], [t, locale]);
+
+  const documentLines = document?.lines;
+  const mappedLines = useMemo(() => {
+   return documentLines?.map((line: AdjustmentLine) => ({
+    id: line.id,
+    item: line.item,
+    qty: line.qtyAdjusted,
+    uomId: line.uomId,
+    direction: line.direction,
+    qtyBefore: line.qtyBefore,
+    qtyAdjusted: line.qtyAdjusted,
+    unitCost: line.unitCost,
+    lot: line.lot ? {
+     lotNumber: line.lot.lotNumber,
+     expiryDate: line.lot.expiryDate ?? null,
+    } : null,
+   })) || [];
+  }, [documentLines]);
+
+  const extraColumns = useMemo(() => [
+   {
+    header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
+    cell: (line: MappedAdjustmentLine) => (
+     <span className="text-body-md font-bold text-foreground">
+      {line.direction === 'INCREASE'
+       ? (line.unitCost !== null && line.unitCost !== undefined
+          ? formatQuantity(line.unitCost, locale as 'ar' | 'en')
+          : '0')
+       : '—'}
+     </span>
+    )
+   },
+   {
+    header: t('direction') || 'Direction',
+    cell: (line: MappedAdjustmentLine) => (
+     <div className={cn(
+      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-xs font-semibold uppercase",
+      line.direction === 'INCREASE' ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
+     )}>
+      {line.direction === 'INCREASE' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+      {t(`direction_${line.direction.toLowerCase()}`)}
+     </div>
+    )
+   },
+   {
+    header: t('qty_before') || 'Qty Before',
+    cell: (line: MappedAdjustmentLine) => (
+     <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
+      {formatQuantity(line.qtyBefore, locale as 'ar' | 'en')}
+     </span>
+    )
+   },
+   {
+    header: tc('table_headers.lot') || 'Lot',
+    cell: (line: MappedAdjustmentLine) => (
+     <span className="text-body-md font-mono text-muted-foreground/60">
+      {line.lot?.lotNumber || '—'}
+     </span>
+    )
+   },
+   {
+    header: t('qty_after') || 'Qty After',
+    cell: (line: MappedAdjustmentLine) => {
+     const afterVal = line.direction === 'INCREASE'
+      ? line.qtyBefore + line.qtyAdjusted
+      : line.qtyBefore - line.qtyAdjusted;
+     return (
+      <span className={cn("text-body-md font-bold", afterVal < 0 ? "text-red-500" : "text-foreground")} lang="en" dir="ltr">
+       {formatQuantity(afterVal, locale as 'ar' | 'en')}
+      </span>
+     );
+    }
+   }
+  ], [t, tc, locale]);
 
  return (
   <div className="min-h-screen print:bg-card print:min-h-0">
@@ -176,10 +202,12 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
         </div>
        </div>
        <DocumentReadOnlyOverlay isPosted={document?.status === 'POSTED'}>
-        <DocumentLineItemTable
+        <DocumentLineItemTable<MappedAdjustmentLine>
          lines={mappedLines}
          isReadOnly={true}
          hideLotColumns={true}
+         noCollapse={false}
+         mobileLayoutPattern="adjustment-form"
          headers={{ qty: t('qty_adjusted') }}
          renderQty={(line) => (
           <div className="flex flex-col items-center gap-0.5">

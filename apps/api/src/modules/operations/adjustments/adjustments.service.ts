@@ -139,6 +139,13 @@ export class AdjustmentsService {
     if (params.search) {
       where.OR = [
         { adjustmentNumber: { contains: params.search, mode: 'insensitive' } },
+        { notes: { contains: params.search, mode: 'insensitive' } },
+        {
+          warehouse: { name: { contains: params.search, mode: 'insensitive' } },
+        },
+        {
+          createdBy: { name: { contains: params.search, mode: 'insensitive' } },
+        },
       ];
     }
 

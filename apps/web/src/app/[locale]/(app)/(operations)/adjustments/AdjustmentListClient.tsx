@@ -124,7 +124,21 @@ const t = useTranslations('operations.adjustment');
  const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page, warehouse_id: effectiveWarehouseId || undefined, date_from: dateFrom || undefined, date_to: dateTo || undefined, sort_by: sortBy, sort_dir: sortDir });
  const { data: summaryData } = useAdjustmentSummary();
 
- const allData = data?.data || [];
+ const mappedData = useMemo(() => {
+  const list = data?.data || [];
+  return list.map(item => {
+   const reasonLower = item.reason.toLowerCase();
+   const reasonLabel = t.has(`reasons.${reasonLower}`) ? t(`reasons.${reasonLower}`) : item.reason;
+   return {
+    ...item,
+    rawReason: item.rawReason || item.reason,
+    reason: reasonLabel,
+    warehouseName: item.warehouseName || warehouseMap.get(item.warehouseId) || '—',
+   };
+  });
+ }, [data?.data, t, warehouseMap]);
+
+ const allData = mappedData;
  const selectedItems = allData.filter(item => selectedIds.has(item.id));
 
  const handleBatchApprove = async () => {
@@ -275,22 +289,20 @@ const t = useTranslations('operations.adjustment');
    accessorKey: 'reason',
    header: t('reason'),
    cell: ({ row }) => {
-    const reason = row.original.reason.toLowerCase();
-    const cls = REASON_CHIP[row.original.reason as keyof typeof REASON_CHIP] ?? REASON_CHIP.OTHER;
-    const label = t.has(`reasons.${reason}`) ? t(`reasons.${reason}`) : row.original.reason;
+    const rawReason = (row.original.rawReason || row.original.reason || '').toUpperCase();
+    const cls = REASON_CHIP[rawReason] ?? REASON_CHIP.OTHER;
     return (
      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-label-xxs uppercase ${cls}`}>
-      {label}
+      {row.original.reason}
      </span>
     );
    },
   },
   {
-   accessorKey: 'warehouseId',
+   accessorKey: 'warehouseName',
    header: tCommon('warehouse'),
    cell: ({ row }) => {
-    const name = warehouseMap.get(row.original.warehouseId);
-    const display = name || '—';
+    const display = row.original.warehouseName || '—';
     return <span className="opacity-80 font-medium">{display}</span>;
    },
   },
@@ -423,7 +435,7 @@ const t = useTranslations('operations.adjustment');
     <div className="hidden md:block w-full">
      <DataTable
       columns={columns}
-      data={data?.data || []}
+      data={allData}
       isLoading={isLoading}
       onRowClick={(row: AdjustmentSummary) => router.push(`/adjustments/${row.id}`)}
       collectionName="operations_adjustments"
@@ -454,14 +466,15 @@ const t = useTranslations('operations.adjustment');
       } : undefined}
       filters={
          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-           <div className="w-full sm:max-w-md">
+           <div className="w-full sm:w-80 md:w-96">
              <div className="relative w-full group">
                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                <Input
-           placeholder={tCommon('statuses.all') || "All Statuses"}
-           value={status || 'ALL'}
-           onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
-          />
+                 placeholder={tCommon('search') || "Search..."}
+                 value={search}
+                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                 className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all shadow-sm"
+               />
              </div>
            </div>
          </div>
@@ -474,12 +487,12 @@ const t = useTranslations('operations.adjustment');
       [...Array(3)].map((_, i) => (
        <div key={i} className="bg-card border border-border rounded-xl p-4 shadow-sm animate-pulse h-28" />
       ))
-     ) : data?.data && data.data.length > 0 ? (
-      data.data.map((row) => {
-       const reason = row.reason.toLowerCase();
-       const reasonCls = REASON_CHIP[row.reason as keyof typeof REASON_CHIP] ?? REASON_CHIP.OTHER;
-       const reasonLabel = t.has(`reasons.${reason}`) ? t(`reasons.${reason}`) : row.reason;
-       const warehouseName = warehouseMap.get(row.warehouseId) || '—';
+     ) : allData && allData.length > 0 ? (
+      allData.map((row) => {
+       const rawReason = (row.rawReason || row.reason || '').toUpperCase();
+       const reasonCls = REASON_CHIP[rawReason] ?? REASON_CHIP.OTHER;
+       const reasonLabel = row.reason;
+       const warehouseName = row.warehouseName || '—';
 
        return (
         <div key={row.id} className="bg-card border border-border rounded-xl flex flex-col shadow-sm relative overflow-hidden">

@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { PrismaService } from '../../database/prisma.service';
 import { otantikBase64Logo } from './logo-base64';
+import { getDocumentTitle } from '@logirest/shared-types';
 
 @Injectable()
 export class PdfGeneratorService {
@@ -457,7 +458,7 @@ export class PdfGeneratorService {
       const isAr = locale === 'ar';
       const currency = po.currency?.code || '';
 
-      const title = isAr ? 'أمر شراء - Purchase Order' : 'Purchase Order';
+      const title = getDocumentTitle('po', locale);
 
       const detailsHtml = `
         <div class="details-column">
@@ -566,9 +567,7 @@ export class PdfGeneratorService {
       }
 
       const isAr = locale === 'ar';
-      const title = isAr
-        ? 'سند تحويل مخزني - Stock Transfer'
-        : 'Stock Transfer';
+      const title = getDocumentTitle('transfer', locale);
 
       const detailsHtml = `
         <div class="details-column">
@@ -682,7 +681,7 @@ export class PdfGeneratorService {
 
       const isAr = locale === 'ar';
       const currency = grn.purchaseOrder?.currency?.code || '';
-      const title = isAr ? 'سند استلام بضاعة - Goods Receipt' : 'Goods Receipt';
+      const title = getDocumentTitle('grn', locale);
 
       const detailsHtml = `
         <div class="details-column">
@@ -808,9 +807,7 @@ export class PdfGeneratorService {
 
       const isAr = locale === 'ar';
       const currency = await this.getBaseCurrencyCode();
-      const title = isAr
-        ? 'تسوية مخزنية - Inventory Adjustment'
-        : 'Inventory Adjustment';
+      const title = getDocumentTitle('adjustment', locale);
 
       const detailsHtml = `
         <div class="details-column">
@@ -938,9 +935,7 @@ export class PdfGeneratorService {
 
       const isAr = locale === 'ar';
       const currency = await this.getBaseCurrencyCode();
-      const title = isAr
-        ? 'بيان جرد - Stocktake Manifest'
-        : 'Stocktake Manifest';
+      const title = getDocumentTitle('stocktake', locale);
 
       const detailsHtml = `
         <div class="details-column">

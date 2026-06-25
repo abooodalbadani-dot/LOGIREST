@@ -37,7 +37,8 @@ import {
 } from 'lucide-react';
 import { AlertCircle as AlertCircleIcon, History as HistoryIcon, Package as PackageIcon, Send as SendIcon, CheckCircle as CheckCircleCircle, Clock as ClockIcon, Save, FileText, ArrowLeft, Scan, Trash2, Loader2 } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import type { LotAllocation } from '@/types/documents';
 import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -178,8 +179,14 @@ function AdjustmentLotSelector({
   );
 }
 
+interface AdjustmentFormLine extends Omit<AdjustmentLine, 'lot' | 'lotAllocations'> {
+ qty: number;
+ lot?: { lotNumber: string; expiryDate: string | null } | null;
+ lotAllocations?: LotAllocation[];
+}
+
 export function AdjustmentForm({ 
- document, 
+  document, 
  id, 
  isLocked,
  onConflict
@@ -494,7 +501,7 @@ export function AdjustmentForm({
  const extraColumns = useMemo(() => [
   {
    header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
-   cell: (line: AdjustmentLine) => {
+   cell: (line: AdjustmentFormLine) => {
     const isIncrease = line.direction === 'INCREASE';
     return (
      <div className="flex justify-center w-full">
@@ -516,7 +523,7 @@ export function AdjustmentForm({
   },
   {
    header: t('direction') || 'Direction',
-   cell: (line: AdjustmentLine) => (
+   cell: (line: AdjustmentFormLine) => (
     <div className="flex justify-center bg-gray-50 border border-gray-200 dark:bg-[#0B1220] dark:border-gray-700 rounded h-8 w-full max-w-[140px] p-0.5 mx-auto">
      <button
       type="button"
@@ -551,7 +558,7 @@ export function AdjustmentForm({
   },
   {
    header: t('qty_before') || 'Qty Before',
-   cell: (line: AdjustmentLine) => (
+   cell: (line: AdjustmentFormLine) => (
     <div className="flex flex-col items-center gap-0.5 tabular-nums">
      <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
       {Number(line.qtyBefore).toLocaleString('en-US')}
@@ -561,7 +568,7 @@ export function AdjustmentForm({
   },
   {
    header: tc('table_headers.lot') || 'Lot',
-   cell: (line: AdjustmentLine) => (
+   cell: (line: AdjustmentFormLine) => (
     <AdjustmentLotSelector
      itemId={line.item.id}
      warehouseId={warehouseId}
@@ -577,7 +584,7 @@ export function AdjustmentForm({
   },
   {
    header: t('qty_after') || 'Qty After',
-   cell: (line: AdjustmentLine) => {
+   cell: (line: AdjustmentFormLine) => {
     const after = line.direction === 'INCREASE' ? line.qtyBefore + line.qtyAdjusted : line.qtyBefore - line.qtyAdjusted;
     return (
      <div className="flex flex-col items-center gap-0.5 tabular-nums">
@@ -742,10 +749,14 @@ export function AdjustmentForm({
         </div>
        </div>
        <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 mx-4 mb-4 overflow-hidden">
-        <DocumentLineItemTable
+        <DocumentLineItemTable<AdjustmentFormLine>
          lines={lines.map(l => ({
           ...l,
           qty: l.qtyAdjusted,
+          lot: l.lot ? {
+           lotNumber: l.lot.lotNumber,
+           expiryDate: l.lot.expiryDate ?? null,
+          } : null,
           lotAllocations: l.lotAllocations?.map(la => ({
            lotId: la.lotId,
            lotNumber: '',
@@ -759,6 +770,7 @@ export function AdjustmentForm({
          hideLotColumns={true}
          dense={true}
          noCollapse={false}
+         mobileLayoutPattern="adjustment-form"
          headers={{
           qty: t('qty_adjusted')
          }}

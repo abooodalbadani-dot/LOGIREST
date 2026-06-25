@@ -17,6 +17,9 @@ describe('OutboxWorker', () => {
       findUnique: jest.Mock;
       findMany: jest.Mock;
     };
+    warehouse: {
+      findUnique: jest.Mock;
+    };
     notificationLog: {
       create: jest.Mock;
     };
@@ -40,6 +43,9 @@ describe('OutboxWorker', () => {
         findUnique: jest.fn(),
         findMany: jest.fn(),
       },
+      warehouse: {
+        findUnique: jest.fn(),
+      },
       notificationLog: {
         create: jest.fn(),
       },
@@ -48,6 +54,14 @@ describe('OutboxWorker', () => {
     mockEmail = {
       sendEmail: jest.fn().mockResolvedValue({ ok: true }),
     };
+
+    mockPrisma.warehouse.findUnique.mockResolvedValue({
+      name: 'HQ Main Warehouse',
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({
+      name: 'System Admin',
+      email: 'admin@example.com',
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -354,19 +368,39 @@ describe('OutboxWorker', () => {
       },
     });
 
+    expect(mockPrisma.warehouse.findUnique).toHaveBeenCalledWith({
+      where: { id: 'warehouse-456' },
+      select: { name: true },
+    });
+
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 'user-789' },
+      select: { name: true, email: true },
+    });
+
+    const expectedEnrichedPayload = {
+      ...mockEvent.payload,
+      warehouseName: 'HQ Main Warehouse',
+      postedByName: 'System Admin',
+      formattedDate: '25-05-2026 15:00',
+      warehouseId: 'HQ Main Warehouse',
+      postedByUserId: 'System Admin',
+      timestamp: '25-05-2026 15:00',
+    };
+
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['admin@example.com', 'manager@example.com'],
       'Stock Issue Posted — ISS-2026-001 / تم ترحيل صرف مخزون',
       expect.stringContaining('Inventory Issue Posted / تم ترحيل صرف مخزون'),
       'ISSUE_POSTED',
-      mockEvent.payload,
+      expectedEnrichedPayload,
     );
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['admin@example.com', 'manager@example.com'],
       'Stock Issue Posted — ISS-2026-001 / تم ترحيل صرف مخزون',
       expect.stringContaining('ISS-2026-001'),
       'ISSUE_POSTED',
-      mockEvent.payload,
+      expectedEnrichedPayload,
     );
   });
 

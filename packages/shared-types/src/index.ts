@@ -3,6 +3,7 @@ export * from './contracts/statuses';
 export * from './contracts/role-capabilities';
 export * from './contracts/auth';
 export * from './contracts/kitchen-request';
+export * from './contracts/document-titles';
 export * from './workflow/document-engine';
 export * from './schemas';
 export * from './workflows';

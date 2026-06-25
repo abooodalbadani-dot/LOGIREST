@@ -743,7 +743,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
             {/* High-density interactive virtualized table */}
             <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 overflow-hidden">
-              <DocumentLineItemTable
+              <DocumentLineItemTable<NewAdjustmentLine>
                 lines={lines}
                 locale={locale}
                 isReadOnly={false}
