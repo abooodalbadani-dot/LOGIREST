@@ -1,7 +1,7 @@
 (cors) {
     @options method OPTIONS
     handle @options {
-        header Access-Control-Allow-Origin "http://localhost:3000"
+        header Access-Control-Allow-Origin "{$FRONTEND_URL:http://localhost:3000}"
         header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
         header Access-Control-Allow-Headers "Content-Type, Accept, Authorization, x-idempotency-key, x-department-id, x-branch-id, x-warehouse-id, x-xsrf-token, Origin, X-Requested-With"
         header Access-Control-Allow-Credentials "true"
@@ -10,7 +10,7 @@
     }
 }
 
-http://{$DOMAIN:localhost} {
+{$DOMAIN:localhost} {
     handle /api/* {
         import cors
         reverse_proxy api:4000 {
@@ -25,7 +25,7 @@ http://{$DOMAIN:localhost} {
     }
 }
 
-http://{$API_DOMAIN:api.localhost} {
+{$API_DOMAIN:api.localhost} {
     handle {
         import cors
         reverse_proxy api:4000 {
