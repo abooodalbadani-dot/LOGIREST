@@ -25,12 +25,12 @@ export function StickyGlassHeader({
  return (
   <div
    className={cn(
-    'sticky top-0 z-[9999] w-full bg-card/90 backdrop-blur-md border-b border-slate-200 shadow-sm dark:bg-slate-950/90 dark:border-slate-800 flex items-center justify-between px-6 py-4 print:hidden',
-    isEditing && 'border-l-4 border-l-primary',
+    'flex flex-col md:flex-row justify-between items-start md:items-center p-4 gap-4 bg-white dark:bg-[#1A2234] rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden print:hidden',
+    isEditing && 'border-s-4 border-s-primary',
     className,
    )}
   >
-   <div className="flex items-center gap-4 overflow-hidden">
+   <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto min-w-0">
     {onBack && (
      <Button
       variant="ghost"
@@ -41,8 +41,8 @@ export function StickyGlassHeader({
       <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
      </Button>
     )}
-    <div className="flex flex-col min-w-0">
-     <h1 className="text-title-lg font-semibold uppercase truncate">
+    <div className="flex flex-col min-w-0 flex-1">
+     <h1 className="text-2xl font-extrabold text-foreground tracking-tight uppercase truncate">
       {title}
      </h1>
      {statusBadge && (
@@ -54,7 +54,7 @@ export function StickyGlassHeader({
    </div>
 
    {actions && (
-    <div className="flex items-center gap-3 shrink-0">
+    <div className="w-full md:w-auto shrink-0">
      {actions}
     </div>
    )}

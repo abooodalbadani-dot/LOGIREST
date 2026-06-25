@@ -100,7 +100,7 @@ export function MetricCard({
 
     return (
         <Card className={cn(
-            "bg-card border border-border shadow-sm rounded-xl p-4 sm:p-5 flex flex-row items-center justify-between overflow-hidden relative group transition-all",
+            "bg-card border border-border shadow-sm rounded-xl p-4 sm:p-5 flex flex-row items-center justify-between overflow-hidden relative group transition-all isolate",
             className
         )}>
             {/* Background Icon Decoration (Optional/Hidden on mobile to save space) */}
@@ -109,7 +109,7 @@ export function MetricCard({
             </div>
 
             <div className="flex flex-col items-start gap-1 z-10">
-                <CardDescription className="text-label-xs font-semibold uppercase text-muted-foreground whitespace-nowrap" dir="auto" style={{ unicodeBidi: 'isolate' }}>
+                <CardDescription className="text-label-xs font-semibold uppercase text-[#b48e67] whitespace-nowrap" dir="auto" style={{ unicodeBidi: 'isolate' }}>
                     {label}
                 </CardDescription>
                 <CardTitle className={cn("text-headline-sm sm:text-headline-md font-display font-bold", valueColor)} dir="auto" style={{ unicodeBidi: 'isolate' }}>

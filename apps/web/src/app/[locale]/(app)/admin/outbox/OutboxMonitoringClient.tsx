@@ -129,7 +129,7 @@ export function OutboxMonitoringClient() {
  };
 
  return (
-  <div className="md:p-8 min-w-0 gap-6 flex-1 space-y-8 flex p-4 mx-auto flex-col max-w-7xl w-full">
+  <div className="min-w-0 gap-6 flex-1 space-y-8 flex mx-auto flex-col max-w-7xl w-full">
    {/* Premium Header */}
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 min-w-0">
     <div className="space-y-4">
@@ -149,14 +149,14 @@ export function OutboxMonitoringClient() {
         Outbox Event Monitoring
        </h1>
       </div>
-      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2">
        Track all transactional mail transmissions, analyze SMTP runtime exceptions, and manually trigger redeliveries.
       </p>
      </div>
     </div>
    </div>
 
-   <div className="w-full flex flex-col md:flex-row gap-6" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+   <div className="w-full flex flex-col md:flex-row gap-6">
     {/* Left Column (Empty State or Selected Event Details) */}
     <div className="w-full md:w-1/3 min-w-0 flex flex-col">
      <AnimatePresence mode="wait">

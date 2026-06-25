@@ -5,6 +5,7 @@ import { AdjustmentPostService } from '../adjustment-post.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role, AdjustmentDirection, AdjustmentReason } from '@prisma/client';
 import type { Request } from 'express';
@@ -20,6 +21,8 @@ describe('AdjustmentsController', () => {
   const mockAdjPostService = {
     post: jest.fn(),
   };
+
+  const mockPdfGeneratorService = {};
 
   const mockPrismaService = {
     adjustment: {
@@ -54,6 +57,7 @@ describe('AdjustmentsController', () => {
         { provide: AdjustmentsService, useValue: mockAdjustmentsService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
         {
           provide: ScopeValidationService,
           useValue: mockScopeValidationService,

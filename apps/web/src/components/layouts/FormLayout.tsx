@@ -106,17 +106,20 @@ export function FormFooter({
  const btnLabel = saveLabel || submitLabel || 'Save';
 
  return (
-  <div className={cn("w-full flex items-center justify-end gap-4 px-6 py-4 bg-muted/30 border-t border-border mt-auto", className)}>
+  <div className={cn(
+   "w-full flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-3 md:gap-4 px-4 sm:px-6 py-4 sm:pb-4 pb-8 bg-muted/30 border-t border-border mt-auto", 
+   className
+  )}>
    {actions}
    {onCancel && (
-    <Button
-     variant="outline"
+    <button
      type="button"
      onClick={onCancel}
      disabled={saving}
+     className="w-full md:w-auto px-6 py-3 md:py-2 bg-transparent border border-gray-300 text-gray-600 font-bold rounded-md hover:bg-gray-100 hover:text-[#0B1220] transition-colors uppercase text-sm tracking-wider"
     >
-     {cancelLabel ?? 'Cancel'}
-    </Button>
+     {cancelLabel ?? 'CANCEL'}
+    </button>
    )}
    {onSubmit && !isLocked && (
     <Button
@@ -124,7 +127,7 @@ export function FormFooter({
      onClick={onSubmit}
      disabled={!isDirty || !isValid || !canSubmit || saving}
      isLoading={saving}
-     className="bg-none bg-operational-cyan hover:bg-operational-cyan/90 shadow-sm shadow-operational-cyan/20 px-8"
+     className="w-full md:w-auto h-12 md:h-10 bg-none bg-operational-cyan hover:bg-operational-cyan/90 shadow-sm shadow-operational-cyan/20 px-8"
     >
      {btnLabel}
     </Button>

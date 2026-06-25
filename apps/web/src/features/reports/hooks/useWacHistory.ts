@@ -7,6 +7,7 @@ export const WacHistoryItemSchema = z.object({
  newWac: z.number().or(z.string().transform(Number)),
  documentId: z.string().nullable().optional(),
  documentType: z.string().nullable().optional(),
+ documentNumber: z.string().nullable().optional(),
  quantity: z.number().or(z.string().transform(Number)).nullable().optional(),
  unitPrice: z.number().or(z.string().transform(Number)).nullable().optional(),
  item: z.object({

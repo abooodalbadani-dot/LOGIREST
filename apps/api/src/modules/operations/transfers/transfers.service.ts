@@ -17,7 +17,8 @@ export class TransfersService {
     body: {
       fromWarehouseId: string;
       toWarehouseId: string;
-      lines: Array<{ itemId: string; quantityShipped: number }>;
+      notes?: string;
+      lines: Array<{ itemId: string; quantityShipped: number; notes?: string }>;
     },
     userId: string,
   ) {
@@ -43,11 +44,13 @@ export class TransfersService {
           transferNumber,
           fromWarehouseId: body.fromWarehouseId,
           toWarehouseId: body.toWarehouseId,
+          notes: body.notes || null,
           status: 'DRAFT',
           lines: {
             create: body.lines.map((line) => ({
               itemId: line.itemId,
               quantityShipped: line.quantityShipped,
+              notes: line.notes || null,
             })),
           },
         },
@@ -196,8 +199,14 @@ export class TransfersService {
   }
 
   async findOne(id: string) {
-    const transfer = await this.prisma.transfer.findUnique({
-      where: { id },
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
+    const transfer = await this.prisma.transfer.findFirst({
+      where: isUuid
+        ? { OR: [{ id }, { transferNumber: id }] }
+        : { transferNumber: id },
       include: {
         lines: {
           include: {
@@ -205,6 +214,7 @@ export class TransfersService {
               include: {
                 unitOfMeasure: true,
                 category: true,
+                barcodeMappings: true,
               },
             },
           },
@@ -227,7 +237,7 @@ export class TransfersService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'transfer',
       'CANCEL',
@@ -237,6 +247,7 @@ export class TransfersService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async postToLedger(
@@ -245,7 +256,7 @@ export class TransfersService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'transfer',
       'POST',
@@ -255,5 +266,77 @@ export class TransfersService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
+  }
+
+  async dispute(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: {
+      comments: string;
+      version?: number;
+      ipAddress?: string;
+      disputedLines: Array<{ lineId: string; receivedQty: number }>;
+    },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const transfer = await tx.transfer.findUnique({
+        where: { id },
+        include: { lines: true },
+      });
+      if (!transfer) {
+        throw new NotFoundException(`Transfer ${id} not found`);
+      }
+
+      for (const line of body.disputedLines) {
+        await tx.transferLine.update({
+          where: { id: line.lineId },
+          data: {
+            quantityReceived: line.receivedQty,
+            varianceReason: body.comments,
+          },
+        });
+      }
+
+      await this.workflowService.executeTransition(
+        id,
+        'transfer',
+        'DISPUTE',
+        userId,
+        userRole,
+        body.comments,
+        body.version,
+        body.ipAddress,
+        tx,
+      );
+
+      const updatedTransfer = await tx.transfer.findFirst({
+        where: { id },
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                  category: true,
+                  barcodeMappings: true,
+                },
+              },
+            },
+          },
+          fromWarehouse: true,
+          toWarehouse: true,
+        },
+      });
+
+      if (!updatedTransfer) {
+        throw new NotFoundException(
+          `Transfer with ID ${id} not found after dispute`,
+        );
+      }
+
+      return updatedTransfer;
+    });
   }
 }

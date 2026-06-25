@@ -10,6 +10,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AdjustmentPostService } from '../adjustment-post.service';
@@ -29,26 +30,70 @@ import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
-import type { Request } from 'express';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
+import type { Request, Response } from 'express';
 
-function mapAdjustmentDetail(adj: Record<string, unknown>) {
-  const rawLines = (adj.lines as Record<string, unknown>[]) || [];
-  const lines = rawLines.map((line: Record<string, unknown>) => {
-    const item = line.item as Record<string, unknown> | undefined;
+interface UomDetail {
+  id: string;
+  code: string;
+}
+
+interface ItemDetail {
+  id: string;
+  sku: string;
+  name: string;
+  uomId?: string | null;
+  unitOfMeasure?: UomDetail | null;
+}
+
+interface AdjustmentLineWithRelations {
+  id: string;
+  itemId: string;
+  lotId?: string | null;
+  quantity: number | string | unknown;
+  direction: string;
+  reason: string;
+  unitCost?: number | string | unknown | null;
+  item?: ItemDetail | null;
+}
+
+interface ApprovalEventDetail {
+  actionPerformed: string;
+  userRole: string;
+  user?: { name: string } | null;
+}
+
+interface AdjustmentWithRelations {
+  id?: string | null;
+  adjustmentNumber?: string | null;
+  status?: string | null;
+  warehouseId?: string | null;
+  notes?: string | null;
+  version?: number | null;
+  createdAt?: Date | string | number | null;
+  postedAt?: Date | string | number | null;
+  createdBy?: { name: string; email: string } | null;
+  warehouse?: { name: string } | null;
+  lines?: AdjustmentLineWithRelations[];
+  approvalEvents?: ApprovalEventDetail[];
+}
+
+function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
+  const rawLines = adj.lines || [];
+  const lines = rawLines.map((line) => {
+    const item = line.item;
     return {
-      id: line.id as string,
+      id: line.id,
       item: item
         ? {
-            id: item.id as string,
-            code: item.sku as string,
-            nameAr: item.name as string,
-            nameEn: item.name as string,
+            id: item.id,
+            code: item.sku,
+            nameAr: item.name,
+            nameEn: item.name,
             primaryUom: item.unitOfMeasure
               ? {
-                  id: (item.unitOfMeasure as Record<string, unknown>)
-                    .id as string,
-                  code: (item.unitOfMeasure as Record<string, unknown>)
-                    .code as string,
+                  id: item.unitOfMeasure.id,
+                  code: item.unitOfMeasure.code,
                 }
               : { id: '', code: '' },
           }
@@ -62,17 +107,17 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
       direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
       qtyBefore: 0,
       qtyAdjusted: Number(line.quantity),
-      uomId: (item?.uomId as string) || '',
+      uomId: item?.uomId || '',
       unitCost: line.unitCost ? Number(line.unitCost) : null,
-      reasonNotes: (line.reason as string) || '',
+      reasonNotes: line.reason || '',
       lotAllocations: line.lotId
-        ? [{ lotId: line.lotId as string, qty: Number(line.quantity) }]
+        ? [{ lotId: line.lotId, qty: Number(line.quantity) }]
         : [],
     };
   });
 
-  const mainReason = (rawLines[0]?.reason as string) || 'CORRECTION';
-  const createdAtVal = adj.createdAt as Date | string | number | undefined;
+  const mainReason = rawLines[0]?.reason || 'CORRECTION';
+  const createdAtVal = adj.createdAt;
   const createdAtIso = createdAtVal
     ? (createdAtVal instanceof Date
         ? createdAtVal
@@ -80,29 +125,35 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
       ).toISOString()
     : new Date().toISOString();
 
-  const warehouse = adj.warehouse as Record<string, unknown> | null;
+  const warehouse = adj.warehouse;
 
   return {
-    id: adj.id as string,
-    documentNumber: adj.adjustmentNumber as string,
-    status: adj.status as string,
-    warehouseId: adj.warehouseId as string,
-    warehouseName: (warehouse?.name as string) || '',
+    id: adj.id || '',
+    documentNumber: adj.adjustmentNumber || '',
+    status: adj.status || '',
+    warehouseId: adj.warehouseId || '',
+    warehouseName: warehouse?.name || '',
     reason: mainReason,
-    notes: '',
+    notes: adj.notes || '',
+    createdBy: adj.createdBy?.name || 'System',
     reject: null,
     movementId: null,
-    approvedBy: null,
-    postedAt:
-      adj.status === 'POSTED' && createdAtVal
-        ? (createdAtVal instanceof Date
-            ? createdAtVal
-            : new Date(createdAtVal)
-          ).toISOString()
-        : null,
+    approvedBy: (() => {
+      const events = adj.approvalEvents || [];
+      const approvalEvent = events.find(
+        (e) => e.actionPerformed === 'APPROVE' || e.actionPerformed === 'POST',
+      );
+      return approvalEvent?.user?.name || approvalEvent?.userRole || null;
+    })(),
+    postedAt: adj.postedAt
+      ? (adj.postedAt instanceof Date
+          ? adj.postedAt
+          : new Date(adj.postedAt)
+        ).toISOString()
+      : null,
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
-    version: adj.version as number,
+    version: adj.version || 1,
     lines,
     timeline: [],
   };
@@ -117,11 +168,18 @@ export class AdjustmentsController {
     private readonly adjustmentsService: AdjustmentsService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Post()
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -163,8 +221,27 @@ export class AdjustmentsController {
       warehouseId,
     );
 
+    const adjustmentIds = result.data.map((item) => item.id);
+    const events = await this.prisma.approvalEvent.findMany({
+      where: {
+        documentType: 'ADJUSTMENT',
+        documentId: { in: adjustmentIds },
+        actionPerformed: { in: ['APPROVE', 'POST'] },
+      },
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const mappedData = result.data.map((item) => {
+      const itemEvents = events.filter((e) => e.documentId === item.id);
+      return mapAdjustmentDetail({
+        ...item,
+        approvalEvents: itemEvents,
+      });
+    });
+
     return {
-      data: result.data.map(mapAdjustmentDetail),
+      data: mappedData,
       meta: result.meta,
     };
   }
@@ -189,8 +266,43 @@ export class AdjustmentsController {
     return mapAdjustmentDetail(adj);
   }
 
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const adj = await this.adjustmentsService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      adj.warehouseId,
+    );
+
+    const buffer = await this.pdfGeneratorService.generateAdjustmentPdf(
+      id,
+      locale,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=ADJUSTMENT_${adj.adjustmentNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
+  }
+
   @Put(':id')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -244,7 +356,13 @@ export class AdjustmentsController {
   }
 
   @Post(':id/edit')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async edit(
     @Param('id') id: string,
@@ -280,7 +398,13 @@ export class AdjustmentsController {
   }
 
   @Post(':id/submit')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -310,7 +434,14 @@ export class AdjustmentsController {
   }
 
   @Post(':id/approve')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.GM,
+    Role.INV_MGR,
+    Role.APPROVER,
+    Role.BRANCH_MGR,
+    Role.STORE_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -340,7 +471,14 @@ export class AdjustmentsController {
   }
 
   @Post(':id/reject')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.GM,
+    Role.INV_MGR,
+    Role.APPROVER,
+    Role.BRANCH_MGR,
+    Role.STORE_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'adjustment',
@@ -376,6 +514,13 @@ export class AdjustmentsController {
     action: 'CANCEL',
     modelName: 'adjustment',
   })
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async cancel(
     @Param('id') id: string,

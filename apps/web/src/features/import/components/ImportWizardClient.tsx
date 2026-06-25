@@ -35,6 +35,8 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
  case 'items': return t('items');
  case 'uoms': return t('uoms');
  case 'barcodes': return t('barcodes');
+ case 'suppliers': return t('suppliers');
+ case 'openingStock': return t('openingStock');
  default: return '';
  }
  };
@@ -53,7 +55,7 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
 
  <PageHeader
  title={`${t('title')} — ${getEntityTitle()}`}
- description={t('select_type')}
+ subtitle={t('select_type')}
  />
 
  {/* Stepper Container */}

@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2, ScanLine, CheckCircle2, AlertCircle, Keyboard } from 'lucide-react';
@@ -21,7 +22,7 @@ interface ScanInputProps {
     isScanning?: boolean;
     clearOnScan?: boolean;
     scannerMode?: boolean;
-    value?: string;
+    variant?: "standard" | "retro";
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onManualTrigger?: () => void;
     size?: "sm" | "md" | "lg";
@@ -29,6 +30,7 @@ interface ScanInputProps {
     autoFocus?: boolean;
     latencyThreshold?: number;
     items?: ComboboxItem[];
+    value?: string;
 }
 
 export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
@@ -44,6 +46,7 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
             isScanning,
             clearOnScan = true,
             scannerMode = false,
+            variant = "standard",
             value,
             onChange,
             onManualTrigger,
@@ -157,131 +160,190 @@ export const ScanInput = forwardRef<HTMLInputElement, ScanInputProps>(
         const config = sizeConfigs[size];
 
         return (
-            <div className={cn("relative group w-full flex flex-col gap-3", className)}>
+            <div className={cn(variant === 'standard' ? "flex flex-col w-full gap-2 mb-6" : "relative group w-full flex flex-col gap-3", className)}>
                 {label && (
-                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-operational-cyan ps-1 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-operational-cyan rounded-full animate-pulse shadow-[0_0_10px_var(--operational-cyan)]" />
-                        {label}
-                    </label>
-                )}
-                <div className={cn(
-                    "relative flex items-center transition-all duration-200 rounded-sm border-[4px] shadow-2xl overflow-hidden",
-                    config.container,
-                    scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
-                        scanStatus === 'error' ? "border-destructive bg-destructive/10 shadow-[0_0_60px_rgba(var(--destructive-rgb),0.25)]" :
-                            readOnly ? "border-surface-container-highest bg-card border border-border shadow-sm/60 opacity-80 cursor-default" :
-                                "border-surface-container-highest bg-card border border-border shadow-sm hover:border-operational-cyan/50 focus-within:border-operational-cyan focus-within:ring-[12px] focus-within:ring-operational-cyan/10 focus-within:bg-card border border-border shadow-sm"
-                )}>
-                    {/* Background glow when focused */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-operational-cyan/5 via-transparent to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
-
-                    <div className="ps-6 text-muted-foreground/40 transition-colors group-focus-within:text-operational-cyan z-10">
-                        {isScanning ? (
-                            <Loader2 className={cn("animate-spin text-operational-cyan", config.icon)} />
-                        ) : scanStatus === 'success' ? (
-                            <CheckCircle2 className={cn("text-operational-cyan animate-in zoom-in duration-300", config.icon)} />
-                        ) : scanStatus === 'error' ? (
-                            <AlertCircle className={cn("text-destructive animate-in shake duration-300", config.icon)} />
-                        ) : (
-                            <ScanLine className={cn("transition-transform group-hover:scale-125 duration-300", config.icon)} />
-                        )}
-                    </div>
-                    {isManual ? (
-                        <div className={cn("flex-1 w-full z-10 flex items-center", config.input)}>
-                            <SmartCombobox
-                                items={items || []}
-                                placeholder={placeholder || tc('search_placeholder') || 'Search item...'}
-                                onSelect={(item) => {
-                                    const identifier = item.barcode || item.code || String(item.id);
-                                    onScan(identifier);
-                                    setIsManual(false);
-                                    setTimeout(() => {
-                                        inputRef.current?.focus();
-                                    }, 100);
-                                }}
-                                className="flex-1 w-full"
-                                triggerClassName="h-10 bg-transparent border-none text-foreground w-full font-medium"
-                            />
+                    variant === 'standard' ? (
+                        <div className="flex items-center justify-start gap-2 w-full flex-row-reverse mb-1">
+                            <div className="w-2 h-2 rounded-full bg-brand-gold animate-pulse shadow-[0_0_8px_rgba(202,174,133,0.5)]"></div>
+                            <span className="text-sm font-semibold text-brand-gold">{label}</span>
                         </div>
                     ) : (
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            dir="ltr"
-                            disabled={disabled || isScanning}
-                            readOnly={readOnly}
-                            placeholder={placeholder || tc('scan_placeholder')}
-                            onKeyDown={handleKeyDown}
-                            onChange={onChangeWrapper}
-                            autoComplete="off"
-                            className={cn(
-                                "bg-transparent border-none text-foreground w-full transition-all duration-200 outline-none z-10",
-                                "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black",
-                                readOnly && "cursor-default select-all opacity-70",
-                                config.input
+                        <label className="text-[11px] font-black uppercase tracking-[0.25em] text-operational-cyan ps-1 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-operational-cyan rounded-full animate-pulse shadow-[0_0_10px_var(--operational-cyan)]" />
+                            {label}
+                        </label>
+                    )
+                )}
+
+                <div className={cn(variant === 'standard' ? "flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full" : "")}>
+                    <div className={cn(
+                        "relative flex items-center transition-all duration-200 overflow-hidden shrink-0",
+                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : "flex items-center w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden sm:flex-1",
+                        variant === 'retro' && config.container,
+                        variant === 'retro' ? (
+                            scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
+                                scanStatus === 'error' ? "border-destructive bg-destructive/10 shadow-[0_0_60px_rgba(var(--destructive-rgb),0.25)]" :
+                                    readOnly ? "border-surface-container-highest bg-card border border-border shadow-sm/60 opacity-80 cursor-default" :
+                                        "border-surface-container-highest bg-card hover:border-operational-cyan/50 focus-within:border-operational-cyan focus-within:ring-[12px] focus-within:ring-operational-cyan/10"
+                        ) : (
+                            readOnly ? "opacity-70 cursor-default" : ""
+                        )
+                    )}>
+                        {/* Background glow when focused */}
+                        {variant === 'retro' && <div className="absolute inset-0 bg-gradient-to-r from-operational-cyan/5 via-transparent to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />}
+
+                        <div className={cn(variant === 'retro' ? "text-muted-foreground/40 transition-colors group-focus-within:text-operational-cyan z-10 ps-6" : "absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-20")}>
+                            {isScanning ? (
+                                <Loader2 className={cn("animate-spin text-operational-cyan", variant === 'retro' ? config.icon : "w-5 h-5")} />
+                            ) : scanStatus === 'success' ? (
+                                <CheckCircle2 className={cn("text-operational-cyan animate-in zoom-in duration-300", variant === 'retro' ? config.icon : "w-5 h-5")} />
+                            ) : scanStatus === 'error' ? (
+                                <AlertCircle className={cn("text-destructive animate-in shake duration-300", variant === 'retro' ? config.icon : "w-5 h-5")} />
+                            ) : (
+                                <ScanLine className={cn("transition-transform group-hover:scale-125 duration-300", variant === 'retro' ? config.icon : "w-5 h-5")} />
                             )}
-                        />
-                    )}
-
-                    <div className="flex items-center pe-4 gap-3 z-10">
-                        {(!readOnly) && (items || onManualTrigger) && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (items) {
-                                        setIsManual(prev => !prev);
-                                    } else if (onManualTrigger) {
-                                        onManualTrigger();
-                                    }
-                                }}
+                        </div>
+                        {isManual ? (
+                            <div className={cn("flex-1 w-full z-10 flex items-center h-ful", variant === 'retro' ? config.input : "pr-4 pl-12")}>
+                                <SmartCombobox
+                                    items={items || []}
+                                    placeholder={placeholder || tc('search_placeholder') || 'Search item...'}
+                                    onSelect={(item) => {
+                                        const identifier = item.barcode || item.code || String(item.id);
+                                        onScan(identifier);
+                                        setIsManual(false);
+                                        setTimeout(() => {
+                                            inputRef.current?.focus();
+                                        }, 100);
+                                    }}
+                                    className="flex-1 w-full h-full"
+                                    triggerClassName="h-full bg-transparent border-none text-[#0B1220] dark:text-white w-full font-semibold text-sm md:text-base px-0 ps-0 pe-4 shadow-none outline-none focus:ring-0 focus:border-none focus-within:ring-0 focus-within:border-none hover:bg-transparent"
+                                />
+                            </div>
+                        ) : (
+                            <Input
+                                ref={inputRef}
+                                type="text"
+                                dir="ltr"
+                                disabled={disabled || isScanning}
+                                readOnly={readOnly}
+                                placeholder={placeholder || tc('scan_placeholder')}
+                                onKeyDown={handleKeyDown}
+                                onChange={onChangeWrapper}
+                                autoComplete="off"
                                 className={cn(
-                                    "bg-operational-cyan/10 border-2 border-operational-cyan/30 hover:border-operational-cyan hover:bg-operational-cyan text-operational-cyan hover:text-white rounded-sm font-black uppercase transition-all whitespace-nowrap flex items-center gap-3 shadow-sm active:scale-95 group/btn",
-                                    config.button
+                                    "bg-transparent border-none text-[#0B1220] dark:text-white w-full transition-all duration-200 outline-none z-10 h-full focus:ring-0 focus:outline-none",
+                                    variant === 'retro' ? "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black" : "placeholder:text-muted-foreground text-sm md:text-base font-semibold px-2 pr-4 pl-12 focus:ring-0 focus:outline-none",
+                                    readOnly && "cursor-default select-all opacity-70",
+                                    variant === 'retro' && config.input
                                 )}
-                            >
-                                {isManual ? (
-                                    <>
-                                        <ScanLine className={cn("transition-transform group-hover/btn:-translate-y-0.5", config.buttonIcon)} />
-                                        {tc('scan_mode')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Keyboard className={cn("transition-transform group-hover/btn:-translate-y-0.5", config.buttonIcon)} />
-                                        {tc('manual_entry')}
-                                    </>
-                                )}
-                            </button>
+                            />
                         )}
 
-                        {onCameraActivate && !readOnly && (
-                            <button
-                                type="button"
-                                onClick={onCameraActivate}
-                                className={cn(
-                                    "p-3 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 transition-all rounded-sm active:scale-95",
-                                    config.buttonIcon
+                        {variant === 'retro' && (
+                            <div className="flex items-center pe-4 gap-3 z-10">
+                                {(!readOnly) && (items || onManualTrigger) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (items) {
+                                                setIsManual(prev => !prev);
+                                            } else if (onManualTrigger) {
+                                                onManualTrigger();
+                                            }
+                                        }}
+                                        className={cn(
+                                            "transition-all whitespace-nowrap flex items-center gap-2 active:scale-95 group/btn",
+                                            "bg-operational-cyan/10 border-2 border-operational-cyan/30 hover:border-operational-cyan hover:bg-operational-cyan text-operational-cyan hover:text-white rounded-sm font-black uppercase shadow-sm",
+                                            config.button
+                                        )}
+                                    >
+                                        {isManual ? (
+                                            <>
+                                                <ScanLine className={cn("transition-transform group-hover/btn:-translate-y-0.5", config.buttonIcon)} />
+                                                {tc('scan_mode')}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Keyboard className={cn("transition-transform group-hover/btn:-translate-y-0.5", config.buttonIcon)} />
+                                                {tc('manual_entry')}
+                                            </>
+                                        )}
+                                    </button>
                                 )}
-                            >
-                                <ScanLine className="w-full h-full" />
-                            </button>
+
+                                {onCameraActivate && !readOnly && (
+                                    <button
+                                        type="button"
+                                        onClick={onCameraActivate}
+                                        className={cn(
+                                            "transition-all active:scale-95",
+                                            "p-3 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-sm",
+                                            config.buttonIcon
+                                        )}
+                                    >
+                                        <ScanLine className="w-full h-full" />
+                                    </button>
+                                )}
+                            </div>
                         )}
+
+                        {statusMessage && (
+                            <div className={cn(
+                                "absolute -bottom-11 start-0 px-6 py-2.5 rounded-b-sm font-black text-[11px] uppercase tracking-[0.2em] animate-in slide-in-from-top-4 duration-200 shadow-2xl z-20",
+                                scanStatus === 'success' ? "bg-operational-cyan text-white shadow-operational-cyan/20" : "bg-destructive text-white shadow-destructive/20"
+                            )}>
+                                {statusMessage}
+                            </div>
+                        )}
+
+                        {/* Industrial scan line animation when focused */}
+                        {variant === 'retro' && <div className={cn(
+                            "absolute top-0 left-0 w-[4px] h-full bg-operational-cyan shadow-[0_0_25px_var(--operational-cyan)] opacity-0 pointer-events-none transition-all duration-[2000ms] ease-in-out z-0",
+                            "group-focus-within:animate-[scan_2s_infinite]",
+                            !disabled && !isScanning && !readOnly && scanStatus === 'idle' && "group-focus-within:opacity-60"
+                        )} />}
                     </div>
 
-                    {statusMessage && (
-                        <div className={cn(
-                            "absolute -bottom-11 start-0 px-6 py-2.5 rounded-b-sm font-black text-[11px] uppercase tracking-[0.2em] animate-in slide-in-from-top-4 duration-200 shadow-2xl z-20",
-                            scanStatus === 'success' ? "bg-operational-cyan text-white shadow-operational-cyan/20" : "bg-destructive text-white shadow-destructive/20"
-                        )}>
-                            {statusMessage}
+                    {variant === 'standard' && (
+                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                            {(!readOnly) && (items || onManualTrigger) && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (items) {
+                                            setIsManual(prev => !prev);
+                                        } else if (onManualTrigger) {
+                                            onManualTrigger();
+                                        }
+                                    }}
+                                    className="w-full sm:w-auto mt-2 sm:mt-0 py-2 px-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-md hover:bg-gray-50 dark:hover:bg-[#1A2234] hover:text-[#0B1220] dark:hover:text-white transition-colors text-sm text-center flex items-center justify-center gap-2 whitespace-nowrap active:scale-95 group/btn shadow-sm"
+                                >
+                                    {isManual ? (
+                                        <>
+                                            <ScanLine className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
+                                            {tc('scan_mode')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Keyboard className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
+                                            {tc('manual_entry')}
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            {onCameraActivate && !readOnly && (
+                                <button
+                                    type="button"
+                                    onClick={onCameraActivate}
+                                    className="w-14 h-11 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-[#0B1220] dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#1A2234] border border-gray-300 dark:border-gray-700 rounded-md transition-all active:scale-95 shadow-sm"
+                                >
+                                    <ScanLine className="w-5 h-5" />
+                                </button>
+                            )}
                         </div>
                     )}
-
-                    {/* Industrial scan line animation when focused */}
-                    <div className={cn(
-                        "absolute top-0 left-0 w-[4px] h-full bg-operational-cyan shadow-[0_0_25px_var(--operational-cyan)] opacity-0 pointer-events-none transition-all duration-[2000ms] ease-in-out z-0",
-                        "group-focus-within:animate-[scan_2s_infinite]",
-                        !disabled && !isScanning && !readOnly && scanStatus === 'idle' && "group-focus-within:opacity-60"
-                    )} />
                 </div>
 
                 <style jsx>{`

@@ -184,9 +184,12 @@ export const PERMISSION_MATRIX: Partial<Record<UserRole, Partial<Record<Resource
       inventory_balance: ['view'],
       inventory_lots: ['view'],
       inventory_movements: ['view'],
-      stocktake: ['count'],
+      stocktake: ['view', 'create', 'edit', 'count'],
+      adjustment: ['view', 'create', 'edit'],
       operations_issues: ['view', 'create', 'edit', 'submit'],
       operations_transfers: ['view', 'create', 'edit', 'ship', 'receive'],
+      operations_stocktake: ['view', 'create', 'edit', 'submit', 'count'],
+      operations_adjustments: ['view', 'create', 'edit', 'submit'],
       procurement_grn: ['view', 'create', 'edit'],
     },
   APPROVER: {

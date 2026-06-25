@@ -153,11 +153,73 @@ export class EmailService {
     to: string | string[],
     subject: string,
     htmlContent: string,
+    eventSlug?: string,
+    payload?: unknown,
   ): Promise<EmailResult> {
     const transporter = await this.getTransporter();
     if (!transporter) {
       this.logger.log(`SMTP skipped send for subject: "${subject}"`);
       return { ok: false, reason: 'SMTP_UNCONFIGURED' };
+    }
+
+    let finalSubject = subject;
+    let finalHtml = htmlContent;
+
+    if (eventSlug) {
+      try {
+        const template = await this.prisma.emailTemplate.findFirst({
+          where: { code: eventSlug, isActive: true },
+        });
+        if (template) {
+          const payloadObj = (payload || {}) as Record<string, unknown>;
+          const interpolatedSubjectEn = this.interpolate(
+            template.subjectEn || '',
+            payloadObj,
+          );
+          const interpolatedSubjectAr = this.interpolate(
+            template.subjectAr || '',
+            payloadObj,
+          );
+          const interpolatedBodyEn = this.interpolate(
+            template.bodyEn || '',
+            payloadObj,
+          );
+          const interpolatedBodyAr = this.interpolate(
+            template.bodyAr || '',
+            payloadObj,
+          );
+
+          if (interpolatedSubjectEn && interpolatedSubjectAr) {
+            finalSubject = `${interpolatedSubjectEn} / ${interpolatedSubjectAr}`;
+          } else {
+            finalSubject =
+              interpolatedSubjectEn || interpolatedSubjectAr || subject;
+          }
+
+          if (interpolatedBodyEn && interpolatedBodyAr) {
+            finalHtml = `
+              <div>
+                <div>${interpolatedBodyEn}</div>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                <div dir="rtl" style="text-align: right;">${interpolatedBodyAr}</div>
+              </div>
+            `;
+          } else {
+            const singleBody = interpolatedBodyEn || interpolatedBodyAr;
+            if (singleBody) {
+              if (interpolatedBodyAr) {
+                finalHtml = `<div dir="rtl" style="text-align: right;">${singleBody}</div>`;
+              } else {
+                finalHtml = `<div>${singleBody}</div>`;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        this.logger.error(
+          `Failed to process database email template: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
 
     let fromName = 'Otantik Restuarant Alerts';
@@ -194,8 +256,8 @@ export class EmailService {
       await transporter.sendMail({
         from,
         to: recipients,
-        subject,
-        html: this.wrapInBrandTemplate(subject, htmlContent),
+        subject: finalSubject,
+        html: this.wrapInBrandTemplate(finalSubject, finalHtml),
       });
       this.logger.log(`Successfully dispatched email to: ${recipients}`);
       return { ok: true };
@@ -204,6 +266,93 @@ export class EmailService {
       this.logger.error(`SMTP transmission failed: ${msg}`);
       return { ok: false, reason: 'SEND_FAILED', error: msg };
     }
+  }
+
+  private safeStringify(val: unknown): string {
+    if (val === null || val === undefined) {
+      return '';
+    }
+    if (typeof val === 'string') {
+      return val;
+    }
+    if (
+      typeof val === 'number' ||
+      typeof val === 'boolean' ||
+      typeof val === 'bigint'
+    ) {
+      return val.toString();
+    }
+    if (typeof val === 'object') {
+      return JSON.stringify(val);
+    }
+    if (typeof val === 'symbol') {
+      return val.toString();
+    }
+    return '';
+  }
+
+  private interpolate(
+    templateStr: string,
+    payload: Record<string, unknown>,
+  ): string {
+    if (!templateStr) return '';
+    return templateStr.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+      const trimmedKey = key.trim();
+
+      // 1. Direct match
+      if (payload[trimmedKey] !== undefined) {
+        return this.safeStringify(payload[trimmedKey]);
+      }
+
+      // 2. Try stripping prefixes (e.g. item_name -> name)
+      const cleanKey = trimmedKey.replace(/^[a-zA-Z0-9]+_/, '');
+      if (payload[cleanKey] !== undefined) {
+        return this.safeStringify(payload[cleanKey]);
+      }
+
+      // 3. Manual mappings for specific expected fields from NotificationTemplateService:
+      if (
+        trimmedKey === 'item_currentStock' &&
+        payload.qtyOnHand !== undefined
+      ) {
+        return this.safeStringify(payload.qtyOnHand);
+      }
+      if (
+        trimmedKey === 'item_warehouse' &&
+        payload.warehouseName !== undefined
+      ) {
+        return this.safeStringify(payload.warehouseName);
+      }
+      if (
+        trimmedKey === 'purchaseorder_poNumber' &&
+        payload.poNumber !== undefined
+      ) {
+        return this.safeStringify(payload.poNumber);
+      }
+      if (
+        trimmedKey === 'purchaseorder_totalAmount' &&
+        payload.totalAmount !== undefined
+      ) {
+        return this.safeStringify(payload.totalAmount);
+      }
+      if (
+        trimmedKey === 'purchaseorder_status' &&
+        payload.status !== undefined
+      ) {
+        return this.safeStringify(payload.status);
+      }
+
+      // 4. Try camelCase conversion (e.g. item_name -> itemName)
+      const camelCased = trimmedKey.replace(
+        /_([a-z])/g,
+        (_match: string, g: string) => g.toUpperCase(),
+      );
+      if (payload[camelCased] !== undefined) {
+        return this.safeStringify(payload[camelCased]);
+      }
+
+      return match;
+    });
   }
 
   /**

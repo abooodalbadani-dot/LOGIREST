@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useEffect, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Scan, Camera, X, CheckCircle2, RefreshCw, RotateCcw, Loader2 } from 'lucide-react';
@@ -72,7 +73,7 @@ export default function ScannerClient() {
  };
 
  return (
-  <div className=" text-foreground w-full min-w-0 bg-card items-center flex-1 selection:bg-operational-cyan/30 border gap-6 shadow-sm justify-center flex-col flex min-h-screen border-border p-6 dark:bg-card-dark">
+  <div className="text-foreground w-full min-w-0 bg-card items-center flex-1 selection:bg-operational-cyan/30 border gap-6 shadow-sm justify-center flex-col flex min-h-screen border-border dark:bg-card-dark">
    
    {/* Full-Screen Loading Overlay to prevent "flipping" feel */}
    {isPending && (
@@ -126,7 +127,7 @@ export default function ScannerClient() {
         <p className="text-label-sm font-bold text-operational-cyan/80">{t('scanner.align_tip')}</p>
         
         {/* Hidden or subtle input to capture hardware scanner keystrokes */}
-        <input 
+        <Input 
          type="text" 
          autoFocus
          value={barcodeInput}
@@ -180,24 +181,6 @@ export default function ScannerClient() {
        </div>
       </div>
      )}
-    </div>
-
-    {/* System Logs / Helper */}
-    <div className="bg-card border border-border shadow-sm/30 p-6 rounded-[2rem] border border-surface-variant/10 space-y-4">
-     <div className="flex items-center gap-3">
-      <div className="w-1.5 h-6 bg-operational-cyan rounded-full" />
-      <h3 className="text-label-sm font-semibold uppercase">{t('scanner.protocol_version')}</h3>
-     </div>
-     <div className="grid grid-cols-2 gap-4">
-      <div className="p-3 bg-card border border-border shadow-sm/50 rounded-xl border border-surface-variant/10">
-       <p className="text-label-xs font-bold text-muted-foreground/80 mb-1">{t('scanner.battery_level')}</p>
-       <p className="text-body-md font-semibold">94%</p>
-      </div>
-      <div className="p-3 bg-card border border-border shadow-sm/50 rounded-xl border border-surface-variant/10">
-       <p className="text-label-xs font-bold text-muted-foreground/80 mb-1">{t('scanner.ai_confidence')}</p>
-       <p className="text-body-md font-semibold text-operational-cyan">99.8%</p>
-      </div>
-     </div>
     </div>
 
     {/* Exit Button */}

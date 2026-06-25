@@ -17,7 +17,8 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
-import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History, RotateCcw } from 'lucide-react';
+import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History, RotateCcw, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -145,22 +146,21 @@ const { data, isLoading } = useStocktakeList({
    ),
   },
   {
-   accessorKey: 'warehouseId',
+   accessorKey: 'warehouseName',
    header: tc('warehouse') || 'Warehouse',
    cell: ({ row }) => {
-    const display = warehouseMap.get(row.original.warehouseId) || '—';
     return (
      <div className="gap-2 min-w-0 items-center flex-1 gap-6 flex-col flex w-full">
       <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
        <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
       </div>
-      <span className="font-bold text-label-sm text-foreground/80">{display}</span>
+      <span className="font-bold text-label-sm text-foreground/80">{row.original.warehouseName}</span>
      </div>
     );
    },
   },
   {
-   id: 'progress',
+   accessorKey: 'progress',
    header: t('items_counted') || 'Progress',
    cell: ({ row }) => {
     const total = row.original.totalItems || 0;
@@ -208,24 +208,41 @@ const { data, isLoading } = useStocktakeList({
  </div>
  ),
  },
- ], [t, tc, locale, router, warehouseMap]);
+  ], [t, tc, locale, router, warehouseMap]);
 
 const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
 const inProgressCount = summaryData?.active ?? 0;
 const postedCount = summaryData?.completed ?? 0;
 
+const processedData = useMemo(() => {
+  const rawData = data?.data || [];
+  return rawData.map((item) => {
+    const total = item.totalItems || 0;
+    const counted = item.countedItems || 0;
+    const resolvedWarehouseName =
+      item.warehouseName ||
+      warehouseMap.get(item.warehouseId) ||
+      '—';
+    return {
+      ...item,
+      warehouseName: resolvedWarehouseName,
+      progress: total > 0 ? `${counted}/${total}` : '0',
+    };
+  });
+}, [data?.data, warehouseMap]);
+
  return (
- <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+ <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <div className="flex flex-col gap-6 min-w-0">
  <Breadcrumb 
  items={[
  { label: tc('inventory'), href: '#' },
  { label: t('title'), href: `/stocktake` }
  ]} 
- />
+  />
  <PageHeader
  title={t('title')}
- description={t('description') || 'Physical inventory verification and variance auditing'} actions={
+ subtitle={t('description') || 'Physical inventory verification and variance auditing'} children={
  <div className="flex items-center gap-8">
  <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-8 hidden md:flex min-w-0">
  <div className="text-label-xs font-semibold uppercase text-foreground flex items-center gap-2">
@@ -238,8 +255,8 @@ const postedCount = summaryData?.completed ?? 0;
  </div>
  </div>
  <PermissionGate action="create" resource="stocktake">
- <Link href={`/stocktake/new`}>
- <Button className="h-12 px-10 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-xl shadow-cyan-900/20 group">
+ <Link href={`/stocktake/new`} className="shrink-0 w-full sm:w-auto">
+ <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
  <Plus className="w-4 h-4 me-2 group-hover:rotate-90 transition-transform" />
  {t('create_new')}
  </Button>
@@ -278,124 +295,149 @@ const postedCount = summaryData?.completed ?? 0;
      />
     </div>
 
-<div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-card border border-border shadow-sm rounded-lg border border-outline-low shadow-2xl">
-       <div className="flex flex-col gap-3 min-w-[280px] flex-1 min-w-0">
-        <div className="flex items-center gap-2 ms-1">
-         <Filter className="w-3 h-3 text-foreground/60" />
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
-        </div>
-        <SmartCombobox
-         items={statusItems}
-         value={initialStatus || 'ALL'}
-         onSelect={(item) => handleStatusChange(item.id === 'ALL' ? '' : String(item.id))}
-         placeholder={tc('statuses.all') || "All Statuses"}
-         triggerClassName="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all"
-        />
-       </div>
+      <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+       <DataTable
+        columns={columns}
+        data={processedData}
+        isLoading={false}
+        onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
+        collectionName="operations_stocktake"
+        enableVirtualization={true}
+        containerHeight="600px"
+        sorting={sorting}
+        onSortingChange={setSorting}
+        renderMobileCard={(session: StocktakeSummary) => {
+          const total = session.totalItems || 0;
+          const counted = session.countedItems || 0;
+          const progressPercentage = total > 0 ? Math.round((counted / total) * 100) : 0;
+          const warehouseName = warehouseMap.get(session.warehouseId) || '—';
 
-       <div className="flex flex-col gap-3 min-w-[340px] flex-[2] min-w-0">
-        <div className="flex items-center gap-2 ms-1">
-         <Search className="w-3 h-3 text-foreground/60" />
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
-        </div>
-        <div className="relative group">
-         <input
-          placeholder={t('search_placeholder') || 'Search by Session ID...'}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
+          return (
+            <div 
+              key={session.id} 
+              className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-4 text-start"
+            >
+              {/* TOP TIER: Session ID & Status */}
+              <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-3">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-black text-[#0B1220] dark:text-white truncate max-w-[180px]" dir="ltr">
+                    {session.sessionNumber || session.id}
+                  </span>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1">
+                    Operational Audit
+                  </span>
+                </div>
+                {/* Status Badge */}
+                <div>
+                  <StatusBadge status={session.status} />
+                </div>
+              </div>
+
+              {/* MIDDLE TIER: Warehouse & Date */}
+              <div className="flex justify-between items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="p-1.5 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700 shrink-0">
+                    <Warehouse className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <span className="text-xs font-bold text-[#0B1220] dark:text-gray-300 truncate">
+                    {warehouseName}
+                  </span>
+                </div>
+                <div dir="ltr" className="shrink-0">
+                  <ClientOnlyTime 
+                    date={session.snapshotAt} 
+                    mode="datetime" 
+                    locale={locale as 'ar' | 'en'}
+                    className="text-[10px] font-medium text-gray-400"
+                  />
+                </div>
+              </div>
+
+              {/* BOTTOM TIER: Progress Bar & Action */}
+              <div className="flex flex-col gap-3 pt-3 border-t border-gray-50 dark:border-gray-800/50">
+                <div className="flex flex-col gap-1 w-full">
+                  <div className="flex justify-between text-[10px] font-bold text-gray-500">
+                    <span dir="ltr">{counted}/{total} {t('items_count') || 'Items Count'}</span>
+                    <span dir="ltr">{progressPercentage}%</span>
+                  </div>
+                  {/* Progress Bar Track */}
+                  <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" style={{ width: `${progressPercentage}%` }}></div>
+                  </div>
+                </div>
+                
+                {/* Full-width View Button for easy tapping */}
+                <button 
+                  onClick={() => router.push(`/stocktake/${session.id}`)}
+                  className="w-full py-2 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white text-xs font-bold rounded-lg hover:bg-gray-100 transition-colors flex justify-center items-center gap-2"
+                >
+                  {tc('view') || 'VIEW SESSION'} <span className="text-lg leading-none">+</span>
+                </button>
+              </div>
+            </div>
+          );
+        }}
+        filters={
+         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+           <div className="w-full sm:w-64">
+             <div className="relative w-full">
+               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+               <Input
+                 placeholder={t('search_placeholder') || 'Search by Session ID...'}
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+               />
+             </div>
+           </div>
+           <div className="w-full sm:w-48 relative group">
+             <SmartCombobox
+               items={statusItems}
+               value={initialStatus || 'ALL'}
+               onSelect={(item) => handleStatusChange(item.id === 'ALL' ? '' : String(item.id))}
+               placeholder={tc('statuses.all') || "All Statuses"}
+               triggerClassName={initialStatus && initialStatus !== 'ALL' ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+             />
+             {initialStatus && initialStatus !== 'ALL' && (
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                 onClick={(e) => { e.stopPropagation(); handleStatusChange(''); }}
+               >
+                 <X className="h-4 w-4" />
+               </Button>
+             )}
+           </div>
+         </div>
+        }
+        emptyState={
+         <EmptyState 
+          variant="minimal"
+          title={t('no_records') || 'No Stocktakes Found'} 
+          description={t('description') || 'Physical inventory verification sessions will appear here.'} 
+          action={
+           <PermissionGate action="create" resource="stocktake">
+            <Button 
+             onClick={() => router.push(`/stocktake/new`)}
+             className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
+            >
+             <Plus className="w-4 h-4 me-2" />
+             {t('create_new')}
+            </Button>
+           </PermissionGate>
+          }
          />
-        </div>
-       </div>
-
-       <Button
-        className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-label-xs font-semibold uppercase rounded-md transition-all border border-outline-low hover:text-foreground group"
-        onClick={() => setShowFilters(!showFilters)}
-       >
-        <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180" />
-        {tc('filters_button')}
-        {activeFilterCount > 0 && (
-         <span className="ms-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500 text-white text-label-xxs font-bold">
-          {activeFilterCount}
-         </span>
-        )}
-       </Button>
-       <Button
-        variant="ghost"
-        size="sm"
-        className="h-12 px-4 text-muted-foreground/60 hover:text-foreground text-label-xs font-semibold uppercase rounded-md transition-all"
-        onClick={() => { handleStatusChange(''); setDateFrom(''); setDateTo(''); }}
-       >
-        <RotateCcw className="w-3.5 h-3.5 me-2" />
-        {tc('clear_filters') || 'Clear Filters'}
-       </Button>
+        }
+        pagination={data?.meta ? {
+         page: data.meta.page,
+         pageSize: data.meta.pageSize,
+         total: data.meta.total,
+         totalPages: data.meta.totalPages,
+         onPageChange: handlePageChange
+        } : undefined}
+       />
       </div>
-
-      {showFilters && (
-       <div className="flex items-center gap-6 px-8 py-4 bg-card border border-border shadow-sm/30 border border-outline-low/5 rounded-lg">
-        <div className="flex flex-col gap-2 min-w-[180px] min-w-0">
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">{tFilters('date_from')}</label>
-         <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => { setDateFrom(e.target.value); handlePageChange(1); }}
-          className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-cyan-500/20 outline-none"
-          dir="ltr"
-         />
-        </div>
-        <div className="flex flex-col gap-2 min-w-[180px] min-w-0">
-         <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">{tFilters('date_to')}</label>
-         <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => { setDateTo(e.target.value); handlePageChange(1); }}
-          className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-cyan-500/20 outline-none"
-          dir="ltr"
-         />
-        </div>
-       </div>
-      )}
-
-     <div className="bg-card border border-border shadow-sm rounded-lg border border-outline-low overflow-hidden shadow-2xl">
-      <DataTable
-       columns={columns}
-       data={data?.data || []}
-       isLoading={false}
-       onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
-       collectionName="operations_stocktake"
-       enableVirtualization={true}
-       containerHeight="600px"
-       sorting={sorting}
-       onSortingChange={setSorting}
-       emptyState={
-        <EmptyState 
-         variant="minimal"
-         title={t('no_records') || 'No Stocktakes Found'} 
-         description={t('description') || 'Physical inventory verification sessions will appear here.'} 
-         action={
-          <PermissionGate action="create" resource="stocktake">
-           <Button 
-            onClick={() => router.push(`/stocktake/new`)}
-            className="bg-muted/50 hover:bg-muted/50 text-foreground border border-cyan-500/20"
-           >
-            <Plus className="w-4 h-4 me-2" />
-            {t('create_new')}
-           </Button>
-          </PermissionGate>
-         }
-        />
-       }
-       pagination={data?.meta ? {
-        page: data.meta.page,
-        pageSize: data.meta.pageSize,
-        total: data.meta.total,
-        totalPages: data.meta.totalPages,
-        onPageChange: handlePageChange
-       } : undefined}
-      />
-     </div>
-    </div>
    </QueryBoundary>
  </div>
  );

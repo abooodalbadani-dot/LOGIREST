@@ -90,7 +90,7 @@ export function Step4Commit({ wizard }: Step4CommitProps) {
  {tc('back')}
  </Button>
  <Button 
- className="flex-1 h-14 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase text-label-xs shadow-sm shadow-cyan-500/20"
+ className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
  disabled={wizard.isCommitting}
  onClick={wizard.handleCommit}
  >

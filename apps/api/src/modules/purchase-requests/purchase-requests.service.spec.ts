@@ -83,6 +83,7 @@ describe('PurchaseRequestsService', () => {
           requestNumber: 'PURCHASE_REQUEST-SEQ-00001',
           branchId: 'branch-1',
           warehouseId: 'wh-1',
+          departmentId: null,
           createdById: userId,
           status: 'DRAFT',
           lines: {

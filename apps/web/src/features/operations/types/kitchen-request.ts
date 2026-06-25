@@ -7,6 +7,7 @@ export interface KitchenRequestItem {
  id: string;
  itemId: string;
  itemName: string;
+ itemCode?: string;
  uom: string;
  quantity: number;
  notes?: string;
@@ -64,6 +65,7 @@ export const KitchenRequestDetailSchema = z.object({
   id: z.string(),
   itemId: z.string(),
   itemName: z.string(),
+  itemCode: z.string().optional(),
   uom: z.string(),
   quantity: z.number(),
   notes: z.string().optional(),
@@ -79,6 +81,7 @@ export const KitchenRequestDetailSchema = z.object({
  rejectionReason: z.string().optional(),
  fulfilledBy: z.string().optional(),
  fulfilledAt: z.string().optional(),
+ issueId: z.string().nullable().optional(),
  createdAt: z.string().default(() => new Date().toISOString()),
  updatedAt: z.string().default(() => new Date().toISOString()),
  version: z.number().default(1),

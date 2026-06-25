@@ -274,7 +274,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
               <button
                 type="button"
                 onClick={onSubmit}
-                className="bg-operational-cyan hover:bg-operational-cyan/90 text-white h-10 px-6 rounded-md transition-colors disabled:opacity-50 shadow-sm shadow-operational-cyan/20"
+                className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 disabled={conflict.saveDisabled || !isDirty || isSaving}
               >
                 {isSaving ? t('saving') : t('save')}

@@ -6,8 +6,28 @@
 @custom-variant dark (&:is(.dark, .dark *));
 
 @theme {
+  --color-brand-gold: #c4a276;
+  --color-brand-gold-hover: #b09068;
+  --color-brand-black: #000000;
+  --color-sidebar-dark: var(--background);
+  --color-card-dark: var(--card-bg);
+  --color-bg-light: var(--background);
+
+  /* Override default Tailwind cyan with #b48e67 (Gold) across all system components */
+  --color-cyan-50: color-mix(in srgb, #b48e67 10%, white);
+  --color-cyan-100: color-mix(in srgb, #b48e67 20%, white);
+  --color-cyan-200: color-mix(in srgb, #b48e67 30%, white);
+  --color-cyan-300: color-mix(in srgb, #b48e67 40%, white);
+  --color-cyan-400: color-mix(in srgb, #b48e67 60%, white);
+  --color-cyan-500: #b48e67;
+  --color-cyan-600: color-mix(in srgb, #b48e67 80%, black);
+  --color-cyan-700: color-mix(in srgb, #b48e67 60%, black);
+  --color-cyan-800: color-mix(in srgb, #b48e67 40%, black);
+  --color-cyan-900: color-mix(in srgb, #b48e67 20%, black);
+  --color-cyan-950: color-mix(in srgb, #b48e67 10%, black);
+
   /* Fonts */
-  --font-sans: var(--font-ibm-plex-arabic), var(--font-ibm-plex), sans-serif;
+  --font-sans: var(--font-ibm-plex), var(--font-ibm-plex-arabic), sans-serif;
   --font-display: var(--font-be-vietnam-pro), sans-serif;
 
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
@@ -136,7 +156,7 @@
 
 :root {
   /* Light Mode: Operational Elegance & Luxury Enterprise */
-  --operational-cyan: #CAAE85;
+  --operational-cyan: #b48e67;
   --operational-red: #ba1a1a;
   --surface-ledger: #FCFBF8;
 
@@ -146,16 +166,21 @@
   --status-info: #535f76;
 
   /* Client proposed semantic variables */
-  --background: #F9FAFB; /* bg-light */
-  --card-bg: #FFFFFF; /* card-bg */
-  --text-main: #1A1A1A; /* text-main */
-  --muted-bg: #E5E7EB; /* muted-bg */
-  --border-color: #E5E7EB; /* border-color */
+  --background: #F9FAFB;
+  /* bg-light */
+  --card-bg: #FFFFFF;
+  /* card-bg */
+  --text-main: #1A1A1A;
+  /* text-main */
+  --muted-bg: #E5E7EB;
+  /* muted-bg */
+  --border-color: #E5E7EB;
+  /* border-color */
 
   /* Surface Foundation */
   --foreground: #1A1A1A;
 
-  --primary: #CAAE85;
+  --primary: #b48e67;
   --primary-foreground: #ffffff;
   --primary-container: #715b38;
 
@@ -167,9 +192,10 @@
   --tertiary-fixed-dim: #bbc7e2;
 
   --muted: #E5E7EB;
-  --muted-foreground: #2C2C2C; /* Darkened from #544C42 for high readability and contrast */
+  --muted-foreground: #2C2C2C;
+  /* Darkened from #544C42 for high readability and contrast */
 
-  --accent: #CAAE85;
+  --accent: #b48e67;
   --accent-foreground: #ffffff;
 
   --destructive: #ba1a1a;
@@ -188,14 +214,15 @@
   --surface-container-high: #eee7e2;
   --surface-container-highest: #e8e1dc;
   --surface-variant: #e8e1dc;
-  --on-surface-variant: #1A1A1A; /* Darkened from #2F3130 for clarity */
+  --on-surface-variant: #1A1A1A;
+  /* Darkened from #2F3130 for clarity */
 
   /* No-Line Rule: Section borders are transparent/subtle in Light Mode */
-  --border: #E5E7EB;
-  --border-surface: #E5E7EB;
-  --border-muted: #f4ede7;
-  --input: #E5E7EB;
-  --ring: #caae85;
+  --border: #E6D5C1;
+  --border-surface: #E6D5C1;
+  --border-muted: #F0E6D8;
+  --input: #E6D5C1;
+  --ring: #b48e67;
 
   --outline-low: rgba(113, 91, 56, 0.05);
   --outline-medium: rgba(113, 91, 56, 0.1);
@@ -210,32 +237,38 @@
   --status-warning-rgb: 245, 158, 11;
   --status-error-rgb: 186, 26, 26;
   --on-surface-rgb: 30, 27, 24;
-  --foreground-ar-muted: #2C2C2C; /* Darkened from #4d463c for high readability and contrast */
+  --foreground-ar-muted: #2C2C2C;
+  /* Darkened from #4d463c for high readability and contrast */
   --radius: 0.25rem;
 }
 
 .dark {
   /* Dark Mode: Luxury Enterprise */
-  --operational-cyan: #CAAE85;
+  --operational-cyan: #b48e67;
   --operational-red: #ffb4ab;
   --surface-ledger: #121212;
 
-  --status-success: #caae85;
+  --status-success: #b48e67;
   --status-warning: #eb8f3b;
   --status-error: #ffb4ab;
   --status-info: #a6b2cd;
 
   /* Client proposed semantic variables */
-  --background: #111827; /* sidebar-dark */
-  --card-bg: #18181B; /* card-dark */
-  --text-main: #F9FAFB; /* text-main reverse */
-  --muted-bg: #374151; /* muted-bg */
-  --border-color: #3F3F46; /* border-color */
+  --background: #111827;
+  /* sidebar-dark */
+  --card-bg: #18181B;
+  /* card-dark */
+  --text-main: #F9FAFB;
+  /* text-main reverse */
+  --muted-bg: #374151;
+  /* muted-bg */
+  --border-color: #3F3F46;
+  /* border-color */
 
   --surface: #18181B;
   --foreground: #F9FAFB;
 
-  --primary: #CAAE85;
+  --primary: #b48e67;
   --primary-foreground: #0a0a0a;
   --primary-container: #715b38;
   --primary-fixed-dim: #dfc298;
@@ -250,7 +283,7 @@
   --muted: #374151;
   --muted-foreground: #a3a3a3;
 
-  --accent: #CAAE85;
+  --accent: #b48e67;
   --accent-foreground: #fcfbf8;
 
   --destructive: #ffb4ab;
@@ -271,20 +304,20 @@
   --surface-variant: #1e1e1e;
   --on-surface-variant: #fcfbf8;
 
-  --border: #3F3F46;
-  --border-surface: #3F3F46;
-  --border-muted: rgba(255, 255, 255, 0.05);
-  --input: #1e1e1e;
-  --ring: #caae85;
+  --border: #524433;
+  --border-surface: #524433;
+  --border-muted: #3D3326;
+  --input: #524433;
+  --ring: #b48e67;
 
-  --outline-low: rgba(202, 174, 133, 0.05);
-  --outline-medium: rgba(202, 174, 133, 0.1);
-  --outline-strong: rgba(202, 174, 133, 0.2);
+  --outline-low: rgba(180, 142, 103, 0.05);
+  --outline-medium: rgba(180, 142, 103, 0.1);
+  --outline-strong: rgba(180, 142, 103, 0.2);
 
-  --primary-rgb: 202, 174, 133;
-  --operational-cyan-rgb: 202, 174, 133;
+  --primary-rgb: 180, 142, 103;
+  --operational-cyan-rgb: 180, 142, 103;
   --operational-red-rgb: 255, 180, 171;
-  --status-success-rgb: 202, 174, 133;
+  --status-success-rgb: 180, 142, 103;
   --status-warning-rgb: 235, 143, 59;
   --status-error-rgb: 255, 180, 171;
   --on-surface-rgb: 247, 239, 234;
@@ -293,8 +326,40 @@
 
 @layer base {
   * {
-    @apply outline-ring/50;
-    border-color: transparent;
+    @apply border-border outline-ring/50;
+  }
+
+  /* Global Input and Select Border Visibility ("Ghost Fields" elimination) */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+  textarea,
+  select,
+  [data-slot="input"],
+  [data-slot="select-trigger"] {
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(196, 162, 118, 0.4);
+    background-color: var(--background);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):hover,
+  textarea:hover,
+  select:hover,
+  [data-slot="input"]:hover,
+  [data-slot="select-trigger"]:hover {
+    border-color: rgba(196, 162, 118, 0.7);
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus-visible,
+  textarea:focus,
+  textarea:focus-visible,
+  select:focus,
+  [data-slot="input"]:focus,
+  [data-slot="select-trigger"]:focus {
+    border-color: #c4a276;
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(196, 162, 118, 0.5);
   }
 
   body {
@@ -305,8 +370,55 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+
   :lang(ar) * {
     letter-spacing: normal !important;
+  }
+
+  /* ============================================================
+   * ENTERPRISE NUMERAL STANDARDIZATION — LAYER 1 (FONT EXCLUSION)
+   * Prevents IBM Plex Sans Arabic from rendering Eastern Arabic-Indic
+   * numerals (٠١٢٣٤٥٦٧٨٩). Forces fallback to IBM Plex Sans (Latin).
+   * Unicode blocks excluded:
+   *   U+0660–U+0669  Arabic-Indic digits
+   *   U+06F0–U+06F9  Extended Arabic-Indic digits (Farsi/Urdu)
+   * ============================================================ */
+  @font-face {
+    font-family: var(--font-ibm-plex-arabic);
+    src: local('');
+    /* no-op: override trigger only */
+    unicode-range: U+0660-0669, U+06F0-06F9;
+  }
+
+  /* ============================================================
+   * ENTERPRISE NUMERAL STANDARDIZATION — LAYER 2 (CSS HARD OVERRIDE)
+   * Forces ltr direction and Latin numeral shaping on ALL data-entry
+   * and numeric display elements, regardless of inherited :lang(ar).
+   * ============================================================ */
+  :lang(ar) input[type="number"],
+  :lang(ar) input[type="tel"],
+  :lang(ar) input[type="date"],
+  :lang(ar) input[type="datetime-local"],
+  :lang(ar) input[type="time"],
+  :lang(ar) input[type="text"][inputmode="numeric"],
+  :lang(ar) input[type="text"][inputmode="decimal"],
+  :lang(ar) [data-slot="input"][type="number"],
+  :lang(ar) [data-slot="input"][type="tel"],
+  :lang(ar) [data-slot="input"][type="date"],
+  :lang(ar) [data-slot="input"][type="text"][inputmode="numeric"],
+  :lang(ar) [data-slot="input"][type="text"][inputmode="decimal"],
+  :lang(ar) [data-numeric="true"],
+  :lang(ar) [dir="ltr"] {
+    font-variant-numeric: lining-nums tabular-nums !important;
+    font-feature-settings: "lnum" 1, "tnum" 1 !important;
+  }
+
+  /* Numeric display containers (read-only data in tables, cards, etc.) */
+  [data-numeric="true"] {
+    direction: ltr;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    font-family: var(--font-mono), ui-monospace, monospace;
   }
 
   :lang(en) {
@@ -322,6 +434,52 @@
   :lang(ar) input[type="date"] {
     direction: ltr;
     text-align: right;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * ENTERPRISE NUMERIC STANDARDIZATION — ABSOLUTE LAW
+   * When lang="ar" is on <html>, browsers auto-render Eastern Arabic numerals
+   * (١٢٣). This block is a non-negotiable global override to force Western
+   * Arabic numerals (1, 2, 3) in ALL numeric and data entry contexts.
+   * ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Numeric inputs: force LTR with Western numerals */
+  input[type="number"],
+  input[type="tel"] {
+    -webkit-locale: "en" !important;
+    direction: ltr !important;
+    text-align: center;
+    unicode-bidi: plaintext;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+  }
+
+  /* Text inputs that display codes, IDs, or structured data */
+  input[type="text"][dir="ltr"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    direction: ltr !important;
+    unicode-bidi: plaintext;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+  }
+
+  /* Table cells, badges, and static numeric displays */
+  td[data-numeric="true"],
+  .numeric-data,
+  [data-numeric] {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    display: inline-block;
+  }
+
+  /* Textarea: structural data entry */
+  textarea[dir="ltr"] {
+    direction: ltr !important;
+    unicode-bidi: plaintext;
   }
 
   :lang(ar) h1,
@@ -492,25 +650,111 @@
   box-shadow: 0 0 24px 0 rgba(var(--on-surface-rgb), 0.04);
 }
 
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 30%, transparent) transparent;
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+@media print {
+
+  /* Hide the entire application UI unless a thermal receipt is present */
+  #root,
+  body>*:not(.thermal-receipt-root) {
+    display: none !important;
+  }
+
+  /* Make sure thermal-receipt-root is visible if present */
+  .thermal-receipt-root {
+    display: block !important;
+  }
+
+  /* Display a professional warning message */
+  body:not(:has(.thermal-receipt-root)) {
+    background-color: white !important;
+  }
+
+  body:not(:has(.thermal-receipt-root))::before {
+    content: 'عذراً، هذه الشاشة التفاعلية غير مخصصة للطباعة المباشرة. يرجى استخدام زر "تصدير التقرير" (Export/Generate Report) للحصول على نسخة معتمدة ومنسقة.';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #334155;
+    text-align: center;
+    padding: 2rem;
+    direction: rtl;
+    box-sizing: border-box;
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
-  border-radius: 10px;
+/* إجبار عنصر الـ SVG الداخلي على التجاوب الكامل مع الحاوية في التقارير */
+.report-svg-banner svg {
+  height: 100% !important;
+  width: auto !important;
+  max-height: 100% !important;
+  overflow: visible !important;
+  /* CRITICAL: Forces paths that slightly exceed viewBox to render */
+  padding: 4px;
+  /* Safety margin to prevent canvas clipping */
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--primary) 60%, transparent);
+.report-svg-mark svg {
+  height: 100% !important;
+  width: 100% !important;
+  max-height: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+/* Force Latin (Western) numerals globally or under specific classes */
+.force-latin-numbers,
+.force-latin-numbers * {
+  -webkit-locale: "en" !important;
+  font-variant-numeric: lining-nums !important;
+  font-feature-settings: "lnum" 1 !important;
+}
+
+input,
+textarea,
+.font-numeric {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }

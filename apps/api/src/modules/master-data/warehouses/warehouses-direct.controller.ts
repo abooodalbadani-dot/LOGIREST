@@ -38,9 +38,13 @@ export class WarehousesDirectController {
     @CurrentUser('role') role: Role,
     @Query('branchId') branchId?: string,
     @Query('limit') limit?: string,
+    @Query('includeInactive') includeInactive?: string,
   ) {
     const take = limit ? parseInt(limit, 10) : undefined;
-    const filter: Record<string, unknown> = { isActive: true };
+    const filter: Record<string, unknown> = {};
+    if (includeInactive !== 'true') {
+      filter.isActive = true;
+    }
     if (branchId) {
       filter.branchId = branchId;
     }

@@ -1,6 +1,7 @@
 # Stage 1: Builder
-FROM node:20-slim AS builder
-RUN apt-get update && apt-get install -y --no-install-recommends openssl
+FROM node:24-slim AS builder
+RUN rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg
+RUN apt-get update && apt-get install -y --no-install-recommends openssl chromium
 WORKDIR /app
 
 # Copy root configurations and workspaces bootstrap
@@ -9,13 +10,18 @@ COPY packages/shared-types/package*.json ./packages/shared-types/
 COPY apps/api/package*.json ./apps/api/
 COPY apps/web/package*.json ./apps/web/
 
+# Set NPM registry mirror
+RUN npm config set registry https://registry.npmmirror.com/
+
+# Set Prisma mirror to bypass connection drops
+ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
+
 # Install dependencies (hoisted to root node_modules)
-#RUN npm ci --workspace=apps/api
-RUN npm config set fetch-retries 5 \
-    && npm config set fetch-retry-mintimeout 20000 \
-    && npm config set fetch-retry-maxtimeout 120000 \
-    && npm cache clean --force \
-    && npm ci --workspace=apps/api
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --workspace=apps/api --no-audit --no-fund --legacy-peer-deps
+
+# Explicit Playwright Chromium Installation
+RUN npx playwright install --with-deps chromium
 
 # Copy the rest of the source code
 COPY packages/ packages/
@@ -30,11 +36,12 @@ RUN npm run build --workspace=apps/api
 
 
 # Stage 2: Production Runner
-FROM node:20-slim AS production
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+FROM node:24-slim AS production
+RUN apt-get update && apt-get install -y --no-install-recommends curl chromium && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV CHROMIUM_PATH=/usr/bin/chromium
 
 # Copy compiled source files (NestJS is compiled to dist/apps/api/src/main.js)
 COPY --from=builder /app/apps/api/dist ./dist

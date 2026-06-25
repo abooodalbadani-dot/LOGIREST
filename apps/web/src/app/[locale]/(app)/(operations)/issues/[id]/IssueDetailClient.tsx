@@ -5,6 +5,7 @@ import { Package } from 'lucide-react';
 import { useIssue } from '@/features/operations/hooks/useIssue';
 import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { IssueForm } from '@/features/operations/components/issue-form';
+import { IssueViewer } from './IssueViewer';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScopeGuard } from '@/components/shared/ScopeGuard';
@@ -18,7 +19,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
 
  if (isLoading) {
   return (
-   <div className=" min-w-0 items-center bg-card flex-1 space-y-8 gap-6 animate-pulse rounded-lg justify-center shadow-sm flex-col flex border border-border min-h-[60vh] w-full dark:bg-card-dark">
+   <div className="min-w-0 items-center bg-card flex-1 space-y-8 gap-6 animate-pulse rounded-lg justify-center shadow-sm flex-col flex border border-border min-h-[60vh] w-full dark:bg-card-dark">
     <div className="relative w-32 h-32 flex items-center justify-center">
      <div className="absolute inset-0 border-4 border-primary/5 rounded-full" />
      <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
@@ -32,6 +33,17 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
      <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
     </div>
    </div>
+  );
+ }
+
+ const status = issue?.status ?? 'DRAFT';
+ const isDocLocked = isDocumentLocked("ISSUE", status as DocumentStatus);
+
+ if (isDocLocked && issue) {
+  return (
+   <ScopeGuard warehouseId={issue.warehouseId}>
+    <IssueViewer issue={issue} locale={locale} />
+   </ScopeGuard>
   );
  }
 
@@ -52,3 +64,4 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
   </ScopeGuard>
  );
 }
+

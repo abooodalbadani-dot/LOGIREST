@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { Input } from '@/components/ui/input';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useForm, Controller, useWatch, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useWatch, useFieldArray, type UseFormRegister } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,77 @@ interface GRNFormProps {
    initialData?: GRNDetail;
    id: string;
    onConflict?: () => void;
+}
+
+interface GRNReceivedQtyCellProps {
+ register: UseFormRegister<GRNFormValues>;
+ index: number;
+ isLocked: boolean;
+ isWarehouseLocked: boolean;
+ qty: number;
+ receivedQty: number;
+ hasError: boolean;
+}
+
+function GRNReceivedQtyCell({
+ register,
+ index,
+ isLocked,
+ isWarehouseLocked,
+ qty,
+ receivedQty,
+ hasError
+}: GRNReceivedQtyCellProps) {
+ const isOver = receivedQty > qty;
+ return (
+  <Input
+   type="number"
+   dir="ltr"
+   lang="en"
+   style={{ WebkitLocale: '"en"' }}
+   disabled={isLocked || isWarehouseLocked}
+   className={cn(
+    "w-16 md:w-20 h-7 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50",
+    hasError
+     ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
+     : isOver
+       ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
+       : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-background/50 dark:border-brand-gold/40 dark:text-white focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
+   )}
+   {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
+  />
+ );
+}
+
+interface GRNLotAllocationCellProps {
+ field: LineItem;
+ hasLot: boolean;
+ label: string;
+ onClick: () => void;
+}
+
+function GRNLotAllocationCell({ field, hasLot, label, onClick }: GRNLotAllocationCellProps) {
+ return (
+  <button
+   type="button"
+   className={cn(
+    'inline-flex items-center justify-center transition-all text-[10px] font-bold uppercase rounded px-2 md:px-2.5 py-0.5 md:py-1 h-7 border',
+    hasLot
+       ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 w-auto font-mono gap-1.5'
+       : 'border-[#b48e67] text-[#b48e67] hover:bg-[#b48e67] hover:text-black w-auto'
+   )}
+   onClick={onClick}
+  >
+   {hasLot ? (
+      <>
+       <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shrink-0" />
+       <span dir="ltr" className="font-mono">{field.lot!.lotNumber}</span>
+      </>
+   ) : (
+      label
+   )}
+  </button>
+ );
 }
 
 export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) {
@@ -159,6 +231,11 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
    const status = (initialData?.status || GRN_STATUS.DRAFT) as DocumentStatus;
    const isLocked = isDocumentLocked('GRN', status);
+   const isSaved = status && (
+      status.toLowerCase() === 'saved' ||
+      status.toLowerCase() === 'received' ||
+      status.toLowerCase() === 'posted'
+   );
 
    const [isCustomItemDialogOpen, setIsCustomItemDialogOpen] = useState(false);
    const [customItemBarcode, setCustomItemBarcode] = useState('');
@@ -180,6 +257,21 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       name: "lines"
    });
 
+    const handleLotClick = useCallback((line: LineItem) => {
+       const index = fields.findIndex(f => f.id === line.id);
+       if (index < 0) return;
+       setLotDialogState({
+          open: true,
+          lineId: line.id,
+          lineIndex: index,
+          itemName: line.item.name || line.item.nameEn || line.item.nameAr || '',
+          receivedQty: line.receivedQty,
+          currentLot: line.lot,
+       });
+    }, [fields]);
+
+
+
    const { router } = useUnsavedChangesGuard(isDirty);
 
    const currencyId = useWatch({ control, name: 'currencyId' });
@@ -187,6 +279,42 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    const { data: warehouseLock } = useWarehouseLock(warehouseId || null);
    const isWarehouseLocked = !!warehouseLock?.isLocked;
    const watchedLines = useWatch({ control, name: 'lines' });
+
+   const extraColumns = useMemo(() => [
+      {
+         header: tc('table_headers.received_qty'),
+         cell: (field: LineItem) => {
+            const index = fields.findIndex(f => f.id === field.id);
+            const hasError = !!errors.lines?.[index]?.receivedQty;
+            return (
+               <GRNReceivedQtyCell
+                  register={register}
+                  index={index}
+                  isLocked={isLocked}
+                  isWarehouseLocked={isWarehouseLocked}
+                  qty={field.qty}
+                  receivedQty={field.receivedQty}
+                  hasError={hasError}
+               />
+            );
+         }
+      },
+      {
+         header: tc('table_headers.lot_allocation'),
+         isAction: true,
+         cell: (field: LineItem) => {
+            const hasLot = !!field.lot;
+            return (
+               <GRNLotAllocationCell
+                  field={field}
+                  hasLot={hasLot}
+                  label={t('allocate_lot')}
+                  onClick={() => handleLotClick(field)}
+               />
+            );
+         }
+      }
+   ], [tc, fields, errors.lines, isLocked, isWarehouseLocked, register, t, handleLotClick]);
 
    const selectedCurrencyCode = useMemo(() => {
       return currencies?.find(c => c.id === currencyId)?.code || '';
@@ -329,19 +457,6 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       }
    };
 
-   const handleLotClick = (line: LineItem) => {
-      const index = fields.findIndex(f => f.id === line.id);
-      if (index < 0) return;
-      setLotDialogState({
-         open: true,
-         lineId: line.id,
-         lineIndex: index,
-         itemName: line.item.name || line.item.nameEn || line.item.nameAr || '',
-         receivedQty: line.receivedQty,
-         currentLot: line.lot,
-      });
-   };
-
    const handleLotConfirm = (lot: LotAllocation) => {
       if (!lotDialogState) return;
       const existing = fields[lotDialogState.lineIndex];
@@ -420,7 +535,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             const result = await createMutation.mutateAsync({ payload, headers });
             playSound('success');
             toast.success(t('create_success'));
-            router.push(`/goods-received/${result.id}`, { skipGuard: true });
+            router.push('/goods-received', { skipGuard: true });
          } else if (initialData) {
             await updateMutation.mutateAsync({
                id: initialData.id,
@@ -432,6 +547,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             });
             playSound('success');
             toast.success(t('update_success'));
+            router.push('/goods-received', { skipGuard: true });
          }
       } catch (error) {
          const isConflict = error && typeof error === 'object' && 'name' in error && error.name === 'ConflictError';
@@ -445,7 +561,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                : undefined;
             console.error('[GRNForm] Submit Error:', { code: apiCode, message: apiMessage, raw: error });
             playSound('error');
-            toast.error(apiMessage || tc('error_occurred'));
+            const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+            if (!isToastShown) {
+               toast.error(apiMessage || tc('error_occurred'));
+            }
          }
       }
    };
@@ -455,15 +574,15 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    }
 
    return (
-      <div className="flex flex-col min-h-screen bg-card border border-border shadow-sm pb-32">
+      <div className="flex flex-col min-h-screen pb-32">
          <DocumentLockBanner status={status} isLocked={isLocked} />
          <LockBanner lockState={warehouseLock} />
 
          <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
-            <input type="hidden" {...register('poId')} />
-            <div className="flex items-center justify-between px-2">
-               <div className="flex flex-col">
-                  <h1 className="text-2xl font-black text-foreground tracking-widest uppercase flex items-center gap-4">
+            <Input type="hidden" {...register('poId')} />
+            <div className="flex items-center justify-between px-2 gap-4">
+               <div className="flex flex-col flex-1 min-w-0">
+                  <h1 className="text-2xl font-black text-foreground tracking-widest uppercase whitespace-nowrap truncate max-w-full block">
                      {isNew ? t('create_new') : `#${initialData?.documentNumber}`}
                   </h1>
                   <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase mt-1">
@@ -560,8 +679,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_supplier')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 rounded-xl border border-solid border-border bg-background text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold uppercase transition-colors"
-                                    // triggerClassName="w-full bg-background border-input text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold h-12 rounded-xl px-4 uppercase border"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                     disabled={isLocked || isWarehouseLocked}
                                  />
                               )}
@@ -584,8 +702,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_currency')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 rounded-xl border border-solid border-border bg-background text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold uppercase transition-colors"
-                                    // triggerClassName="w-full bg-background border-input text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold h-12 rounded-xl px-4 font-mono border"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                     disabled={isLocked || isWarehouseLocked}
                                  />
                               )}
@@ -611,8 +728,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                        router.replace(`/goods-received/new?po_id=${item.id}`);
                                     }}
                                     placeholder={t('select_po') || "Select Purchase Order"}
-                                    triggerClassName="w-full h-12 px-4 rounded-xl border border-solid border-border bg-background text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold uppercase transition-colors"
-                                 // triggerClassName="w-full bg-background border-input text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold h-10 rounded-xl px-4 font-mono border"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                  />
                               ) : (
                                  <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
@@ -632,8 +748,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     onSelect={(item) => field.onChange(item.id)}
                                     placeholder={tc('select_warehouse')}
                                     className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 rounded-xl border border-solid border-border bg-background text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold uppercase transition-colors"
-                                    // triggerClassName="w-full bg-background border-input text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold h-12 rounded-xl px-4 uppercase border"
+                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
                                     disabled={isLocked || isWarehouseLocked}
                                  />
                               )}
@@ -650,7 +765,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                               id="notes-area"
                               {...register('notes')}
                               disabled={isLocked || isWarehouseLocked}
-                              className="mt-2 w-full min-h-[100px] bg-background border border-input text-foreground font-medium shadow-sm focus:ring-1 focus:ring-brand-gold focus:border-brand-gold placeholder:text-muted-foreground/70 rounded-xl p-4 resize-none transition-all"
+                              className="mt-2 w-full min-h-[100px] bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white placeholder:text-gray-400 dark:placeholder:text-muted-foreground/70 rounded-xl p-4 resize-none"
                               placeholder={tc('notes_placeholder')}
                            />
                         </div>
@@ -707,63 +822,18 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                               }))}
                               isReadOnly={isLocked || isWarehouseLocked}
                               dense={true}
+                              layoutMode="table"
+                              hideLotColumns={true}
+                              hideUomColumn={true}
+                              borderless={true}
+                              noCollapse={true}
+                              enableVirtualization={false}
                               rowClassName={(line) => expiredLineIds.includes(line.id) ? 'border-l-2 border-l-destructive bg-destructive/5' : ''}
                               onRemoveLine={(id) => {
                                  const idx = fields.findIndex(f => f.id === id);
                                  if (idx >= 0) remove(idx);
                               }}
-                              extraColumns={[
-                                 {
-                                    header: tc('table_headers.received_qty'),
-                                    cell: (field: LineItem) => {
-                                       const index = fields.findIndex(f => f.id === field.id);
-                                       const isOver = field.receivedQty > field.qty;
-                                       const hasError = !!errors.lines?.[index]?.receivedQty;
-                                       return (
-                                          <input type="number"
-                                             dir="ltr"
-                                             disabled={isLocked || isWarehouseLocked}
-                                             className={cn(
-                                                "w-20 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 h-7",
-                                                hasError
-                                                   ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
-                                                   : isOver
-                                                      ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
-                                                      : "bg-background border-input text-foreground focus:ring-brand-gold focus:border-brand-gold shadow-none placeholder:text-muted-foreground"
-                                             )}
-                                             {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
-                                          />
-                                       );
-                                    }
-                                 },
-                                 {
-                                    header: tc('table_headers.lot_allocation'),
-                                    cell: (field: LineItem) => {
-                                       const hasLot = !!field.lot;
-                                       return (
-                                          <button
-                                             type="button"
-                                             className={cn(
-                                                'inline-flex items-center gap-1.5 text-label-xs font-semibold uppercase transition-all rounded-lg px-2.5 py-1',
-                                                hasLot
-                                                   ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20'
-                                                   : 'text-primary underline underline-offset-4 decoration-dotted decoration-primary/40 hover:decoration-primary'
-                                             )}
-                                             onClick={() => handleLotClick(field)}
-                                          >
-                                             {hasLot ? (
-                                                <>
-                                                   <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shrink-0" />
-                                                   <span dir="ltr" className="font-mono">{field.lot!.lotNumber}</span>
-                                                </>
-                                             ) : (
-                                                t('allocate_lot')
-                                             )}
-                                          </button>
-                                       );
-                                    }
-                                 }
-                              ]}
+                              extraColumns={extraColumns}
                            />
                         </div>
                      </div>
@@ -781,7 +851,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                         onChange={(e) => setOverrideReason(e.target.value)}
                         disabled={isLocked || isWarehouseLocked}
                         placeholder={t('override_reason')}
-                        className="w-full bg-background border border-input text-foreground focus:ring-brand-gold focus:border-brand-gold rounded-xl p-4 transition-all text-body-md font-medium min-h-[80px] resize-none placeholder:text-muted-foreground shadow-none"
+                        className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl p-4 text-body-md font-medium min-h-[80px] resize-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
                      />
                   </div>
                )}
@@ -799,7 +869,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                      </div>
                   </div>
 
-                  <div className="bg-card border border-border shadow-sm p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-[340px] group transition-all hover:shadow-2xl">
+                  <div className="bg-card border border-border shadow-sm p-4 md:p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-full md:min-w-[340px] group transition-all hover:shadow-2xl">
                      <div className="absolute top-0 end-0 w-1 h-full bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] group-hover:bg-primary transition-all" />
 
                      <div className="space-y-6 relative z-10">
@@ -826,6 +896,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             <FormFooter
                isLocked={isLocked || isWarehouseLocked}
                onCancel={() => router.push('/goods-received', { skipGuard: !isDirty })}
+               cancelLabel={isSaved ? tc('back') || 'BACK' : tc('cancel') || 'CANCEL'}
                actions={actions || workflowActions}
                onSubmit={handleSubmit(onSubmit, onFormError)}
                isPending={isPending}

@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -45,25 +46,28 @@ export default function MovementsClient() {
 
  const { data, isLoading, isError, error } = useInventoryMovements({
   search: searchFilter || undefined,
-  document_type: typeFilter || undefined,
+  documentType: typeFilter || undefined,
   page
  });
 
  const getDocumentPath = useMemo(() => (movement: InventoryMovement): string => {
   const type = movement.transactionType.toUpperCase();
   if (type === 'GRN' || type === 'GOODS_RECEIVED_NOTE') {
-   return `/goods-received/${movement.documentReference}`;
+   return `/goods-received/${movement.documentId || movement.documentReference}`;
   }
   if (type === 'ISSUE' || type === 'INVENTORY_ISSUE') {
-   return `/issues/${movement.documentReference}`;
+   return `/issues/${movement.documentId || movement.documentReference}`;
   }
   if (type === 'TRANSFER') {
-   return `/transfers/${movement.documentReference}`;
+   return `/transfers/${movement.documentId || movement.documentReference}`;
   }
   if (type === 'ADJUSTMENT') {
    return movement.documentReference === 'INITIAL_BALANCE'
     ? '/adjustments/new?type=INITIAL_BALANCE'
-    : `/adjustments/${movement.documentReference}`;
+    : `/adjustments/${movement.documentId || movement.documentReference}`;
+  }
+  if (type === 'STOCKTAKE') {
+   return `/stocktake/${movement.documentId || movement.documentReference}`;
   }
   return '#';
  }, []);
@@ -73,27 +77,21 @@ export default function MovementsClient() {
    accessorKey: 'timestamp',
    header: t('posted_at'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 min-w-0">
-     <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/60">
-      {formatDate(row.original.timestamp, currentLocale as 'ar' | 'en')}
-     </span>
-     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('temporal_mark')}</span>
-    </div>
+    <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/60 tabular-nums">
+     {formatDate(row.original.timestamp, currentLocale as 'ar' | 'en')}
+    </span>
    ),
   },
   {
    accessorKey: 'documentReference',
    header: t('document_number'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 min-w-0">
-     <Link
-      href={getDocumentPath(row.original)}
-      className="text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
-     >
-      <span dir="ltr">{row.original.documentReference}</span>
-     </Link>
-     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('source_reference')}</span>
-    </div>
+    <Link
+     href={getDocumentPath(row.original)}
+     className="text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)] block"
+    >
+     <span dir="ltr">{row.original.documentReference}</span>
+    </Link>
    ),
   },
   {
@@ -109,26 +107,18 @@ export default function MovementsClient() {
    accessorKey: 'itemCode',
    header: t('item_code'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 min-w-0">
-     <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase">
-      {row.original.itemCode || '—'}
-     </span>
-     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('system_id')}</span>
-    </div>
+    <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase block">
+     {row.original.itemCode || '—'}
+    </span>
    ),
   },
   {
    id: 'itemName',
    header: t('item_name'),
    cell: ({ row }) => (
-    <div className="flex flex-col gap-0.5 max-w-[220px] min-w-0">
-     <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-foreground transition-colors leading-tight">
-      {row.original.itemName}
-     </span>
-     <span className="text-label-xxs font-bold text-muted-foreground/60 truncate uppercase">
-      {t('sku_master_entity')}
-     </span>
-    </div>
+    <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-foreground transition-colors leading-tight block max-w-[220px]">
+     {row.original.itemName}
+    </span>
    ),
   },
   {
@@ -149,15 +139,13 @@ export default function MovementsClient() {
   {
    accessorKey: 'quantity',
    header: t('qty'),
+   meta: { numeric: true },
    cell: ({ row }) => {
     const isEntry = row.original.quantity > 0;
     return (
-     <div className="min-w-0 gap-6 flex-1 items-end flex-col flex w-full">
-      <span dir="ltr" className={`font-mono text-label-sm font-semibold px-3 py-1 rounded-xl ${isEntry ? 'text-status-success bg-status-success/10 border border-status-success/20' : 'text-status-error bg-status-error/10 border border-status-error/20'}`}>
-       {formatQuantity(Math.abs(row.original.quantity), currentLocale as 'ar' | 'en')}
-      </span>
-      <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">{t('movement_delta')}</span>
-     </div>
+     <span dir="ltr" className={`inline-block font-mono text-label-sm font-semibold px-3 py-1 rounded-xl tabular-nums ${isEntry ? 'text-status-success bg-status-success/10 border border-status-success/20' : 'text-status-error bg-status-error/10 border border-status-error/20'}`}>
+      {formatQuantity(Math.abs(row.original.quantity), currentLocale as 'ar' | 'en')}
+     </span>
     );
    },
   },
@@ -261,13 +249,13 @@ export default function MovementsClient() {
        {t('ledger_query')}
       </span>
       <div className="relative group">
-       <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-foreground transition-colors" />
-       <input
+       <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-operational-cyan transition-colors" />
+       <Input
         type="search"
         placeholder={t('search_placeholder')}
         value={searchFilter}
         onChange={(e) => { setSearchFilter(e.target.value); setPage(1); }}
-        className="w-full h-12 ps-12 pe-4 bg-surface-container-highest/30 border-none focus:ring-2 focus:ring-operational-cyan/30 rounded-xl text-label-sm font-bold transition-all"
+        className="w-full h-12 ps-12 pe-4 bg-white/5 border border-border/50 focus:ring-2 focus:ring-operational-cyan/30 rounded-xl text-label-sm font-bold transition-all"
         dir={isRtl ? 'rtl' : 'ltr'} />
       </div>
      </div>
@@ -297,7 +285,7 @@ export default function MovementsClient() {
     <Button
      variant="default"
      onClick={handleExport}
-     className="h-12 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl shadow-sm shadow-operational-cyan/20 transition-all border-none group"
+     className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
     >
      <Download className="w-4 h-4 me-3 text-white transition-transform group-hover:-translate-y-0.5" />
      {t('export_manifest')}
@@ -310,25 +298,85 @@ export default function MovementsClient() {
       Failed to load data: {(error instanceof Error ? error.message : 'Unknown error')}
      </div>
     )}
-    <DataTable
-     columns={columns}
-     data={data?.data ?? []}
-     isLoading={isLoading}
-     collectionName="inventory_operational_ledger"
-     pagination={data?.meta ? {
-      page: data.meta.page,
-      pageSize: data.meta.pageSize,
-      total: data.meta.total,
-      totalPages: data.meta.totalPages,
-      onPageChange: setPage
-     } : undefined}
-     emptyState={
-      <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-20 min-w-0">
-       <History className="w-16 h-16 text-muted-foreground/60" />
-       <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('zero_movement')}</div>
+    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+     <div className="hidden md:block w-full">
+      <DataTable
+       columns={columns}
+       data={data?.data ?? []}
+       isLoading={isLoading}
+       collectionName="inventory_operational_ledger"
+       pagination={data?.meta ? {
+        page: data.meta.page,
+        pageSize: data.meta.pageSize,
+        total: data.meta.total,
+        totalPages: data.meta.totalPages,
+        onPageChange: setPage
+       } : undefined}
+       emptyState={
+        <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-20 min-w-0">
+         <History className="w-16 h-16 text-muted-foreground/60" />
+         <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('zero_movement')}</div>
+        </div>
+       }
+      />
+     </div>
+
+     {!isLoading && (data?.data ?? []).length > 0 && (
+      <div className="flex flex-col gap-3 md:hidden mt-4 p-4">
+       {(data?.data ?? []).map((movement) => {
+        const isEntry = movement.quantity > 0;
+        return (
+        <div 
+         key={movement.id} 
+         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+        >
+         {/* TOP TIER: Identity */}
+         <div className="flex justify-between items-start">
+           <div className="flex flex-col gap-1 w-full">
+             <div className="flex justify-between items-start gap-2">
+               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{movement.itemCode}#</span>
+               <Badge variant="secondary" className={`${getTypeStyle(movement.transactionType)} text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-sm h-auto shrink-0 border-transparent`}>
+                {t(`types.${movement.transactionType.toLowerCase()}` as 'types.grn' | 'types.issue' | 'types.transfer' | 'types.adjustment')}
+              </Badge>
+             </div>
+             <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{movement.itemName}</span>
+           </div>
+         </div>
+
+         {/* MIDDLE TIER: Financial/Qty */}
+         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+           <div className="flex flex-col">
+             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{t('qty')}</span>
+             <span dir="ltr" className={`font-mono text-sm font-bold ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
+               {isEntry ? '+' : '-'}{formatQuantity(Math.abs(movement.quantity), currentLocale as 'ar' | 'en')}
+             </span>
+           </div>
+           <div className="flex flex-col items-end">
+             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{t('direction')}</span>
+             <div className={`flex items-center gap-1 font-semibold text-[10px] uppercase ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
+              {isEntry ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {isEntry ? t('in') : t('out')}
+             </div>
+           </div>
+         </div>
+
+         {/* BOTTOM TIER: Meta */}
+         <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground tabular-nums">
+             <span dir="ltr">{formatDate(movement.timestamp, currentLocale as 'ar' | 'en')}</span>
+           </div>
+           <Link
+            href={getDocumentPath(movement)}
+            className="text-[10px] font-mono font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
+           >
+            <span dir="ltr">{movement.documentReference}</span>
+           </Link>
+         </div>
+        </div>
+       )})}
       </div>
-     }
-    />
+     )}
+    </div>
    </div>
   </div>
  );

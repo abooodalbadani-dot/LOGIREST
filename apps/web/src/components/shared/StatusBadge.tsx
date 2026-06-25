@@ -10,7 +10,7 @@ export const BadgeStatusSchema = z.enum([
  'DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'RECEIVED', 'REJECTED', 'CANCELLED', 
  'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED', 'PARTIAL',
  'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'INACTIVE', 'COUNTING', 'STARTED', 'COUNTING_COMPLETED', 'VARIANCE_SUBMITTED',
- 'FULFILLED', 'VOIDED'
+ 'FULFILLED', 'VOIDED', 'DISPUTED', 'CLOSED'
 ]);
 
 export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
@@ -18,29 +18,33 @@ export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
 const statusBadgeVariants = cva(
  "inline-flex items-center rounded-full px-2.5 py-0.5 text-label-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 uppercase whitespace-nowrap",
  {
- variants: {
- variant: {
- default:
- "bg-muted text-foreground border border-border hover:bg-surface-container-highest",
- brand:
- "bg-primary/15 text-primary hover:bg-primary/25",
- warning:
- "bg-status-warning/15 text-status-warning hover:bg-status-warning/25",
- error:
- "bg-status-error/15 text-status-error hover:bg-status-error/25",
- success:
- "bg-brand-gold/10 text-brand-gold border border-brand-gold/20",
- outline: "text-foreground bg-surface-container border",
- info: "bg-status-info/15 text-status-info hover:bg-status-info/25",
- },
- },
+  variants: {
+  variant: {
+  default:
+  "bg-muted/50 text-muted-foreground border-none hover:bg-muted",
+  brand:
+  "bg-primary/15 text-primary border-none hover:bg-primary/25",
+  warning:
+  "bg-amber-500/10 text-amber-500 border-none hover:bg-amber-500/20",
+  error:
+  "bg-red-500/10 text-red-500 border-none hover:bg-red-500/20",
+  success:
+  "bg-slate-100 dark:bg-[#1A2234] text-[#0B1220] dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-[#232d44]",
+  outline: 
+  "text-muted-foreground bg-transparent border border-border/50",
+  info: 
+  "bg-cyan-500/10 text-cyan-500 border-none hover:bg-cyan-500/20",
+  partial:
+  "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67] border border-[#b48e67]/30 hover:bg-amber-100/50 dark:hover:bg-amber-950/20",
+  },
+  },
  defaultVariants: {
  variant: "default",
  },
  }
 )
 
-export type BadgeVariant = "default" | "brand" | "warning" | "error" | "success" | "outline" | "info";
+export type BadgeVariant = "default" | "brand" | "warning" | "error" | "success" | "outline" | "info" | "partial";
 
 export interface StatusBadgeProps
  extends React.HTMLAttributes<HTMLDivElement>,

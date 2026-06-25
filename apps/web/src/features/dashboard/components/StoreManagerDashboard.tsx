@@ -23,6 +23,7 @@ import { canViewFinancialData } from '@/utils/roleUtils';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { EmptyScopeState } from '@/components/ui/EmptyScopeState';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export function StoreManagerDashboard() {
  const t = useTranslations('dashboard');
@@ -50,20 +51,21 @@ export function StoreManagerDashboard() {
 
  return (
   <main role="main" className="space-y-10 animate-in fade-in duration-200">
-   <h1 className="sr-only">{t('store.operational')} {t('store.control')}</h1>
-   
+
    {/* Store Manager Header - Industrial/Brutalist Style */}
-   <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 ps-6">
-    <div className="space-y-2">
-     <span className="text-label-xs font-semibold uppercase text-status-success block mb-2 opacity-80">{t('store.logistics')}</span>
-     <h2 className="text-headline-lg font-semibold uppercase italic text-foreground leading-none">
-      {t('store.operational')} <span className="text-status-success">{t('store.control')}</span>
-     </h2>
-     <div className="flex items-center gap-3">
-      <div className="h-[2px] w-12 bg-status-success" />
-      <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('store.central_warehouse')}</p>
-     </div>
-    </div>
+   <PageHeader
+    title="Operational"
+    highlight="Control"
+    subtitle={
+     <>
+      <span className="text-label-xs font-semibold uppercase text-status-success block mb-2 opacity-80">{t('store.logistics')}</span>
+      <div className="flex items-center gap-3">
+       <div className="h-[2px] w-12 bg-status-success" />
+       <p className="text-sm font-bold text-muted-foreground tracking-widest mt-2">{t('store.central_warehouse')}</p>
+      </div>
+     </>
+    }
+   >
     <div className="flex gap-4">
      <PermissionGate action="view" resource="operations_stocktake">
       <Link href="/stocktake" className="contents">
@@ -80,7 +82,7 @@ export function StoreManagerDashboard() {
       </Link>
      </PermissionGate>
     </div>
-   </header>
+   </PageHeader>
  
    {/* KPI Grid */}
    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" aria-labelledby="kpi-heading">
@@ -127,8 +129,8 @@ export function StoreManagerDashboard() {
       <div className="p-8 pb-4">
        <div className="flex items-center justify-between mb-8">
         <div>
-         <h3 id="fulfillment-queue-title" className="text-headline-lg font-semibold uppercase italic text-foreground leading-none">{t('store.fulfillment_queue')}</h3>
-         <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase mt-2">{t('store.fefo_guided')}</p>
+         <h3 id="fulfillment-queue-title" className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.fulfillment_queue')}</h3>
+         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-1">{t('store.fefo_guided')}</p>
         </div>
         <div className="flex items-center gap-3">
          <div className="flex -space-x-2.5">
@@ -139,50 +141,42 @@ export function StoreManagerDashboard() {
        </div>
        <div className="divide-y divide-transparent">
         {stats.fulfillmentQueue.map((job) => (
-         <div key={job.id} className="px-8 py-6 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial cursor-pointer group">
-          <div className="flex items-center gap-8">
-           <div className="flex flex-col items-center justify-center w-14 h-14 bg-card border border-border shadow-sm rounded-2xl font-mono text-label-sm font-semibold group-hover:bg-operational-cyan/10 transition-all duration-200">
-            <span className="opacity-10 text-label-xxs mb-1">{tc('id')}</span>
-            {job.documentNumber.split('-')[1] || job.documentNumber}
-           </div>
-           <div className="space-y-2">
-            <div className="flex items-center gap-4">
-             <span className="text-body-md font-semibold text-foreground uppercase">{job.destination}</span>
-             <Badge className={`rounded-lg text-label-xxs font-semibold uppercase px-2.5 py-1 border-none ${ job.priority.toLowerCase() === 'high' || job.priority.toLowerCase() === 'urgent' ? 'bg-status-error text-white animate-pulse' : 'bg-muted text-muted-foreground' }`}>
-              {t(`store.urgency_${(job.priority || 'normal').toLowerCase() === 'high' ? 'urgent' : (job.priority || 'normal').toLowerCase()}`)}
-             </Badge>
+         <Link key={job.id} href={job.type === 'ISSUE' ? `/issues/${job.id}` : `/transfers/${job.id}`} className="block">
+          <div className="px-8 py-6 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group">
+           <div className="flex items-center gap-8">
+            <div className="flex flex-col items-center justify-center w-14 h-14 bg-card border border-border shadow-sm rounded-2xl font-mono text-label-sm font-semibold group-hover:bg-operational-cyan/10 transition-all duration-200">
+             <span className="opacity-10 text-label-xxs mb-1">{tc('id')}</span>
+             {job.documentNumber.split('-')[1] || job.documentNumber}
             </div>
-            <p className="text-label-xs text-muted-foreground/30 font-semibold uppercase">
-             {job.itemsCount} {tc('units_label')} • {job.type === 'ISSUE' ? t('store.direct_issue') : t('store.transfer_request')}
-            </p>
-           </div>
-          </div>
-          <div className="flex items-center gap-10">
-           <div className="hidden md:flex flex-col items-end gap-2">
-            <span className="text-label-xxs font-semibold text-muted-foreground/20 uppercase italic">{t('store.fefo_buffer')}</span>
-            <div className="flex gap-1">
-             <div className="w-5 h-1 bg-status-success rounded-full" />
-             <div className="w-5 h-1 bg-status-success rounded-full" />
-             <div className="w-5 h-1 bg-muted rounded-full" />
+            <div className="space-y-2">
+             <div className="flex items-center gap-4">
+              <span className="text-body-md font-semibold text-foreground uppercase">{job.destination}</span>
+              <Badge className={`rounded-lg text-label-xxs font-semibold uppercase px-2.5 py-1 border-none ${ job.priority.toLowerCase() === 'high' || job.priority.toLowerCase() === 'urgent' ? 'bg-status-error text-white animate-pulse' : 'bg-muted text-muted-foreground' }`}>
+               {t(`store.urgency_${(job.priority || 'normal').toLowerCase() === 'high' ? 'urgent' : (job.priority || 'normal').toLowerCase()}`)}
+              </Badge>
+             </div>
+             <p className="text-label-xs text-muted-foreground/30 font-semibold uppercase">
+              {job.itemsCount} {tc('units_label')} • {job.type === 'ISSUE' ? t('store.direct_issue') : t('store.transfer_request')}
+             </p>
             </div>
            </div>
-           <PermissionGate action="edit" resource="operations_issues">
-            <Button 
-             variant="ghost" 
-             className="rounded-2xl bg-card border border-border shadow-sm h-12 w-12 p-0 hover:bg-status-success hover:text-black transition-all hover:scale-110 active:scale-95"
-             onClick={() => {
-              if (job.type === 'ISSUE') {
-               router.push(`/issues/${job.id}`);
-              } else {
-               router.push(`/transfers/${job.id}`);
-              }
-             }}
-            >
-             <ArrowRightLeft className="w-4 h-4" />
-            </Button>
-           </PermissionGate>
+           <div className="flex items-center gap-10">
+            <div className="hidden md:flex flex-col items-end gap-2">
+             <span className="text-label-xxs font-semibold text-muted-foreground/20 uppercase italic">{t('store.fefo_buffer')}</span>
+             <div className="flex gap-1">
+              <div className="w-5 h-1 bg-status-success rounded-full" />
+              <div className="w-5 h-1 bg-status-success rounded-full" />
+              <div className="w-5 h-1 bg-muted rounded-full" />
+             </div>
+            </div>
+            <PermissionGate action="edit" resource="operations_issues">
+             <div className="flex items-center justify-center rounded-2xl bg-card border border-border shadow-sm h-12 w-12 p-0 hover:bg-status-success hover:text-black transition-all hover:scale-110 active:scale-95">
+              <ArrowRightLeft className="w-4 h-4" />
+             </div>
+            </PermissionGate>
+           </div>
           </div>
-         </div>
+         </Link>
         ))}
        </div>
       </div>
@@ -199,7 +193,7 @@ export function StoreManagerDashboard() {
        <span className="text-label-xs font-semibold uppercase text-status-success flex items-center gap-2 mb-4">
         <Zap className="w-3.5 h-3.5 fill-current" /> {t('store.fefo_boundary')}
        </span>
-       <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('store.expiring_stock')}</h3>
+       <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.expiring_stock')}</h3>
       </div>
       <div className="p-8 pt-2 space-y-6">
        {stats.expiringLots.map((item) => (
@@ -235,7 +229,7 @@ export function StoreManagerDashboard() {
        <span className="text-label-xs font-semibold uppercase text-muted-foreground/20 flex items-center gap-2 mb-4">
         <BarChart3 className="w-3.5 h-3.5" /> {t('store.efficiency')}
        </span>
-       <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('store.stock_velocity')}</h3>
+       <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.stock_velocity')}</h3>
       </div>
       <div className="h-44 flex flex-col items-center justify-center gap-6 bg-card border border-border shadow-sm/30 group-hover:bg-card border border-border shadow-sm/50 transition-all duration-140 ease-industrial">
        <div className="flex items-end gap-2 h-16 w-full justify-center">

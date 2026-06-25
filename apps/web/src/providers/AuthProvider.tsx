@@ -1,5 +1,6 @@
 'use client';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
@@ -76,11 +77,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [hasAttemptedAutoSelect, setHasAttemptedAutoSelect] = useState(false);
   const router = useRouter();
   const t = useTranslations('auth');
+  const queryClient = useQueryClient();
 
   const setActiveScope = (scope: ActiveScope) => {
     setActiveScopeState(scope);
     localStorage.setItem('logirest_active_scope', JSON.stringify(scope));
   };
+
+  // Track whether this is the initial mount so we don't invalidate on first render.
+  const isScopeMounted = useRef(false);
+
+  useEffect(() => {
+    // Skip the very first run (mount). Only react to genuine scope changes
+    // while the user is already authenticated and the session is fully loaded.
+    if (!isScopeMounted.current) {
+      isScopeMounted.current = true;
+      return;
+    }
+    if (!isLoading && user) {
+      queryClient.invalidateQueries();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeScope]);
 
   useEffect(() => {
     const handleExpired = () => {

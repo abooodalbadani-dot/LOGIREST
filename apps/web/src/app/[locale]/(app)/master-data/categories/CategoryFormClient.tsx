@@ -43,6 +43,7 @@ interface Props {
 export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tc = useTranslations('master_data.categories');
+  const tv = useTranslations();
   const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useCategory(id);
@@ -254,7 +255,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 />
                 {errors.code && (
                   <p className="text-xs text-red-500 mt-1">
-                    {errors.code.message}
+                    {tv(errors.code.message as never)}
                   </p>
                 )}
               </div>
@@ -273,7 +274,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 />
                 {errors.name && (
                   <p className="text-xs text-red-500 mt-1">
-                    {errors.name.message}
+                    {tv(errors.name.message as never)}
                   </p>
                 )}
               </div>

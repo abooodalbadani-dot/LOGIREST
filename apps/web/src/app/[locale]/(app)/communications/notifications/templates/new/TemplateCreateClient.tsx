@@ -28,6 +28,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { useTriggerEvents, useParameterRegistry } from '@/features/notifications/hooks/useNotificationTemplates';
 
+const TEMPLATE_CODE_OPTIONS = [
+  { value: 'LOW_STOCK_ALERT', labelEn: 'Low Stock Alert', labelAr: 'تنبيه نقص المخزون' },
+  { value: 'EXPIRY_WARNING_ALERT', labelEn: 'Expiry Warning Alert', labelAr: 'تحذير اقتراب انتهاء الصلاحية' },
+  { value: 'ADJUSTMENT_POSTED', labelEn: 'Stock Adjustment Posted', labelAr: 'ترحيل تسوية مخزنية' },
+  { value: 'STOCKTAKE_POSTED', labelEn: 'Stocktake Finalized', labelAr: 'اعتماد جرد مخزني' },
+  { value: 'TRANSFER_SHIPPED', labelEn: 'Warehouse Transfer Dispatched', labelAr: 'شحن تحويل مخزني' },
+  { value: 'TRANSFER_RECEIVED', labelEn: 'Warehouse Transfer Received', labelAr: 'استلام تحويل مخزني' },
+  { value: 'PR_APPROVED', labelEn: 'Purchase Request Approved', labelAr: 'اعتماد طلب شراء' },
+  { value: 'PR_REJECTED', labelEn: 'Purchase Request Rejected', labelAr: 'رفض طلب شراء' },
+  { value: 'PO_PENDING_APPROVAL', labelEn: 'PO Pending Approval', labelAr: 'أمر شراء بانتظار الاعتماد' },
+  { value: 'PO_APPROVED', labelEn: 'Purchase Order Approved', labelAr: 'اعتماد أمر شراء' },
+  { value: 'KITCHEN_REQUEST_SUBMITTED', labelEn: 'Kitchen Request Submitted', labelAr: 'رفع طلب مطبخ' },
+  { value: 'KITCHEN_REQUEST_POSTED', labelEn: 'Kitchen Request Posted', labelAr: 'صرف طلب مطبخ' },
+  { value: 'GRN_POSTED', labelEn: 'Goods Received Note Posted', labelAr: 'اعتماد سند استلام بضاعة' },
+];
+
 export function TemplateCreateClient({ locale }: { locale: string }) {
  const t = useTranslations('notifications');
  const t_common = useTranslations('common');
@@ -62,53 +78,66 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
  };
 
  const [step, setStep] = useState(1);
- const [template, setTemplate] = useState({
-  code: '',
-  triggerEvent: 'LOW_STOCK',
-  subjectAr: '',
-  subjectEn: '',
-  bodyAr: '',
-  bodyEn: '',
-  allowedParameters: [] as Array<{ name: string; labelAr: string; labelEn: string; sampleValue: string; entity?: string; fieldPath?: string }>,
-  isActive: true,
- });
+  const [template, setTemplate] = useState({
+   code: '',
+   triggerEvent: '',
+   subjectAr: '',
+   subjectEn: '',
+   bodyAr: '',
+   bodyEn: '',
+   allowedParameters: [] as Array<{ name: string; labelAr: string; labelEn: string; sampleValue: string; entity?: string; fieldPath?: string }>,
+   isActive: true,
+  });
 
- const [paramForm, setParamForm] = useState({
-  name: '',
-  labelAr: '',
-  labelEn: '',
-  sampleValue: '',
- });
+  const [paramForm, setParamForm] = useState({
+   name: '',
+   labelAr: '',
+   labelEn: '',
+   sampleValue: '',
+  });
 
- const [entitySearch, setEntitySearch] = useState('');
- const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
- const [error, setError] = useState<string | null>(null);
+  const [entitySearch, setEntitySearch] = useState('');
+  const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
- const createMutation = useMutation({
-  mutationFn: (body: unknown) => apiClient.post('/notifications/templates', z.unknown(), body),
-  onSuccess: (data: unknown) => {
-   playSound('success');
-   qc.invalidateQueries({ queryKey: ['notifications/templates'] });
-   // Redirect to the newly created template detail page
-   const createdId = (data as { id?: string })?.id || 'tmpl-1';
-   router.push(`/communications/notifications/templates/${createdId}`);
-  },
-  onError: (err: unknown) => {
-   playSound('error');
-   setError((err as { message?: string })?.message || 'Failed to create template');
-  }
- });
+  const createMutation = useMutation({
+   mutationFn: (body: unknown) => apiClient.post('/notifications/templates', z.unknown(), body),
+   onSuccess: (data: unknown) => {
+    playSound('success');
+    qc.invalidateQueries({ queryKey: ['notifications/templates'] });
+    // Redirect to the newly created template detail page
+    const createdId = (data as { id?: string })?.id || 'tmpl-1';
+    router.push(`/communications/notifications/templates/${createdId}`);
+   },
+   onError: (err: unknown) => {
+    playSound('error');
+    setError((err as { message?: string })?.message || 'Failed to create template');
+   }
+  });
 
- const handleTriggerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const val = e.target.value;
-  const suggested = getSuggestedParams(val);
-  setTemplate(prev => ({
-   ...prev,
-   triggerEvent: val,
-   allowedParameters: [...suggested]
-  }));
-  setSelectedEntity(null);
- };
+  const handleCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+   const val = e.target.value;
+   const suggested = getSuggestedParams(val);
+   setTemplate(prev => ({
+    ...prev,
+    code: val,
+    triggerEvent: val,
+    allowedParameters: [...suggested]
+   }));
+   setSelectedEntity(null);
+   setError(null);
+  };
+
+  const handleTriggerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+   const val = e.target.value;
+   const suggested = getSuggestedParams(val);
+   setTemplate(prev => ({
+    ...prev,
+    triggerEvent: val,
+    allowedParameters: [...suggested]
+   }));
+   setSelectedEntity(null);
+  };
 
  const addRegistryField = (field: EntityField) => {
   const paramName = `${field.entity.toLowerCase()}_${field.field}`;
@@ -171,8 +200,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
  };
 
  return (
-  <div className="md:p-8 min-w-0 gap-6 flex-1 max-w-4xl space-y-8 p-4 mx-auto relative flex-col flex w-full">
-   <div className="absolute top-0 end-1/4 w-96 h-96 bg-operational-cyan/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+  <div className="min-w-0 gap-6 flex-1 max-w-4xl space-y-8 mx-auto relative flex-col flex w-full">
+   <div className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" />
 
    {/* Header section */}
    <div className="space-y-4">
@@ -219,63 +248,44 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
        transition={{ duration: 0.15 }}
        className="space-y-6"
       >
-       <div className="grid gap-4">
-        <Label htmlFor="code" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
-         TEMPLATE CODE
-        </Label>
-        <Input
-         id="code"
-         value={template.code}
-         onChange={(e) => {
-          setTemplate(prev => ({ ...prev, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '') }));
-          setError(null);
-         }}
-         placeholder="E.G. INVENTORY_LOW_STOCK_MAIL"
-         className="h-14 font-mono font-semibold rounded-none bg-card border border-border dark:border-white/10 px-5 focus-visible:ring-operational-cyan text-sm"
-        />
-        <span className="text-[9px] text-muted-foreground/45 font-medium ms-1">
-         UPPERCASE ALPHANUMERIC LETTERS AND UNDERSCORES ONLY.
-        </span>
-       </div>
-
-       <div className="grid gap-4">
-        <Label htmlFor="triggerEvent" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
-         EVENT TRIGGER
-        </Label>
-        {eventsLoading ? (
-         <div className="flex items-center gap-2 h-14 bg-card border border-border dark:border-white/10 rounded-none px-5 text-sm text-muted-foreground/60">
-          <Loader2 className="w-4 h-4 animate-spin text-operational-cyan" />
-          Loading trigger events...
-         </div>
-        ) : (
+        <div className="grid gap-4">
+         <Label htmlFor="code" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
+          TEMPLATE CODE
+         </Label>
          <div className="relative">
           <select
-           id="triggerEvent"
-           value={template.triggerEvent}
-           onChange={handleTriggerChange}
+           id="code"
+           value={template.code}
+           onChange={handleCodeChange}
            className="w-full h-14 bg-card border border-border dark:border-white/10 rounded-none px-5 focus:outline-none focus:ring-1 focus:ring-operational-cyan text-sm font-semibold transition-all appearance-none cursor-pointer"
           >
-            {triggerEvents.map((evt: TriggerEvent) => (
-            <option key={evt.code} value={evt.code}>
-             {evt.nameEn.toUpperCase()} ({evt.code}) — {evt.entityType}
+           <option value="" disabled>
+            {locale === 'ar' ? 'اختر رمز القالب...' : 'Select template code...'}
+           </option>
+           {TEMPLATE_CODE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+             {locale === 'ar' ? opt.labelAr : opt.labelEn} ({opt.value})
             </option>
            ))}
-           <option value="CUSTOM">FULLY CUSTOM EVENT TEMPLATE (CUSTOM)</option>
           </select>
           <div className="absolute end-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/45">
            ▼
           </div>
-          {template.triggerEvent !== 'CUSTOM' && (() => {
-           const evt = triggerEvents.find((e: TriggerEvent) => e.code === template.triggerEvent);
-           return evt ? (
-            <p className="text-[9px] text-muted-foreground/45 font-medium mt-1.5 ms-1">
-             {evt.description} — Entity: <span className="font-mono text-operational-cyan">{evt.entityType}</span>
-            </p>
-           ) : null;
-          })()}
          </div>
-        )}
-       </div>
+         {eventsLoading ? (
+          <p className="text-[9px] text-muted-foreground/45 font-medium mt-1.5 ms-1 flex items-center gap-1.5">
+           <Loader2 className="w-3 h-3 animate-spin text-operational-cyan" />
+           Loading trigger metadata...
+          </p>
+         ) : template.code && (() => {
+          const evt = triggerEvents.find((e: TriggerEvent) => e.code === template.code);
+          return evt ? (
+           <p className="text-[9px] text-muted-foreground/45 font-medium mt-1.5 ms-1">
+            {evt.description} — Entity: <span className="font-mono text-operational-cyan">{evt.entityType}</span>
+           </p>
+          ) : null;
+         })()}
+        </div>
       </motion.div>
      )}
 
@@ -359,7 +369,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
           </div>
           <div className="relative w-48">
            <Search className="w-3 h-3 absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-           <input
+           <Input
              type="text"
              value={entitySearch}
              onChange={(e) => setEntitySearch(e.target.value)}
@@ -567,7 +577,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
           onChange={(e) => setTemplate(prev => ({ ...prev, bodyAr: e.target.value }))}
           placeholder="الصنف {{item_name}} وصل إلى كمية {{qty}}..."
           dir="rtl"
-          className="min-h-[80px] text-xs rounded-none bg-surface-container border border-white/10 px-3 py-2"
+          className="w-full min-h-[200px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
          />
         </div>
        </div>
@@ -599,7 +609,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
           onChange={(e) => setTemplate(prev => ({ ...prev, bodyEn: e.target.value }))}
           placeholder="Item {{item_name}} reached low quantity of {{qty}}..."
           dir="ltr"
-          className="min-h-[80px] text-xs rounded-none bg-surface-container border border-white/10 px-3 py-2"
+          className="w-full min-h-[200px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
          />
         </div>
        </div>
@@ -649,7 +659,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
        type="button"
        onClick={executeCreate}
        disabled={createMutation.isPending}
-       className="h-12 px-8 bg-operational-cyan text-black hover:brightness-110 font-bold uppercase text-[10px] tracking-widest gap-2 rounded-none transition-all duration-300"
+       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
        {createMutation.isPending ? 'CREATING...' : 'CREATE TEMPLATE'}
        <Check className="w-4 h-4 stroke-[3px]" />

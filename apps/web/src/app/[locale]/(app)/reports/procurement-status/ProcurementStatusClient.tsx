@@ -60,11 +60,11 @@ export default function ProcurementStatusClient() {
 
  const exportColumns = [
  { header: t('table.po_no'), key: 'poNo', width: 15 },
- { header: t('table.date'), key: 'date', width: 20 },
- { header: t('table.supplier'), key: 'supplier', width: 30 },
- { header: t('table.total'), key: 'total', width: 15 },
+ { header: t('table.date'), key: 'date', width: 15 },
+ { header: t('table.supplier'), key: 'supplier', width: 35 },
+ { header: t('table.total'), key: 'total', width: 13 },
  { header: t('table.currency'), key: 'currency', width: 10 },
- { header: t('table.status'), key: 'status', width: 15 },
+ { header: t('table.status'), key: 'status', width: 12 },
  ];
 
  return (

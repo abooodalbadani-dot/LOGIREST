@@ -8,10 +8,10 @@ import { useAdminSettings } from './useAdminSettings';
 import { apiClient } from '@/lib/api/client';
 
 export const RestaurantProfileSchema = z.object({
- name: z.string().min(1, 'Restaurant name is required'),
+ name: z.string().min(1, 'admin.restaurant_profile.validation.name_required'),
  address: z.string().optional().nullable(),
  phone: z.string().optional().nullable(),
- email: z.string().email('Invalid email address').optional().nullable().or(z.literal('')),
+ email: z.string().email('admin.restaurant_profile.validation.email_required').optional().nullable().or(z.literal('')),
  logo: z.string().optional().nullable(),
  logoUrl: z.string().optional().nullable(),
  taxNumber: z.string().optional().nullable(),
@@ -20,6 +20,9 @@ export const RestaurantProfileSchema = z.object({
  website: z.string().optional().nullable(),
  socialLinks: z.string().optional().nullable(),
  updatedAt: z.string().optional().nullable(),
+ brandingConfig: z.object({
+  logoType: z.enum(['MARK', 'BANNER']).optional(),
+ }).optional(),
 });
 
 export type RestaurantProfile = z.infer<typeof RestaurantProfileSchema>;
@@ -43,6 +46,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
      taxNumber: profile.taxNumber || '',
      commercialRegistration: profile.commercialRegistration || '',
      updatedAt: profile.updatedAt || new Date().toISOString(),
+     brandingConfig: profile.brandingConfig || { logoType: 'MARK' },
     } as RestaurantProfile;
 
     if (typeof window !== 'undefined') {
@@ -65,6 +69,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
      taxNumber: '',
      commercialRegistration: '',
      updatedAt: new Date().toISOString(),
+     brandingConfig: { logoType: 'MARK' },
     } as RestaurantProfile;
 
     if (typeof window !== 'undefined') {

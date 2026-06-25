@@ -1,5 +1,6 @@
 "use client"
 
+import { Input } from '@/components/ui/input';
 import * as React from "react";
 import { RelationalName } from "@/components/shared/RelationalName";
 import { useTranslations } from "next-intl";
@@ -10,7 +11,8 @@ import {
  User, 
  ClipboardList, 
  History,
- Search
+ Search,
+ Play
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -75,7 +77,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
  }, [filteredItems]);
 
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm pb-12 animate-in fade-in duration-500 print:bg-card print:pb-0">
+  <div className="min-h-screen pb-12 animate-in fade-in duration-500 print:bg-card print:pb-0">
    {/* Print-Only Report Header */}
    <div className="print-only print-header p-6 border-b-2 border-gray-300 mb-6">
     <div className="flex justify-between items-start">
@@ -109,7 +111,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
     actions={
      <div className="flex items-center gap-3">
       {actions}
-      <DocumentExportMenu />
+      <DocumentExportMenu documentType="STOCKTAKE" documentId={session.id} documentNumber={session.sessionNumber} />
      </div>
     }
    />
@@ -148,12 +150,12 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
      <div className="px-6 pb-3 flex flex-col gap-3 print-hidden">
       <div className="relative">
        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-       <input
+       <Input
         type="text"
         value={manifestSearch}
         onChange={(e) => setManifestSearch(e.target.value)}
         placeholder={t('manifest_search_placeholder')}
-        className="w-full ps-9 pe-3 py-2 rounded-xl bg-card border border-border shadow-sm border border-border/40 text-label-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+        className="w-full ps-9 pe-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-label-sm placeholder:text-gray-400 dark:placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
        />
       </div>
       {manifestSearch && (
@@ -162,12 +164,28 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
        </p>
       )}
      </div>
-     {filteredItems.length === 0 && manifestSearch ? (
-      <div className="px-6 pb-8 text-center print:px-0">
-       <p className="text-label-sm text-muted-foreground/40">{common('no_results') || 'No matching items'}</p>
-      </div>
-     ) : (
-      <DocumentLineItemTable<StocktakeLineItem>
+      {filteredItems.length === 0 && manifestSearch ? (
+       <div className="px-6 pb-8 text-center print:px-0">
+        <p className="text-label-sm text-muted-foreground/40">{common('no_results') || 'No matching items'}</p>
+       </div>
+      ) : session.status === 'DRAFT' && session.items.length === 0 ? (
+       <div className="px-6 py-12 flex flex-col items-center justify-center text-center gap-4 bg-muted/5 border border-border/10 rounded-2xl print:border-none print:bg-transparent">
+        <div className="p-4 rounded-full bg-brand-gold/10 text-brand-gold border border-brand-gold/20 print:hidden">
+         <Play className="w-8 h-8 fill-current translate-x-[1px]" />
+        </div>
+        <div className="space-y-2 w-full">
+         <h4 className="text-body-md font-bold text-foreground">
+          {locale === 'ar' ? 'مسودة جلسة الجرد فارغة' : 'Draft Stocktake Manifest is Empty'}
+         </h4>
+         <p className="text-label-sm text-muted-foreground w-full max-w-2xl mx-auto md:whitespace-nowrap leading-relaxed">
+          {locale === 'ar' 
+            ? 'يرجى النقر فوق زر "بدء الجلسة" (أيقونة التشغيل) بالأسفل لأخذ اللقطة المخزنية وتجميد المستودع وبدء الجرد.' 
+            : 'Click the "Start Session" (Play) button below to freeze the warehouse, take the initial stock snapshot, and begin counting.'}
+         </p>
+        </div>
+       </div>
+      ) : (
+       <DocumentLineItemTable<StocktakeLineItem>
        lines={tableLines}
        locale={locale}
        isReadOnly={true}

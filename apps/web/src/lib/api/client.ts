@@ -2,6 +2,78 @@ import { z } from 'zod';
 import type { ApiError } from '@/types/api';
 import { ConflictError } from './ConflictError';
 import { getTokenCookie, setTokenCookie, deleteTokenCookie } from './cookies';
+import { toast } from 'sonner';
+
+const INFRASTRUCTURE_ERRORS = {
+  unauthorized: {
+    en: 'Session expired. Please log in again.',
+    ar: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.'
+  },
+  forbidden: {
+    en: 'Access denied. You do not have the required permissions.',
+    ar: 'تم رفض الوصول. لا تملك الصلاحيات الكافية.'
+  },
+  server: {
+    en: 'An unexpected server error occurred. Please try again later.',
+    ar: 'حدث خطأ غير متوقع في الخادم. يرجى المحاولة لاحقاً.'
+  },
+  network: {
+    en: 'Network connection failure. Please check your internet.',
+    ar: 'فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.'
+  }
+};
+
+function translateApiErrorMessage(message: string, lang: string): string {
+  if (!message || typeof message !== 'string') return message;
+
+  const isAr = lang === 'ar';
+
+  // 1. FX Rate Error: "No active FX rate found for YER to CNY"
+  const fxRateRegex = /No active FX rate found for (\w+) to (\w+)/i;
+  const fxMatch = message.match(fxRateRegex);
+  if (fxMatch) {
+    const [, fromCurrency, toCurrency] = fxMatch;
+    return isAr
+      ? `لم يتم العثور على سعر صرف نشط للتحويل من ${fromCurrency} إلى ${toCurrency}. يرجى تهيئة أسعار الصرف أولاً في إعدادات العملات.`
+      : `No active exchange rate found from ${fromCurrency} to ${toCurrency}. Please configure the exchange rate in currency settings.`;
+  }
+
+  // 2. PO status: "Cannot create a GRN against a Purchase Order that is not APPROVED. (Current status: ...)"
+  const poStatusRegex = /Cannot create a GRN against a Purchase Order that is not APPROVED\.\s*\(Current status:\s*(\w+)\)/i;
+  const poMatch = message.match(poStatusRegex);
+  if (poMatch) {
+    const [, status] = poMatch;
+    return isAr
+      ? `لا يمكن إنشاء إشعار استلام بضائع (GRN) لأمر شراء غير معتمد. (الحالة الحالية: ${status})`
+      : `Cannot create a Goods Received Note (GRN) against a Purchase Order that is not APPROVED. (Current status: ${status})`;
+  }
+
+  // 3. Lot number duplication: "Lot number ... is already registered to another item."
+  const lotNumberRegex = /Lot number ([\w-]+) is already registered to another item\./i;
+  const lotMatch = message.match(lotNumberRegex);
+  if (lotMatch) {
+    const [, lotNum] = lotMatch;
+    return isAr
+      ? `رقم الدفعة (${lotNum}) مسجل بالفعل لصنف آخر.`
+      : `Lot number (${lotNum}) is already registered to another item.`;
+  }
+
+  // 4. Concurrency conflict: "Concurrency conflict: The document was modified by another user."
+  if (message.includes('Concurrency conflict: The document was modified by another user')) {
+    return isAr
+      ? 'حدث تعارض: تم تعديل هذا المستند بواسطة مستخدم آخر. يرجى تحديث الصفحة وإعادة المحاولة.'
+      : 'Concurrency conflict: This document was modified by another user. Please refresh and try again.';
+  }
+
+  // 5. Database connectivity / server errors stubs
+  if (message.includes('Database connection lost') || message.includes('Database connection')) {
+    return isAr
+      ? 'فقد الاتصال بقاعدة البيانات. يرجى التحقق من الخادم والمحاولة مرة أخرى.'
+      : 'Database connection lost. Please verify server status and try again.';
+  }
+
+  return message;
+}
 
 type CamelCase<S extends string> = S extends `${infer T}_${infer U}`
   ? `${T}${Capitalize<CamelCase<U>>}`
@@ -171,6 +243,7 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
   const csrfToken = getCookie('XSRF-TOKEN');
 
   const methodUpper = method.toUpperCase();
+  const isGetRequest = methodUpper === 'GET';
   const isModifying = methodUpper === 'POST' || methodUpper === 'PUT' || methodUpper === 'PATCH';
   const hasIdempotencyKey = customHeaders && Object.keys(customHeaders).some(
     k => k.toLowerCase() === 'x-idempotency-key'
@@ -291,10 +364,50 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
           return request<T, D, I>(method, path, schema, body, { ...options, isRetry: true });
         }
       }
-      const err: ApiError = {
+
+      const skipAutoToast = !!options?.skipAutoToast || isGetRequest;
+      const lang = (typeof document !== 'undefined' ? document.documentElement.lang : 'ar') === 'en' ? 'en' : 'ar';
+      let message = res.status === 401
+        ? INFRASTRUCTURE_ERRORS.unauthorized[lang]
+        : INFRASTRUCTURE_ERRORS.forbidden[lang];
+
+      if (process.env.NODE_ENV === 'development') {
+        message += ` [${method} ${path}]`;
+      }
+
+      if (typeof window !== 'undefined' && !skipAutoToast) {
+        toast.error(message);
+      }
+
+      const err: ApiError & { _isToastShown?: boolean; skipAutoToast?: boolean } = {
         code: res.status === 401 ? 'UNAUTHORIZED' : 'FORBIDDEN',
         message: res.status === 401 ? 'errors.unauthorized' : 'errors.forbidden',
-        fieldErrors: null
+        fieldErrors: null,
+        _isToastShown: !skipAutoToast,
+        skipAutoToast
+      };
+      throw err;
+    }
+
+    if (res.status >= 500) {
+      const skipAutoToast = !!options?.skipAutoToast || isGetRequest;
+      const lang = (typeof document !== 'undefined' ? document.documentElement.lang : 'ar') === 'en' ? 'en' : 'ar';
+      let message = INFRASTRUCTURE_ERRORS.server[lang];
+
+      if (process.env.NODE_ENV === 'development') {
+        message += ` [${method} ${path}]`;
+      }
+
+      if (typeof window !== 'undefined' && !skipAutoToast) {
+        toast.error(message);
+      }
+
+      const err: ApiError & { _isToastShown?: boolean; skipAutoToast?: boolean } = {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'errors.generic',
+        fieldErrors: null,
+        _isToastShown: !skipAutoToast,
+        skipAutoToast
       };
       throw err;
     }
@@ -302,13 +415,26 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
       const normalizedData = normalizeKeysToCamelCase(data);
-      throw new ConflictError({
+      const isWarehouseLocked = typeof normalizedData.message === 'string' &&
+        normalizedData.message.toLowerCase().includes('warehouse is locked');
+
+      if (isWarehouseLocked && typeof window !== 'undefined') {
+        const lang = (typeof document !== 'undefined' ? document.documentElement.lang : 'ar') === 'en' ? 'en' : 'ar';
+        const toastMessage = lang === 'en'
+          ? 'This operation is blocked while a physical inventory audit is in progress.'
+          : 'لا يمكن إتمام هذه العملية لأن المستودع مقفل حالياً بسبب جلسة جرد نشطة. يرجى الانتظار حتى انتهاء الجرد.';
+        toast.error(toastMessage);
+      }
+
+      const conflictErr = new ConflictError({
         message: normalizedData.message || 'Conflict detected',
         code: normalizedData.code || 'VERSION_CONFLICT',
         currentVersion: normalizedData.currentVersion,
         updatedBy: normalizedData.updatedBy,
         updatedAt: normalizedData.updatedAt,
       });
+      conflictErr._isToastShown = true;
+      throw conflictErr;
     }
 
     if (!res.ok) {
@@ -316,7 +442,19 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
         console.error(`[API Error] Failed to parse error response for ${path}`);
         return { code: 'NETWORK_ERROR', message: 'errors.network', fieldErrors: null };
       });
-      const normalizedErr = normalizeKeysToCamelCase(err) as ApiError;
+      const normalizedErr = normalizeKeysToCamelCase(err) as ApiError & { _isToastShown?: boolean };
+      
+      const isWarehouseLocked = typeof normalizedErr.message === 'string' &&
+        normalizedErr.message.toLowerCase().includes('warehouse is locked');
+
+      if (isWarehouseLocked && typeof window !== 'undefined') {
+        const lang = (typeof document !== 'undefined' ? document.documentElement.lang : 'ar') === 'en' ? 'en' : 'ar';
+        const toastMessage = lang === 'en'
+          ? 'This operation is blocked while a physical inventory audit is in progress.'
+          : 'لا يمكن إتمام هذه العملية لأن المستودع مقفل حالياً بسبب جلسة جرد نشطة. يرجى الانتظار حتى انتهاء الجرد.';
+        toast.error(toastMessage);
+        normalizedErr._isToastShown = true;
+      }
       
       if (isNestValidationMessage(normalizedErr)) {
         const fieldErrors: Record<string, string[]> = {};
@@ -343,6 +481,11 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
           normalizedErr.fieldErrors = fieldErrors;
           normalizedErr.message = msgObj.errors[0]?.message || 'errors.validation';
         }
+      }
+
+      // Translate raw API error messages into user-friendly localized text
+      if (normalizedErr.message && typeof normalizedErr.message === 'string') {
+        normalizedErr.message = translateApiErrorMessage(normalizedErr.message, locale);
       }
       
       console.error(`[API Error] ${method} ${path} Details: ` + JSON.stringify({
@@ -384,6 +527,32 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
     if (error instanceof Error && error.name === 'AbortError') {
       throw error;
     }
+
+    // Check for network connectivity failure
+    const isNetworkError = error instanceof TypeError || (error instanceof Error && error.message.includes('fetch'));
+    if (isNetworkError) {
+      const skipAutoToast = !!options?.skipAutoToast || isGetRequest;
+      const lang = (typeof document !== 'undefined' ? document.documentElement.lang : 'ar') === 'en' ? 'en' : 'ar';
+      let message = INFRASTRUCTURE_ERRORS.network[lang];
+
+      if (process.env.NODE_ENV === 'development') {
+        message += ` [${method} ${path}]`;
+      }
+
+      if (typeof window !== 'undefined' && !skipAutoToast) {
+        toast.error(message);
+      }
+
+      const networkErr: ApiError & { _isToastShown?: boolean; skipAutoToast?: boolean } = {
+        code: 'NETWORK_ERROR',
+        message: 'errors.network',
+        fieldErrors: null,
+        _isToastShown: !skipAutoToast,
+        skipAutoToast
+      };
+      throw networkErr;
+    }
+
     throw error;
   }
 }
@@ -392,6 +561,7 @@ export interface RequestOptions {
   signal?: AbortSignal;
   headers?: Record<string, string>;
   isRetry?: boolean;
+  skipAutoToast?: boolean;
 }
 
 export const apiClient = {

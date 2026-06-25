@@ -132,7 +132,7 @@ export function KitchenRequestsListClient({
  const fulfilledCount = data?.data?.filter(r => r.status === KITCHEN_REQUEST_STATUS.FULFILLED).length || 0;
 
  return (
-  <div className="w-full min-w-0 gap-6 flex-1 flex-col flex p-6">
+  <div className="w-full min-w-0 gap-6 flex-1 flex-col flex">
    <Breadcrumb
     items={[
      { label: tc('home'), href: '/' },
@@ -143,14 +143,15 @@ export function KitchenRequestsListClient({
 
    <PageHeader
     title={t('title')}
-    description={t('description')}
-    actions={
+    subtitle={t('description')}
+    children={
      <PermissionGate action="create" resource="kitchen_requests">
       <Button 
        onClick={() => router.push('/kitchen-requests/new')}
-       className="bg-cyan-600 hover:bg-cyan-500 text-white border-none shadow-[0_0_15px_rgba(8,145,178,0.3)] transition-all active:scale-95"
+       variant="outline"
+       className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
       >
-       <Plus className="w-4 h-4 mr-2" />
+       <Plus className="w-4 h-4" />
        {t('create_new')}
       </Button>
      </PermissionGate>
@@ -184,23 +185,75 @@ export function KitchenRequestsListClient({
     />
    </div>
 
-   <div className="bg-card border border-border shadow-sm rounded-xl border border-outline-low shadow-sm">
-    <DataTable
-     columns={columns}
-     data={data?.data ?? []}
-     isLoading={isLoading}
-     pagination={{
-      page: initialPage,
-      pageSize: data?.meta?.pageSize ?? 10,
-      total: data?.meta?.total ?? 0,
-      totalPages: data?.meta?.totalPages ?? 1,
-      onPageChange: (page) => {
-       const params = new URLSearchParams(searchParams.toString());
-       params.set('page', (page + 1).toString());
-       router.push(`${pathname}?${params.toString()}`);
-      }
-     }}
-    />
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    <div className="hidden md:block w-full">
+     <DataTable
+      columns={columns}
+      data={data?.data ?? []}
+      isLoading={isLoading}
+      pagination={{
+       page: initialPage,
+       pageSize: data?.meta?.pageSize ?? 10,
+       total: data?.meta?.total ?? 0,
+       totalPages: data?.meta?.totalPages ?? 1,
+       onPageChange: (page) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', (page + 1).toString());
+        router.push(`${pathname}?${params.toString()}`);
+       }
+      }}
+     />
+    </div>
+
+    <div className="flex flex-col gap-3 md:hidden mt-4">
+     {isLoading ? (
+      <div className="flex items-center justify-center p-8">
+       <span className="text-muted-foreground text-sm font-semibold animate-pulse">{tc('loading')}...</span>
+      </div>
+     ) : (!data?.data || data.data.length === 0) ? (
+      <div className="p-8 text-center text-muted-foreground text-sm font-medium">{tc('datatable.no_records')}</div>
+     ) : (
+      data.data.map((item) => (
+       <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+         <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
+            <div><StatusBadge status={item.status} /></div>
+            <span className="text-[10px] text-gray-500 font-mono" dir="ltr">
+             <ClientOnlyTime 
+              date={item.createdAt} 
+              mode="datetime" 
+              locale={locale} 
+              className="text-label-xxs font-semibold tabular-nums" 
+             />
+            </span>
+         </div>
+         
+         <div className="flex justify-between items-center">
+            <span className="text-sm font-black text-[#0B1220] dark:text-white" dir="ltr">{item.requestNumber}</span>
+            <Link 
+             href={`/kitchen-requests/${item.id}`}
+             className="text-[#b48e67] hover:text-[#8a6b4c] text-xs font-bold flex items-center gap-1 transition-colors"
+            >
+              {locale === 'ar' ? 'عرض' : 'View'}
+              <svg className="w-3 h-3 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+         </div>
+
+         <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 mt-1">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-[9px] text-gray-400 font-bold uppercase min-w-[50px]">{locale === 'ar' ? 'القسم' : 'DEPT'}</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300 truncate">{item.departmentName || '—'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs border-t border-gray-100 dark:border-gray-800 pt-1.5">
+              <span className="text-[9px] text-gray-400 font-bold uppercase min-w-[50px]">{locale === 'ar' ? 'المستودع' : 'WH'}</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300 truncate">{item.warehouseName || '—'}</span>
+            </div>
+         </div>
+       </div>
+      ))
+     )}
+    </div>
    </div>
   </div>
  );

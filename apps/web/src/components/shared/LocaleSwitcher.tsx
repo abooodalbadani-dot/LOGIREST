@@ -38,9 +38,11 @@ export default function LocaleSwitcher() {
  return (
   <button 
    onClick={toggleLocale}
-   className="px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border rounded-xl text-body-md font-medium transition-colors text-foreground"
+   className="flex items-center justify-center h-9 sm:px-3 sm:py-1 w-9 sm:w-auto bg-surface-container-high hover:bg-surface-container-highest border rounded-xl text-body-md font-medium transition-colors text-foreground"
+   title={label}
   >
-   {label}
+   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:hidden"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+   <span className="hidden sm:inline">{label}</span>
   </button>
  );
 }

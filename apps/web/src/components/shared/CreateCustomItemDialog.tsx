@@ -89,7 +89,7 @@ export function CreateCustomItemDialog({
 
  return (
   <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-   <DialogContent className="sm:max-w-[480px] bg-surface-container-highest border border-surface-container-high/60 shadow-2xl rounded-3xl overflow-hidden p-6 gap-6">
+   <DialogContent className="w-[92vw] sm:w-full sm:max-w-[480px] bg-surface-container-highest border border-surface-container-high/60 shadow-2xl rounded-3xl overflow-hidden p-6 gap-6">
     <DialogHeader className="flex flex-col gap-1.5">
      <div className="flex items-center gap-3">
       <div className="w-10 h-10 rounded-2xl bg-operational-cyan/15 flex items-center justify-center">
@@ -188,7 +188,7 @@ export function CreateCustomItemDialog({
       <Button
        type="submit"
        disabled={!isFormValid}
-       className="bg-operational-cyan hover:bg-operational-cyan/90 text-black font-bold px-6 rounded-2xl"
+       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
        {tCommon('add') || 'Add Item'}
       </Button>

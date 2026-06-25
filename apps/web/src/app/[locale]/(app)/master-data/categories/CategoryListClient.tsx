@@ -57,7 +57,7 @@ export function CategoryListClient() {
       <Button
        variant="ghost"
        size="sm"
-       className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
+       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        onClick={(e) => {
         e.stopPropagation();
         router.push(`/master-data/categories/${row.original.id}`);
@@ -90,7 +90,7 @@ export function CategoryListClient() {
 
  if (isError) {
   return (
-   <div className="min-w-0 gap-6 flex-1 p-8 flex-col flex w-full">
+   <div className="min-w-0 gap-6 flex-1 flex-col flex w-full">
     <ErrorState
      type="server_error"
      onRetry={() => refetch()}
@@ -111,11 +111,11 @@ export function CategoryListClient() {
     <Breadcrumb items={breadcrumbs} />
     <PageHeader
      title={tc('title')}
-     description={tc('description')}
-     actions={
+     subtitle={tc('description')}
+     children={
       <PermissionGate action="create" resource="master_data">
-       <Link href={`/master-data/categories/new`}>
-        <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
+       <Link href={`/master-data/categories/new`} className="shrink-0 w-full sm:w-auto">
+        <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
          <Plus className="w-3.5 h-3.5 me-2" />
          {t('create_new')}
         </Button>
@@ -161,16 +161,20 @@ export function CategoryListClient() {
     }
     onRowClick={(r: Category) => router.push(`/master-data/categories/${r.id}`)}
     filters={
-      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-        <Input
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:w-80 md:w-96">
+           <div className="relative w-full group">
+             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+             <Input
          placeholder={tc('search_placeholder')}
          value={search}
          onChange={ (e) => setSearch(e.target.value) }
          className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
+           </div>
+         </div>
        </div>
-     }
+      }
    />
   </div>
  );

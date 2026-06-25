@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType, Prisma, Role } from '@prisma/client';
+import { DocumentType, Prisma, Role, IssueStatus } from '@prisma/client';
 
 @Injectable()
 export class IssuesService {
@@ -20,6 +20,8 @@ export class IssuesService {
     body: {
       departmentId: string;
       lines: Array<{ itemId: string; quantity: number }>;
+      kitchenRequestId?: string;
+      notes?: string;
     },
     userId: string,
     activeWarehouseId: string,
@@ -71,12 +73,16 @@ export class IssuesService {
             warehouseId: activeWarehouseId,
             departmentId: body.departmentId,
             status: 'DRAFT',
+            notes: body.notes,
             lines: {
               create: body.lines.map((line) => ({
                 itemId: line.itemId,
                 quantity: line.quantity,
               })),
             },
+            kitchenRequest: body.kitchenRequestId
+              ? { connect: { id: body.kitchenRequestId } }
+              : undefined,
           },
           include: {
             lines: {
@@ -96,6 +102,7 @@ export class IssuesService {
             },
             warehouse: true,
             department: true,
+            kitchenRequest: true,
           },
         });
       },
@@ -118,7 +125,7 @@ export class IssuesService {
 
     const where: Prisma.InventoryIssueWhereInput = {};
     if (params.status) {
-      where.status = params.status;
+      where.status = params.status as IssueStatus;
     }
 
     const andConditions: Prisma.InventoryIssueWhereInput[] = [];
@@ -220,6 +227,12 @@ export class IssuesService {
         },
         department: true,
         warehouse: true,
+        kitchenRequest: {
+          select: { id: true, requestNumber: true },
+        },
+        createdBy: {
+          select: { name: true, email: true },
+        },
       },
     });
 
@@ -227,7 +240,13 @@ export class IssuesService {
       throw new NotFoundException(`Inventory Issue with ID ${id} not found`);
     }
 
-    return issue;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: { documentId: id },
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { ...issue, approvalEvents };
   }
 
   async submit(
@@ -236,7 +255,7 @@ export class IssuesService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'inventoryIssue',
       'SUBMIT',
@@ -246,6 +265,7 @@ export class IssuesService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async cancel(
@@ -254,7 +274,7 @@ export class IssuesService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'inventoryIssue',
       'CANCEL',
@@ -264,5 +284,6 @@ export class IssuesService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 }

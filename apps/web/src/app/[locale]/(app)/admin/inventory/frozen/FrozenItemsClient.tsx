@@ -115,7 +115,7 @@ type FrozenItem = z.infer<typeof FrozenItemSchema>;
  };
 
  return (
-  <div className="md:p-8 min-w-0 gap-6 flex-1 space-y-8 flex p-4 mx-auto flex-col max-w-7xl w-full">
+  <div className="min-w-0 gap-6 flex-1 space-y-8 flex mx-auto flex-col max-w-7xl w-full">
    {/* Premium Header */}
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 min-w-0">
     <div className="space-y-4">
@@ -135,14 +135,14 @@ type FrozenItem = z.infer<typeof FrozenItemSchema>;
         Inventory Integrity Dashboard
        </h1>
       </div>
-      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2">
        Manage frozen inventory records. Frozen items are automatically locked during stocktake discrepancies to protect cost ledger consistency.
       </p>
      </div>
     </div>
    </div>
 
-   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
     {/* Left Side: Frozen Items List */}
     <div className="lg:col-span-7 space-y-6">
      <div className="p-6 rounded-[2rem] bg-card border border-border shadow-sm border border-white/5 space-y-6 shadow-sm">

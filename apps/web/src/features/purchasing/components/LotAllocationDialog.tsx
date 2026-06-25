@@ -21,6 +21,8 @@ export const LotAllocationSchema = z.object({
 
 export type LotAllocation = z.infer<typeof LotAllocationSchema>;
 
+const generateTempId = () => `new-${Date.now()}`;
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface LotAllocationDialogProps {
@@ -48,13 +50,13 @@ export function LotAllocationDialog({
   const tc = useTranslations('common');
 
   const [lotNumber, setLotNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState(new Date().toISOString().split('T')[0]);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     if (open) {
       setLotNumber(currentLot?.lotNumber ?? '');
-      setExpiryDate(currentLot?.expiryDate ?? '');
+      setExpiryDate(currentLot?.expiryDate ?? new Date().toISOString().split('T')[0]);
       setTouched(false);
     }
   }, [open, currentLot]);
@@ -71,8 +73,7 @@ export function LotAllocationDialog({
     setTouched(true);
     if (!isFormValid) return;
     onConfirm({
-      // eslint-disable-next-line react-hooks/purity
-      id: currentLot?.id ?? `new-${Date.now()}`,
+      id: currentLot?.id ?? generateTempId(),
       lotNumber: lotNumberTrimmed,
       expiryDate: expiryDate || null,
     });
@@ -101,7 +102,7 @@ export function LotAllocationDialog({
           <div
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-3xl bg-card border border-border shadow-2xl rounded-2xl overflow-hidden"
+            className="w-full max-w-3xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-2xl sm:rounded-xl overflow-hidden"
           >
             {/* Header */}
             <div className="px-6 pt-6 pb-4 border-b border-border/50">
@@ -226,7 +227,7 @@ export function LotAllocationDialog({
                 <Button
                   type="button"
                   onClick={handleConfirm}
-                  className="w-full sm:w-auto shrink-0 bg-operational-cyan hover:brightness-110 text-white text-xs font-bold uppercase shadow-md shadow-operational-cyan/20 disabled:opacity-50"
+                  className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   disabled={touched && !isFormValid}
                 >
                   <CheckCircle2 className="w-4 h-4 me-2" />

@@ -118,6 +118,7 @@ function mapIssueDetail(issue: Record<string, unknown>) {
 
   const warehouse = issue.warehouse as Record<string, unknown> | null;
   const department = issue.department as Record<string, unknown> | null;
+  const kitchenRequest = issue.kitchenRequest as Record<string, unknown> | null;
 
   return {
     id: issue.id as string,
@@ -128,26 +129,35 @@ function mapIssueDetail(issue: Record<string, unknown>) {
     destinationDepartmentId: issue.departmentId as string,
     destinationDepartmentName: (department?.name as string) || '',
     departmentName: (department?.name as string) || '',
-    requestedBy: 'System',
+    requestedBy:
+      ((issue.createdBy as Record<string, unknown>)?.name as string) ||
+      'System',
     warehouseId: issue.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     branchId:
       ((issue.warehouse as Record<string, unknown> | undefined)
         ?.branchId as string) || '',
     notes: (issue.notes as string) || '',
-    createdBy: 'System',
+    createdBy:
+      ((issue.createdBy as Record<string, unknown>)?.name as string) ||
+      'System',
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
-    postedAt:
-      issue.status === 'POSTED' && createdAtVal
-        ? (createdAtVal instanceof Date
-            ? createdAtVal
-            : new Date(createdAtVal)
-          ).toISOString()
-        : null,
+    postedAt: issue.postedAt
+      ? (issue.postedAt instanceof Date
+          ? issue.postedAt
+          : new Date(issue.postedAt as string | number)
+        ).toISOString()
+      : null,
     postedBy: null,
     version: issue.version as number,
     lines,
+    kitchenRequest: kitchenRequest
+      ? {
+          id: kitchenRequest.id as string,
+          requestNumber: kitchenRequest.requestNumber as string,
+        }
+      : null,
   };
 }
 
@@ -173,7 +183,12 @@ function mapIssueSummary(issue: Record<string, unknown>) {
     warehouseId: issue.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     createdAt: createdAtIso,
-    postedAt: issue.status === 'POSTED' ? createdAtIso : null,
+    postedAt: issue.postedAt
+      ? (issue.postedAt instanceof Date
+          ? issue.postedAt
+          : new Date(issue.postedAt as string | number)
+        ).toISOString()
+      : null,
   };
 }
 
@@ -202,9 +217,16 @@ export class IssuesController {
   async create(
     @Body()
     body: {
-      departmentId: string;
+      destinationDeptId?: string;
+      departmentId?: string;
       warehouseId?: string;
-      lines: Array<{ itemId: string; quantity: number }>;
+      lines: Array<{
+        itemId: string;
+        requestedQty?: number;
+        quantity?: number;
+      }>;
+      notes?: string;
+      kitchenRequestId?: string;
     },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
@@ -219,7 +241,40 @@ export class IssuesController {
       role,
       warehouseId,
     );
-    const issue = await this.issuesService.create(body, userId, warehouseId);
+
+    const departmentId = body.destinationDeptId || body.departmentId;
+    if (!departmentId) {
+      throw new BadRequestException('Department ID is required');
+    }
+
+    if (!body.lines || !Array.isArray(body.lines) || body.lines.length === 0) {
+      throw new BadRequestException('At least one line item is required');
+    }
+
+    const lines = body.lines.map((line) => {
+      const qty =
+        line.requestedQty !== undefined ? line.requestedQty : line.quantity;
+      if (qty === undefined || qty === null) {
+        throw new BadRequestException(
+          `Quantity is required for item ${line.itemId}`,
+        );
+      }
+      return {
+        itemId: line.itemId,
+        quantity: Number(qty),
+      };
+    });
+
+    const issue = await this.issuesService.create(
+      {
+        departmentId,
+        lines,
+        kitchenRequestId: body.kitchenRequestId,
+        notes: body.notes,
+      },
+      userId,
+      warehouseId,
+    );
     return mapIssueDetail(issue);
   }
 
@@ -271,6 +326,7 @@ export class IssuesController {
     Role.INV_MGR,
     Role.WH_KEEPER,
     Role.STORE_MGR,
+    Role.KITCHEN_CHIEF,
     Role.BRANCH_MGR,
   )
   @UseGuards(WorkflowStateGuard)
@@ -307,6 +363,7 @@ export class IssuesController {
     Role.INV_MGR,
     Role.WH_KEEPER,
     Role.STORE_MGR,
+    Role.KITCHEN_CHIEF,
     Role.BRANCH_MGR,
   )
   @UseGuards(WorkflowStateGuard)
@@ -339,7 +396,7 @@ export class IssuesController {
 
   @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/post')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'issue',

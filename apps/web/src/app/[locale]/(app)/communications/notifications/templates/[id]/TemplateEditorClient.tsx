@@ -185,7 +185,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
 
  if (isLoading) {
   return (
-   <div className="md:p-8 min-w-0 gap-6 flex-1 space-y-8 flex p-4 animate-pulse mx-auto flex-col max-w-7xl w-full">
+   <div className="min-w-0 gap-6 flex-1 space-y-8 flex animate-pulse mx-auto flex-col max-w-7xl w-full">
     <div className="h-10 w-48 bg-surface-container-highest rounded-2xl" />
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
      <div className="lg:col-span-7 space-y-6">
@@ -301,22 +301,10 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
              type="button"
              onClick={() => handleInjectTag(param.name)}
              disabled={!activeField}
-             className={`group/btn px-3.5 py-2 rounded-none border font-mono text-[11px] transition-all duration-150 flex items-center gap-2 ${
-              activeField
-               ? 'bg-card border border-border shadow-sm border-white/15 text-operational-cyan hover:border-operational-cyan hover:bg-operational-cyan hover:text-black active:scale-[0.98]'
-               : 'bg-card border border-border shadow-sm/30 border-white/5 text-muted-foreground/30 cursor-not-allowed'
-             }`}
+             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono text-xs cursor-pointer transition-colors bg-brand-gold/15 text-brand-gold border border-brand-gold/30 hover:bg-brand-gold/25 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-             <span className="font-bold text-foreground/50 group-hover/btn:text-black/50 transition-colors">
-              {"{"}
-             </span>
-             <span className="font-extrabold tracking-wide">
-              {param.name}
-             </span>
-             <span className="font-bold text-foreground/50 group-hover/btn:text-black/50 transition-colors">
-              {"}"}
-             </span>
-             <span className="text-[9px] text-muted-foreground/45 border-l border-white/10 pl-2 font-sans group-hover/btn:text-black/60 group-hover/btn:border-black/20 transition-colors max-w-[120px] truncate">
+             {`{{`} {param.name} {`}}`}
+             <span className="text-[10px] text-muted-foreground/60 border-l border-brand-gold/20 pl-1.5 font-sans truncate max-w-[100px]">
               {locale === 'ar' ? param.labelAr : param.labelEn}
              </span>
             </button>
@@ -382,7 +370,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
           {...registerBodyAr}
           ref={setBodyArRef}
           {...createTrackingProps('bodyAr')}
-          className="min-h-[220px] py-4 bg-card border border-border shadow-sm rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
+          className="w-full min-h-[200px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
          />
         </div>
        </div>
@@ -432,7 +420,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
           {...registerBodyEn}
           ref={setBodyEnRef}
           {...createTrackingProps('bodyEn')}
-          className="min-h-[220px] py-4 bg-card dark:bg-card border border-border shadow-sm border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
+          className="w-full min-h-[200px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
          />
         </div>
        </div>
@@ -445,7 +433,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
        transition={{ delay: 0.1 }}
        className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 min-w-0"
       >
-       <div className="flex items-center gap-3">
+       <div className="flex items-center gap-4">
         <Button
          type="button"
          variant="ghost"
@@ -462,7 +450,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
           <Button
            type="submit"
            disabled={updateMutation.isPending}
-           className="h-14 px-10 bg-gradient-to-r from-operational-cyan to-cyan-400 text-black hover:brightness-110 transition-all font-extrabold uppercase text-[10px] tracking-widest gap-3 rounded-2xl shadow-[0_10px_30px_rgba(var(--operational-cyan-rgb),0.25)]"
+           className="h-14 px-10 bg-brand-gold hover:bg-brand-gold-hover text-black transition-all font-extrabold uppercase text-[10px] tracking-widest gap-3 rounded-2xl shadow-[0_10px_30px_rgba(196,162,118,0.15)]"
           >
            {updateMutation.isPending ? (
             <Loader2 className="w-4.5 h-4.5 animate-spin" />
@@ -554,7 +542,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
        <div className="p-6 bg-[url('/grid.svg')] bg-center bg-fixed opacity-95 min-h-[460px] flex flex-col justify-between min-w-0">
         
         <div
-         className="w-full bg-card border border-border shadow-sm/95 border border-white/5 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] p-6 space-y-6 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-500 flex-1 flex flex-col justify-between min-w-0"
+         className="w-full rounded-2xl p-6 space-y-6 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-500 flex-1 flex flex-col justify-between min-w-0 border border-slate-200 shadow-2xl dark:border-white/10 dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-white dark:bg-[#121212]"
          dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
         >
          <div className="space-y-4">
@@ -582,9 +570,41 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
            <span className="text-[8px] text-operational-cyan font-bold uppercase tracking-widest mb-2 block">
             {tc('message_body') || 'Message Body'}
            </span>
-           <p className="text-foreground/85 whitespace-pre-wrap leading-[1.8] text-xs font-semibold">
-            {body || t_common('placeholders.typing_preview') || 'Waiting for input values...'}
-           </p>
+           {body ? (
+            <div className="w-full h-full overflow-y-auto scrollbar-hide p-4 flex flex-col gap-4">
+             <iframe
+              title="Email Live Preview"
+              srcDoc={`
+               <html>
+                <head>
+                 <style>
+                  body {
+                   margin: 0;
+                   padding: 0;
+                   background-color: #ffffff;
+                   color: #000000;
+                   ms-overflow-style: none;
+                   scrollbar-width: none;
+                  }
+                  body::-webkit-scrollbar {
+                   display: none;
+                  }
+                 </style>
+                </head>
+                <body>
+                 ${body}
+                </body>
+               </html>
+              `}
+              className="w-full min-h-[500px] border-0 bg-white"
+              style={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', overflow: 'hidden' }}
+             />
+            </div>
+           ) : (
+            <p className="text-foreground/85 whitespace-pre-wrap leading-[1.8] text-xs font-semibold">
+             {t_common('placeholders.typing_preview') || 'Waiting for input values...'}
+            </p>
+           )}
           </div>
          </div>
 

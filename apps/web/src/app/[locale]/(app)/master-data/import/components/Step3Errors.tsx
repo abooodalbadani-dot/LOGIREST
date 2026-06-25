@@ -85,7 +85,7 @@ export function Step3Errors({ wizard }: Step3ErrorsProps) {
  </Button>
  </div>
 
- <div className="bg-muted/5 rounded-[2.5rem] border border-foreground/5 overflow-hidden">
+ <div className="flex-1 w-full min-h-[400px] md:min-h-0">
  <DataTable 
  columns={columns} 
  data={wizard.errors}
@@ -113,7 +113,7 @@ export function Step3Errors({ wizard }: Step3ErrorsProps) {
  
  {!hasCriticalErrors && (
  <Button 
- className="h-14 px-10 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase text-label-xs"
+ className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
  onClick={wizard.nextStep}
  >
  {t('commit_step')}

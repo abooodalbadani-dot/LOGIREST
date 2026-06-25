@@ -1,17 +1,18 @@
 #!/usr/bin/env sh
 set -eu
 
-# LogiRest Containerized PostgreSQL Backup Script
+# LogiRest Containerized PostgreSQL & Asset Backup Script
 # Location: scripts/db-backup.sh
 
 BACKUP_DIR="/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_FILE="${BACKUP_DIR}/logirest_backup_${TIMESTAMP}.sql.gz"
+BACKUP_FILE="${BACKUP_DIR}/logirest_backup_${TIMESTAMP}.sql.gz.enc"
+UPLOADS_BACKUP_FILE="${BACKUP_DIR}/uploads_backup_${TIMESTAMP}.tar.gz"
 LOG_FILE="${BACKUP_DIR}/backup.log"
 
 mkdir -p "$BACKUP_DIR"
 
-echo "[$(date)] Starting database backup..." >> "$LOG_FILE"
+echo "[$(date)] Starting database and asset backup..." >> "$LOG_FILE"
 
 # Ensure aws-cli is installed (alpine image lacks it by default)
 if ! command -v aws >/dev/null 2>&1; then
@@ -19,8 +20,28 @@ if ! command -v aws >/dev/null 2>&1; then
   apk add --no-cache aws-cli >> "$LOG_FILE" 2>&1
 fi
 
-export AWS_ACCESS_KEY_ID="${BACKUP_S3_ACCESS_KEY}"
-export AWS_SECRET_ACCESS_KEY="${BACKUP_S3_SECRET_KEY}"
+# Ensure openssl is installed
+if ! command -v openssl >/dev/null 2>&1; then
+  echo "[$(date)] Installing openssl..." >> "$LOG_FILE"
+  apk add --no-cache openssl >> "$LOG_FILE" 2>&1
+fi
+
+# Validate BACKUP_ENCRYPTION_KEY is present
+if [ -z "${BACKUP_ENCRYPTION_KEY:-}" ]; then
+  echo "[$(date)] ERROR: BACKUP_ENCRYPTION_KEY environment variable is missing" >> "$LOG_FILE"
+  echo "ERROR: BACKUP_ENCRYPTION_KEY environment variable is missing" >&2
+  exit 1
+fi
+
+# Validate BACKUP_ENCRYPTION_KEY length is 64 characters (hex key)
+if [ ${#BACKUP_ENCRYPTION_KEY} -ne 64 ]; then
+  echo "[$(date)] ERROR: BACKUP_ENCRYPTION_KEY must be a 64-character hex string" >> "$LOG_FILE"
+  echo "ERROR: BACKUP_ENCRYPTION_KEY must be a 64-character hex string" >&2
+  exit 1
+fi
+
+export AWS_ACCESS_KEY_ID="${BACKUP_S3_ACCESS_KEY_ID}"
+export AWS_SECRET_ACCESS_KEY="${BACKUP_S3_SECRET_ACCESS_KEY}"
 export AWS_DEFAULT_REGION="${BACKUP_S3_REGION:-us-east-1}"
 
 AWS_ARGS=""
@@ -28,13 +49,39 @@ if [ -n "${BACKUP_S3_ENDPOINT:-}" ]; then
   AWS_ARGS="--endpoint-url ${BACKUP_S3_ENDPOINT}"
 fi
 
-# Run pg_dump and compress with gzip
-echo "[$(date)] Executing pg_dump for database ${PGDATABASE}..." >> "$LOG_FILE"
-if pg_dump -h "${PGHOST:-db}" -U "${PGUSER:-logirest}" -d "${PGDATABASE:-logirest}" | gzip > "$BACKUP_FILE"; then
-  echo "[$(date)] SUCCESS: Local compressed backup created at ${BACKUP_FILE}" >> "$LOG_FILE"
-else
-  echo "[$(date)] ERROR: pg_dump failed." >> "$LOG_FILE"
+# 1. Database Backup & Encryption
+echo "[$(date)] Executing pg_dump and encrypting output..." >> "$LOG_FILE"
+
+# Generate random 16-byte IV in hex
+IV_HEX=$(openssl rand -hex 16)
+
+# Write the IV as raw binary bytes to the output file first
+if ! printf "$(echo -n "$IV_HEX" | sed 's/\(..\)/\\x\1/g')" > "$BACKUP_FILE"; then
+  echo "[$(date)] ERROR: Failed to write IV to backup file." >> "$LOG_FILE"
   exit 1
+fi
+
+# Append the AES-256-CBC encrypted gzip dump
+if pg_dump -h "${PGHOST:-db}" -U "${PGUSER:-logirest}" -d "${PGDATABASE:-logirest}" | gzip | openssl enc -aes-256-cbc -K "$BACKUP_ENCRYPTION_KEY" -iv "$IV_HEX" -nosalt >> "$BACKUP_FILE"; then
+  echo "[$(date)] SUCCESS: Local encrypted database backup created at ${BACKUP_FILE}" >> "$LOG_FILE"
+else
+  echo "[$(date)] ERROR: pg_dump or encryption failed." >> "$LOG_FILE"
+  rm -f "$BACKUP_FILE"
+  exit 1
+fi
+
+# 2. Uploads Directory Backup
+if [ -d "/uploads" ]; then
+  echo "[$(date)] Creating tarball for uploads directory /uploads..." >> "$LOG_FILE"
+  if tar -czf "$UPLOADS_BACKUP_FILE" -C /uploads . ; then
+    echo "[$(date)] SUCCESS: Local uploads backup created at ${UPLOADS_BACKUP_FILE}" >> "$LOG_FILE"
+  else
+    echo "[$(date)] ERROR: Failed to create uploads tarball." >> "$LOG_FILE"
+    rm -f "$UPLOADS_BACKUP_FILE"
+    exit 1
+  fi
+else
+  echo "[$(date)] WARNING: /uploads directory not found. Skipping uploads backup." >> "$LOG_FILE"
 fi
 
 # Ensure S3 bucket exists (MinIO doesn't auto-create)
@@ -44,19 +91,33 @@ if ! aws ${AWS_ARGS} s3 ls "s3://${BACKUP_S3_BUCKET}" >/dev/null 2>&1; then
   aws ${AWS_ARGS} s3 mb "s3://${BACKUP_S3_BUCKET}" >> "$LOG_FILE" 2>&1
 fi
 
-# Upload to S3-compatible storage
-echo "[$(date)] Uploading backup to S3-compatible storage..." >> "$LOG_FILE"
-if aws ${AWS_ARGS} s3 cp "$BACKUP_FILE" "s3://${BACKUP_S3_BUCKET}/logirest_backup_${TIMESTAMP}.sql.gz" >> "$LOG_FILE" 2>&1; then
-  echo "[$(date)] SUCCESS: Backup uploaded successfully to s3://${BACKUP_S3_BUCKET}/logirest_backup_${TIMESTAMP}.sql.gz" >> "$LOG_FILE"
-  # Write a successful backup heartbeat timestamp file
-  echo "$TIMESTAMP" > "${BACKUP_DIR}/last_success"
+# 3. Upload to S3 & Fail Loudly
+echo "[$(date)] Uploading database backup to S3..." >> "$LOG_FILE"
+if aws ${AWS_ARGS} s3 cp "$BACKUP_FILE" "s3://${BACKUP_S3_BUCKET}/logirest_backup_${TIMESTAMP}.sql.gz.enc" >> "$LOG_FILE" 2>&1; then
+  echo "[$(date)] SUCCESS: Database backup uploaded to s3://${BACKUP_S3_BUCKET}/logirest_backup_${TIMESTAMP}.sql.gz.enc" >> "$LOG_FILE"
 else
-  echo "[$(date)] ERROR: S3 upload failed." >> "$LOG_FILE"
+  echo "[$(date)] ERROR: Database backup S3 upload failed." >> "$LOG_FILE"
   exit 1
 fi
 
-# Prune local backups older than 7 days
-echo "[$(date)] Pruning local backups older than 7 days..." >> "$LOG_FILE"
-find "$BACKUP_DIR" -name "logirest_backup_*.sql.gz" -type f -mtime +7 -delete >> "$LOG_FILE" 2>&1
+if [ -f "$UPLOADS_BACKUP_FILE" ]; then
+  echo "[$(date)] Uploading uploads backup to S3..." >> "$LOG_FILE"
+  if aws ${AWS_ARGS} s3 cp "$UPLOADS_BACKUP_FILE" "s3://${BACKUP_S3_BUCKET}/uploads_backup_${TIMESTAMP}.tar.gz" >> "$LOG_FILE" 2>&1; then
+    echo "[$(date)] SUCCESS: Uploads backup uploaded to s3://${BACKUP_S3_BUCKET}/uploads_backup_${TIMESTAMP}.tar.gz" >> "$LOG_FILE"
+  else
+    echo "[$(date)] ERROR: Uploads backup S3 upload failed." >> "$LOG_FILE"
+    exit 1
+  fi
+fi
+
+# Write successful backup heartbeat timestamp file
+echo "$TIMESTAMP" > "${BACKUP_DIR}/last_success"
+
+# 4. Prune local backups older than 7 days
+echo "[$(date)] Pruning local database backups older than 7 days..." >> "$LOG_FILE"
+find "$BACKUP_DIR" -name "logirest_backup_*.sql.gz.enc" -type f -mtime +7 -delete >> "$LOG_FILE" 2>&1
+
+echo "[$(date)] Pruning local uploads backups older than 7 days..." >> "$LOG_FILE"
+find "$BACKUP_DIR" -name "uploads_backup_*.tar.gz" -type f -mtime +7 -delete >> "$LOG_FILE" 2>&1
 
 echo "[$(date)] Backup process completed successfully." >> "$LOG_FILE"

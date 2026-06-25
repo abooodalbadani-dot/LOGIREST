@@ -12,7 +12,7 @@ import {
   AdjustmentReason,
   DocumentType,
   Prisma,
-  $Enums,
+  AdjStatus,
 } from '@prisma/client';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 
@@ -55,10 +55,10 @@ export class AdjustmentsService {
           if (
             line.unitCost === undefined ||
             line.unitCost === null ||
-            Number(line.unitCost) <= 0
+            Number(line.unitCost) < 0
           ) {
             throw new BadRequestException(
-              `Unit cost is required and must be greater than zero for manual Adjustment IN.`,
+              `Unit cost is required and must be greater than or equal to zero for manual Adjustment IN.`,
             );
           }
         }
@@ -101,7 +101,10 @@ export class AdjustmentsService {
               quantity: line.quantity,
               direction: line.direction,
               reason: line.reason,
-              unitCost: line.unitCost || null,
+              unitCost:
+                line.unitCost !== undefined && line.unitCost !== null
+                  ? line.unitCost
+                  : null,
             })),
           },
         },
@@ -128,7 +131,7 @@ export class AdjustmentsService {
 
     const where: Prisma.AdjustmentWhereInput = {};
     if (params.status) {
-      where.status = params.status;
+      where.status = params.status as AdjStatus;
     }
     if (warehouseId) {
       where.warehouseId = warehouseId;
@@ -136,6 +139,13 @@ export class AdjustmentsService {
     if (params.search) {
       where.OR = [
         { adjustmentNumber: { contains: params.search, mode: 'insensitive' } },
+        { notes: { contains: params.search, mode: 'insensitive' } },
+        {
+          warehouse: { name: { contains: params.search, mode: 'insensitive' } },
+        },
+        {
+          createdBy: { name: { contains: params.search, mode: 'insensitive' } },
+        },
       ];
     }
 
@@ -213,6 +223,9 @@ export class AdjustmentsService {
           },
         },
         warehouse: true,
+        createdBy: {
+          select: { name: true, email: true },
+        },
       },
     });
 
@@ -222,7 +235,13 @@ export class AdjustmentsService {
       );
     }
 
-    return adjustment;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: { documentId: id },
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { ...adjustment, approvalEvents };
   }
 
   async update(
@@ -271,10 +290,10 @@ export class AdjustmentsService {
             if (
               line.unitCost === undefined ||
               line.unitCost === null ||
-              Number(line.unitCost) <= 0
+              Number(line.unitCost) < 0
             ) {
               throw new BadRequestException(
-                `Unit cost is required and must be greater than zero for manual Adjustment IN.`,
+                `Unit cost is required and must be greater than or equal to zero for manual Adjustment IN.`,
               );
             }
           }
@@ -311,7 +330,10 @@ export class AdjustmentsService {
                     ? AdjustmentDirection.IN
                     : AdjustmentDirection.OUT,
                   reason: reason,
-                  unitCost: line.unitCost || null,
+                  unitCost:
+                    line.unitCost !== undefined && line.unitCost !== null
+                      ? line.unitCost
+                      : null,
                 };
               }),
             },

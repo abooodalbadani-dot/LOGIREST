@@ -5,7 +5,7 @@ import {
   ADJUSTMENT_STATUS,
 } from '@logirest/shared-types';
 
-export type BadgeVariant = 'default' | 'brand' | 'warning' | 'error' | 'success' | 'outline' | 'info';
+export type BadgeVariant = 'default' | 'brand' | 'warning' | 'error' | 'success' | 'outline' | 'info' | 'partial';
 
 interface StatusConfig {
   variant: BadgeVariant;
@@ -18,11 +18,11 @@ interface StatusConfig {
  */
 export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   // Generic / Common
-  DRAFT: { variant: 'outline', labelKey: 'statuses.draft' },
+  DRAFT: { variant: 'warning', labelKey: 'statuses.draft' },
   POSTED: { variant: 'success', labelKey: 'statuses.posted' },
   CANCELLED: { variant: 'error', labelKey: 'statuses.cancelled' },
   SUBMITTED: { variant: 'info', labelKey: 'statuses.submitted' },
-  APPROVED: { variant: 'success', labelKey: 'statuses.approved' },
+  APPROVED: { variant: 'info', labelKey: 'statuses.approved' },
   REJECTED: { variant: 'error', labelKey: 'statuses.rejected' },
   PENDING: { variant: 'warning', labelKey: 'statuses.pending' },
   COMPLETED: { variant: 'success', labelKey: 'statuses.completed' },
@@ -30,7 +30,8 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   
   // PR/PO Specific
   CLOSED: { variant: 'default', labelKey: 'statuses.closed' },
-  PARTIAL: { variant: 'info', labelKey: 'statuses.partial' },
+  PARTIAL: { variant: 'partial', labelKey: 'statuses.partial' },
+  IN_PROGRESS: { variant: 'partial', labelKey: 'statuses.in_progress' },
   FULFILLED: { variant: 'success', labelKey: 'statuses.fulfilled' },
 
   // GRN Specific
@@ -38,11 +39,12 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
 
   // Stocktake Specific
   STARTED: { variant: 'brand', labelKey: 'statuses.started' },
-  COUNTING: { variant: 'info', labelKey: 'statuses.counting' },
+  COUNTING: { variant: 'partial', labelKey: 'statuses.counting' },
   REVIEW: { variant: 'warning', labelKey: 'statuses.review' },
   
   // Transfer Specific
-  IN_TRANSIT: { variant: 'warning', labelKey: 'statuses.in_transit' },
+  IN_TRANSIT: { variant: 'partial', labelKey: 'statuses.in_transit' },
+  DISPUTED: { variant: 'error', labelKey: 'statuses.disputed' },
 
   // Specialized / Missing
   VARIANCE_SUBMITTED: { variant: 'warning', labelKey: 'statuses.variance_submitted' },
@@ -74,7 +76,7 @@ export const STOCKTAKE_STATUS_UI: Record<string, StatusConfig> = {
 
 export const TRANSFER_STATUS_UI: Record<string, StatusConfig> = {
   ...STATUS_UI_CONFIG,
-  [TRANSFER_STATUS.IN_TRANSIT]: { variant: 'warning', labelKey: 'statuses.in_transit' },
+  [TRANSFER_STATUS.IN_TRANSIT]: { variant: 'partial', labelKey: 'statuses.in_transit' },
 };
 
 /**

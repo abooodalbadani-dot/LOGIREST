@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Loader2, AlertTriangle, Trash2, XCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,6 @@ import {
  AlertDialogTitle,
  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface PostConfirmDialogProps {
@@ -48,13 +47,6 @@ const VARIANT_STYLES = {
  default: "bg-operational-cyan/10 text-operational-cyan shadow-operational-cyan/20",
 };
 
-const BUTTON_STYLES = {
- destructive: "bg-status-error hover:bg-status-error/90 text-white shadow-status-error/20",
- warning: "bg-status-warning hover:bg-status-warning/90 text-white shadow-status-warning/20",
- info: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
- default: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
-};
-
 const ICON_MAP = {
  delete: Trash2,
  reject: XCircle,
@@ -85,13 +77,17 @@ export function PostConfirmDialog({
  const locale = useLocale();
  const [internalOpen, setInternalOpen] = useState(false);
  const [confirmInput, setConfirmInput] = useState('');
+ const [localLoading, setLocalLoading] = useState(false);
+ // Synchronous ref-based guard — prevents double-submission between renders.
+ // useState updates are async and can let a second click through before re-render.
+ const isSubmittingRef = useRef(false);
 
  const open = controlledOpen ?? internalOpen;
  const rawOnOpenChange = controlledOnOpenChange ?? setInternalOpen;
 
  const handleOpenChange = (newOpen: boolean, event?: { cancel?: () => void }) => {
   // Prevent closing via Escape key or backdrop click if loading
-  if (!newOpen && isLoading) {
+  if (!newOpen && (isLoading || localLoading)) {
    if (event?.cancel) {
     event.cancel();
    }
@@ -103,13 +99,31 @@ export function PostConfirmDialog({
  const isRtl = locale === 'ar';
  const defaultKeyword = isRtl ? 'تأكيد' : 'CONFIRM';
  const requiredWord = confirmKeyword || defaultKeyword;
- const isConfirmDisabled = isLoading || disabled || (requiresTextConfirmation && confirmInput !== requiredWord);
+ const isConfirmDisabled =
+  isLoading ||
+  localLoading ||
+  disabled ||
+  (requiresTextConfirmation &&
+   confirmInput.trim().toLowerCase() !== requiredWord.trim().toLowerCase());
 
  const handleConfirm = async (e: React.MouseEvent) => {
   e.preventDefault();
-  await onConfirm();
-  handleOpenChange(false);
-  setConfirmInput('');
+  // Synchronous ref check first — blocks second click before React re-renders
+  if (isSubmittingRef.current || localLoading || isLoading || disabled) return;
+  isSubmittingRef.current = true;
+  setLocalLoading(true);
+  try {
+   await onConfirm();
+   // Only close and reset on success
+   rawOnOpenChange(false);
+   setConfirmInput('');
+  } catch {
+   // Error is already surfaced via toast from useSafeMutation / caller.
+   // Keep the dialog open so the user can see the failure and retry or dismiss manually.
+  } finally {
+   isSubmittingRef.current = false;
+   setLocalLoading(false);
+  }
  };
 
  const Icon = (icon && ICON_MAP[icon]) || (variant === 'info' ? Info : AlertTriangle);
@@ -117,7 +131,7 @@ export function PostConfirmDialog({
  return (
   <AlertDialog open={open} onOpenChange={handleOpenChange}>
    {trigger && <AlertDialogTrigger render={trigger} />}
-   <AlertDialogContent className={cn("sm:max-w-2xl w-[95vw] sm:w-full border-none ambient-shadow p-8 bg-card border border-border shadow-sm rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
+   <AlertDialogContent className={cn("sm:max-w-2xl w-[95vw] sm:w-full p-8 bg-white dark:bg-[#1A2234] shadow-2xl border border-gray-200 dark:border-gray-800 rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
     <AlertDialogHeader className="space-y-4">
      <div className={cn(
       "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-200 hover:scale-110",
@@ -126,17 +140,17 @@ export function PostConfirmDialog({
       <Icon className="w-6 h-6" />
      </div>
      <div className="space-y-2">
-      <AlertDialogTitle className="text-headline-sm font-bold uppercase tracking-tight">
+      <AlertDialogTitle className="text-lg font-black text-[#0B1220] dark:text-white uppercase tracking-tight">
        {title}
       </AlertDialogTitle>
-      <AlertDialogDescription className="text-label-sm font-medium text-muted-foreground/60 leading-relaxed uppercase">
+      <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
        {description}
       </AlertDialogDescription>
      </div>
-     {!isLoading && (
+     {!(isLoading || localLoading) && (
       <button
        onClick={() => handleOpenChange(false)}
-       className="absolute top-4 end-4 text-gray-400 hover:text-foreground dark:hover:text-white transition-colors bg-transparent border-none"
+       className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors bg-transparent border-none"
        aria-label={t('actions.close')}
       >
        ✕
@@ -146,17 +160,11 @@ export function PostConfirmDialog({
 
     <div className="my-6 space-y-6">
      {(warningText || t('posting_irreversible')) && (
-      <div className={cn(
-       "p-4 rounded-2xl border flex flex-col gap-1",
-       variant === 'destructive' ? "bg-status-error/5 border-status-error/10" : "bg-status-warning/5 border-status-warning/10"
-      )}>
-       <div className="flex items-center gap-2 text-label-xs font-bold uppercase">
-        <AlertTriangle className="w-3.5 h-3.5" />
-        {warningText || t('warning')}
-       </div>
-       <p className="text-label-xxs font-medium opacity-60 uppercase">
-        {t('posting_irreversible')}
-       </p>
+      <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-lg p-3 mt-4 flex items-start gap-3">
+       <AlertTriangle className="w-4 h-4 text-yellow-800 dark:text-yellow-500 shrink-0 mt-0.5" />
+       <span className="text-xs font-bold text-yellow-800 dark:text-yellow-500">
+        {warningText || t('posting_irreversible')}
+       </span>
       </div>
      )}
 
@@ -171,7 +179,7 @@ export function PostConfirmDialog({
         type="text"
         value={confirmInput}
         onChange={(e) => setConfirmInput(e.target.value)}
-        disabled={isLoading}
+        disabled={isLoading || localLoading}
         className="h-12 bg-surface-container-high/40 border-none rounded-xl px-4 text-foreground outline-none focus:ring-2 focus:ring-operational-cyan/20 transition-all font-mono font-bold uppercase tracking-widest placeholder:opacity-20"
         placeholder={requiredWord}
         autoFocus
@@ -181,31 +189,36 @@ export function PostConfirmDialog({
     </div>
 
     <AlertDialogFooter className="gap-4 mt-2">
-     {!isLoading && (
+     {!(isLoading || localLoading) && (
       <AlertDialogCancel
-       variant="ghost"
-       className="flex-1 h-12 rounded-xl border-none bg-surface-container-high hover:bg-surface-container-highest text-label-xs font-bold uppercase transition-all"
-       disabled={isLoading}
+       render={
+        <button
+         type="button"
+         className="w-full py-2.5 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-[#0B1220] transition-colors outline-none select-none focus:outline-none"
+        />
+       }
+       disabled={isLoading || localLoading}
       >
        {customCancelText || t('actions.cancel')}
       </AlertDialogCancel>
      )}
-     <Button
+     <button
+      type="button"
       onClick={handleConfirm}
       disabled={isConfirmDisabled}
-      aria-label={isLoading ? t('loading') : (customConfirmText || t('actions.confirm'))}
-      aria-busy={isLoading}
+      aria-label={(isLoading || localLoading) ? t('loading') : (customConfirmText || t('actions.confirm'))}
+      aria-busy={isLoading || localLoading}
       className={cn(
-       "flex-1 h-12 rounded-xl text-label-xs font-bold uppercase transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:grayscale",
-       BUTTON_STYLES[variant]
+       "w-full py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg hover:bg-gray-800 dark:hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2 outline-none select-none focus:outline-none disabled:opacity-40 disabled:pointer-events-none active:scale-[0.99]",
+       (isLoading || localLoading) && "cursor-not-allowed"
       )}
      >
-      {isLoading ? (
+      {(isLoading || localLoading) ? (
        <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
        customConfirmText || t('actions.confirm')
       )}
-     </Button>
+     </button>
     </AlertDialogFooter>
    </AlertDialogContent>
   </AlertDialog>

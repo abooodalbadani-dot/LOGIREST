@@ -52,10 +52,17 @@ export class TransferPostService {
             );
           }
 
-          // 1. Centralized Role Check
+          // 1. Status Guard (Defense-in-depth)
+          if (lockedDoc.status !== 'DRAFT') {
+            throw new BadRequestException(
+              `Transfer must be in DRAFT status to be shipped`,
+            );
+          }
+
+          // 2. Centralized Role Check
           const hasRolePermission = canPerformActionV2(
             'TRANSFER',
-            lockedDoc.status as DocumentStatus,
+            lockedDoc.status,
             'SHIP',
             userRole,
           );
@@ -64,7 +71,7 @@ export class TransferPostService {
             throw new ForbiddenException(errorMsg);
           }
 
-          // 2. Strict Origin Warehouse Branch Scope Check
+          // 3. Strict Origin Warehouse Branch Scope Check
           const originScope = await tx.userWarehouseScope.findUnique({
             where: {
               userId_warehouseId: {
@@ -76,13 +83,6 @@ export class TransferPostService {
           if (!originScope) {
             const errorMsg = `User ${userId} with role ${userRole} is not authorized for the origin warehouse branch ${lockedDoc.fromWarehouseId}`;
             throw new ForbiddenException(errorMsg);
-          }
-
-          // 3. Status Guard (Defense-in-depth)
-          if (lockedDoc.status !== 'DRAFT') {
-            throw new BadRequestException(
-              `Transfer must be in DRAFT status to be shipped`,
-            );
           }
 
           // Optimistic locking version check
@@ -115,14 +115,7 @@ export class TransferPostService {
           for (const line of transfer.lines) {
             const item = line.item;
 
-            // Historical posting guard
-            const latestLedger = await tx.stockLedger.findFirst({
-              where: { warehouseId: transfer.fromWarehouseId, itemId: item.id },
-              orderBy: { postedAt: 'desc' },
-            });
-            if (latestLedger && transfer.createdAt < latestLedger.postedAt) {
-              throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
-            }
+            // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
 
             // Check if item is frozen in source warehouse
             await this.scopeValidationService.checkWarehouseItemQuarantine(
@@ -263,6 +256,29 @@ export class TransferPostService {
               }),
               ipAddress: ipAddress || null,
             },
+          });
+
+          const fromWh = tx.warehouse
+            ? await tx.warehouse.findUnique({
+                where: { id: transfer.fromWarehouseId },
+                select: { name: true },
+              })
+            : null;
+          const user = tx.user
+            ? await tx.user.findUnique({
+                where: { id: userId },
+                select: { name: true },
+              })
+            : null;
+
+          await this.outboxService.writeEvent(tx, 'TRANSFER_SHIPPED', {
+            id: transfer.id,
+            documentNumber: transfer.transferNumber || transfer.id,
+            warehouseId: transfer.toWarehouseId,
+            toWarehouseId: transfer.toWarehouseId,
+            fromWarehouseId: transfer.fromWarehouseId,
+            warehouseName: fromWh?.name || 'N/A',
+            userName: user?.name || 'N/A',
           });
 
           return updatedTransfer;
@@ -418,9 +434,11 @@ export class TransferPostService {
             string,
             { quantityReceived: number; varianceReason?: string }
           >();
-          if (linesReceived) {
+          if (linesReceived && Array.isArray(linesReceived)) {
             for (const input of linesReceived) {
-              receivedMap.set(input.lineId, input);
+              if (input && typeof input.lineId === 'string') {
+                receivedMap.set(input.lineId, input);
+              }
             }
           }
 
@@ -428,18 +446,12 @@ export class TransferPostService {
           for (const line of transfer.lines) {
             const item = line.item;
 
-            // Historical posting guard
-            const latestLedger = await tx.stockLedger.findFirst({
-              where: { warehouseId: transfer.toWarehouseId, itemId: item.id },
-              orderBy: { postedAt: 'desc' },
-            });
-            if (latestLedger && transfer.createdAt < latestLedger.postedAt) {
-              throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
-            }
+            // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
             const input = receivedMap.get(line.id);
-            const receivedQty = input
-              ? input.quantityReceived
-              : Number(line.quantityShipped);
+            const receivedQty =
+              input && typeof input.quantityReceived === 'number'
+                ? input.quantityReceived
+                : Number(line.quantityShipped);
             const varianceReason = input ? input.varianceReason : undefined;
             const shippedQty = Number(line.quantityShipped);
 
@@ -473,6 +485,24 @@ export class TransferPostService {
               },
             });
 
+            // Ensure WarehouseItem exists in destination warehouse first to satisfy the FK on WarehouseItemLot
+            await tx.warehouseItem.upsert({
+              where: {
+                warehouseId_itemId: {
+                  warehouseId: transfer.toWarehouseId,
+                  itemId: item.id,
+                },
+              },
+              create: {
+                warehouseId: transfer.toWarehouseId,
+                itemId: item.id,
+                qtyOnHand: 0,
+                qtyAllocated: 0,
+                wac: sourceWac,
+              },
+              update: {},
+            });
+
             // Lock WarehouseItem first (destination warehouse)
             await this.lockService.lockItem(
               tx,
@@ -485,6 +515,12 @@ export class TransferPostService {
               const allocations = await tx.lotAllocation.findMany({
                 where: { transferLineId: line.id },
               });
+
+              if (allocations.length === 0) {
+                throw new BadRequestException(
+                  `No lot allocations found from shipment phase for item ${item.sku}. Lot tracking is required.`,
+                );
+              }
 
               // Distribute receivedQty progressively across the shipped lots
               let remainingReceived = receivedQty;
@@ -711,12 +747,27 @@ export class TransferPostService {
             },
           });
 
+          const toWh = tx.warehouse
+            ? await tx.warehouse.findUnique({
+                where: { id: transfer.toWarehouseId },
+                select: { name: true },
+              })
+            : null;
+          const user = tx.user
+            ? await tx.user.findUnique({
+                where: { id: userId },
+                select: { name: true },
+              })
+            : null;
+
           // Dispatch TRANSFER_RECEIVED outbox event
           await this.outboxService.writeEvent(tx, 'TRANSFER_RECEIVED', {
             id: transfer.id,
             documentNumber: transfer.transferNumber || transfer.id,
             fromWarehouseId: transfer.fromWarehouseId,
             toWarehouseId: transfer.toWarehouseId,
+            warehouseName: toWh?.name || 'N/A',
+            userName: user?.name || 'N/A',
           });
 
           // Notification log for source warehouse keeper
@@ -773,8 +824,12 @@ export class TransferPostService {
       );
     } catch (error: unknown) {
       const logger = new Logger(TransferPostService.name);
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.warn(`Transfer RECEIVE failed for user ${userId}: ${errorMsg}`);
+      const errorMsg =
+        error instanceof Error ? error.stack || error.message : String(error);
+      logger.error(
+        `Transfer RECEIVE failed for user ${userId}: ${errorMsg}`,
+        error instanceof Error ? error.stack : undefined,
+      );
 
       if (error instanceof ForbiddenException) {
         let action = 'WORKFLOW_RECEIVE_FAILED';

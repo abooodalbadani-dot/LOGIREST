@@ -47,6 +47,75 @@ interface StocktakeLineItem extends LineItem {
  varianceReason: string;
 }
 
+interface StocktakeVarianceReasonCellProps {
+ lineId: string;
+ reason: string;
+ hasVariance: boolean;
+ reasonError: boolean;
+ placeholder: string;
+ validationMessage: string;
+ successText: string;
+ onChange: (val: string) => void;
+}
+
+function StocktakeVarianceReasonCell({
+ lineId,
+ reason,
+ hasVariance,
+ reasonError,
+ placeholder,
+ validationMessage,
+ successText,
+ onChange
+}: StocktakeVarianceReasonCellProps) {
+ const [localReason, setLocalReason] = React.useState(reason);
+
+ React.useEffect(() => {
+  setLocalReason(reason);
+ }, [reason]);
+
+ if (!hasVariance) {
+  return (
+   <div className="text-label-sm text-muted-foreground italic flex items-center gap-1.5 justify-center">
+    <CheckCircle2 className="h-3.5 w-3.5 text-status-success" />
+    {successText}
+   </div>
+  );
+ }
+
+ return (
+  <div className="space-y-1.5 text-start w-full md:min-w-[200px]">
+   <Textarea
+    value={localReason}
+    onChange={(e) => {
+     const val = e.target.value.slice(0, 500);
+     setLocalReason(val);
+     onChange(val);
+    }}
+    placeholder={placeholder}
+    maxLength={500}
+    className={cn(
+     "min-h-[80px] text-body-md bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-medium dark:border-none dark:text-white resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
+     reasonError ? "bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-500/10 dark:border-none dark:text-white focus-visible:ring-amber-500/50" : ""
+    )}
+   />
+   <div className="flex items-center justify-between">
+    {reasonError && (
+     <p className="text-label-xs text-amber-500 font-medium animate-in fade-in slide-in-from-top-1">
+      {validationMessage}
+     </p>
+    )}
+    <p className={cn(
+     "text-label-xs font-bold ms-auto transition-colors",
+     localReason.trim().length >= 10 ? "text-status-success" : "text-status-warning"
+    )}>
+     {localReason.trim().length} / 500
+    </p>
+   </div>
+  </div>
+ );
+}
+
 export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
  const common = useTranslations('common')
@@ -113,38 +182,105 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
 
  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
- if (isLoading) return <PageSkeleton variant="list" />;
- if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
+  const handleReasonChange = React.useCallback((lineId: string, value: string) => {
+   setReasons(prev => ({ ...prev, [lineId]: value }))
+  }, [])
+ 
+  const isReasonValid = React.useCallback((lineId: string, variance: number) => {
+   if (variance === 0) return true
+   const reason = reasons[lineId] || ""
+   return reason.trim().length >= 10
+  }, [reasons])
 
- const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
+  const extraColumns = React.useMemo(() => [
+   {
+    header: t('snapshot_qty'),
+    cell: (line: StocktakeLineItem) => (
+     <span className="font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
+      {formatQuantity(line.snapshotQty, locale)}
+     </span>
+    )
+   },
+   {
+    header: t('variance'),
+    cell: (line: StocktakeLineItem) => {
+     const counted = line.countedQty || 0;
+     const variance = counted - (line.snapshotQty ?? 0);
+     return (
+      <div className={cn(
+       "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono font-semibold text-label-xs",
+       variance === 0 ? "bg-slate-100 dark:bg-slate-800 text-[#0B1220] dark:text-slate-400" : 
+       variance > 0 ? "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67]" : 
+       "bg-red-500/10 text-red-800/80 dark:text-red-400/80"
+      )} dir="ltr">
+       {variance === 0 ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+       {variance > 0 ? '+' : ''}{formatQuantity(variance, locale)}
+      </div>
+     );
+    }
+   },
+   {
+    header: t('variance_value'),
+    cell: (line: StocktakeLineItem) => {
+     const counted = line.countedQty || 0;
+     const variance = counted - (line.snapshotQty ?? 0);
+     const varianceValue = variance * line.unitCost;
+     return (
+      <div className={cn(
+       "font-mono text-label-sm font-semibold",
+       varianceValue === 0 ? "text-muted-foreground/40" : 
+       varianceValue > 0 ? "text-[#b48e67]" : "text-red-800/80 dark:text-red-400/80"
+      )} dir="ltr">
+       {formatCurrency(varianceValue, currencyCode, locale)}
+      </div>
+     );
+    }
+   },
+   {
+    header: t('variance_reason'),
+    cell: (line: StocktakeLineItem) => {
+     const counted = line.countedQty || 0;
+     const variance = counted - (line.snapshotQty ?? 0);
+     const hasVariance = variance !== 0;
+     const reasonError = hasVariance && !isReasonValid(line.id, variance);
+     return (
+      <StocktakeVarianceReasonCell
+       lineId={line.id}
+       reason={reasons[line.id] || ""}
+       hasVariance={hasVariance}
+       reasonError={reasonError}
+       placeholder={t('mandatory_reason')}
+       validationMessage={t('validation.variance_reason_min')}
+       successText={t('no_variance_recorded')}
+       onChange={(val) => handleReasonChange(line.id, val)}
+      />
+     );
+    }
+   }
+  ], [locale, t, reasons, isReasonValid, currencyCode, handleReasonChange]);
 
- const itemsWithVariance = session.items.filter(i => (i.countedQty || 0) - (i.snapshotQty ?? 0) !== 0);
- const totalPositiveVariance = session.items.reduce((acc, i) => {
-  const diff = (i.countedQty || 0) - (i.snapshotQty ?? 0);
-  return diff > 0 ? acc + (diff * i.unitCost) : acc;
- }, 0);
- const totalNegativeVariance = session.items.reduce((acc, i) => {
-  const diff = (i.countedQty || 0) - (i.snapshotQty ?? 0);
-  return diff < 0 ? acc + (Math.abs(diff) * i.unitCost) : acc;
- }, 0);
- const netImpact = totalPositiveVariance - totalNegativeVariance;
+  if (isLoading) return <PageSkeleton variant="list" />;
+  if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
 
- // Status check: Must be in REVIEW
- if (!isStocktakeInReview(session.status)) {
-  baseRouter.replace(`/stocktake/${id}`);
-  return null;
- }
+  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
+  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
 
- const handleReasonChange = (lineId: string, value: string) => {
-  setReasons(prev => ({ ...prev, [lineId]: value }))
- }
+  const itemsWithVariance = session.items.filter(i => (i.countedQty || 0) - (i.snapshotQty ?? 0) !== 0);
+  const totalPositiveVariance = session.items.reduce((acc, i) => {
+   const diff = (i.countedQty || 0) - (i.snapshotQty ?? 0);
+   return diff > 0 ? acc + (diff * i.unitCost) : acc;
+  }, 0);
+  const totalNegativeVariance = session.items.reduce((acc, i) => {
+   const diff = (i.countedQty || 0) - (i.snapshotQty ?? 0);
+   return diff < 0 ? acc + (Math.abs(diff) * i.unitCost) : acc;
+  }, 0);
+  const netImpact = totalPositiveVariance - totalNegativeVariance;
 
- const isReasonValid = (lineId: string, variance: number) => {
-  if (variance === 0) return true
-  const reason = reasons[lineId] || ""
-  return reason.trim().length >= 10
- }
+  // Status check: Must be in REVIEW
+  if (!isStocktakeInReview(session.status)) {
+   baseRouter.replace(`/stocktake/${id}`);
+   return null;
+  }
 
  const canSubmit = session.items.every(item => {
   const variance = (item.countedQty || 0) - (item.snapshotQty ?? 0)
@@ -153,8 +289,8 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
 
  const handleSubmit = () => {
   const updates = session.items.map(item => ({
-   line_id: item.id,
-   variance_reason: reasons[item.id] || ""
+   lineId: item.id,
+   varianceReason: reasons[item.id] || ""
   }))
 
   submitVariance.mutate(
@@ -275,6 +411,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
        locale={locale}
        isReadOnly={true}
        hideLotColumns={true}
+       mobileLayoutPattern="variance-form"
        headers={{ qty: t('counted_qty') }}
        rowClassName={(line) => {
         const variance = (line.countedQty || 0) - (line.snapshotQty ?? 0);
@@ -290,95 +427,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
          {line.uom}
         </span>
        )}
-       extraColumns={[
-        {
-         header: t('snapshot_qty'),
-         cell: (line) => (
-          <span className="font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
-           {formatQuantity(line.snapshotQty, locale)} {line.uom}
-          </span>
-         )
-        },
-        {
-         header: t('variance'),
-         cell: (line) => {
-          const counted = line.countedQty || 0;
-          const variance = counted - (line.snapshotQty ?? 0);
-          return (
-           <div className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono font-semibold text-label-xs",
-            variance === 0 ? "bg-muted/50 text-foreground" : 
-            variance > 0 ? "bg-muted/50 text-foreground" : 
-            "bg-red-500/10 text-red-500"
-           )} dir="ltr">
-            {variance === 0 ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
-            {variance > 0 ? '+' : ''}{formatQuantity(variance, locale)}
-           </div>
-          );
-         }
-        },
-        {
-         header: t('variance_value'),
-         cell: (line) => {
-          const counted = line.countedQty || 0;
-          const variance = counted - (line.snapshotQty ?? 0);
-          const varianceValue = variance * line.unitCost;
-          return (
-           <div className={cn(
-            "font-mono text-label-sm font-semibold",
-            varianceValue === 0 ? "text-muted-foreground/40" : 
-            varianceValue > 0 ? "text-foreground" : "text-red-500"
-           )} dir="ltr">
-            {formatCurrency(varianceValue, currencyCode, locale)}
-           </div>
-          );
-         }
-        },
-        {
-         header: t('variance_reason'),
-         cell: (line) => {
-          const counted = line.countedQty || 0;
-          const variance = counted - (line.snapshotQty ?? 0);
-          const hasVariance = variance !== 0;
-          const reasonError = hasVariance && !isReasonValid(line.id, variance);
-          return hasVariance ? (
-           <div className="space-y-1.5 text-start min-w-[200px]">
-            <Textarea
-             value={reasons[line.id] || ""} 
-             onChange={(e) => {
-              const val = e.target.value.slice(0, 500);
-              handleReasonChange(line.id, val);
-             }}
-             placeholder={t('mandatory_reason')}
-             maxLength={500}
-             className={cn(
-              "min-h-[80px] text-body-md bg-surface-container-medium border-none resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
-              reasonError ? "bg-amber-500/10 focus-visible:ring-amber-500/50" : ""
-             )}
-            />
-            <div className="flex items-center justify-between">
-             {reasonError && (
-              <p className="text-label-xs text-amber-500 font-medium animate-in fade-in slide-in-from-top-1">
-               {t('validation.variance_reason_min')}
-              </p>
-             )}
-             <p className={cn(
-              "text-label-xs font-bold ms-auto transition-colors",
-              (reasons[line.id] || "").trim().length >= 10 ? "text-status-success" : "text-status-warning"
-             )}>
-              {(reasons[line.id] || "").trim().length} / 500
-             </p>
-            </div>
-           </div>
-          ) : (
-           <div className="text-label-sm text-muted-foreground italic flex items-center gap-1.5 justify-center">
-            <CheckCircle2 className="h-3.5 w-3.5 text-status-success" />
-            {t('no_variance_recorded')}
-           </div>
-          );
-         }
-        }
-       ]}
+       extraColumns={extraColumns}
       />
      </Card>
     </div>

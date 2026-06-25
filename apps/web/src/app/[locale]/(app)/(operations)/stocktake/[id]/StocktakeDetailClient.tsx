@@ -10,7 +10,6 @@ import {
  AlertTriangle,
  ClipboardList,
  XCircle,
- Printer,
  History
 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
@@ -50,6 +49,13 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  const { data: rawSession, isLoading, error } = useStocktake(id);
  const session = rawSession ? mapToSessionVM(rawSession) : null;
 
+ // Clean up pointer-events on unmount to prevent Radix UI Dialog freeze bug
+ React.useEffect(() => {
+  return () => {
+   document.body.style.pointerEvents = 'auto';
+  };
+ }, []);
+
  if (isLoading) return <PageSkeleton variant="detail" />
  if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
 
@@ -61,132 +67,147 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
    { id, version: session.version ?? 0, reason: cancelReason },
    {
     onSuccess: () => {
-     toast.success(t('cancelled_success') || 'Stocktake cancelled');
+     try {
+      toast.success(t('cancelled_success'));
+     } catch {
+      toast.success('Stocktake cancelled');
+     }
      setIsCancelDialogOpen(false);
      router.push(`/stocktake/${id}`);
     },
-    onError: () => {
-     toast.error(tc('error') || 'Error');
+    onError: (error) => {
+     const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+     if (!isToastShown) {
+      try {
+       toast.error(tc('error'));
+      } catch {
+       toast.error('Error cancelling stocktake');
+      }
+     }
+     setIsCancelDialogOpen(false); // Ensure dialog closes even on error
     },
    }
   );
  };
 
- const workflowActions = (
-  <div className="flex items-center gap-2">
-   {/* Quick Tools Group */}
-   <div className="flex items-center gap-1 me-1">
-    <Button 
-     variant="ghost" 
-     size="icon"
-     onClick={() => window.print()}
-     className="h-10 w-10 md:h-12 md:w-12 rounded-full text-white/50 hover:text-operational-cyan hover:bg-card/5 transition-all"
-     title={t('print_labels') || 'Print Manifest'}
-    >
-     <Printer className="w-4 h-4 md:w-5 md:h-5" />
-    </Button>
-    <Button 
-     variant="ghost" 
-     size="icon"
-     className="h-10 w-10 md:h-12 md:w-12 rounded-full text-white/50 hover:text-operational-cyan hover:bg-card/5 transition-all"
-     title={t('audit_trail') || 'Audit Trail'}
-    >
-     <History className="w-4 h-4 md:w-5 md:h-5" />
-    </Button>
+  const workflowActions = (
+   <div className="w-full md:w-auto flex flex-col-reverse md:flex-row items-stretch md:items-center gap-3">
+    {/* Quick Tools Group */}
+    <div className="flex items-center gap-1 me-1">
+
+     <Button 
+      variant="ghost" 
+      size="icon"
+      className="h-10 w-10 md:h-12 md:w-12 rounded-full text-white/50 hover:text-operational-cyan hover:bg-card/5 transition-all"
+      title={t('audit_trail') || 'Audit Trail'}
+     >
+      <History className="w-4 h-4 md:w-5 md:h-5" />
+     </Button>
+    </div>
+
+    <div className="w-px h-8 bg-card/10 mx-1 hidden md:block" />
+
+     {status === 'DRAFT' && (
+      <PermissionGate action="start" resource="operations_stocktake">
+       <ActionGuard documentType="STOCKTAKE" status={status} action="START" role={user?.role || ''}>
+        <Button 
+         onClick={() => router.push(`/stocktake/${id}/start`)} 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-primary text-white rounded-full gap-2 shadow-sm shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+        >
+         <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
+         <span className="hidden xs:inline">{t('start_session')}</span>
+        </Button>
+       </ActionGuard>
+      </PermissionGate>
+     )}
+     
+     {status === 'STARTED' && (
+      <PermissionGate action="count" resource="operations_stocktake">
+       <ActionGuard documentType="STOCKTAKE" status={status} action="COUNT" role={user?.role || ''}>
+        <Button 
+         onClick={() => router.push(`/stocktake/${id}/count`)} 
+         className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" 
+        >
+         <ClipboardList className="w-4 h-4 md:w-5 md:h-5" />
+         <span className="hidden xs:inline">{t('go_to_count')}</span>
+        </Button>
+       </ActionGuard>
+      </PermissionGate>
+     )}
+
+     {status === 'COUNTING' && (
+      <>
+       {/* Primary: Resume the interactive counting screen */}
+       <PermissionGate action="count" resource="operations_stocktake">
+        <Button
+         onClick={() => router.push(`/stocktake/${id}/count`)}
+         className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+        >
+         <ClipboardList className="w-4 h-4 md:w-5 md:h-5" />
+         <span className="hidden xs:inline">{t('resume_counting')}</span>
+        </Button>
+       </PermissionGate>
+
+       {/* Secondary: Jump straight to variance review / submit */}
+       <PermissionGate action="review_variance" resource="operations_stocktake">
+        <ActionGuard documentType="STOCKTAKE" status={status} action="REVIEW_VARIANCE" role={user?.role || ''}>
+         <Button
+          variant="outline"
+          onClick={() => router.push(`/stocktake/${id}/variance`)}
+          className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide"
+         >
+          <AlertTriangle className="w-4 h-4 md:w-5 md:h-5" />
+          <span className="hidden xs:inline">{t('review_variance')}</span>
+         </Button>
+        </ActionGuard>
+       </PermissionGate>
+      </>
+     )}
+
+     <PermissionGate action="approve" resource="operations_stocktake">
+      {status === 'REVIEW' && (
+       <ActionGuard documentType="STOCKTAKE" status={status} action="APPROVE" role={user?.role || ''}>
+        <Button 
+         onClick={() => router.push(`/stocktake/${id}/approve`)} 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-8 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] hover:bg-[#1A2234] dark:hover:bg-[#cba47e] rounded-full gap-2 shadow-sm shadow-[#0B1220]/20 dark:shadow-[#b48e67]/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
+        >
+         <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
+         <span className="hidden xs:inline">{t('review_approval')}</span>
+        </Button>
+       </ActionGuard>
+      )}
+     </PermissionGate>
+
+     <PermissionGate action="post" resource="operations_stocktake">
+      {status === 'APPROVED' && (
+       <ActionGuard documentType="STOCKTAKE" status={status} action="POST" role={user?.role || ''}>
+        <Button 
+         onClick={() => router.push(`/stocktake/${id}/post`)} 
+         className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" 
+        >
+         <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
+         <span className="hidden xs:inline">{t('go_to_post')}</span>
+        </Button>
+       </ActionGuard>
+      )}
+     </PermissionGate>
+
+     {['DRAFT', 'STARTED', 'COUNTING'].includes(status) && (
+      <PermissionGate action="cancel" resource="operations_stocktake">
+       <ActionGuard documentType="STOCKTAKE" status={status} action="CANCEL" role={user?.role || ''}>
+        <Button 
+         variant="outline"
+         onClick={() => setIsCancelDialogOpen(true)} 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-6 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide" 
+        >
+         <XCircle className="w-4 h-4 md:w-5 md:h-5" />
+         <span className="hidden xs:inline">{tc('cancel') || 'Cancel'}</span>
+        </Button>
+       </ActionGuard>
+      </PermissionGate>
+     )}
    </div>
-
-   <div className="w-px h-8 bg-card/10 mx-1 hidden md:block" />
-
-    {status === 'DRAFT' && (
-     <PermissionGate action="start" resource="operations_stocktake">
-      <ActionGuard documentType="STOCKTAKE" status={status} action="START" role={user?.role || ''}>
-       <Button 
-        onClick={() => router.push(`/stocktake/${id}/start`)} 
-        className="h-10 md:h-12 px-4 md:px-8 bg-primary text-white rounded-full gap-2 shadow-sm shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
-        disabled={isLocked}
-       >
-        <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
-        <span className="hidden xs:inline">{t('start_session')}</span>
-       </Button>
-      </ActionGuard>
-     </PermissionGate>
-    )}
-    
-    {status === 'STARTED' && (
-     <PermissionGate action="count" resource="operations_stocktake">
-      <ActionGuard documentType="STOCKTAKE" status={status} action="COUNT" role={user?.role || ''}>
-       <Button 
-        onClick={() => router.push(`/stocktake/${id}/count`)} 
-        className="h-10 md:h-12 px-4 md:px-8 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
-        disabled={isLocked}
-       >
-        <ClipboardList className="w-4 h-4 md:w-5 md:h-5" />
-        <span className="hidden xs:inline">{t('go_to_count')}</span>
-       </Button>
-      </ActionGuard>
-     </PermissionGate>
-    )}
-
-    {status === 'COUNTING' && (
-     <PermissionGate action="review_variance" resource="operations_stocktake">
-      <ActionGuard documentType="STOCKTAKE" status={status} action="REVIEW_VARIANCE" role={user?.role || ''}>
-       <Button 
-        onClick={() => router.push(`/stocktake/${id}/variance`)} 
-        className="h-10 md:h-12 px-4 md:px-8 bg-amber-500 text-white rounded-full gap-2 shadow-sm shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
-        disabled={isLocked}
-       >
-        <AlertTriangle className="w-4 h-4 md:w-5 md:h-5" />
-        <span className="hidden xs:inline">{t('review_variance')}</span>
-       </Button>
-      </ActionGuard>
-     </PermissionGate>
-    )}
-
-    <PermissionGate action="approve" resource="operations_stocktake">
-     {status === 'REVIEW' && (
-      <ActionGuard documentType="STOCKTAKE" status={status} action="APPROVE" role={user?.role || ''}>
-       <Button 
-        onClick={() => router.push(`/stocktake/${id}/approve`)} 
-        className="h-10 md:h-12 px-4 md:px-8 bg-emerald-500 text-white rounded-full gap-2 shadow-sm shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
-        disabled={isLocked}
-       >
-        <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
-        <span className="hidden xs:inline">{t('review_approval')}</span>
-       </Button>
-      </ActionGuard>
-     )}
-    </PermissionGate>
-
-    <PermissionGate action="post" resource="operations_stocktake">
-     {status === 'APPROVED' && (
-      <ActionGuard documentType="STOCKTAKE" status={status} action="POST" role={user?.role || ''}>
-       <Button 
-        onClick={() => router.push(`/stocktake/${id}/post`)} 
-        className="h-10 md:h-12 px-6 md:px-10 bg-operational-cyan text-white rounded-full gap-2 shadow-sm shadow-operational-cyan/20 hover:scale-105 active:scale-95 transition-all text-[10px] md:text-xs font-black uppercase tracking-wide" 
-        disabled={isLocked}
-       >
-        <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
-        <span className="hidden xs:inline">{t('go_to_post')}</span>
-       </Button>
-      </ActionGuard>
-     )}
-    </PermissionGate>
-
-    <PermissionGate action="cancel" resource="operations_stocktake">
-     <ActionGuard documentType="STOCKTAKE" status={status} action="CANCEL" role={user?.role || ''}>
-      <Button 
-       variant="outline"
-       onClick={() => setIsCancelDialogOpen(true)} 
-       className="h-10 md:h-12 px-4 md:px-6 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide" 
-       disabled={isLocked}
-      >
-       <XCircle className="w-4 h-4 md:w-5 md:h-5" />
-       <span className="hidden xs:inline">{tc('cancel') || 'Cancel'}</span>
-      </Button>
-     </ActionGuard>
-    </PermissionGate>
-  </div>
- );
+  );
 
  return (
   <ScopeGuard warehouseId={session?.warehouseId}>
@@ -205,7 +226,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
    />
 
    <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-    <DialogContent className="bg-surface-container-high border-none p-0 overflow-hidden rounded-[2rem] max-w-lg">
+    <DialogContent className="w-[95vw] sm:w-[500px] sm:max-w-[500px] bg-surface-container-high border-none p-0 overflow-hidden rounded-[2rem]">
      <div className="p-8 space-y-6">
       <DialogHeader>
        <DialogTitle className="text-headline-lg font-semibold">{tc('cancel') || 'Cancel Stocktake'}</DialogTitle>

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Calendar, Package, ArrowLeft, Building2, FileText, History, Printer } from 'lucide-react';
+import { Calendar, Package, ArrowLeft, Building2, FileText, History } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -55,14 +55,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
     </div>
     
     <div className="flex items-center gap-3">
-     <Button 
-      variant="outline" 
-      onClick={() => window.print()} 
-      className="h-10 px-4 rounded-lg hidden md:flex border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/10 uppercase text-label-xs font-bold transition-all"
-     >
-      <Printer className="w-4 h-4 me-2" />
-      {tc('print') || 'Print'}
-     </Button>
+
      <StatusBadge status={document.status as BadgeStatus} />
      {actions && (
       <>

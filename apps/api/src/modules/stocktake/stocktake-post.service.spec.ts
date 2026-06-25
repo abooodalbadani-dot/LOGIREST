@@ -6,6 +6,7 @@ import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Prisma, Role, DocumentType, StocktakeStatus } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 describe('StocktakePostService', () => {
   let service: StocktakePostService;
@@ -14,6 +15,10 @@ describe('StocktakePostService', () => {
     postingOperationsCounter: {
       inc: jest.fn(),
     },
+  };
+
+  const mockOutboxService = {
+    writeEvent: jest.fn(),
   };
 
   const mockSessionFindUnique = jest.fn();
@@ -25,6 +30,7 @@ describe('StocktakePostService', () => {
   const mockWarehouseItemUpsert = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockWarehouseItemFindUnique = jest.fn();
+  const mockWarehouseItemUpdateMany = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockWarehouseLockUpdateMany = jest.fn();
   const mockWarehouseUpdate = jest.fn();
@@ -56,6 +62,7 @@ describe('StocktakePostService', () => {
       upsert: mockWarehouseItemUpsert,
       update: mockWarehouseItemUpdate,
       findUnique: mockWarehouseItemFindUnique,
+      updateMany: mockWarehouseItemUpdateMany,
     },
     stockLedger: {
       create: mockStockLedgerCreate,
@@ -100,6 +107,7 @@ describe('StocktakePostService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: LedgerLockService, useValue: mockLockService },
         { provide: MetricsService, useValue: mockMetricsService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 
@@ -167,6 +175,10 @@ describe('StocktakePostService', () => {
     expect(mockWarehouseLockUpdateMany).toHaveBeenCalledWith({
       where: { warehouseId, isActive: true },
       data: { isActive: false },
+    });
+    expect(mockWarehouseItemUpdateMany).toHaveBeenCalledWith({
+      where: { warehouseId, isFrozen: true },
+      data: { isFrozen: false },
     });
     expect(mockWarehouseUpdate).toHaveBeenCalledWith({
       where: { id: warehouseId },

@@ -16,6 +16,7 @@ const PRLineSchema = z.object({
   primaryUom: z.object({
    id: z.string(),
    code: z.string(),
+   name: z.string().optional(),
   }),
   minStockLevel: z.number().optional(),
   reorderPoint: z.number().optional(),

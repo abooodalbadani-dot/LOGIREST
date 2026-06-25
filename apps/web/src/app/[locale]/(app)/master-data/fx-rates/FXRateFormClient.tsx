@@ -44,6 +44,7 @@ export function FXRateFormClient({
   locale
 }: Props) {
   const t = useTranslations('master_data.fx_rates');
+  const tv = useTranslations();
   const tCommon = useTranslations('common');
   const tAuth = useTranslations('auth');
   const tPermissions = useTranslations('permissions');
@@ -294,7 +295,7 @@ export function FXRateFormClient({
                     />
                   )}
                 />
-                {errors.fromCurrencyId && <p className="text-xs text-red-500 mt-1">{t(errors.fromCurrencyId.message as Parameters<typeof t>[0])}</p>}
+                {errors.fromCurrencyId && <p className="text-xs text-red-500 mt-1">{tv(errors.fromCurrencyId.message as never)}</p>}
               </div>
 
               {/* To Currency */}
@@ -316,7 +317,7 @@ export function FXRateFormClient({
                     />
                   )}
                 />
-                {errors.toCurrencyId && <p className="text-xs text-red-500 mt-1">{t(errors.toCurrencyId.message as Parameters<typeof t>[0])}</p>}
+                {errors.toCurrencyId && <p className="text-xs text-red-500 mt-1">{tv(errors.toCurrencyId.message as never)}</p>}
               </div>
 
               {/* Rate Field */}
@@ -337,7 +338,7 @@ export function FXRateFormClient({
                     className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm read-only:opacity-70 read-only:cursor-default w-full"
                   />
                 </div>
-                {errors.rate && <p className="text-xs text-red-500 mt-1">{t(errors.rate.message as Parameters<typeof t>[0])}</p>}
+                {errors.rate && <p className="text-xs text-red-500 mt-1">{tv(errors.rate.message as never)}</p>}
               </div>
 
               {/* Effective Date Field */}
@@ -356,7 +357,7 @@ export function FXRateFormClient({
                     className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm read-only:opacity-70 read-only:cursor-default w-full"
                   />
                 </div>
-                {errors.effectiveDate && <p className="text-xs text-red-500 mt-1">{t(errors.effectiveDate.message as Parameters<typeof t>[0])}</p>}
+                {errors.effectiveDate && <p className="text-xs text-red-500 mt-1">{tv(errors.effectiveDate.message as never)}</p>}
               </div>
             </div>
           </div>

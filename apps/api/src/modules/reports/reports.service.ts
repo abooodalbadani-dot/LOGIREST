@@ -45,6 +45,7 @@ export interface MovementExportRow {
   sku: string;
   documentType: DocumentType;
   documentId: string | null;
+  documentNumber?: string | null;
   quantity: number;
   [key: string]: unknown;
 }
@@ -428,11 +429,13 @@ export class ReportsService {
       }),
     ]);
 
+    const mappedData = await this.attachDocumentNumbers(data);
+
     return {
       total,
       page: pageNum,
       limit: limitNum,
-      data,
+      data: mappedData,
     };
   }
 
@@ -705,7 +708,7 @@ export class ReportsService {
       where.postedAt = postedAtFilter;
     }
 
-    return this.prisma.costLedger.findMany({
+    const data = await this.prisma.costLedger.findMany({
       where,
       include: {
         item: true,
@@ -714,6 +717,8 @@ export class ReportsService {
         postedAt: 'desc',
       },
     });
+
+    return this.attachDocumentNumbers(data);
   }
 
   async getLotTrace(
@@ -981,13 +986,16 @@ export class ReportsService {
       ? this.encodeCursor(data[data.length - 1].id, newOffset)
       : null;
 
+    const mappedData = await this.attachDocumentNumbers(data);
+
     return {
-      data: data.map((m) => ({
+      data: mappedData.map((m) => ({
         postedAt: m.postedAt,
         itemName: m.item.name,
         sku: m.item.sku,
         documentType: m.documentType,
         documentId: m.documentId,
+        documentNumber: m.documentNumber,
         quantity: Number(m.quantity),
       })),
       nextCursor,
@@ -1233,13 +1241,16 @@ export class ReportsService {
       ? this.encodeCursor(data[data.length - 1].id, newOffset)
       : null;
 
+    const mappedData = await this.attachDocumentNumbers(data);
+
     return {
-      data: data.map((m) => ({
+      data: mappedData.map((m) => ({
         postedAt: m.postedAt,
         itemName: m.item.name,
         sku: m.item.sku,
         documentType: m.documentType,
         documentId: m.documentId,
+        documentNumber: m.documentNumber,
         quantity: Number(m.quantity),
       })),
       nextCursor,
@@ -1282,6 +1293,7 @@ export class ReportsService {
       fulfilledRequests,
       ledgerAggregation,
       auditLogsList,
+      lastBackupSetting,
     ] = await Promise.all([
       // Total inventory value (sum of WAC * qtyOnHand)
       this.prisma.warehouseItem.findMany({
@@ -1299,8 +1311,13 @@ export class ReportsService {
       this.prisma.warehouseItem.count({
         where: { qtyOnHand: { lte: 0 } },
       }),
-      // Active users
-      this.prisma.user.count({ where: { isActive: true } }),
+      // Active users (sessions)
+      this.prisma.refreshToken
+        .groupBy({
+          by: ['sessionId'],
+          where: { expiresAt: { gt: new Date() }, isRevoked: false },
+        })
+        .then((res) => res.length),
       // Near-expiry lots (within 30 days)
       this.prisma.lot.count({
         where: {
@@ -1485,6 +1502,10 @@ export class ReportsService {
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: { user: true },
+      }),
+      // 13. System Last Backup
+      this.prisma.systemSetting.findUnique({
+        where: { key: 'last_backup_at' },
       }),
     ]);
 
@@ -1719,6 +1740,7 @@ export class ReportsService {
         velocityChart,
       },
       systemAuditLogs,
+      lastBackupTimestamp: lastBackupSetting?.value || undefined,
     };
   }
 
@@ -1793,9 +1815,12 @@ export class ReportsService {
           status: { in: ['DRAFT', 'STARTED', 'COUNTING', 'REVIEW'] },
         },
       }),
-      this.prisma.user.count({
-        where: { isActive: true },
-      }),
+      this.prisma.refreshToken
+        .groupBy({
+          by: ['sessionId'],
+          where: { expiresAt: { gt: new Date() }, isRevoked: false },
+        })
+        .then((res) => res.length),
       this.prisma.lot.count({
         where: {
           status: 'ACTIVE',
@@ -2364,10 +2389,13 @@ export class ReportsService {
       this.prisma.outboxEvent.count({
         where: { deadLettered: true },
       }),
-      // 8. Active users
-      this.prisma.user.count({
-        where: { isActive: true },
-      }),
+      // 8. Active users (sessions)
+      this.prisma.refreshToken
+        .groupBy({
+          by: ['sessionId'],
+          where: { expiresAt: { gt: new Date() }, isRevoked: false },
+        })
+        .then((res) => res.length),
     ]);
 
     // Calculate shortages
@@ -2487,6 +2515,63 @@ export class ReportsService {
       }
       where.postedAt = postedAtFilter;
     }
+  }
+
+  private async attachDocumentNumbers<
+    T extends { documentId: string; documentType: DocumentType },
+  >(data: T[]): Promise<(T & { documentNumber: string | null })[]> {
+    if (!data.length) return [];
+
+    const grnIds = data
+      .filter((m) => m.documentType === 'GOODS_RECEIVED_NOTE')
+      .map((m) => m.documentId);
+    const adjustmentIds = data
+      .filter((m) => m.documentType === 'ADJUSTMENT')
+      .map((m) => m.documentId);
+    const transferIds = data
+      .filter((m) => m.documentType === 'TRANSFER')
+      .map((m) => m.documentId);
+    const issueIds = data
+      .filter((m) => m.documentType === 'INVENTORY_ISSUE')
+      .map((m) => m.documentId);
+
+    const [grns, adjustments, transfers, issues] = await Promise.all([
+      grnIds.length
+        ? this.prisma.goodsReceivedNote.findMany({
+            where: { id: { in: grnIds } },
+            select: { id: true, grnNumber: true },
+          })
+        : [],
+      adjustmentIds.length
+        ? this.prisma.adjustment.findMany({
+            where: { id: { in: adjustmentIds } },
+            select: { id: true, adjustmentNumber: true },
+          })
+        : [],
+      transferIds.length
+        ? this.prisma.transfer.findMany({
+            where: { id: { in: transferIds } },
+            select: { id: true, transferNumber: true },
+          })
+        : [],
+      issueIds.length
+        ? this.prisma.inventoryIssue.findMany({
+            where: { id: { in: issueIds } },
+            select: { id: true, issueNumber: true },
+          })
+        : [],
+    ]);
+
+    const docMap = new Map<string, string>();
+    grns.forEach((g) => docMap.set(g.id, g.grnNumber));
+    adjustments.forEach((a) => docMap.set(a.id, a.adjustmentNumber));
+    transfers.forEach((t) => docMap.set(t.id, t.transferNumber));
+    issues.forEach((i) => docMap.set(i.id, i.issueNumber));
+
+    return data.map((m) => ({
+      ...m,
+      documentNumber: docMap.get(m.documentId) || null,
+    }));
   }
 }
 

@@ -80,7 +80,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
       <Button
        variant="ghost"
        size="sm"
-       className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
+       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        onClick={(e) => {
         e.stopPropagation();
         router.push(`/master-data/suppliers/${row.original.id}`);
@@ -117,16 +117,16 @@ export function SupplierListClient({ locale }: { locale: string }) {
  ];
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex w-full">
    <Breadcrumb items={breadcrumbs} />
 
    <PageHeader
     title={tc('title')}
-    description={tc('description')}
-    actions={
+    subtitle={tc('description')}
+    children={
      <PermissionGate action="create" resource="master_data">
-      <Link href={`/master-data/suppliers/new`}>
-       <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
+      <Link href={`/master-data/suppliers/new`} className="shrink-0 w-full sm:w-auto">
+       <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
         <Plus className="w-3.5 h-3.5 me-2" />
         {t('create_new')}
        </Button>
@@ -161,30 +161,102 @@ export function SupplierListClient({ locale }: { locale: string }) {
     />
    </div>
 
-   <DataTable
-    columns={columns}
-    data={data?.data ?? []}
-    isLoading={isLoading}
-    collectionName="master_data_suppliers"
-    onRowClick={(r: Supplier) => router.push(`/master-data/suppliers/${r.id}`)}
-    emptyState={
-     <EmptyState 
-      variant="minimal"
-      title={t('no_data')}
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    <div className="hidden md:block w-full">
+     <DataTable
+      columns={columns}
+      data={data?.data ?? []}
+      isLoading={isLoading}
+      collectionName="master_data_suppliers"
+      onRowClick={(r: Supplier) => router.push(`/master-data/suppliers/${r.id}`)}
+      emptyState={
+       <EmptyState 
+        variant="minimal"
+        title={t('no_data')}
+       />
+      }
+      filters={
+         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+           <div className="w-full sm:w-80 md:w-96">
+             <div className="relative w-full group">
+               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+               <Input
+           placeholder={tc('search_placeholder') || 'البحث عن الموردين بالكود أو الاسم...'}
+           value={search}
+           onChange={ (e) => setSearch(e.target.value) }
+           className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
+          />
+             </div>
+           </div>
+         </div>
+        }
      />
-    }
-    filters={
-      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-        <Input
-         placeholder={tc('search_placeholder') || 'البحث عن الموردين بالكود أو الاسم...'}
-         value={search}
-         onChange={ (e) => setSearch(e.target.value) }
-         className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
-        />
+    </div>
+
+    {!isLoading && (data?.data ?? []).length > 0 && (
+     <div className="flex flex-col gap-3 md:hidden mt-4">
+      {(data?.data ?? []).map((supplier) => (
+       <div 
+        key={supplier.id} 
+        className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
+        onClick={() => router.push(`/master-data/suppliers/${supplier.id}`)}
+       >
+        
+        {/* TOP TIER: Identity & Status */}
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-1 w-full">
+            {/* Name & Status Inline */}
+            <div className="flex justify-between items-start gap-2">
+              <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{supplier.name}</span>
+              <StatusBadge status={supplier.isActive ? 'ACTIVE' : 'INACTIVE'} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+            </div>
+            {/* Codes Inline */}
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{supplier.code}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM TIER: Metadata & Actions */}
+        <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+          
+          {/* Left Side: Payment Terms */}
+          <div className="flex items-center gap-1.5 text-status-warning font-bold text-[10px] uppercase">
+           {supplier.paymentTerms ? (
+             <>
+               <CreditCard className="w-3 h-3 opacity-60" />
+               {supplier.paymentTerms}
+             </>
+           ) : (
+             <span className="opacity-20 italic text-[10px]">{t('not_available')}</span>
+           )}
+          </div>
+
+          {/* Right Side: Compact Touch-Friendly Buttons */}
+          <div className="flex gap-2 shrink-0">
+           <PermissionGate action="view" resource="master_data">
+            <button 
+             className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+             onClick={(e) => { e.stopPropagation(); router.push(`/master-data/suppliers/${supplier.id}`); }}
+            >
+             {t('view')}
+            </button>
+           </PermissionGate>
+           <PermissionGate action="edit" resource="master_data">
+            <button 
+             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors"
+             onClick={(e) => { e.stopPropagation(); router.push(`/master-data/suppliers/${supplier.id}/edit`); }}
+            >
+             {t('edit')}
+            </button>
+           </PermissionGate>
+          </div>
+        </div>
        </div>
-     }
-   />
+      ))}
+     </div>
+    )}
+   </div>
   </div>
  );
 }

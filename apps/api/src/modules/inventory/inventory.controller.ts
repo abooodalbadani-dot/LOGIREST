@@ -33,6 +33,23 @@ import type {
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Get()
+  async getWarehouseInventory(
+    @Query('warehouseId') warehouseId: string,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (!warehouseId) {
+      throw new BadRequestException('warehouseId is required');
+    }
+    return this.inventoryService.getBalance(warehouseId, {
+      search,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 50,
+    });
+  }
+
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Get('balance')
   async getBalance(

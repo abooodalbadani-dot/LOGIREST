@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useItems } from '@/features/items/hooks/useItems';
 import { type Item } from '@/features/items/types';
@@ -44,6 +45,95 @@ interface NewTransferLine {
  };
  qty: number;
  uomId: string;
+ notes?: string;
+}
+
+interface TransferLineNotesCellProps {
+ locale: 'ar' | 'en';
+ lineId: string;
+ notes?: string;
+ onChange: (val: string) => void;
+}
+
+function TransferLineNotesCell({ locale, lineId, notes, onChange }: TransferLineNotesCellProps) {
+ const [localNotes, setLocalNotes] = useState(notes || '');
+
+ useEffect(() => {
+  setLocalNotes(notes || '');
+ }, [notes]);
+
+ return (
+  <div className="flex justify-center min-w-[200px] w-full">
+   <Input
+    value={localNotes}
+    onChange={(e) => setLocalNotes(e.target.value)}
+    onBlur={() => onChange(localNotes)}
+    placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
+    className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
+   />
+  </div>
+ );
+}
+
+interface TransferLineQtyCellProps {
+ lineId: string;
+ qty: number;
+ isExceeded: boolean;
+ onChange: (val: number) => void;
+}
+
+function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLineQtyCellProps) {
+ const [localQty, setLocalQty] = useState(qty !== undefined && qty !== null ? String(qty) : '1');
+
+ useEffect(() => {
+  setLocalQty(qty !== undefined && qty !== null ? String(qty) : '1');
+ }, [qty]);
+
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const rawVal = e.target.value;
+  if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+   setLocalQty(rawVal);
+   if (rawVal !== '' && rawVal !== '.') {
+    const parsed = parseFloat(rawVal);
+    if (!isNaN(parsed) && parsed > 0) {
+     onChange(parsed);
+    }
+   }
+  }
+ };
+
+ const handleBlur = () => {
+  let finalVal = 1;
+  if (localQty === '' || localQty === '.') {
+   finalVal = 1;
+  } else {
+   const parsed = parseFloat(localQty);
+   if (isNaN(parsed) || parsed <= 0) {
+    finalVal = 1;
+   } else {
+    finalVal = parsed;
+   }
+  }
+  setLocalQty(String(finalVal));
+  onChange(finalVal);
+ };
+
+ return (
+  <div className="flex items-center justify-end w-full">
+   <Input
+    dir="ltr"
+    type="text"
+    inputMode="decimal"
+    value={localQty}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    className={cn(
+     "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all",
+     isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
+    )}
+   />
+  </div>
+ );
 }
 
 export function TransferNewClient() {
@@ -149,18 +239,19 @@ export function TransferNewClient() {
    if (existingLine) {
     return prev.map(l => l.itemId === item.id ? { ...l, qty: l.qty + 1 } : l);
    }
-   return [...prev, {
-    id: `temp-${item.id}-${Date.now()}`,
-    itemId: item.id,
-    item: {
-     id: item.id,
-     code: item.code,
-     name: item.name,
-     primaryUom: { code: item.primaryUom.code }
-     },
-    qty: 1,
-    uomId: item.primaryUom.id
-   }];
+    return [...prev, {
+     id: `temp-${item.id}-${Date.now()}`,
+     itemId: item.id,
+     item: {
+      id: item.id,
+      code: item.code,
+      name: item.name,
+      primaryUom: { code: item.primaryUom.code }
+      },
+     qty: 1,
+     uomId: item.primaryUom.id,
+     notes: ''
+    }];
   });
  };
 
@@ -237,11 +328,47 @@ export function TransferNewClient() {
   });
  };
 
- const hasQuantityErrors = !!inventoryBalances?.data && lines.some(line => {
-  const balance = inventoryBalances.data.find(b => b.itemId === line.itemId);
-  const availableQty = balance ? balance.qtyAvailable : 0;
-  return line.qty > availableQty || line.qty <= 0;
- });
+  const hasQuantityErrors = !!inventoryBalances?.data && lines.some(line => {
+   const balance = inventoryBalances.data.find(b => b.itemId === line.itemId);
+   const availableQty = balance ? balance.qtyAvailable : 0;
+   return line.qty > availableQty || line.qty <= 0;
+  });
+
+  const handleNotesChange = useCallback((lineId: string, val: string) => {
+   setLines(prev => prev.map(l => l.id === lineId ? { ...l, notes: val } : l));
+  }, []);
+
+  const handleQtyChange = useCallback((lineId: string, val: number) => {
+   setLines(prev => prev.map(l => l.id === lineId ? { ...l, qty: val } : l));
+  }, []);
+
+  const renderQty = useCallback((line: NewTransferLine) => {
+   const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
+   const availableQty = balance ? balance.qtyAvailable : 0;
+   const isExceeded = balance ? line.qty > availableQty : false;
+   return (
+    <TransferLineQtyCell
+     lineId={line.id}
+     qty={line.qty}
+     isExceeded={isExceeded}
+     onChange={(val) => handleQtyChange(line.id, val)}
+    />
+   );
+  }, [inventoryBalances?.data, handleQtyChange]);
+
+  const extraColumns = useMemo(() => [
+   {
+    header: tCommon('notes'),
+    cell: (line: NewTransferLine) => (
+     <TransferLineNotesCell
+      locale={locale as 'ar' | 'en'}
+      lineId={line.id}
+      notes={line.notes}
+      onChange={(val) => handleNotesChange(line.id, val)}
+     />
+    )
+   }
+  ], [locale, tCommon, handleNotesChange]);
 
  const isValid = !!(
   fromWarehouseId && 
@@ -282,7 +409,7 @@ export function TransferNewClient() {
 
    <PageHeader
     title={t('create_new')}
-    description={t('description')}
+    subtitle={t('description')}
    />
 
    <div className="space-y-2">
@@ -292,10 +419,9 @@ export function TransferNewClient() {
     )}
    </div>
 
-   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div className="lg:col-span-1 space-y-8">
-     <div className="bg-card border border-border shadow-sm/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl">
-      <div className={`absolute top-0 inset-x-0 h-1 rounded-t-[2.5rem] ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
+    <div className="flex flex-col lg:flex-row gap-8">
+     <div className="w-full lg:w-[320px] shrink-0 space-y-8">
+      <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100">
       
       <div className="flex items-center gap-3 mb-6">
        <Warehouse className="w-4 h-4 text-foreground" />
@@ -323,7 +449,7 @@ export function TransferNewClient() {
          }}
          getPrimaryLabel={(item) => item.name}
          placeholder={t('select_warehouse') || 'Select warehouse...'}
-         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
         />
        </div>
 
@@ -344,7 +470,7 @@ export function TransferNewClient() {
          }}
          getPrimaryLabel={(item) => item.name}
          placeholder={t('select_warehouse') || 'Select warehouse...'}
-         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+         triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
         />
         {fromWarehouseId && toWarehouseId && fromWarehouseId === toWarehouseId && (
          <p className="text-label-xxs font-bold text-status-error uppercase px-1 mt-1">
@@ -367,10 +493,9 @@ export function TransferNewClient() {
       </div>
      </div>
     </div>
-
-    <div className="lg:col-span-2 space-y-6">
-     <div className="bg-card border border-border shadow-sm/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl">
-      <div className={`absolute top-0 inset-x-0 h-1 rounded-t-[2.5rem] ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-emerald-500/50 via-emerald-500/20 to-transparent`} />
+ 
+    <div className="flex-1 min-w-0 space-y-6">
+     <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100">
       
       <div className="flex items-center justify-between mb-8">
        <div className="flex items-center gap-3">
@@ -405,10 +530,10 @@ export function TransferNewClient() {
         </label>
         <ScanInput 
          onScan={handleAddItem}
-         placeholder={t('scan_item_placeholder')} 
+         placeholder={t('scan_item_placeholder') || "Scan item barcode..."} 
          className="w-full"
+         variant="standard"
          scannerMode={true}
-         size="lg"
          disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
         />
        </div>
@@ -422,6 +547,7 @@ export function TransferNewClient() {
          getPrimaryLabel={(item) => item.name}
          placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
          disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
+         triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-md text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
         />
        </div>
       </div>
@@ -433,6 +559,8 @@ export function TransferNewClient() {
         isReadOnly={false}
         onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
         hideLotColumns={true}
+        hideUomColumn={true}
+        noCollapse={false}
         dense={true}
         headers={{
          code: tCommon('table_headers.code'),
@@ -440,34 +568,18 @@ export function TransferNewClient() {
          qty: tCommon('table_headers.qty'),
          uom: tCommon('table_headers.uom'),
         }}
-        renderQty={(line) => {
+        renderItemDescription={(line) => {
          const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
          const availableQty = balance ? balance.qtyAvailable : 0;
          const isExceeded = balance ? line.qty > availableQty : false;
-         return (
-          <div className="w-full min-w-0 items-center flex-1 gap-6 flex-col flex gap-1">
-           <div className="flex justify-center">
-            <input
-              type="number"
-             min="0.001"
-             step="0.001"
-             value={line.qty}
-             onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
-             }}
-             className={cn(
-              "w-24 bg-surface-container-highest/60 border rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50",
-              isExceeded ? "border-status-error focus:ring-status-error/30" : "border-white/5"
-             )}
-            />
-           </div>
-           <span className={cn("text-label-xxs font-semibold", isExceeded ? "text-status-error font-bold animate-pulse" : "text-muted-foreground")}>
+          return (
+           <span className={cn("text-[10px] font-medium tracking-wide block mt-1", isExceeded ? "text-status-error font-bold animate-pulse" : "text-gray-400")}>
             {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
            </span>
-          </div>
-         );
+          );
         }}
+        renderQty={renderQty}
+        extraColumns={extraColumns}
        />
       </div>
      </div>

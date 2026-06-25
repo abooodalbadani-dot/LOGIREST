@@ -2,17 +2,20 @@
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useMemo, useEffect } from 'react';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useMemo, useEffect, useState } from 'react';
+import { useForm, useFieldArray, useWatch, type UseFormRegister } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCreateKitchenRequest } from '@/features/operations/hooks/useKitchenRequests';
+import { 
+ useCreateKitchenRequest,
+ useUpdateKitchenRequestStatus
+ } from '@/features/operations/hooks/useKitchenRequests';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
-import { useItems } from '@/features/items/hooks/useItems';
+import { useWarehouseInventory } from '@/features/inventory/hooks/useWarehouseInventory';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { 
@@ -30,17 +33,108 @@ import {
  CreateKitchenRequestDTO 
 } from '@/features/operations/types/kitchen-request';
 import { type Item } from '@/types/master-data';
+
 import { mapWarehouseToCombobox, mapItemToCombobox } from '@/utils/mappers';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useAuth } from '@/providers/AuthProvider';
+import { useItems } from '@/features/items/hooks/useItems';
 import { onFormError } from '@/hooks/useFormError';
 
 type KitchenRequestFormValues = CreateKitchenRequestDTO;
 
+interface QuantityInputProps {
+ value: number | string;
+ onChange: (val: number | '') => void;
+ disabled?: boolean;
+ className?: string;
+}
+
+function QuantityInput({ value, onChange, disabled, className }: QuantityInputProps) {
+ const [localValue, setLocalValue] = useState(value !== undefined && value !== null ? String(value) : '');
+
+ useEffect(() => {
+  setLocalValue(value !== undefined && value !== null ? String(value) : '');
+ }, [value]);
+
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const rawVal = e.target.value;
+  if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+   setLocalValue(rawVal);
+   if (rawVal === '' || rawVal === '.') {
+    onChange('');
+   } else {
+    const parsed = parseFloat(rawVal);
+    onChange(isNaN(parsed) ? '' : parsed);
+   }
+  }
+ };
+
+ const handleBlur = () => {
+  let finalVal = 1;
+  if (localValue === '' || localValue === '.') {
+   finalVal = 1;
+  } else {
+   const parsed = parseFloat(localValue);
+   if (isNaN(parsed) || parsed <= 0) {
+    finalVal = 1;
+   } else {
+    finalVal = parsed;
+   }
+  }
+  setLocalValue(String(finalVal));
+  onChange(finalVal);
+ };
+
+ return (
+  <Input
+   type="text"
+   inputMode="decimal"
+   value={localValue}
+   disabled={disabled}
+   onChange={handleChange}
+   onBlur={handleBlur}
+   className={className}
+   dir="ltr"
+  />
+ );
+}
+
+interface ScopedItem extends Item {
+  qtyAvailable: number;
+}
+
 interface KitchenRequestFormLineItem extends LineItem {
  index: number;
- selectedItem?: Item;
+ selectedItem?: ScopedItem;
+}
+
+interface KitchenRequestNotesCellProps {
+ value: string;
+ onChange: (val: string) => void;
+ placeholder?: string;
+ disabled?: boolean;
+}
+
+function KitchenRequestNotesCell({ value, onChange, placeholder, disabled }: KitchenRequestNotesCellProps) {
+ const [localVal, setLocalVal] = useState(value);
+
+ useEffect(() => {
+  setLocalVal(value);
+ }, [value]);
+
+ return (
+  <div className="flex justify-center min-w-[200px] w-full">
+   <Input 
+    value={localVal}
+    onChange={(e) => setLocalVal(e.target.value)}
+    onBlur={() => onChange(localVal)}
+    placeholder={placeholder}
+    disabled={disabled}
+    className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
+   />
+  </div>
+ );
 }
 
 export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
@@ -64,10 +158,55 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  const { data: departmentsData, isLoading: isLoadingDepartments, error: errorDepartments } = useDepartments();
  const departmentsList = useMemo(() => departmentsData?.data || [], [departmentsData]);
 
- const { data: itemsData, isLoading: isLoadingItems, error: errorItems } = useItems();
- const items = useMemo(() => itemsData?.data || [], [itemsData]);
+  const watchedWarehouseId = useWatch({
+    control: form.control,
+    name: 'warehouseId',
+  });
+
+  const { data: inventoryData, isLoading: isLoadingItems, error: errorItems } = useWarehouseInventory(
+    watchedWarehouseId,
+    { enabled: !!watchedWarehouseId }
+  );
+
+  const items = useMemo<ScopedItem[]>(() => {
+    return (inventoryData?.data || []).map((b) => ({
+      id: b.itemId,
+      code: b.itemCode,
+      barcode: b.itemCode,
+      name: b.itemName,
+      qtyAvailable: b.qtyAvailable,
+      categoryId: '',
+      primaryUom: { id: '', code: b.uomCode || '', name: '' },
+      uomConversions: [],
+      trackLots: false,
+      minStockLevel: 0,
+      reorderPoint: b.reorderPoint || 0,
+      isActive: true,
+    }));
+  }, [inventoryData]);
+
+  const [prevWarehouseId, setPrevWarehouseId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (watchedWarehouseId) {
+      if (prevWarehouseId !== undefined && prevWarehouseId !== watchedWarehouseId) {
+        const currentItems = form.getValues('items') || [];
+        if (currentItems.length > 0) {
+          form.setValue('items', [], { shouldDirty: true, shouldValidate: true });
+        }
+      }
+      setPrevWarehouseId(watchedWarehouseId);
+    } else {
+      const currentItems = form.getValues('items') || [];
+      if (currentItems.length > 0) {
+        form.setValue('items', [], { shouldDirty: true, shouldValidate: true });
+      }
+      setPrevWarehouseId(undefined);
+    }
+  }, [watchedWarehouseId, prevWarehouseId, form]);
 
  const createRequest = useCreateKitchenRequest();
+ const updateStatus = useUpdateKitchenRequestStatus();
  
  const { fields, append, remove } = useFieldArray({
  control: form.control,
@@ -78,6 +217,20 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  control: form.control,
  name: "items",
  });
+
+   const extraColumns = useMemo(() => [
+    {
+     header: tCommon('notes'),
+     cell: (line: KitchenRequestFormLineItem) => (
+      <KitchenRequestNotesCell
+       value={watchedItems?.[line.index]?.notes || ''}
+       onChange={(val) => form.setValue(`items.${line.index}.notes`, val, { shouldDirty: true, shouldValidate: true })}
+       placeholder={t('line_notes_placeholder')}
+       disabled={form.formState.isSubmitting}
+      />
+     )
+    }
+   ], [t, tCommon, form.setValue, form.formState.isSubmitting, watchedItems]);
 
  // Derive assigned warehouses and departments from user scopes
  const assignedWarehouseIds = useMemo(() => {
@@ -122,17 +275,36 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   }
  }, [departmentItems, form]);
 
- const itemItems = useMemo(() => {
-  return items.map(item => mapItemToCombobox(item));
- }, [items]);
+  const itemItems = useMemo(() => {
+    return items.map((item) => {
+      const balanceText = item.qtyAvailable > 0
+        ? `${locale === 'ar' ? 'المتاح' : 'Available'}: ${item.qtyAvailable} ${item.primaryUom?.code || ''}`
+        : (locale === 'ar' ? 'غير متوفر' : 'Out of Stock');
+      return {
+        id: item.id,
+        name: `${item.name} - ${balanceText}`,
+        code: item.code,
+        barcode: item.barcode,
+      };
+    });
+  }, [items, locale]);
 
- const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
-  createRequest.mutate({ data: { ...values, isDraft } }, {
-   onSuccess: (data) => {
-    form.reset(values);
-    guardedRouter.push(`/kitchen-requests/${data.id}`, { skipGuard: true });
+ const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
+  try {
+   const data = await createRequest.mutateAsync({ data: { ...values, isDraft } });
+   if (!isDraft) {
+    await updateStatus.mutateAsync({
+     id: data.id,
+     status: 'SUBMITTED',
+     version: data.version ?? 0,
+     headers: { 'X-Idempotency-Key': crypto.randomUUID() },
+    });
    }
-  });
+   form.reset(values);
+   guardedRouter.push(`/kitchen-requests/${data.id}`, { skipGuard: true });
+  } catch (error) {
+   console.error('Failed to submit kitchen request:', error);
+  }
  };
 
  if (isLoadingWarehouses || isLoadingDepartments || isLoadingItems) {
@@ -154,7 +326,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  }
 
  return (
-  <div className="w-full min-w-0 gap-6 flex-1 fade-in space-y-8 p-8 mx-auto animate-in slide-in-from-bottom-2 flex flex-col duration-700 max-w-[1200px]">
+  <div className="w-full min-w-0 gap-6 flex-1 fade-in space-y-8 mx-auto animate-in slide-in-from-bottom-2 flex flex-col duration-700 max-w-[1200px]">
    <Breadcrumb 
     items={[
      { label: tCommon('inventory'), href: '#' },
@@ -165,7 +337,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
    <PageHeader
     title={t('create_new')}
-    description={t('new_description')}
+    subtitle={t('new_description')}
    />
 
    <form className="space-y-8">
@@ -183,7 +355,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         onSelect={(dept) => form.setValue('departmentId', String(dept.id), { shouldValidate: true })}
         getPrimaryLabel={(dept) => dept.name}
         placeholder={tCommon('select_department')}
-        triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
+        triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
        />
        {form.formState.errors.departmentId && (
         <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.department_required')}</p>
@@ -201,7 +373,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         onSelect={(w) => form.setValue('warehouseId', String(w.id), { shouldValidate: true })}
         getPrimaryLabel={(w) => w.name}
         placeholder={tCommon('select_warehouse')}
-        triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
+        triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
        />
        {form.formState.errors.warehouseId && (
         <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.warehouse_required')}</p>
@@ -216,7 +388,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
        <Input 
         {...form.register('notes')}
         placeholder={t('notes_placeholder')}
-        className="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20 w-full"
+        className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20 w-full"
        />
       </div>
      
@@ -236,26 +408,25 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       </div>
      </div>
 
-     {/* Search / Add Item Bar */}
-     <div className="mb-8 w-full max-w-xl mx-auto space-y-2">
-      <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block text-center whitespace-nowrap">
-       {tCommon('select_item')}
-      </label>
-      <SmartCombobox
-       items={itemItems}
-       onSelect={(item) => {
-        const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
-        if (existingIndex !== -1) {
-         const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
-         form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
-        } else {
-         append({ itemId: String(item.id), quantity: 1, notes: '' });
-        }
-       }}
-       getPrimaryLabel={(item) => item.name}
-       placeholder={tCommon('select_item')}
-      />
-     </div>
+      {/* Search / Add Item Bar */}
+      <div className="w-full mb-4">
+        <SmartCombobox
+         items={itemItems}
+         disabled={!watchedWarehouseId || isLoadingItems}
+         onSelect={(item) => {
+          const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
+          if (existingIndex !== -1) {
+           const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
+           form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+          } else {
+           append({ itemId: String(item.id), quantity: 1, notes: '' });
+          }
+         }}
+         getPrimaryLabel={(item) => item.name}
+         placeholder={tCommon('select_item')}
+         triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white h-12 rounded-xl px-4 shadow-sm"
+        />
+      </div>
 
      <div className="space-y-4">
       {fields.length === 0 ? (
@@ -264,77 +435,120 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('validation.items_required')}</p>
        </div>
       ) : (
-       <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 overflow-hidden">
-        <DocumentLineItemTable<KitchenRequestFormLineItem>
-         lines={fields.map((field, index) => {
+       <>
+        <div className="hidden md:block bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 overflow-hidden">
+         <DocumentLineItemTable<KitchenRequestFormLineItem>
+          lines={fields.map((field, index) => {
+           const selectedItemId = watchedItems?.[index]?.itemId;
+           const selectedItem = items?.find(i => i.id === selectedItemId);
+           return {
+            id: field.id,
+            item: {
+             id: selectedItemId || '',
+             code: selectedItem?.barcode || '',
+             name: selectedItem?.name || '',
+             primaryUom: { code: selectedItem?.primaryUom?.code || '' }
+            },
+            qty: watchedItems?.[index]?.quantity ?? 1,
+            uomId: '',
+            lot: null,
+            index,
+            selectedItem,
+           };
+          })}
+          locale={locale}
+          isReadOnly={false}
+          onRemoveLine={(id) => {
+           const idx = fields.findIndex(f => f.id === id);
+           if (idx !== -1) remove(idx);
+          }}
+          hideLotColumns={true}
+          dense={true}
+          headers={{
+           code: tCommon('table_headers.code'),
+           name: tCommon('table_headers.name'),
+           qty: tCommon('table_headers.qty'),
+           uom: tCommon('table_headers.uom'),
+          }}
+          renderQty={(line) => (
+           <div className="flex flex-col items-center gap-1 min-w-0">
+            <div className="flex justify-center">
+              <QuantityInput 
+               value={form.watch(`items.${line.index}.quantity`)}
+               onChange={(val) => {
+                form.setValue(`items.${line.index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
+               }}
+               disabled={form.formState.isSubmitting}
+               className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+              />
+            </div>
+            {form.formState.errors.items?.[line.index]?.quantity && (
+             <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">{t('validation.qty_positive')}</p>
+            )}
+           </div>
+          )}
+          renderUom={(line) => (
+           <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+            {line.selectedItem?.primaryUom?.code || '---'}
+           </span>
+          )}
+          extraColumns={extraColumns}
+         />
+        </div>
+
+        {/* Mobile Card Protocol */}
+        <div className="flex flex-col gap-3 md:hidden">
+         {fields.map((field, index) => {
           const selectedItemId = watchedItems?.[index]?.itemId;
           const selectedItem = items?.find(i => i.id === selectedItemId);
-          return {
-           id: field.id,
-           item: {
-            id: selectedItemId || '',
-            code: selectedItem?.barcode || '',
-            name: selectedItem?.name || '',
-            primaryUom: { code: selectedItem?.primaryUom?.code || '' }
-           },
-           qty: watchedItems?.[index]?.quantity ?? 1,
-           uomId: '',
-           lot: null,
-           index,
-           selectedItem,
-          };
-         })}
-         locale={locale}
-         isReadOnly={false}
-         onRemoveLine={(id) => {
-          const idx = fields.findIndex(f => f.id === id);
-          if (idx !== -1) remove(idx);
-         }}
-         hideLotColumns={true}
-         dense={true}
-         headers={{
-          code: tCommon('table_headers.code'),
-          name: tCommon('table_headers.name'),
-          qty: tCommon('table_headers.qty'),
-          uom: tCommon('table_headers.uom'),
-         }}
-         renderQty={(line) => (
-          <div className="flex flex-col items-center gap-1 min-w-0">
-           <div className="flex justify-center">
-            <Input 
-             type="number"
-             step="0.01"
-             dir="ltr"
-             {...form.register(`items.${line.index}.quantity`, { valueAsNumber: true })}
-             className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50 w-full h-10"
-            />
-           </div>
-           {form.formState.errors.items?.[line.index]?.quantity && (
-            <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">{t('validation.qty_positive')}</p>
-           )}
-          </div>
-         )}
-         renderUom={(line) => (
-          <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-           {line.selectedItem?.primaryUom?.code || '---'}
-          </span>
-         )}
-         extraColumns={[
-          {
-           header: tCommon('notes'),
-           cell: (line) => (
-            <div className="flex justify-center min-w-[200px]">
+          if (!selectedItem) return null;
+          return (
+           <div key={field.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm relative animate-in fade-in duration-200">
+            <button 
+             type="button"
+             onClick={() => remove(index)}
+             className="absolute top-3 left-3 rtl:left-auto rtl:right-3 p-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-md hover:bg-red-100 transition-colors"
+            >
+             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+             </svg>
+            </button>
+            <div className="pl-8 rtl:pl-0 rtl:pr-8 border-b border-gray-100 dark:border-gray-800 pb-2 mb-2">
+             <span className="text-sm font-black text-[#0B1220] dark:text-white">{selectedItem.name}</span>
+             <span className="text-[10px] text-gray-400 font-mono tracking-widest block">{selectedItem.code || '---'}</span>
+            </div>
+            <div className="flex items-center gap-3 mb-2">
+             <div className="flex-1">
+              <label className="text-[10px] font-bold text-gray-500 mb-1 block">الكمية</label>
+              <div className="flex items-center gap-2">
+               <QuantityInput 
+                value={form.watch(`items.${index}.quantity`)}
+                onChange={(val) => {
+                 form.setValue(`items.${index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
+                }}
+                disabled={form.formState.isSubmitting}
+                className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all" 
+               />
+               <span className="text-xs font-bold text-gray-500 px-2">{selectedItem.primaryUom?.code || '---'}</span>
+              </div>
+              {form.formState.errors.items?.[index]?.quantity && (
+               <p className="text-label-xxs font-bold text-red-500 uppercase mt-1">{t('validation.qty_positive')}</p>
+              )}
+             </div>
+            </div>
+            <div>
              <Input 
-              {...form.register(`items.${line.index}.notes`)}
-              placeholder={t('line_notes_placeholder')}
-              className="w-full bg-surface-container-highest/60 border border-white/5 rounded-lg h-9 px-3 text-label-sm font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
+              type="text" 
+              placeholder="ملاحظات السطر..." 
+              {...form.register(`items.${index}.notes`)}
+              className="w-full text-xs p-2 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 rounded-md focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-foreground placeholder:text-muted-foreground/50"
              />
             </div>
-           )
-          }
-         ]}
-        />
-       </div>
+           </div>
+          );
+         })}
+        </div>
+       </>
       )}
      </div>
     </div>
@@ -345,20 +559,21 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       variant="outline"
       onClick={form.handleSubmit((data) => onSubmit(data, true), onFormError)} 
       isLoading={createRequest.isPending}
+      disabled={updateStatus.isPending}
       className="h-10 px-8 bg-transparent border border-border text-foreground text-label-xs font-semibold uppercase rounded-md hover:bg-muted dark:hover:bg-neutral-900 transition-all shadow-sm"
      >
       <Save className="w-4 h-4 me-2" />
       {t('save_draft')}
      </Button>
-     <Button 
-      type="button"
-      onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)} 
-      isLoading={createRequest.isPending}
-      className="h-10 px-8 bg-brand-gold hover:bg-brand-gold-hover text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm focus-visible:ring-1 focus-visible:ring-brand-gold"
-     >
-      <Send className="w-4 h-4 me-2" />
-      {t('submit')}
-     </Button>
+      <Button 
+       type="button"
+       onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)} 
+       isLoading={createRequest.isPending || updateStatus.isPending}
+       className="h-10 px-8 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center gap-2 transition-opacity"
+      >
+       <Send className="w-4 h-4 me-2" />
+       {t('submit')}
+      </Button>
     </div>
    </form>
   </div>

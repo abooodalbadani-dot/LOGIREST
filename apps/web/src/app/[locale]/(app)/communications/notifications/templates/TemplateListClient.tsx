@@ -122,8 +122,8 @@ export function TemplateListClient({ locale }: { locale: string }) {
    {/* Page Header with Action Button */}
    <PageHeader
     title={t('title') || 'Notification Templates'}
-    description={t('templates_desc') || 'Manage notification system triggers and dynamic templates.'}
-    actions={
+    subtitle={t('templates_desc') || 'Manage notification system triggers and dynamic templates.'}
+    children={
      <Button
       onClick={() => {
        playSound('click');

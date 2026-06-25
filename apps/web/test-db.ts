@@ -3,10 +3,10 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const currencies = await prisma.currency.findMany();
-  const settings = await prisma.systemSetting.findMany();
-  console.log('Currencies:', currencies);
-  console.log('Settings:', settings);
+  const users = await prisma.user.findMany({
+    select: { id: true, email: true, role: true }
+  });
+  console.log('Users:', users);
 }
 
 main().finally(() => prisma.$disconnect());

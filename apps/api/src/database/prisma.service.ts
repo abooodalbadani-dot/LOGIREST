@@ -4,9 +4,10 @@ import {
   OnModuleDestroy,
   Logger,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { transactionLifecycleStore } from '../common/transaction-lifecycle.context';
 
 interface PrismaMigration {
   migration_name: string;
@@ -30,6 +31,64 @@ export class PrismaService
     });
 
     return this;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  override $transaction<P extends Prisma.PrismaPromise<any>[]>(
+    arg: [...P],
+    options?: { isolationLevel?: Prisma.TransactionIsolationLevel }, // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<any>;
+  override $transaction<R>(
+    fn: (prisma: Prisma.TransactionClient) => Promise<R>,
+    options?: {
+      maxWait?: number;
+      timeout?: number;
+      isolationLevel?: Prisma.TransactionIsolationLevel;
+    },
+  ): Promise<R>;
+  override async $transaction(
+    arg: unknown,
+    options?: unknown,
+  ): Promise<unknown> {
+    const callbacks: Array<() => Promise<void> | void> = [];
+    return transactionLifecycleStore.run(callbacks, async () => {
+      let result: unknown;
+      if (typeof arg === 'function') {
+        const fn = arg as (
+          prisma: Prisma.TransactionClient,
+        ) => Promise<unknown>;
+        const opts = options as
+          | {
+              maxWait?: number;
+              timeout?: number;
+              isolationLevel?: Prisma.TransactionIsolationLevel;
+            }
+          | undefined;
+        result = await super.$transaction(fn, opts);
+      } else if (Array.isArray(arg)) {
+        const arr = arg as Prisma.PrismaPromise<unknown>[];
+        const opts = options as
+          | { isolationLevel?: Prisma.TransactionIsolationLevel }
+          | undefined;
+        result = await super.$transaction(arr, opts);
+      } else {
+        throw new Error('Invalid arguments passed to $transaction');
+      }
+
+      // Run post-commit callbacks:
+      for (const cb of callbacks) {
+        try {
+          await cb();
+        } catch (err) {
+          this.logger.error(
+            `Error in post-commit callback: ${err instanceof Error ? err.message : String(err)}`,
+            err instanceof Error ? err.stack : undefined,
+          );
+        }
+      }
+
+      return result;
+    });
   }
 
   async onModuleInit() {

@@ -21,9 +21,16 @@ import { OperationsController } from './operations.controller';
 import { YieldController } from './yield/yield.controller';
 import { YieldService } from './yield/yield.service';
 import { OutboxModule } from '../outbox/outbox.module';
+import { PdfModule } from '../pdf/pdf.module';
 
 @Module({
-  imports: [PrismaModule, LedgerModule, DocumentSequenceModule, OutboxModule],
+  imports: [
+    PrismaModule,
+    LedgerModule,
+    DocumentSequenceModule,
+    OutboxModule,
+    PdfModule,
+  ],
   controllers: [
     IssuesController,
     TransfersController,

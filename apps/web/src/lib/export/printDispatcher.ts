@@ -80,7 +80,7 @@ export async function dispatchPrintJob({
 
     const pdfTitle = isAr
       ? `طلب تحضير مطبخ - ${doc.requestNumber}`
-      : `Kitchen Request - ${doc.requestNumber}`;
+      : `KITCHEN REQUEST - ${doc.requestNumber}`;
 
     await generatePDF(pdfCols, pdfRows, `KitchenRequest_${doc.requestNumber}`, pdfTitle, {
       scope: doc.departmentName,
@@ -111,10 +111,10 @@ export async function dispatchPrintJob({
 
     const pdfTitle = isAr
       ? `سند صرف مخزني - ${doc.documentNumber}`
-      : `Inventory Issue - ${doc.documentNumber}`;
+      : `INVENTORY ISSUE - ${doc.documentNumber}`;
 
     await generatePDF(pdfCols, pdfRows, `InventoryIssue_${doc.documentNumber}`, pdfTitle, {
-      scope: doc.destinationDeptId || doc.warehouseId,
+      scope: doc.destinationDepartmentName || doc.departmentName || doc.warehouseName || doc.destinationDeptId || doc.warehouseId,
       generatedBy: doc.createdBy || doc.requestedBy || '',
     });
   } else if (columns && data && filename && title) {

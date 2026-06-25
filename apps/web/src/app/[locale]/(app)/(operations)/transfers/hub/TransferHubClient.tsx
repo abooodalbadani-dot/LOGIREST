@@ -32,9 +32,9 @@ export function TransferHubClient() {
  const transfers = transfersData?.data || [];
 
  const stats = useMemo(() => {
-  const pending = transfers.filter(x => x.transferStatus === 'PENDING').length;
+  const pending = transfers.filter(x => x.transferStatus === 'DRAFT' || x.transferStatus === 'PENDING').length;
   const transit = transfers.filter(x => x.transferStatus === 'IN_TRANSIT').length;
-  const completed = transfers.filter(x => x.transferStatus === 'COMPLETED').length;
+  const completed = transfers.filter(x => x.transferStatus === 'RECEIVED' || x.transferStatus === 'POSTED' || x.transferStatus === 'COMPLETED').length;
   
   return {
    pending,
@@ -67,22 +67,22 @@ export function TransferHubClient() {
    cell: ({ row }) => <span className="tabular-nums opacity-70">{row.original.createdAt?.split('T')[0]}</span>,
   },
   {
-   id: 'status',
-   header: t('status'),
-   cell: ({ row }) => {
-    const s = row.original.transferStatus;
-    const colors = {
-     PENDING: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-     IN_TRANSIT: 'bg-muted/50 text-foreground border-cyan-500/20',
-     COMPLETED: 'bg-muted/50 text-foreground border-emerald-500/20'
-    };
-    const colorClass = colors[s as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
-    return (
-     <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-sm border ${colorClass}`}>
-      {t(s?.toLowerCase() as 'pending' | 'in_transit' | 'completed')}
-     </span>
-    );
-   },
+    id: 'status',
+    header: t('status'),
+    cell: ({ row }) => {
+     const s = row.original.transferStatus;
+     const colors = {
+      PENDING: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+      IN_TRANSIT: 'bg-muted/50 text-foreground border-cyan-500/20',
+      COMPLETED: 'bg-muted/50 text-foreground border-emerald-500/20'
+     };
+     const colorClass = colors[s as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
+     return (
+      <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-sm border ${colorClass}`}>
+       {tc(`statuses.${s?.toLowerCase()}` as 'statuses.pending')}
+      </span>
+     );
+    },
   },
   {
    id: 'actions',
@@ -100,14 +100,14 @@ export function TransferHubClient() {
      >
       <Eye className="w-4 h-4 opacity-50" />
      </Button>
-     {row.original.transferStatus !== 'COMPLETED' && (
+     {(row.original.transferStatus === 'DRAFT' || row.original.transferStatus === 'IN_TRANSIT') && (
       <Button 
        variant="ghost" 
        size="sm" 
        className="h-8 w-8 p-0 hover:bg-muted/50 hover:text-foreground"
        onClick={(e) => {
         e.stopPropagation();
-        const target = row.original.transferStatus === 'PENDING' ? 'ship' : 'receive';
+        const target = row.original.transferStatus === 'DRAFT' ? 'ship' : 'receive';
         router.push(`/transfers/${row.original.id}/${target}`);
        }}
       >
@@ -120,11 +120,11 @@ export function TransferHubClient() {
  ];
 
  return (
-  <div className="md:p-8 min-w-0 max-w-[1600px] md:space-y-10 fade-in flex-1 gap-6 p-4 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-6 w-full">
+  <div className="min-w-0 max-w-[1600px] md:space-y-10 fade-in flex-1 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-6 w-full">
    <PageHeader 
     title={t('title')} 
-    description={t('subtitle')}
-    actions={
+    subtitle={t('subtitle')}
+    children={
      <Button 
       onClick={() => router.push('/transfers/new')}
       className="h-11 px-4 md:px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-bold uppercase rounded-sm transition-all shadow-sm shadow-primary/20"

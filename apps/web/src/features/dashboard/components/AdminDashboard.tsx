@@ -26,6 +26,7 @@ import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export function AdminDashboard() {
  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
@@ -43,21 +44,30 @@ export function AdminDashboard() {
  }
 
  // Additional derived info
- const lastBackupTime = tc('time_ago.hours', { count: 2 });
+ let lastBackupTime = tc('no_data');
+ if (stats.lastBackupTimestamp) {
+  const diffHours = Math.abs(new Date().getTime() - new Date(stats.lastBackupTimestamp).getTime()) / 36e5;
+  if (diffHours < 1) {
+   lastBackupTime = tc('time_ago.minutes', { count: Math.floor(diffHours * 60) || 1 });
+  } else if (diffHours < 24) {
+   lastBackupTime = tc('time_ago.hours', { count: Math.floor(diffHours) });
+  } else {
+   lastBackupTime = tc('time_ago.days', { count: Math.floor(diffHours / 24) });
+  }
+ }
 
  return (
   <main role="main" className="space-y-10">
    {/* Admin Header */}
-   <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-    <div className="space-y-1">
+   <PageHeader
+    title={t('title')}
+    highlight={t('kitchen.overview')}
+    subtitle={
      <Badge className="bg-operational-cyan/10 text-operational-cyan border-none text-label-xs font-semibold uppercase mb-2">
       {tc('role.admin')}
      </Badge>
-     <h1 className="text-headline-lg font-semibold uppercase italic text-foreground">
-      {t('title')} <span className="text-operational-cyan">{t('kitchen.overview')}</span>
-     </h1>
-    </div>
-   </header>
+    }
+   />
 
    {/* KPI Grid */}
    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" aria-labelledby="kpi-grid-title">
@@ -67,7 +77,6 @@ export function AdminDashboard() {
      value={formatCurrency(stats.totalValue, stats.currency, locale as 'ar' | 'en')}
      icon={Package}
      accent="cyan"
-     trend={{ value: '12%', isPositive: true }}
      description={t('kpi.vs_last_month')}
      currency={stats.currency}
      symbol={stats.currencySymbol}
@@ -109,7 +118,7 @@ export function AdminDashboard() {
          {t('system_health.optimal')}
         </Badge>
        </div>
-       <CardTitle className="text-headline-lg font-semibold uppercase italic">{stats.systemHealth}% {t('system_health.health_suffix')}</CardTitle>
+       <CardTitle className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{stats.systemHealth}% {t('system_health.health_suffix')}</CardTitle>
        <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">{t('system_health.node_description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-4">
@@ -179,11 +188,11 @@ export function AdminDashboard() {
       <CardHeader className="flex flex-row items-center justify-between pb-6">
        <div>
         <span className="text-label-xs font-semibold uppercase text-operational-cyan mb-1 block">{t('analytics.title')}</span>
-        <CardTitle className="text-headline-lg font-semibold uppercase italic">{t('analytics.velocity')}</CardTitle>
+        <CardTitle className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('analytics.velocity')}</CardTitle>
        </div>
        <PermissionGate action="view" resource="reports">
         <Link href="/reports">
-         <Button variant="outline" size="sm" className="bg-card border border-border shadow-sm/10 text-label-xs font-semibold uppercase px-4 h-8 rounded-xl hover:bg-operational-cyan hover:text-black hover:border-operational-cyan transition-all duration-140 ease-industrial">
+         <Button variant="outline" size="sm" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
           {t('analytics.full_report')} <TrendingUp className="w-3 h-3 ms-2" />
          </Button>
         </Link>

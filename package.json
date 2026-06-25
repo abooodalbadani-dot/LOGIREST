@@ -11,7 +11,13 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "test:e2e": "npx playwright test --config tests/playwright.config.ts",
+    "test:e2e:rbac": "npx playwright test --config tests/playwright.config.ts tests/e2e/specs/rbac.spec.ts",
+    "test:e2e:procurement": "npx playwright test --config tests/playwright.config.ts tests/e2e/specs/procurement.spec.ts",
+    "test:e2e:inventory": "npx playwright test --config tests/playwright.config.ts tests/e2e/specs/inventory.spec.ts",
+    "test:e2e:ui": "npx playwright test --config tests/playwright.config.ts --ui",
+    "test:e2e:report": "npx playwright show-report tests/results/playwright-report"
   },
   "devDependencies": {
     "turbo": "^2.9.14"

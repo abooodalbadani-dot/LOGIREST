@@ -14,7 +14,7 @@ export function useCancelStocktake(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: async ({ id, reason, version, signal }: { id: string; reason?: string; version: number; signal?: AbortSignal }) => {
-   return apiClient.post(`/stocktake/sessions/${id}/cancel`, successSchema, { reason, version }, { signal });
+   return apiClient.post(`/stocktake/sessions/${id}/cancel`, successSchema, { reason, version }, { signal, isRetry: true });
   },
   onSuccess: (_, { id }) => {
    queryClient.setQueryData(['stocktakes', id], (old: Record<string, unknown> | undefined) => {

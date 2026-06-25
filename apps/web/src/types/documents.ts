@@ -168,6 +168,10 @@ export const StockIssueSchema = BaseDocumentSchema.extend({
   warehouseName: z.string().optional().nullable(),
   requestedBy: z.string(),
   lines: z.array(IssueLineItemSchema),
+  kitchenRequest: z.object({
+    id: z.string(),
+    requestNumber: z.string(),
+  }).nullable().optional(),
 });
 
 export const TransferLineItemSchema = z.object({
@@ -188,6 +192,7 @@ export const TransferLineItemSchema = z.object({
   shippedQty: z.number(),
   receivedQty: z.number().nullable(),
   lotAllocations: z.array(LotAllocationSchema).default([]),
+  notes: z.string().nullable().optional(),
 });
 
 export const TransferSchema = BaseDocumentSchema.extend({
@@ -240,10 +245,10 @@ export interface PurchaseRequest extends BaseDocument { type: 'PR'; requestedByD
 export interface PRLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; }; category?: { id: string; name: string; } | null; }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; requestedQty: number; approvedQty: number | null; }
 export interface PurchaseOrder extends BaseDocument { type: 'PO'; prId: string | null; supplierId: string; supplierName?: string | null; warehouseName?: string | null; currencyId: string; currencyCode?: string | null; expectedDeliveryDate: string; lines: POLineItem[]; }
 export interface POLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; }; category?: { id: string; name: string; } | null; }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; orderedQty: number; unitPrice: number; totalPrice: number; }
-export interface StockIssue extends BaseDocument { type: 'ISSUE'; destinationDeptId: string; destinationDepartmentName?: string | null; departmentName?: string | null; warehouseName?: string | null; requestedBy: string; lines: IssueLineItem[]; }
+export interface StockIssue extends BaseDocument { type: 'ISSUE'; destinationDeptId: string; destinationDepartmentName?: string | null; departmentName?: string | null; warehouseName?: string | null; requestedBy: string; lines: IssueLineItem[]; kitchenRequest?: { id: string; requestNumber: string; } | null; }
 export interface IssueLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; }; category?: { id: string; name: string; } | null; }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; requestedQty: number; issuedQty: number; lotAllocations: LotAllocation[]; }
 export interface Transfer extends BaseDocument { type: 'TRANSFER'; fromWarehouseId: string; fromWarehouseName?: string; toWarehouseId: string; toWarehouseName?: string; transferStatus: TransferStatus; shippedAt: string | null; receivedAt: string | null; varianceReason?: string | null; lines: TransferLineItem[]; }
-export interface TransferLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; }; category?: { id: string; name: string; } | null; }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; shippedQty: number; receivedQty: number | null; lotAllocations: LotAllocation[]; }
+export interface TransferLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; }; category?: { id: string; name: string; } | null; }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; shippedQty: number; receivedQty: number | null; lotAllocations: LotAllocation[]; notes?: string | null; }
 export type AdjustmentReason = 'DAMAGE'|'EXPIRY'|'THEFT'|'COUNTING_ERROR'|'OTHER';
 export interface Adjustment extends BaseDocument { type: 'ADJUSTMENT'; reason: AdjustmentReason; approvedBy: string | null; lines: AdjustmentLineItem[]; warehouseName?: string | null; }
 export interface AdjustmentLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; }; category?: { id: string; name: string; } | null; }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; direction: 'INCREASE'|'DECREASE'; qtyBefore: number; qtyAdjusted: number; reasonNotes: string; }

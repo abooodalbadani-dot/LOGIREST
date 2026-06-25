@@ -93,7 +93,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  })),
  } : {
  department_id: '',
- expected_date: '',
+ expected_date: new Date().toISOString().split('T')[0],
  notes: '',
  lines: [],
  },
@@ -166,9 +166,12 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  router.push('/purchase-requests');
  } catch (error) {
- console.error(error);
- playSound('error');
- toast.error(tc('error'));
+  console.error(error);
+  playSound('error');
+  const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+  if (!isToastShown) {
+   toast.error(tc('error'));
+  }
  } finally {
  setIsSubmitting(false);
  setSubmitConfirmOpen(false);
@@ -291,7 +294,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  type="button" 
  variant="outline" 
  size="sm" 
- className="h-12 px-6 border-none text-operational-cyan bg-operational-cyan/10 hover:bg-operational-cyan hover:text-white rounded-xl text-label-xs font-semibold uppercase transition-all"
+ className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
  onClick={() => append({ item_id: '', item_name: '', item_code: '', req_qty: 1, uom_id: 'EA' })}
  >
  <Plus className="h-3.5 w-3.5 me-2" />

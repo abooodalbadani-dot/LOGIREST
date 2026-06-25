@@ -6,12 +6,14 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { Role, StocktakeStatus, LockType, Prisma } from '@prisma/client';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 @Injectable()
 export class StocktakeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(body: { warehouseId: string }, userId: string) {
@@ -116,8 +118,9 @@ export class StocktakeService {
     };
   }
 
-  async findOne(id: string) {
-    const session = await this.prisma.stocktakeSession.findUnique({
+  async findOne(id: string, tx?: Prisma.TransactionClient) {
+    const client = tx || this.prisma;
+    const session = await client.stocktakeSession.findUnique({
       where: { id },
       include: {
         counts: {
@@ -241,7 +244,7 @@ export class StocktakeService {
       }
 
       // Execute Workflow transition
-      return this.workflowService.executeTransition(
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'START',
@@ -251,12 +254,16 @@ export class StocktakeService {
         body.version,
         body.ipAddress,
       );
+
+      return this.findOne(id, tx);
     });
   }
 
   async count(
     id: string,
-    counts: Array<{ itemId: string; lotId?: string; qtyCounted: number }>,
+    counts:
+      | Array<{ itemId: string; lotId?: string; qtyCounted: number }>
+      | undefined,
     userId: string,
   ) {
     const session = await this.prisma.stocktakeSession.findUnique({
@@ -273,35 +280,85 @@ export class StocktakeService {
       );
     }
 
+    const safeCounts = counts ?? [];
+
     return this.prisma.$transaction(async (tx) => {
-      for (const cnt of counts) {
-        const countKey = {
-          sessionId: id,
-          itemId: cnt.itemId,
-          lotId: cnt.lotId || null,
-        };
+      for (const cnt of safeCounts) {
+        const lotId = cnt.lotId || null;
 
-        const existingCount = await tx.stocktakeCount.findFirst({
-          where: countKey,
-        });
+        const lotFilter =
+          lotId === null
+            ? Prisma.sql`"lotId" IS NULL`
+            : Prisma.sql`"lotId" = ${lotId}`;
 
-        if (existingCount) {
+        const lockedRows = await tx.$queryRaw<
+          Array<{ id: string; qtyCounted: Prisma.Decimal }>
+        >(Prisma.sql`
+          SELECT id, "qtyCounted"
+          FROM "stocktake_counts"
+          WHERE "sessionId" = ${id}
+            AND "itemId" = ${cnt.itemId}
+            AND ${lotFilter}
+          FOR UPDATE
+        `);
+
+        if (lockedRows.length > 0) {
+          const existingRecord = lockedRows[0];
+          const oldQty = Number(existingRecord.qtyCounted);
+          const newQty = cnt.qtyCounted;
+
           await tx.stocktakeCount.update({
-            where: { id: existingCount.id },
+            where: { id: existingRecord.id },
             data: {
-              qtyCounted: cnt.qtyCounted,
+              qtyCounted: newQty,
               countedById: userId,
               countedAt: new Date(),
             },
           });
+
+          // Write Audit Log
+          await this.auditLogService.log(tx, {
+            userId,
+            action: 'STOCKTAKE_COUNT_UPDATED',
+            targetTable: 'stocktake_counts',
+            targetId: existingRecord.id,
+            beforeState: {
+              qtyCounted: oldQty,
+              itemId: cnt.itemId,
+              lotId,
+            },
+            afterState: {
+              qtyCounted: newQty,
+              itemId: cnt.itemId,
+              lotId,
+            },
+          });
         } else {
-          await tx.stocktakeCount.create({
+          const newRecord = await tx.stocktakeCount.create({
             data: {
               sessionId: id,
               itemId: cnt.itemId,
-              lotId: cnt.lotId || null,
+              lotId,
               qtyCounted: cnt.qtyCounted,
               countedById: userId,
+            },
+          });
+
+          // Write Audit Log
+          await this.auditLogService.log(tx, {
+            userId,
+            action: 'STOCKTAKE_COUNT_CREATED',
+            targetTable: 'stocktake_counts',
+            targetId: newRecord.id,
+            beforeState: {
+              qtyCounted: 0,
+              itemId: cnt.itemId,
+              lotId,
+            },
+            afterState: {
+              qtyCounted: cnt.qtyCounted,
+              itemId: cnt.itemId,
+              lotId,
             },
           });
         }
@@ -335,33 +392,79 @@ export class StocktakeService {
         );
       }
 
-      const countKey = {
-        sessionId: stocktakeId,
-        itemId: snapshot.itemId,
-        lotId: snapshot.lotId,
-      };
+      const lotFilter =
+        snapshot.lotId === null
+          ? Prisma.sql`"lotId" IS NULL`
+          : Prisma.sql`"lotId" = ${snapshot.lotId}`;
 
-      const existingCount = await tx.stocktakeCount.findFirst({
-        where: countKey,
-      });
+      const lockedRows = await tx.$queryRaw<
+        Array<{ id: string; qtyCounted: Prisma.Decimal }>
+      >(Prisma.sql`
+        SELECT id, "qtyCounted"
+        FROM "stocktake_counts"
+        WHERE "sessionId" = ${stocktakeId}
+          AND "itemId" = ${snapshot.itemId}
+          AND ${lotFilter}
+        FOR UPDATE
+      `);
 
-      if (existingCount) {
+      if (lockedRows.length > 0) {
+        const existingRecord = lockedRows[0];
+        const oldQty = Number(existingRecord.qtyCounted);
+        const newQty = body.counted_qty;
+
         await tx.stocktakeCount.update({
-          where: { id: existingCount.id },
+          where: { id: existingRecord.id },
           data: {
-            qtyCounted: body.counted_qty,
+            qtyCounted: newQty,
             countedById: userId,
             countedAt: new Date(),
           },
         });
+
+        // Write Audit Log
+        await this.auditLogService.log(tx, {
+          userId,
+          action: 'STOCKTAKE_COUNT_UPDATED',
+          targetTable: 'stocktake_counts',
+          targetId: existingRecord.id,
+          beforeState: {
+            qtyCounted: oldQty,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
+          },
+          afterState: {
+            qtyCounted: newQty,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
+          },
+        });
       } else {
-        await tx.stocktakeCount.create({
+        const newRecord = await tx.stocktakeCount.create({
           data: {
             sessionId: stocktakeId,
             itemId: snapshot.itemId,
-            lotId: snapshot.lotId,
+            lotId: snapshot.lotId || null,
             qtyCounted: body.counted_qty,
             countedById: userId,
+          },
+        });
+
+        // Write Audit Log
+        await this.auditLogService.log(tx, {
+          userId,
+          action: 'STOCKTAKE_COUNT_CREATED',
+          targetTable: 'stocktake_counts',
+          targetId: newRecord.id,
+          beforeState: {
+            qtyCounted: 0,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
+          },
+          afterState: {
+            qtyCounted: body.counted_qty,
+            itemId: snapshot.itemId,
+            lotId: snapshot.lotId,
           },
         });
       }
@@ -377,7 +480,7 @@ export class StocktakeService {
         });
       }
 
-      return this.findOne(stocktakeId);
+      return this.findOne(stocktakeId, tx);
     });
   }
 
@@ -387,7 +490,7 @@ export class StocktakeService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'stocktakeSession',
       'SUBMIT',
@@ -397,6 +500,7 @@ export class StocktakeService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async approve(
@@ -405,7 +509,7 @@ export class StocktakeService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'stocktakeSession',
       'APPROVE',
@@ -415,6 +519,7 @@ export class StocktakeService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async reject(
@@ -423,7 +528,7 @@ export class StocktakeService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    await this.workflowService.executeTransition(
       id,
       'stocktakeSession',
       'REJECT',
@@ -433,6 +538,7 @@ export class StocktakeService {
       body.version,
       body.ipAddress,
     );
+    return this.findOne(id);
   }
 
   async recount(
@@ -449,17 +555,79 @@ export class StocktakeService {
         throw new NotFoundException(`StocktakeSession ${id} not found`);
       }
 
-      return this.workflowService.executeTransition(
+      // 1. Clear existing counts
+      await tx.stocktakeCount.deleteMany({
+        where: { sessionId: id },
+      });
+
+      // 2. Clear existing snapshots
+      await tx.stocktakeSnapshot.deleteMany({
+        where: { sessionId: id },
+      });
+
+      // 3. Fetch current inventory positions to re-generate snapshots
+      const whItems = await tx.warehouseItem.findMany({
+        where: { warehouseId: session.warehouseId },
+        include: { item: true },
+      });
+
+      const whLots = await tx.warehouseItemLot.findMany({
+        where: { warehouseId: session.warehouseId },
+        include: { item: true },
+      });
+
+      const snapshotsToCreate: Array<{
+        sessionId: string;
+        itemId: string;
+        lotId: string | null;
+        qtySnapshot: number;
+        wacSnapshot: number;
+      }> = [];
+
+      // A. Batched / Expiry Lots
+      for (const lot of whLots) {
+        const parentItem = whItems.find((wi) => wi.itemId === lot.itemId);
+        snapshotsToCreate.push({
+          sessionId: id,
+          itemId: lot.itemId,
+          lotId: lot.lotId,
+          qtySnapshot: Number(lot.qtyOnHand),
+          wacSnapshot: parentItem ? Number(parentItem.wac) : 0,
+        });
+      }
+
+      // B. Unbatched Items
+      for (const item of whItems) {
+        if (!item.item.isBatched && !item.item.hasExpiry) {
+          snapshotsToCreate.push({
+            sessionId: id,
+            itemId: item.itemId,
+            lotId: null,
+            qtySnapshot: Number(item.qtyOnHand),
+            wacSnapshot: Number(item.wac),
+          });
+        }
+      }
+
+      if (snapshotsToCreate.length > 0) {
+        await tx.stocktakeSnapshot.createMany({
+          data: snapshotsToCreate,
+        });
+      }
+
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'RECOUNT',
         userId,
         userRole,
-        `Partial recount requested for items: ${body.item_ids?.join(', ') || 'All'}`,
+        `Full recount requested. Snapshots re-generated.`,
         body.version,
         body.ipAddress,
         tx,
       );
+
+      return this.findOne(id, tx);
     });
   }
 
@@ -481,7 +649,7 @@ export class StocktakeService {
         throw new NotFoundException(`StocktakeSession ${id} not found`);
       }
 
-      return this.workflowService.executeTransition(
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'REVIEW_VARIANCE',
@@ -492,6 +660,8 @@ export class StocktakeService {
         body.ipAddress,
         tx,
       );
+
+      return this.findOne(id, tx);
     });
   }
 
@@ -520,7 +690,12 @@ export class StocktakeService {
         data: { isActive: false },
       });
 
-      return this.workflowService.executeTransition(
+      await tx.warehouseItem.updateMany({
+        where: { warehouseId: session.warehouseId, isFrozen: true },
+        data: { isFrozen: false },
+      });
+
+      await this.workflowService.executeTransition(
         id,
         'stocktakeSession',
         'CANCEL',
@@ -529,7 +704,10 @@ export class StocktakeService {
         body.comments,
         body.version,
         body.ipAddress,
+        tx,
       );
+
+      return this.findOne(id, tx);
     });
   }
 }

@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { Prisma } from '@prisma/client';
 
 export interface YieldBatch {
   id: string;
@@ -35,12 +36,12 @@ export class YieldService {
     id: string;
     recipeName: string;
     category: string;
-    inputQty: number;
-    outputQty: number;
-    wasteQty: number;
-    yieldPct: number;
-    standardYield: number;
-    efficiency: number;
+    inputQty: Prisma.Decimal;
+    outputQty: Prisma.Decimal;
+    wasteQty: Prisma.Decimal;
+    yieldPct: Prisma.Decimal;
+    standardYield: Prisma.Decimal;
+    efficiency: Prisma.Decimal;
     createdAt: Date;
     warehouseId: string | null;
   }): YieldBatch {
@@ -48,12 +49,12 @@ export class YieldService {
       id: dbBatch.id,
       recipeName: dbBatch.recipeName,
       category: dbBatch.category,
-      inputQty: dbBatch.inputQty,
-      outputQty: dbBatch.outputQty,
-      wasteQty: dbBatch.wasteQty,
-      yieldPct: dbBatch.yieldPct,
-      standardYield: dbBatch.standardYield,
-      efficiency: dbBatch.efficiency,
+      inputQty: Number(dbBatch.inputQty),
+      outputQty: Number(dbBatch.outputQty),
+      wasteQty: Number(dbBatch.wasteQty),
+      yieldPct: Number(dbBatch.yieldPct),
+      standardYield: Number(dbBatch.standardYield),
+      efficiency: Number(dbBatch.efficiency),
       createdAt:
         dbBatch.createdAt instanceof Date
           ? dbBatch.createdAt.toISOString()
@@ -107,9 +108,17 @@ export class YieldService {
       throw new BadRequestException('inputQty must be greater than zero');
     }
 
-    const waste = parseFloat((input - output).toFixed(4));
-    const yieldPct = parseFloat(((output / input) * 100).toFixed(2));
-    const efficiency = parseFloat(((yieldPct / stdYield) * 100).toFixed(2));
+    const waste = new Prisma.Decimal(input)
+      .sub(new Prisma.Decimal(output))
+      .toDecimalPlaces(4);
+    const yieldPct = new Prisma.Decimal(output)
+      .div(new Prisma.Decimal(input))
+      .mul(100)
+      .toDecimalPlaces(4);
+    const efficiency = yieldPct
+      .div(new Prisma.Decimal(stdYield))
+      .mul(100)
+      .toDecimalPlaces(4);
 
     const dbBatch = await this.prisma.yieldBatch.create({
       data: {

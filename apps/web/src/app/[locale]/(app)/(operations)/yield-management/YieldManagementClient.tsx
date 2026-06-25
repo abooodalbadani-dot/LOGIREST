@@ -127,11 +127,11 @@ export function YieldManagementClient() {
  ];
 
  return (
-  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+  <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
    <PageHeader 
     title={t('title')} 
-    description={t('subtitle')}
-    actions={
+    subtitle={t('subtitle')}
+    children={
      <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-bold uppercase rounded-sm transition-all shadow-sm shadow-primary/20">
       <ClipboardList className="w-3.5 h-3.5 me-2" />
       {t('new_batch')}

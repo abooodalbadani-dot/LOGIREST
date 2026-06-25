@@ -29,6 +29,7 @@ import { Switch } from '@/components/ui/switch';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { Link } from '@/i18n/navigation';
 import { useAdminSettings, useUpdateSettings, AdminSettingsSchema, type AdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useRestaurantProfile } from '@/features/admin/hooks/useRestaurantProfile';
 import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
 import { type Currency } from '@/types/master-data';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -43,6 +44,7 @@ export function SettingsClient({ locale }: { locale: string }) {
  const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
  const { playSound } = useAudioFeedback();
  const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
+ const { data: profile } = useRestaurantProfile();
  
  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
  const [pendingData, setPendingData] = useState<AdminSettings | null>(null);
@@ -59,7 +61,10 @@ export function SettingsClient({ locale }: { locale: string }) {
  const watchedDefaultPaperSize = useWatch({ control, name: 'printSettings.defaultPaperSize' });
  const watchedThermalShowLogo = useWatch({ control, name: 'printSettings.thermalShowLogo' });
  const watchedAutoPrintOnFulfill = useWatch({ control, name: 'printSettings.autoPrintOnFulfill' });
+ const watchedShowSystemName = useWatch({ control, name: 'printSettings.showSystemName' });
  const initialBaseCurrency = currentSettings?.baseCurrency || null;
+
+ const isBannerLogo = profile?.brandingConfig?.logoType === 'BANNER';
 
  const showCurrencyWarning = watchedBaseCurrency && initialBaseCurrency && watchedBaseCurrency !== initialBaseCurrency;
 
@@ -98,7 +103,7 @@ export function SettingsClient({ locale }: { locale: string }) {
 
  if (isLoading) {
   return (
-   <div className="md:p-8 min-w-0 gap-6 flex-1 space-y-8 flex p-4 animate-pulse mx-auto flex-col max-w-7xl w-full">
+   <div className="min-w-0 gap-6 flex-1 space-y-8 flex animate-pulse mx-auto flex-col max-w-7xl w-full">
     <div className="h-12 w-64 bg-surface-container-highest rounded-2xl" />
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
      <div className="lg:col-span-4 space-y-6">
@@ -486,8 +491,8 @@ export function SettingsClient({ locale }: { locale: string }) {
         {/* Show Logo on Receipt */}
         <div className="flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors hover:bg-muted/30">
          <div className="flex flex-col space-y-1 text-start min-w-0">
-          <span className="text-sm font-medium text-text-main dark:text-white">{t('show_logo')}</span>
-          <span className="text-xs text-muted-foreground dark:text-gray-400">Print logo on thermal receipt</span>
+          <span className="text-sm font-medium text-text-main dark:text-white">{locale === 'ar' ? 'عرض الشعار' : 'Show Logo on Receipt'}</span>
+          <span className="text-xs text-muted-foreground dark:text-gray-400">{locale === 'ar' ? 'طباعة الشعار على إيصال الطابعة الحرارية' : 'Print logo on thermal receipt'}</span>
          </div>
          <Switch
           id="thermal-show-logo"
@@ -498,15 +503,35 @@ export function SettingsClient({ locale }: { locale: string }) {
         </div>
 
         {/* Auto Print on Fulfill */}
-        <div className="flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors hover:bg-muted/30 md:col-span-2">
+        <div className="flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors hover:bg-muted/30">
          <div className="flex flex-col space-y-1 text-start min-w-0">
-          <span className="text-sm font-medium text-text-main dark:text-white">{t('auto_print')}</span>
-          <span className="text-xs text-muted-foreground dark:text-gray-400">Print receipt automatically on fulfill</span>
+          <span className="text-sm font-medium text-text-main dark:text-white">{locale === 'ar' ? 'طباعة تلقائية عند التنفيذ' : 'Auto Print on Fulfill'}</span>
+          <span className="text-xs text-muted-foreground dark:text-gray-400">{locale === 'ar' ? 'طباعة الإيصال تلقائياً عند تنفيذ الطلب' : 'Print receipt automatically on fulfill'}</span>
          </div>
          <Switch
           id="auto-print-fulfill"
           checked={watchedAutoPrintOnFulfill ?? false}
           onCheckedChange={(val) => setValue('printSettings.autoPrintOnFulfill', val, { shouldDirty: true })}
+          activeClassName="bg-status-active"
+         />
+        </div>
+
+        {/* Report Customization: Show System Name */}
+        <div className={`flex flex-row items-center justify-between w-full rounded-lg border border-border p-4 shadow-sm bg-transparent transition-colors md:col-span-2 ${isBannerLogo ? 'opacity-50 pointer-events-none grayscale' : 'hover:bg-muted/30'}`}>
+         <div className="flex flex-col space-y-1 text-start min-w-0">
+          <span className="text-sm font-medium text-text-main dark:text-white flex items-center gap-2">
+            {locale === 'ar' ? 'عرض اسم النظام في التقارير' : 'Show System Name in Reports'}
+            {isBannerLogo && <span className="px-2 py-0.5 rounded bg-muted text-[10px] uppercase font-bold text-muted-foreground">Locked by Banner Logo</span>}
+          </span>
+          <span className="text-xs text-muted-foreground dark:text-gray-400">
+            {locale === 'ar' ? 'طباعة اسم النظام بجوار الشعار (معطل عند اختيار لافتة)' : 'Display the system name next to the logo in A4 exports.'}
+          </span>
+         </div>
+         <Switch
+          id="show-system-name"
+          checked={isBannerLogo ? false : (watchedShowSystemName ?? true)}
+          disabled={isBannerLogo}
+          onCheckedChange={(val) => setValue('printSettings.showSystemName', val, { shouldDirty: true })}
           activeClassName="bg-status-active"
          />
         </div>

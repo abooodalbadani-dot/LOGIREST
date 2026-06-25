@@ -28,39 +28,39 @@ import { NetworkStatusBanner } from '@/core/network/NetworkStatusBanner';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
- title: 'مطاعم أوتانتيك | Otantik Restuarant',
- description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
- robots: 'index, follow',
- openGraph: {
-  title: 'مطاعم أوتانتيك | Otantik Restuarant',
-  description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
-  type: 'website',
- },
- icons: {
-  icon: '/icon.svg',
-  shortcut: '/favicon.svg',
-  apple: '/icon.svg',
- },
+    title: 'مطاعم أوتانتيك | Otantik Restaurant',
+    description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
+    robots: 'index, follow',
+    openGraph: {
+        title: 'مطاعم أوتانتيك | Otantik Restaurant',
+        description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
+        type: 'website',
+    },
+    icons: {
+        icon: '/icon.svg',
+        shortcut: '/favicon.svg',
+        apple: '/icon.svg',
+    },
 };
 
 export const viewport: Viewport = {
- width: 'device-width',
- initialScale: 1,
+    width: 'device-width',
+    initialScale: 1,
 };
 
 export default async function LocaleLayout({
- children,
- params
+    children,
+    params
 }: {
- children: React.ReactNode;
- params: Promise<{ locale: string }>;
+    children: React.ReactNode;
+    params: Promise<{ locale: string }>;
 }) {
- if (!isConfigValid(process.env)) {
-  return (
-   <html lang="en" className="dark" suppressHydrationWarning>
-    <head>
-     <title>Configuration Error | Otantik Restuarant</title>
-     <style>{`
+    if (!isConfigValid(process.env)) {
+        return (
+            <html lang="en" className="dark" suppressHydrationWarning>
+                <head>
+                    <title>Configuration Error | Otantik Restaurant</title>
+                    <style>{`
       body {
        margin: 0;
        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -145,75 +145,75 @@ export default async function LocaleLayout({
        50% { transform: translateY(-8px); }
       }
      `}</style>
-    </head>
-    <body>
-     <div className="card">
-      <div className="icon">⚠️</div>
-      <div className="badge">Config Error</div>
-      <h1>Observability & Safety Blocker</h1>
-      <p>
-       The frontend application failed to initialize because the primary API Gateway URL is undefined in the environment.
-      </p>
-      <div className="code-block">
-       FATAL: NEXT_PUBLIC_API_URL is missing
-      </div>
-      <div className="footer">
-       Otantik Restuarant Enterprise Engine v16.2.6
-      </div>
-     </div>
-    </body>
-   </html>
-  );
- }
+                </head>
+                <body>
+                    <div className="card">
+                        <div className="icon">⚠️</div>
+                        <div className="badge">Config Error</div>
+                        <h1>Observability & Safety Blocker</h1>
+                        <p>
+                            The frontend application failed to initialize because the primary API Gateway URL is undefined in the environment.
+                        </p>
+                        <div className="code-block">
+                            FATAL: NEXT_PUBLIC_API_URL is missing
+                        </div>
+                        <div className="footer">
+                            Otantik Restaurant Enterprise Engine v16.2.6
+                        </div>
+                    </div>
+                </body>
+            </html>
+        );
+    }
 
- const { locale } = await params;
- const messages = await getMessages();
+    const { locale } = await params;
+    const messages = await getMessages();
 
- console.log(`[Layout] Rendering for locale: ${locale}`);
- console.log(`[Layout] Messages loaded: ${Object.keys(messages).length > 0 ? 'YES' : 'EMPTY'}`);
- if (Object.keys(messages).length === 0) {
-  console.error(`[Layout] ERROR: No messages loaded for locale: ${locale}`);
- }
+    console.log(`[Layout] Rendering for locale: ${locale}`);
+    console.log(`[Layout] Messages loaded: ${Object.keys(messages).length > 0 ? 'YES' : 'EMPTY'}`);
+    if (Object.keys(messages).length === 0) {
+        console.error(`[Layout] ERROR: No messages loaded for locale: ${locale}`);
+    }
 
- const direction = locale === 'ar' ? 'rtl' : 'ltr';
- const cookieStore = await cookies();
- const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'light';
+    const direction = locale === 'ar' ? 'rtl' : 'ltr';
+    const cookieStore = await cookies();
+    const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'light';
 
 
- return (
-  <html lang={locale} dir={direction} suppressHydrationWarning>
-   <body
-    className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${beVietnamPro.variable} font-sans antialiased text-text-main dark:text-white bg-bg-light dark:bg-brand-black transition-colors duration-300 min-h-screen`}
-    suppressHydrationWarning
-   >
-    <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
-     <NextIntlClientProvider messages={messages} locale={locale}>
-      <QueryProvider>
-       <UnsavedChangesProvider>
-        <ConflictProvider>
-         <ConfirmationProvider>
-          <AuthProvider>
-           <UserProfileProvider>
-            <WarehouseScopeProvider>
-             <CurrencyProvider>
-              <ErrorBoundary>
-               <NetworkStatusBanner />
-               <ErrorProvider>
-                {children}
-               </ErrorProvider>
-               <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
-              </ErrorBoundary>
-             </CurrencyProvider>
-            </WarehouseScopeProvider>
-           </UserProfileProvider>
-          </AuthProvider>
-         </ConfirmationProvider>
-        </ConflictProvider>
-       </UnsavedChangesProvider>
-      </QueryProvider>
-     </NextIntlClientProvider>
-    </ThemeProvider>
-   </body>
-  </html>
- );
+    return (
+        <html lang={locale} dir={direction} className="force-latin-numbers" suppressHydrationWarning>
+            <body
+                className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${beVietnamPro.variable} font-sans antialiased text-text-main dark:text-white bg-bg-light dark:bg-brand-black transition-colors duration-300 min-h-screen custom-scrollbar`}
+                suppressHydrationWarning
+            >
+                <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
+                    <NextIntlClientProvider messages={messages} locale={locale}>
+                        <QueryProvider>
+                            <UnsavedChangesProvider>
+                                <ConflictProvider>
+                                    <ConfirmationProvider>
+                                        <AuthProvider>
+                                            <UserProfileProvider>
+                                                <WarehouseScopeProvider>
+                                                    <CurrencyProvider>
+                                                        <ErrorBoundary>
+                                                            <NetworkStatusBanner />
+                                                            <ErrorProvider>
+                                                                {children}
+                                                            </ErrorProvider>
+                                                            <Toaster richColors closeButton position="top-right" dir={direction as 'rtl' | 'ltr'} />
+                                                        </ErrorBoundary>
+                                                    </CurrencyProvider>
+                                                </WarehouseScopeProvider>
+                                            </UserProfileProvider>
+                                        </AuthProvider>
+                                    </ConfirmationProvider>
+                                </ConflictProvider>
+                            </UnsavedChangesProvider>
+                        </QueryProvider>
+                    </NextIntlClientProvider>
+                </ThemeProvider>
+            </body>
+        </html>
+    );
 }

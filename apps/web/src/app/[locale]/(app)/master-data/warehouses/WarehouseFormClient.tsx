@@ -56,7 +56,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useWarehouse(id);
-  const { data: warehousesData } = useWarehouses();
+  const { data: warehousesData } = useWarehouses({ includeInactive: true });
   const { data: branchesData, isLoading: isLoadingBranches, isError: isErrorBranches } = useBranches();
   const branches = branchesData?.data || [];
   const create = useCreateWarehouse();

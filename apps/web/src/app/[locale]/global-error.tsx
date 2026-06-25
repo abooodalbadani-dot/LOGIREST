@@ -44,7 +44,7 @@ export default function GlobalError({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
        <button
         onClick={() => reset()}
-        className="flex-1 min-h-[40px] px-4 py-2 bg-operational-cyan text-slate-950 hover:brightness-110 active:scale-95 transition-all rounded font-mono text-xs uppercase tracking-wider font-bold"
+        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        >
         Try Again
        </button>

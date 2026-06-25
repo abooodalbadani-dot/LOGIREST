@@ -4,6 +4,7 @@ import { PurchaseOrderService } from './po.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
@@ -29,6 +30,7 @@ describe('PurchaseOrderController', () => {
     email: jest.fn(),
   };
 
+  const mockPdfGeneratorService = {};
   const mockPrismaService = {};
   const mockWorkflowService = {};
 
@@ -44,6 +46,7 @@ describe('PurchaseOrderController', () => {
         { provide: PurchaseOrderService, useValue: mockPoService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
         {
           provide: ScopeValidationService,
           useValue: mockScopeValidationService,

@@ -16,7 +16,19 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 export function useWarehouseLock(warehouseId: string | null) {
   const query = useQuery<WarehouseLockState>({
     queryKey: ['warehouse-lock', warehouseId],
-    queryFn: ({ signal }) => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema, { signal }),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema, { signal, skipAutoToast: true });
+      } catch (err) {
+        console.warn('Silent degradation: Failed to fetch warehouse lock status:', err);
+        return {
+          isLocked: false,
+          sessionId: null,
+          sessionNumber: null,
+          lockStartedAt: null,
+        };
+      }
+    },
     staleTime: 30_000,
     enabled: !!warehouseId,
   });

@@ -9,7 +9,7 @@ export function usePostTransfer(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: ({ id, version, signal, headers }: { id: string; version: number; signal?: AbortSignal; headers?: Record<string, string> }) => 
-   apiClient.post(`/operations/transfers/${id}/post`, successSchema, { version }, { signal, headers }),
+   apiClient.post(`/operations/transfers/${id}/post`, successSchema, { version }, { signal, headers, isRetry: true }),
   onSuccess: (_, { id }) => {
    queryClient.invalidateQueries({ queryKey: ['transfers'] });
    queryClient.invalidateQueries({ queryKey: ['transfers', id] });

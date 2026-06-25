@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { Input } from '@/components/ui/input';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
@@ -29,10 +30,16 @@ import {
  Info,
  Clock,
  AlertCircle,
- Pencil
+ Pencil,
+ X as XIcon,
+ XCircle as XCircleIcon,
+ CheckCircle as CheckCircleIcon
 } from 'lucide-react';
+import { AlertCircle as AlertCircleIcon, History as HistoryIcon, Package as PackageIcon, Send as SendIcon, CheckCircle as CheckCircleCircle, Clock as ClockIcon, Save, FileText, ArrowLeft, Scan, Trash2, Loader2 } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import type { LotAllocation } from '@/types/documents';
+import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { useItems } from '@/features/items/hooks/useItems';
@@ -50,7 +57,7 @@ import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operation
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/layouts/FormLayout';
-import { formatQuantity } from '@/utils/currency';
+import { formatQuantity, formatDate } from '@/utils/currency';
 import { audioAlerts } from '@/utils/audio';
 import { VoidButton } from '@/components/shared/VoidButton';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -62,8 +69,124 @@ interface AdjustmentFormProps {
  onConflict?: () => void;
 }
 
+function UnitCostInput({
+  value,
+  onChange,
+  disabled,
+  placeholder,
+  className
+}: {
+  value: number | null | undefined;
+  onChange: (val: number | null) => void;
+  disabled?: boolean;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [localValue, setLocalValue] = useState<string>(value !== null && value !== undefined ? String(value) : '');
+
+  useEffect(() => {
+    const numVal = value !== null && value !== undefined ? Number(value) : null;
+    const localNum = localValue !== '' ? Number(localValue) : null;
+    if (numVal !== localNum) {
+      setLocalValue(value !== null && value !== undefined ? String(value) : '');
+    }
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+      setLocalValue(rawVal);
+      if (rawVal === '' || rawVal === '.') {
+        onChange(null);
+      } else {
+        const parsed = parseFloat(rawVal);
+        onChange(isNaN(parsed) ? null : parsed);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    if (localValue === '' || localValue === '.') {
+      setLocalValue('0');
+      onChange(0);
+    } else {
+      const parsed = parseFloat(localValue);
+      if (isNaN(parsed)) {
+        setLocalValue('0');
+        onChange(0);
+      } else {
+        setLocalValue(String(parsed));
+        onChange(parsed);
+      }
+    }
+  };
+
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      value={localValue}
+      lang="en"
+      dir="ltr"
+      style={{ direction: 'ltr' }}
+      disabled={disabled}
+      placeholder={placeholder}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={className}
+    />
+  );
+}
+
+function AdjustmentLotSelector({ 
+  itemId, 
+  warehouseId, 
+  value, 
+  onChange, 
+  disabled 
+}: { 
+  itemId: string; 
+  warehouseId: string; 
+  value?: string; 
+  onChange: (lotId: string, lotNumber: string, expiryDate?: string) => void;
+  disabled: boolean;
+}) {
+  const { data: lots } = useLotsByItem({ itemId, warehouseId });
+  const items = useMemo(() => {
+    return (lots || []).map(lot => ({
+      id: lot.id,
+      name: lot.lotNumber + (lot.isExpired ? ` (Expired)` : ''),
+      code: lot.lotNumber,
+    }));
+  }, [lots]);
+
+  return (
+    <div className="flex items-center justify-center w-full" dir="ltr">
+      <SmartCombobox
+        items={items}
+        value={value || ''}
+        disabled={disabled}
+        onSelect={(item) => {
+          const selected = lots?.find(l => l.id === item.id);
+          if (selected) {
+            onChange(selected.id, selected.lotNumber, selected.expiryDate || undefined);
+          }
+        }}
+        placeholder={"Select Lot"}
+        triggerClassName="w-32 md:w-40 h-7 rounded-sm border border-gray-600 bg-transparent text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-white focus:ring-1 focus:ring-primary shadow-none"
+      />
+    </div>
+  );
+}
+
+interface AdjustmentFormLine extends Omit<AdjustmentLine, 'lot' | 'lotAllocations'> {
+ qty: number;
+ lot?: { lotNumber: string; expiryDate: string | null } | null;
+ lotAllocations?: LotAllocation[];
+}
+
 export function AdjustmentForm({ 
- document, 
+  document, 
  id, 
  isLocked,
  onConflict
@@ -106,7 +229,7 @@ export function AdjustmentForm({
  );
 
  const hasInvalidCosts = useMemo(
-  () => lines.some(line => line.direction === 'INCREASE' && (line.unitCost === null || line.unitCost === undefined || line.unitCost <= 0)),
+  () => lines.some(line => line.direction === 'INCREASE' && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0)),
   [lines]
  );
 
@@ -205,10 +328,10 @@ export function AdjustmentForm({
    toast.error(t('errors.negative_stock_not_allowed'));
    return;
   }
-  if (hasInvalidCosts) {
-   toast.error(locale === 'ar' ? 'تكلفة الوحدة مطلوبة ويجب أن تكون أكبر من 0 لبنود الزيادة' : 'Unit cost is required and must be > 0 for increase lines.');
-   return;
-  }
+   if (hasInvalidCosts) {
+    toast.error(locale === 'ar' ? 'تكلفة الوحدة مطلوبة ويجب أن تكون أكبر من أو تساوي 0 لبنود الزيادة' : 'Unit cost is required and must be >= 0 for increase lines.');
+    return;
+   }
   try {
    const payload = {
     version: document?.version || 0,
@@ -247,53 +370,34 @@ export function AdjustmentForm({
    toast.error(t('errors.negative_stock_not_allowed'));
    return;
   }
-  try {
-   await submitAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
-   toast.success(t('submit_success'));
-   setSubmitDialogOpen(false);
-  } catch (e) {
-   console.error(e);
-   toast.error(tc('error_occurred'));
-  }
+  await submitAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
+  toast.success(t('submit_success'));
+  setSubmitDialogOpen(false);
  };
 
  const handleApprove = async () => {
-  try {
-   await approveAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
-   toast.success(t('approve_success'));
-   setApproveDialogOpen(false);
-  } catch (e) {
-   console.error(e);
-   toast.error(tc('error_occurred'));
-  }
+  await approveAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
+  toast.success(t('approve_success'));
+  setApproveDialogOpen(false);
  };
 
  const handleReject = async () => {
   const trimmedComment = rejectionComment.trim();
   if (trimmedComment.length < 15) return;
-  try {
-   await rejectAdjustment.mutateAsync({ 
-    id,
-    version: document?.version || 0, 
-    reject: trimmedComment,
-    signal: abortController.signal 
-   });
-   toast.success(t('reject_success'));
-   setRejectDialogOpen(false);
-  } catch (e) {
-   console.error(e);
-   toast.error(tc('error_occurred'));
-  }
+  await rejectAdjustment.mutateAsync({ 
+   id,
+   version: document?.version || 0, 
+   reject: trimmedComment,
+   signal: abortController.signal 
+  });
+  toast.success(t('reject_success'));
+  setRejectDialogOpen(false);
  };
 
  const handlePost = async () => {
-  try {
-   await postAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
-   setPostDialogOpen(false);
-   router.push(`/adjustments`);
-  } catch (e) {
-   console.error(e);
-  }
+  await postAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
+  setPostDialogOpen(false);
+  router.push(`/adjustments`);
  };
 
  const handleScan = async (barcode: string) => {
@@ -354,7 +458,7 @@ export function AdjustmentForm({
       direction: 'INCREASE',
       qtyBefore: currentQty,
       qtyAdjusted: 1,
-      unitCost: null,
+      unitCost: 0,
       uomId: item.primaryUom.id,
       reasonNotes: ''
      }];
@@ -380,10 +484,10 @@ export function AdjustmentForm({
   setLines(prev => prev.filter(l => l.id !== id));
  };
 
- const updateLine = (id: string, updates: Partial<AdjustmentLine>) => {
+ const updateLine = useCallback((id: string, updates: Partial<AdjustmentLine>) => {
   if (!canEdit) return;
   setLines(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
- };
+ }, [canEdit]);
 
  const timelineEntries = useMemo(() => {
   if (!document?.timeline) return [];
@@ -393,8 +497,114 @@ export function AdjustmentForm({
    by: e.by
   }));
  }, [document]);
+
+ const extraColumns = useMemo(() => [
+  {
+   header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
+   cell: (line: AdjustmentFormLine) => {
+    const isIncrease = line.direction === 'INCREASE';
+    return (
+     <div className="flex justify-center w-full">
+      <UnitCostInput
+       value={line.unitCost}
+       disabled={!isIncrease || !canEdit}
+       placeholder={isIncrease ? '0' : '-'}
+       onChange={(val) => {
+        updateLine(line.id, { unitCost: val });
+       }}
+        className={cn(
+          "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all disabled:opacity-30",
+          isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
+         )}
+      />
+     </div>
+    );
+   }
+  },
+  {
+   header: t('direction') || 'Direction',
+   cell: (line: AdjustmentFormLine) => (
+    <div className="flex justify-center bg-gray-50 border border-gray-200 dark:bg-[#0B1220] dark:border-gray-700 rounded h-8 w-full max-w-[140px] p-0.5 mx-auto">
+     <button
+      type="button"
+      disabled={!canEdit}
+      onClick={() => updateLine(line.id, { direction: 'INCREASE' })}
+      className={cn(
+       "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+       line.direction === 'INCREASE'
+        ? "bg-[#b48e67]/15 text-[#b48e67] shadow-sm"
+        : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
+      )}
+     >
+      <ArrowUp className="w-2.5 h-2.5" />
+      {t('direction_increase') || (locale === 'ar' ? 'زيادة' : 'Inc')}
+     </button>
+     <button
+      type="button"
+      disabled={!canEdit}
+      onClick={() => updateLine(line.id, { direction: 'DECREASE' })}
+      className={cn(
+       "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+       line.direction === 'DECREASE'
+        ? "bg-status-error/15 text-status-error shadow-sm"
+        : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
+      )}
+     >
+      <ArrowDown className="w-2.5 h-2.5" />
+      {t('direction_decrease') || (locale === 'ar' ? 'نقص' : 'Dec')}
+     </button>
+    </div>
+   )
+  },
+  {
+   header: t('qty_before') || 'Qty Before',
+   cell: (line: AdjustmentFormLine) => (
+    <div className="flex flex-col items-center gap-0.5 tabular-nums">
+     <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
+      {Number(line.qtyBefore).toLocaleString('en-US')}
+     </span>
+    </div>
+   )
+  },
+  {
+   header: tc('table_headers.lot') || 'Lot',
+   cell: (line: AdjustmentFormLine) => (
+    <AdjustmentLotSelector
+     itemId={line.item.id}
+     warehouseId={warehouseId}
+     value={line.lotAllocations?.[0]?.lotId}
+     disabled={!canEdit || !!lockState?.isLocked}
+     onChange={(lotId) => {
+       updateLine(line.id, {
+         lotAllocations: [{ lotId, qty: line.qtyAdjusted }]
+       });
+     }}
+    />
+   )
+  },
+  {
+   header: t('qty_after') || 'Qty After',
+   cell: (line: AdjustmentFormLine) => {
+    const after = line.direction === 'INCREASE' ? line.qtyBefore + line.qtyAdjusted : line.qtyBefore - line.qtyAdjusted;
+    return (
+     <div className="flex flex-col items-center gap-0.5 tabular-nums">
+      <span className={cn(
+       "text-body-md font-bold",
+       after < 0 ? "text-red-500" : "text-foreground"
+      )} lang="en" dir="ltr">
+       {Number(after).toLocaleString('en-US')}
+      </span>
+      {after < 0 && (
+       <span className="text-xs text-red-500">{t('errors.exceeds_available_stock')}</span>
+      )}
+     </div>
+    );
+   }
+  }
+ ], [locale, t, tc, canEdit, updateLine, warehouseId, lockState?.isLocked]);
+
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm pb-12 animate-in fade-in duration-500 print:bg-card print:p-0 print:m-0 print:pb-0 print:animate-none">
+  <div className="min-h-screen pb-12 animate-in fade-in duration-500 print:bg-card print:p-0 print:m-0 print:pb-0 print:animate-none">
    {/* Print header (visible only when printing) */}
    <div className="print-only print-header p-8 border-b-2 border-gray-300 mb-6">
     <div className="flex justify-between items-start">
@@ -403,7 +613,7 @@ export function AdjustmentForm({
       <p className="text-sm text-muted-foreground mt-1">{document?.documentNumber || ''}</p>
      </div>
      <div className="text-end text-sm text-muted-foreground">
-      <p>{document?.createdAt ? new Date(document.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</p>
+       <p>{document?.createdAt ? formatDate(document.createdAt, locale as 'ar' | 'en') : ''}</p>
      </div>
     </div>
    </div>
@@ -421,7 +631,7 @@ export function AdjustmentForm({
       />
      </>
     ) : undefined}
-    actions={<DocumentExportMenu />}
+    actions={<DocumentExportMenu documentType="ADJUSTMENT" documentId={isNew ? undefined : id} documentNumber={document?.documentNumber} />}
     isEditing={true}
    />
 
@@ -452,7 +662,7 @@ export function AdjustmentForm({
      <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:block">
       {/* Left Column */}
-      <div className="lg:col-span-8 space-y-8 print:max-w-full">
+      <div className="lg:col-span-9 space-y-8 print:max-w-full">
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 border border-surface-variant/5">
        <div className="space-y-4">
         <div className="space-y-1.5">
@@ -487,10 +697,12 @@ export function AdjustmentForm({
          onChange={e => setNotes(e.target.value)}
          readOnly={!canEdit}
          placeholder={t('notes_placeholder')}
-         className={cn(
-          "bg-card border border-border shadow-sm border-none rounded-lg h-[calc(6rem+3rem+1rem)] p-4 text-body-md resize-none transition-all",
-          (!canEdit) ? "cursor-default opacity-85 select-all focus:ring-0 animate-pulse-slow" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
-         )}
+          className={cn(
+           "h-[calc(6rem+3rem+1rem)] p-4 text-body-md resize-none transition-all w-full",
+           (!canEdit) 
+             ? "bg-white/5 border border-white/10 rounded-xl p-3 min-h-[100px] text-muted-foreground cursor-default select-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" 
+             : "bg-card border border-border shadow-sm focus:ring-1 focus:ring-primary-fixed-dim/10"
+          )}
         />
        </div>
       </div>
@@ -537,130 +749,58 @@ export function AdjustmentForm({
         </div>
        </div>
        <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 mx-4 mb-4 overflow-hidden">
-        <DocumentLineItemTable
-         lines={lines.map(l => ({ ...l, qty: l.qtyAdjusted, lotAllocations: undefined }))}
+        <DocumentLineItemTable<AdjustmentFormLine>
+         lines={lines.map(l => ({
+          ...l,
+          qty: l.qtyAdjusted,
+          lot: l.lot ? {
+           lotNumber: l.lot.lotNumber,
+           expiryDate: l.lot.expiryDate ?? null,
+          } : null,
+          lotAllocations: l.lotAllocations?.map(la => ({
+           lotId: la.lotId,
+           lotNumber: '',
+           allocatedQty: la.qty,
+           qty: la.qty,
+          }))
+         }))}
          locale={locale as 'ar' | 'en'}
          isReadOnly={!canEdit || !!lockState?.isLocked}
          onRemoveLine={(id) => removeLine(id)}
          hideLotColumns={true}
          dense={true}
+         noCollapse={false}
+         mobileLayoutPattern="adjustment-form"
          headers={{
           qty: t('qty_adjusted')
          }}
          renderQty={(line) => (
-          <div className="flex justify-center">
-           <input
+          <div className="flex justify-center w-full">
+           <Input
             type="number"
             min="0.001"
             step="0.001"
             value={line.qty}
+            lang="en"
+            dir="ltr"
+            style={{ direction: 'ltr' }}
             readOnly={!canEdit || !!lockState?.isLocked}
             onChange={(e) => {
              const val = parseFloat(e.target.value);
              updateLine(line.id, { qtyAdjusted: val || 0 });
             }}
-            className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+             className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
            />
           </div>
          )}
-         extraColumns={[
-          {
-           header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
-           cell: (line: AdjustmentLine) => {
-            const isIncrease = line.direction === 'INCREASE';
-            return (
-             <div className="flex justify-center">
-              <input
-               type="number"
-               min="0.0001"
-               step="0.01"
-               value={line.unitCost ?? ''}
-               readOnly={!canEdit || !isIncrease}
-               disabled={!isIncrease}
-               placeholder={isIncrease ? (locale === 'ar' ? 'مطلوب' : 'Required') : '-'}
-               onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                updateLine(line.id, { unitCost: isNaN(val) ? null : val });
-               }}
-               className={cn(
-                "w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-30",
-                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost <= 0) && "border-red-500/50 focus:ring-red-500/30"
-               )}
-              />
-             </div>
-            );
-           }
-          },
-          {
-           header: t('direction') || 'Direction',
-           cell: (line: AdjustmentLine) => (
-            <div className="flex justify-center bg-card border border-border shadow-sm/40 rounded-lg p-0.5 h-9 w-36 mx-auto">
-             <button
-              type="button"
-              disabled={!canEdit}
-              onClick={() => updateLine(line.id, { direction: 'INCREASE' })}
-              className={cn(
-               "flex flex-1 items-center justify-center gap-1 rounded-md text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-               line.direction === 'INCREASE'
-                ? "bg-status-success/15 text-status-success shadow-sm"
-                : "text-muted-foreground/30 hover:text-muted-foreground/60"
-              )}
-             >
-              <ArrowUp className="w-3 h-3" />
-              {t('direction_increase')}
-             </button>
-             <button
-              type="button"
-              disabled={!canEdit}
-              onClick={() => updateLine(line.id, { direction: 'DECREASE' })}
-              className={cn(
-               "flex flex-1 items-center justify-center gap-1 rounded-md text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-               line.direction === 'DECREASE'
-                ? "bg-status-error/15 text-status-error shadow-sm"
-                : "text-muted-foreground/30 hover:text-muted-foreground/60"
-              )}
-             >
-              <ArrowDown className="w-3 h-3" />
-              {t('direction_decrease')}
-             </button>
-            </div>
-           )
-          },
-          {
-           header: t('qty_before') || 'Qty Before',
-           cell: (line: AdjustmentLine) => (
-            <div className="flex flex-col items-center gap-0.5 tabular-nums">
-             <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qtyBefore, locale as 'ar' | 'en')}</span>
-            </div>
-           )
-          },
-          {
-           header: t('qty_after') || 'Qty After',
-           cell: (line: AdjustmentLine) => {
-            const after = line.direction === 'INCREASE' ? line.qtyBefore + line.qtyAdjusted : line.qtyBefore - line.qtyAdjusted;
-            return (
-             <div className="flex flex-col items-center gap-0.5 tabular-nums">
-              <span className={cn(
-               "text-body-md font-bold",
-               after < 0 ? "text-red-500" : "text-foreground"
-              )}>
-               {formatQuantity(after, locale as 'ar' | 'en')}
-              </span>
-              {after < 0 && (
-               <span className="text-xs text-red-500">{t('errors.exceeds_available_stock')}</span>
-              )}
-             </div>
-            );
-           }
-          }
-         ]}
+         extraColumns={extraColumns}
         />
        </div>
       </div>
      </div>
 
      {/* Right Column */}
-     <div className="lg:col-span-4 space-y-8 print-hidden">
+     <div className="lg:col-span-3 space-y-8 print-hidden">
       <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm relative overflow-hidden group border border-surface-variant/5">
        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
        <div className="relative space-y-8">
@@ -721,102 +861,123 @@ export function AdjustmentForm({
      </div>
     </DocumentLockWrapper>
 
-    <FormFooter 
-     onCancel={() => router.push(`/adjustments`)}
-     onSubmit={handleSaveDraft}
-     isSaving={createAdjustment.isPending || updateAdjustment.isPending}
-     isLocked={isLocked}
-     isDirty={lines.length > 0}
-     isValid={!hasNegativeStock && !hasInvalidCosts && lines.length > 0 && notes.trim().length >= 10 && !isRefreshingStock}
-     className="print-hidden"
-     actions={
-      !isNew && (
-       <div className="flex items-center gap-3">
-        {isLocked && (
-         <VoidButton
-          documentId={id}
-          documentType="ADJUSTMENT"
-          status={adjustmentStatus}
-          version={document?.version || 1}
-         />
-        )}
-        {!isLocked && (
-         <>
-          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role} disabled={hasNegativeStock}>
-           <Button 
-            variant="outline"
-            onClick={() => setSubmitDialogOpen(true)}
-            className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-           >
-            <Send className="w-5 h-5 me-3" />
-            {t('submit_for_approval')}
-           </Button>
-          </ActionGuard>
+    {isLocked ? (
+     <div className="sticky bottom-0 w-full bg-background/95 backdrop-blur-md border-t border-border/50 p-4 z-50 flex items-center justify-between print-hidden">
+      {/* Start Edge (RTL Right): Cancel / Close */}
+      <div>
+       <button 
+        type="button"
+        onClick={() => router.push('/adjustments')}
+        className="px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-foreground font-semibold flex items-center gap-2"
+       >
+        <XIcon className="w-4 h-4" /> {tc('actions.close')}
+       </button>
+      </div>
+      {/* End Edge (RTL Left): Approval Actions */}
+      <div className="flex items-center gap-3">
+       {isLocked && (
+        <VoidButton
+         documentId={id}
+         documentType="ADJUSTMENT"
+         status={adjustmentStatus}
+         version={document?.version || 1}
+        />
+       )}
+       <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role || ''} disabled={hasNegativeStock}>
+        <button
+         type="button"
+         onClick={() => setSubmitDialogOpen(true)}
+         className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+        >
+         <Send className="w-4 h-4" /> {t('submit_for_approval')}
+        </button>
+       </ActionGuard>
 
-          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="EDIT" role={user?.role}>
-           <Button 
-            variant="outline"
-            onClick={() => editAdjustment.mutate({ id, version: document?.version ?? 0 })}
-            className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-           >
-            <Pencil className="w-5 h-5 me-3" />
-            {t('edit_rejected')}
-           </Button>
-          </ActionGuard>
+       <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="EDIT" role={user?.role || ''}>
+        <button
+         type="button"
+         onClick={() => editAdjustment.mutate({ id, version: document?.version ?? 0 })}
+         className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+        >
+         <Pencil className="w-4 h-4" /> {t('edit_rejected')}
+        </button>
+       </ActionGuard>
 
-          <PermissionGate action="reject" resource="operations_adjustments">
-           <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role}>
-            <Button 
-             variant="ghost" 
-             onClick={() => setRejectDialogOpen(true)}
-             className="h-14 px-8 text-red-500 hover:bg-red-500/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-            >
-             <XCircle className="w-5 h-5 me-3" />
-             {t('reject')}
-            </Button>
-           </ActionGuard>
-          </PermissionGate>
-          
-          <PermissionGate action="approve" resource="operations_adjustments">
-           <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role} disabled={hasNegativeStock}>
-            <Button 
-             onClick={() => setApproveDialogOpen(true)}
-             className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-emerald-600/30 border-none"
-            >
-             <CheckCircle className="w-5 h-5 me-3" />
-             {t('approve')}
-            </Button>
-           </ActionGuard>
-          </PermissionGate>
+       <PermissionGate action="reject" resource="operations_adjustments">
+        <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role || ''}>
+         <button
+          type="button"
+          onClick={() => setRejectDialogOpen(true)}
+          className="px-6 py-2.5 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 font-bold flex items-center gap-2"
+         >
+          <XCircleIcon className="w-5 h-5" /> {t('reject')}
+         </button>
+        </ActionGuard>
+       </PermissionGate>
+       
+       <PermissionGate action="approve" resource="operations_adjustments">
+        <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role || ''} disabled={hasNegativeStock}>
+         <button
+          type="button"
+          onClick={() => setApproveDialogOpen(true)}
+          className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+         >
+          <CheckCircleIcon className="w-5 h-5" /> {t('approve')}
+         </button>
+        </ActionGuard>
+       </PermissionGate>
 
-          <PermissionGate action="post" resource="operations_adjustments">
-           <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''} disabled={hasNegativeStock}>
-            <Button 
-             onClick={() => setPostDialogOpen(true)}
-             className="h-14 px-12 bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-primary/30 border-none"
-            >
-             <CheckCircle className="w-5 h-5 me-3" />
-             {t('post_adjustment')}
-            </Button>
-           </ActionGuard>
-          </PermissionGate>
+       <PermissionGate action="post" resource="operations_adjustments">
+        <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''} disabled={hasNegativeStock}>
+         <button
+          type="button"
+          onClick={() => setPostDialogOpen(true)}
+          className="px-8 py-2.5 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
+         >
+          <CheckCircleIcon className="w-5 h-5" /> {t('post_adjustment')}
+         </button>
+        </ActionGuard>
+       </PermissionGate>
 
-          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="CANCEL" role={user?.role || ''}>
-           <Button 
-            variant="ghost" 
-            onClick={() => setCancelDialogOpen(true)}
-            className="h-14 px-8 text-red-400 hover:bg-red-500/10 hover:text-red-500 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-           >
-            <XCircle className="w-5 h-5 me-3" />
-            {tc('cancel')}
-           </Button>
-          </ActionGuard>
-         </>
-        )}
-       </div>
-      )
-     }
-    />
+       <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="CANCEL" role={user?.role || ''}>
+        <button
+         type="button"
+         onClick={() => setCancelDialogOpen(true)}
+         className="px-6 py-2.5 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 font-bold flex items-center gap-2"
+        >
+         <XCircleIcon className="w-5 h-5" /> {t('cancel_adjustment')}
+        </button>
+       </ActionGuard>
+      </div>
+     </div>
+    ) : (
+     <FormFooter 
+      onCancel={() => router.push(`/adjustments`)}
+      cancelLabel={tc('actions.cancel')}
+      onSubmit={handleSaveDraft}
+      isSaving={createAdjustment.isPending || updateAdjustment.isPending}
+      isLocked={isLocked}
+      isDirty={lines.length > 0}
+      isValid={!hasNegativeStock && !hasInvalidCosts && lines.length > 0 && notes.trim().length >= 10 && !isRefreshingStock}
+      className="print-hidden"
+      actions={
+       !isNew && (
+        <div className="flex items-center gap-3 w-full md:w-auto md:me-auto">
+         <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role || ''} disabled={hasNegativeStock}>
+          <Button 
+           variant="outline"
+           onClick={() => setSubmitDialogOpen(true)}
+           className="w-full md:w-auto h-12 md:h-10 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-md shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none uppercase text-sm tracking-wider px-8"
+          >
+           <Send className="w-5 h-5 me-2" />
+           {t('submit_for_approval')}
+          </Button>
+         </ActionGuard>
+        </div>
+       )
+      }
+     />
+    )}
    </form>
 
    {/* Confirmation Dialogs */}

@@ -133,7 +133,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
 
  if (isError) {
  return (
-  <div className="min-w-0 gap-6 flex-1 p-8 flex-col flex w-full">
+  <div className="min-w-0 gap-6 flex-1 flex-col flex w-full">
   <ErrorState 
    type="server_error"
    onRetry={() => refetch()}
@@ -154,10 +154,10 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  />
  <PageHeader 
  title={t('title')} 
- description={t('description')}
- actions={
+ subtitle={t('description')}
+ children={
  <PermissionGate action="create" resource="master_data">
-    <Link href={`/master-data/currencies/new`}>
+    <Link href={`/master-data/currencies/new`} className="shrink-0 w-full sm:w-auto">
      <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm shadow-primary/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {tc('create')}
@@ -193,29 +193,94 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  />
  </div>
 
- <DataTable 
- columns={columns} 
- data={filteredCurrencies} 
- isLoading={isLoading}
- collectionName="master_data_currencies"
- onRowClick={(r: Currency) => router.push(`/master-data/currencies/${r.id}`)}
-  emptyState={
-   <EmptyState 
-    variant="minimal"
-    title={tc('no_data')}
-   />
-  }
- filters={
-      <div className="relative w-full flex-1 shrink-0 group sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-        <Input
+ <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+  <div className="hidden md:block w-full">
+   <DataTable 
+    columns={columns} 
+    data={filteredCurrencies} 
+    isLoading={isLoading}
+    collectionName="master_data_currencies"
+    onRowClick={(r: Currency) => router.push(`/master-data/currencies/${r.id}`)}
+    emptyState={
+     <EmptyState 
+      variant="minimal"
+      title={tc('no_data')}
+     />
+    }
+    filters={
+       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+         <div className="w-full sm:w-80 md:w-96">
+           <div className="relative w-full group">
+             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+             <Input
          placeholder={tc('search_placeholder') || (locale === 'ar' ? 'البحث بالاسم، الرمز، أو كود العملة...' : 'Search by name, symbol, or code...')}
          value={search}
          onChange={(e) => { setSearch(e.target.value); }} className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
         />
+           </div>
+         </div>
        </div>
-     }
- />
+      }
+   />
+  </div>
+
+  {!isLoading && filteredCurrencies.length > 0 && (
+   <div className="flex flex-col gap-3 md:hidden mt-4">
+    {filteredCurrencies.map((currency: Currency) => (
+     <div 
+      key={currency.id} 
+      className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
+      onClick={() => router.push(`/master-data/currencies/${currency.id}`)}
+     >
+      
+      {/* TOP TIER: Identity */}
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-1 w-full">
+          {/* Name & Status Inline */}
+          <div className="flex justify-between items-start gap-2">
+            <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{currency.name}</span>
+            <StatusBadge status={currency.isActive ? 'ACTIVE' : 'INACTIVE'} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+          </div>
+          {/* Codes Inline */}
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{currency.code}</span>
+            <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 uppercase">• {currency.symbol || '---'}</span>
+            {currency.isBase && (
+             <Badge className="bg-amber-500/10 text-amber-500 border-none rounded-sm text-[9px] font-semibold uppercase px-1.5 h-4 ml-1 rtl:mr-1">
+              {t('fields.is_base')}
+             </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* BOTTOM TIER: Actions */}
+      <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+        {/* Compact Touch-Friendly Buttons */}
+        <div className="flex gap-2 shrink-0">
+         <PermissionGate action="view" resource="master_data">
+          <button 
+           className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors uppercase"
+           onClick={(e) => { e.stopPropagation(); router.push(`/master-data/currencies/${currency.id}`); }}
+          >
+           {tc('view')}
+          </button>
+         </PermissionGate>
+         <PermissionGate action="edit" resource="master_data">
+          <button 
+           className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors uppercase"
+           onClick={(e) => { e.stopPropagation(); router.push(`/master-data/currencies/${currency.id}/edit`); }}
+          >
+           {t('edit')}
+          </button>
+         </PermissionGate>
+        </div>
+      </div>
+     </div>
+    ))}
+   </div>
+  )}
+ </div>
 
  {/* Quick Tips */}
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60 hover:opacity-100 transition-opacity duration-500 pb-10 pt-4 border-t border-surface-variant/5">

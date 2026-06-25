@@ -96,7 +96,7 @@ export function FrozenItemsClient() {
  };
 
  return (
-  <div className="md:p-8 min-w-0 gap-6 flex-1 space-y-8 flex p-4 mx-auto flex-col max-w-7xl w-full">
+  <div className="min-w-0 gap-6 flex-1 space-y-8 flex mx-auto flex-col max-w-7xl w-full">
    {/* Premium Header */}
    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 min-w-0">
     <div className="space-y-4">
@@ -116,7 +116,7 @@ export function FrozenItemsClient() {
         Frozen Inventory Management
        </h1>
       </div>
-      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+      <p className="text-sm text-muted-foreground/80 max-w-2xl mt-2">
        Review inventory stock locked automatically due to reconciliation count discrepancies, and restore standard transaction privileges.
       </p>
      </div>
@@ -138,7 +138,7 @@ export function FrozenItemsClient() {
     </div>
    </div>
 
-   <div className="grid grid-cols-1 gap-8" style={{ fontFamily: 'IBM Plex Sans Arabic, sans-serif' }}>
+   <div className="grid grid-cols-1 gap-8">
     <div className="p-6 rounded-[2rem] bg-card border border-border shadow-sm border border-white/5 space-y-6 shadow-sm">
      <div className="flex items-center justify-between border-b border-surface-highest/10 pb-4">
       <div className="space-y-1">

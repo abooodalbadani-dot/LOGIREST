@@ -25,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { RelationalName } from '@/components/shared/RelationalName';
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency, formatDate } from '@/utils/currency';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 import type { GRN, GRNLineItem } from '@/types/documents';
@@ -92,12 +92,14 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
      </span>
     }
     actions={
-     <div className="flex items-center gap-3">
-      <StatusBadge status={document?.status as BadgeStatus} />
-      <DocumentExportMenu />
+     <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
+      <div className="flex flex-row items-center gap-2 w-full md:w-auto">
+       <StatusBadge status={document?.status as BadgeStatus} />
+       <DocumentExportMenu documentType="GRN" documentId={document?.id} documentNumber={document?.documentNumber} />
+      </div>
       {actions && (
        <>
-        <div className="w-px h-8 bg-surface-variant/10 mx-1" />
+        <div className="hidden md:block w-px h-8 bg-surface-variant/10 mx-1" />
         {actions}
        </>
       )}
@@ -168,7 +170,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
 
     {/* Lines Table */}
     <DocumentReadOnlyOverlay isPosted={document?.status === 'POSTED'}>
-     <div className="bg-card border border-border shadow-sm rounded-[2rem] overflow-hidden shadow-sm border border-surface-variant/5">
+     <div className="hidden md:block bg-card border border-border shadow-sm rounded-[2rem] overflow-hidden shadow-sm border border-surface-variant/5">
       <DocumentLineItemTable 
        lines={document?.lines || []} 
        locale={locale} 
@@ -190,6 +192,56 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
         }
        ]}
       />
+     </div>
+
+     {/* Mobile Cards View */}
+     <div className="flex flex-col gap-3 md:hidden w-full">
+      {document?.lines?.map((line, idx) => (
+       <div key={line.id || idx} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
+        
+        <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-2">
+          <div className="flex flex-col">
+            <span className="text-sm font-black text-[#0B1220] dark:text-white">
+             {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn) : (line.item.nameEn || line.item.name || line.item.nameAr)}
+            </span>
+            <span className="text-[10px] text-[#b48e67] font-mono tracking-widest mt-0.5">{line.item.code || 'ITM-000'}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">REQ QTY</span>
+            <span className="text-xs font-black text-[#0B1220] dark:text-white" dir="ltr">{line.qty}</span>
+          </div>
+          <div className="flex flex-col bg-cyan-50 dark:bg-cyan-900/10 p-2 rounded-lg border border-cyan-100 dark:border-cyan-800/30">
+            <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-1">RECEIVED</span>
+            <span className="text-xs font-black text-cyan-700 dark:text-cyan-300" dir="ltr">{line.receivedQty}</span>
+          </div>
+          <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">UOM</span>
+            <span className="text-xs font-bold text-[#0B1220] dark:text-gray-300 uppercase"> {line.item.primaryUom?.code || 'PCS'}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 border-t border-gray-50 dark:border-gray-800/50 pt-2">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">LOT</span>
+            <span className="text-[10px] font-bold text-[#0B1220] dark:text-gray-200" dir="ltr">{line.lot?.lotNumber || '—'}</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">EXPIRY</span>
+            <span className="text-[10px] font-bold text-[#0B1220] dark:text-gray-200 [font-variant-numeric:lining-nums]" dir="ltr">
+             {line.lot?.expiryDate ? formatDate(line.lot.expiryDate, locale as 'ar' | 'en') : '—'}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">ALLOC</span>
+            <span className="text-[10px] font-bold text-[#0B1220] dark:text-gray-200" dir="ltr">{line.lot?.lotNumber || 'N/A'}</span>
+          </div>
+        </div>
+
+       </div>
+      ))}
      </div>
     </DocumentReadOnlyOverlay>
 

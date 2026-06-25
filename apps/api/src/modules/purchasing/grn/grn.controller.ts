@@ -12,10 +12,12 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { GrnService } from './grn.service';
 import { GrnPostService } from '../grn-post.service';
+import { GrnVoidService } from '../../operations/grn-void.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -29,7 +31,8 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreateGrnDto } from './dto/create-grn.dto';
 import { UpdateGrnDto } from './dto/update-grn.dto';
-import type { Request } from 'express';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
+import type { Request, Response } from 'express';
 
 function mapGRNDetail(grn: Record<string, unknown>) {
   const grnLines = (grn.lines as Record<string, unknown>[]) || [];
@@ -81,8 +84,14 @@ function mapGRNDetail(grn: Record<string, unknown>) {
       qty: Number(line.quantityReceived),
       receivedQty: Number(line.quantityReceived),
       uomId: (item?.uomId as string) || '',
-      unitCostForeign: Number(line.unitPrice),
-      unitCostBase: Number(line.unitPrice),
+      unitCostForeign:
+        line.unitPriceForeign !== undefined && line.unitPriceForeign !== null
+          ? Number(line.unitPriceForeign)
+          : Number(line.unitPrice),
+      unitCostBase:
+        line.unitPriceBase !== undefined && line.unitPriceBase !== null
+          ? Number(line.unitPriceBase)
+          : Number(line.unitPrice),
     };
   });
 
@@ -114,13 +123,29 @@ function mapGRNDetail(grn: Record<string, unknown>) {
         ?.code as string) || '',
     warehouseId: grn.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
-    fxRate: 1.0,
-    fxRateCapturedAt: createdAtIso,
+    fxRate:
+      grn.fxRate !== undefined && grn.fxRate !== null
+        ? Number(grn.fxRate)
+        : 1.0,
+    fxRateCapturedAt: grn.fxRateCapturedAt
+      ? (grn.fxRateCapturedAt instanceof Date
+          ? grn.fxRateCapturedAt
+          : new Date(grn.fxRateCapturedAt as string)
+        ).toISOString()
+      : createdAtIso,
     version: grn.version as number,
-    notes: '',
+    notes: (grn.notes as string) || '',
     createdAt: createdAtIso,
-    createdBy: 'System',
+    createdBy:
+      ((grn.createdBy as Record<string, unknown> | null)?.name as string) ||
+      'System',
     updatedAt: createdAtIso,
+    postedAt: grn.postedAt
+      ? (grn.postedAt instanceof Date
+          ? grn.postedAt
+          : new Date(grn.postedAt as string)
+        ).toISOString()
+      : null,
     lines,
   };
 }
@@ -175,8 +200,10 @@ export class GrnController {
   constructor(
     private readonly grnService: GrnService,
     private readonly grnPostService: GrnPostService,
+    private readonly grnVoidService: GrnVoidService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Post()
@@ -186,7 +213,6 @@ export class GrnController {
     Role.INV_MGR,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
-    Role.PROC_MGR,
   )
   async create(
     @Body() body: CreateGrnDto,
@@ -275,12 +301,38 @@ export class GrnController {
     return { data: mapGRNDetail(grn) };
   }
 
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const grn = await this.grnService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      grn.warehouseId,
+    );
+
+    const buffer = await this.pdfGeneratorService.generateGrnPdf(id, locale);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=GRN_${grn.grnNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
+  }
+
   @Put(':id')
   @Roles(
     Role.ADMIN,
+    Role.WH_KEEPER,
     Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
+    Role.STORE_MGR,
     Role.BRANCH_MGR,
   )
   async update(
@@ -353,9 +405,9 @@ export class GrnController {
   @Delete(':id')
   @Roles(
     Role.ADMIN,
+    Role.WH_KEEPER,
     Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
+    Role.STORE_MGR,
     Role.BRANCH_MGR,
   )
   async remove(
@@ -388,13 +440,7 @@ export class GrnController {
     action: 'POST',
     modelName: 'goodsReceivedNote',
   })
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
   @HttpCode(HttpStatus.OK)
   async post(
     @Param('id') id: string,
@@ -410,14 +456,49 @@ export class GrnController {
       req.ip ||
       undefined;
 
-    const grn = await this.grnPostService.post(
+    const postedGrn = await this.grnPostService.post(
       id,
       userId,
       role,
       body.version,
       ipAddress,
     );
-    return { data: mapGRNDetail(grn) };
+    return {
+      data: mapGRNDetail(postedGrn),
+    };
+  }
+
+  @Post(':id/void')
+  @Roles(Role.ADMIN, Role.INV_MGR)
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'grn',
+    action: 'VOID',
+    modelName: 'goodsReceivedNote',
+  })
+  @HttpCode(HttpStatus.OK)
+  async void(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const grn = await this.grnVoidService.void(
+      id,
+      userId,
+      role,
+      body.version,
+      ipAddress,
+    );
+    return { data: mapGRNDetail(grn as Record<string, unknown>) };
   }
 
   @Post(':id/submit')
@@ -433,8 +514,6 @@ export class GrnController {
     Role.INV_MGR,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
-    Role.PROC_MGR,
-    Role.PROC_OFFICER,
   )
   @HttpCode(HttpStatus.OK)
   async submit(
@@ -465,6 +544,13 @@ export class GrnController {
     action: 'CANCEL',
     modelName: 'goodsReceivedNote',
   })
+  @Roles(
+    Role.ADMIN,
+    Role.WH_KEEPER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async cancel(
     @Param('id') id: string,

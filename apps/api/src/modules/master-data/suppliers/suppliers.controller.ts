@@ -38,7 +38,7 @@ export class SuppliersController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR, Role.PROC_OFFICER)
   async create(
     @Body() body: CreateSupplierDto,
     @CurrentUser('id') userId: string,
@@ -55,7 +55,7 @@ export class SuppliersController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR, Role.PROC_OFFICER)
   async update(
     @Param('id') id: string,
     @Body() body: UpdateSupplierDto,
@@ -74,7 +74,7 @@ export class SuppliersController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR, Role.PROC_OFFICER)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

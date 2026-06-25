@@ -50,8 +50,8 @@ export default function InventoryLayout({
  ];
 
  return (
- <div className="flex flex-col gap-6">
- <div className="flex items-center gap-1 p-1 bg-card border border-border shadow-sm border border-outline-low rounded-2xl w-fit">
+ <div className="flex flex-col gap-6 w-full min-w-0 max-w-full">
+ <div className="flex items-center gap-2 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-full pb-2 p-1 bg-card border border-border shadow-sm rounded-2xl">
  {tabs.map((tab) => {
  const isActive = pathname === tab.href;
  const Icon = tab.icon;
@@ -60,7 +60,7 @@ export default function InventoryLayout({
  key={tab.href}
  href={tab.href}
  className={cn(
- "flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-label-xs font-semibold uppercase transition-all duration-[140ms] ease-out",
+ "flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-label-xs font-semibold uppercase transition-all duration-[140ms] ease-out whitespace-nowrap shrink-0",
  isActive
  ? "bg-primary text-white shadow-sm shadow-primary/20"
  : "text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high"

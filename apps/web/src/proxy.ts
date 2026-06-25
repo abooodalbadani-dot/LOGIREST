@@ -11,7 +11,7 @@ const intlMiddleware = createMiddleware(routing);
  */
 const ROUTE_ROLE_MAP: Record<string, string[]> = {
   '/stocktake': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
-  '/adjustments': ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
+  '/adjustments': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
   '/transfers': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'APPROVER', 'AUDITOR', 'GM'],
   '/issues': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'KITCHEN_CHIEF', 'AUDITOR', 'GM'],
   '/goods-received': ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'PROC_OFFICER', 'PROC_MGR', 'APPROVER', 'AUDITOR', 'GM'],

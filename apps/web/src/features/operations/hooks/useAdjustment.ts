@@ -28,6 +28,11 @@ export const AdjustmentLineSchema = z.object({
  uomId: z.string(),
  unitCost: z.number().nullable().optional(),
  reasonNotes: z.string().optional(),
+ lot: z.object({
+  id: z.string(),
+  lotNumber: z.string(),
+  expiryDate: z.string().nullable().optional(),
+ }).nullable().optional(),
  lotAllocations: z.array(z.object({
   lotId: z.string(),
   qty: z.number(),

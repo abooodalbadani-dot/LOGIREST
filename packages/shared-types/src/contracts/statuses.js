@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * Centralized Domain Statuses
+ * These constants represent the definitive statuses for each document domain.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ALL_STATUSES = exports.ALL_KITCHEN_REQUEST_STATUSES = exports.KITCHEN_REQUEST_STATUS = exports.ALL_ADJUSTMENT_STATUSES = exports.ADJUSTMENT_STATUS = exports.ALL_ISSUE_STATUSES = exports.ISSUE_STATUS = exports.ALL_TRANSFER_STATUSES = exports.TRANSFER_STATUS = exports.ALL_STOCKTAKE_STATUSES = exports.STOCKTAKE_STATUS = exports.ALL_GRN_STATUSES = exports.GRN_STATUS = exports.ALL_PO_STATUSES = exports.PO_STATUS = exports.ALL_PR_STATUSES = exports.PR_STATUS = void 0;
 exports.assertNever = assertNever;
@@ -45,11 +49,12 @@ exports.TRANSFER_STATUS = {
     DRAFT: 'DRAFT',
     IN_TRANSIT: 'IN_TRANSIT',
     RECEIVED: 'RECEIVED',
+    DISPUTED: 'DISPUTED',
     POSTED: 'POSTED',
     CANCELLED: 'CANCELLED',
     VOIDED: 'VOIDED',
 };
-exports.ALL_TRANSFER_STATUSES = ['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'POSTED', 'CANCELLED', 'VOIDED'];
+exports.ALL_TRANSFER_STATUSES = ['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'DISPUTED', 'POSTED', 'CANCELLED', 'VOIDED'];
 exports.ISSUE_STATUS = {
     DRAFT: 'DRAFT',
     SUBMITTED: 'SUBMITTED',
@@ -78,6 +83,9 @@ exports.KITCHEN_REQUEST_STATUS = {
     VOIDED: 'VOIDED',
 };
 exports.ALL_KITCHEN_REQUEST_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'FULFILLED', 'CANCELLED', 'VOIDED'];
+/**
+ * Union of all possible document statuses (Static Tuple for Zod)
+ */
 exports.ALL_STATUSES = [
     'DRAFT',
     'SUBMITTED',
@@ -91,6 +99,7 @@ exports.ALL_STATUSES = [
     'STARTED',
     'COUNTING',
     'IN_TRANSIT',
+    'DISPUTED',
     'OPEN',
     'VOIDED',
     'REVIEW',
@@ -100,7 +109,9 @@ exports.ALL_STATUSES = [
     'ACTIVE',
     'INACTIVE',
 ];
+/**
+ * Exhaustive check helper
+ */
 function assertNever(x) {
     throw new Error(`Unexpected status: ${x}`);
 }
-//# sourceMappingURL=statuses.js.map

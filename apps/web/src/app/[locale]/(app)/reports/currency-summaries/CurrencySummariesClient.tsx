@@ -45,7 +45,7 @@ export default function CurrencySummariesClient() {
  { header: t('table.currency'), key: 'currency', width: 15 },
  { header: t('table.total'), key: 'total', width: 20 },
  { header: t('table.last_rate'), key: 'lastRate', width: 15 },
- { header: t('table.total_base'), key: 'totalBase', width: 20 },
+ { header: t('table.total_base', { currency: baseCurrency }), key: 'totalBase', width: 20 },
  ];
 
  return (

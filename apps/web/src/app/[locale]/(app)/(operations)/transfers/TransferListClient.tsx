@@ -13,7 +13,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Repeat, Truck, CheckCircle, AlertTriangle, Search } from 'lucide-react';
+import { Plus, Filter, Repeat, Truck, CheckCircle, AlertTriangle, Search, X, ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -155,13 +155,14 @@ export function TransferListClient() {
      <Button
       variant="ghost"
       size="sm"
-      className="text-label-xs font-semibold uppercase text-foreground hover:text-foreground hover:bg-muted/50 h-7"
+      className="text-[#b48e67] hover:text-[#8a6b4c] hover:bg-transparent text-xs font-bold flex items-center gap-1 transition-colors h-7 px-2"
       onClick={(e) => {
        e.stopPropagation();
        router.push(`/transfers/${row.original.id}`);
       }}
      >
-      {tCommon('view') || 'Inspect'}
+      {tCommon('view')}
+      <ArrowLeft className="w-3 h-3 rtl:rotate-180" />
      </Button>
     </div>
    ),
@@ -170,12 +171,12 @@ export function TransferListClient() {
 
  const totalTransfersCount = summaryData?.total ?? data?.meta?.total ?? 0;
  const inTransitCount = summaryData?.inTransit ?? 0;
- const completedCount = data?.data?.filter(i => isTransferPosted(i.transferStatus)).length ?? 0;
+ const completedCount = data?.data?.filter(i => i.transferStatus === 'RECEIVED' || i.transferStatus === 'POSTED' || i.transferStatus === 'COMPLETED').length ?? 0;
 
  const overdueCount = summaryData?.overdueCount ?? 0;
 
  return (
-  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex space-y-10 w-full">
+  <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
    <Breadcrumb
     items={[
      { label: tCommon('modules.operations'), href: `/transfers` },
@@ -201,8 +202,8 @@ export function TransferListClient() {
 
    <PageHeader
     title={t('title')}
-    description={t('description')}
-    actions={
+    subtitle={t('description')}
+    children={
      <div className="flex items-center gap-6">
       <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex min-w-0">
        <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
@@ -214,9 +215,9 @@ export function TransferListClient() {
        </div>
       </div>
       <PermissionGate action="create" resource="transfer">
-       <Link href="/transfers/new">
-        <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm shadow-cyan-900/10 whitespace-nowrap">
-         <Plus className="w-3.5 h-3.5 me-2" />
+       <Link href="/transfers/new" className="shrink-0 w-full sm:w-auto">
+        <Button className="px-4 py-2 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center gap-2 transition-opacity">
+         <Plus className="w-4 h-4" />
          {t('create_new')}
         </Button>
        </Link>
@@ -248,43 +249,102 @@ export function TransferListClient() {
     />
    </div>
 
-   <div className="bg-card border border-border shadow-sm rounded-lg border border-outline-low/5 overflow-hidden shadow-sm">
-    <DataTable
-     columns={columns}
-     data={data?.data || []}
-     isLoading={isLoading}
-     onRowClick={(row: TransferSummary) => router.push(`/transfers/${row.id}`)}
-     collectionName="operations_transfers"
-     enableVirtualization={true}
-     containerHeight="600px"
-     sorting={sorting}
-     onSortingChange={setSorting}
-     emptyState={
-      <EmptyState
-       variant="minimal"
-       title={tCommon('datatable.no_records')}
+   <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    <div className="hidden md:block h-full">
+     <DataTable
+      columns={columns}
+      data={data?.data || []}
+      isLoading={isLoading}
+      onRowClick={(row: TransferSummary) => router.push(`/transfers/${row.id}`)}
+      collectionName="operations_transfers"
+      enableVirtualization={true}
+      containerHeight="600px"
+      sorting={sorting}
+      onSortingChange={setSorting}
+      emptyState={
+       <EmptyState
+        variant="minimal"
+        title={tCommon('datatable.no_records')}
 
-      />
-     }
-     pagination={data?.meta ? {
-      page: page,
-      pageSize: 10,
-      total: data.meta.total,
-      totalPages: data.meta.totalPages,
-      onPageChange: setPage
-     } : undefined}
-     filters={
-      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
-         placeholder={tCommon('statuses.all') || "All Statuses"}
-         value={status || 'ALL'}
-         onChange={(e) => setSearch(e.target.value)}
-         className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
-        />
-       </div>
-     }
-    />
+       />
+      }
+      pagination={data?.meta ? {
+       page: page,
+       pageSize: 10,
+       total: data.meta.total,
+       totalPages: data.meta.totalPages,
+       onPageChange: setPage
+      } : undefined}
+       filters={
+         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+           <div className="w-full sm:w-64">
+             <div className="relative w-full">
+               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+               <Input
+                 placeholder={tCommon('search') || "Search..."}
+                 value={search}
+                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                 className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+               />
+             </div>
+           </div>
+           <div className="w-full sm:w-48 relative group">
+             <SmartCombobox
+               items={statusItems}
+               value={status || 'ALL'}
+               onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+               placeholder={tCommon('statuses.all') || "All Statuses"}
+               triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+             />
+             {status && (
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                 onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
+               >
+                 <X className="h-4 w-4" />
+               </Button>
+             )}
+           </div>
+         </div>
+       }
+     />
+    </div>
+    <div className="flex flex-col gap-3 md:hidden mt-4 pb-10">
+     {isLoading ? (
+       <div className="flex items-center justify-center p-8"><span className="text-muted-foreground text-sm font-semibold animate-pulse">{tCommon('loading')}...</span></div>
+     ) : (!data?.data || data.data.length === 0) ? (
+       <EmptyState variant="minimal" title={tCommon('datatable.no_records')} />
+     ) : (
+       data.data.map((item) => (
+         <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+          <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
+           <div><StatusBadge status={item.transferStatus} /></div>
+           <span className="text-[10px] text-gray-500 font-mono" dir="ltr">
+             <ClientOnlyTime date={item.createdAt} mode="date" locale={locale} />
+           </span>
+          </div>
+          <div className="flex justify-between items-center">
+           <span className="text-sm font-black text-[#0B1220] dark:text-white" dir="ltr">{item.documentNumber}</span>
+           <button onClick={() => router.push(`/transfers/${item.id}`)} className="text-[#b48e67] hover:text-[#8a6b4c] text-xs font-bold flex items-center gap-1 transition-colors">
+            {tCommon('view')} <ArrowLeft className="w-3 h-3 rtl:rotate-180" />
+           </button>
+          </div>
+          <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 mt-1">
+           <div className="flex justify-between items-center text-xs">
+            <span className="text-[9px] text-gray-400 font-bold uppercase">{t('from_warehouse')}</span>
+            <span className="font-bold text-gray-700 dark:text-gray-300">{warehouseMap.get(item.fromWarehouseId) || item.fromWarehouseName || '—'}</span>
+           </div>
+           <div className="flex justify-between items-center text-xs border-t border-gray-100 dark:border-gray-800 pt-1.5">
+            <span className="text-[9px] text-gray-400 font-bold uppercase">{t('to_warehouse')}</span>
+            <span className="font-bold text-gray-700 dark:text-gray-300">{warehouseMap.get(item.toWarehouseId) || item.toWarehouseName || '—'}</span>
+           </div>
+          </div>
+         </div>
+       ))
+     )}
+    </div>
    </div>
   </div>
  );

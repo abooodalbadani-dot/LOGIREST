@@ -9,7 +9,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { usePRList, PRSummary } from '@/features/purchasing/hooks/usePRList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Trash2, X } from 'lucide-react';
+import { Plus, ClipboardList, CheckCircle2, Clock, ArrowUpRight, Search, Trash2, X, Building2, User } from 'lucide-react';
 import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
@@ -29,9 +29,9 @@ export function PRListClient() {
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
  const router = useRouter();
-const deletePR = useDeletePR();
+ const deletePR = useDeletePR();
 
-const [page, setPage] = useState(1);
+ const [page, setPage] = useState(1);
  const [status, setStatus] = useState<string>('');
  const [search, setSearch] = useState('');
  const debouncedSearch = useDebounce(search, 500);
@@ -65,32 +65,23 @@ const [page, setPage] = useState(1);
  accessorKey: 'warehouseName',
  header: tc('warehouse'),
  cell: ({ row }) => (
- <div className="flex flex-col min-w-0">
  <span className="opacity-90 font-bold text-body-md text-start">{row.original.warehouseName || '—'}</span>
- <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold text-start">{tc('warehouse')}</span>
- </div>
  ),
  },
  {
  accessorKey: 'createdAt',
  header: tc('created_at'),
  cell: ({ row }) => (
- <div className="flex flex-col min-w-0">
- <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80">
+ <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80 text-start">
  <ClientOnlyTime date={row.original.createdAt} mode="datetime" />
  </span>
- <span className="text-label-xxs uppercase opacity-30 font-semibold text-start">{tc('created_at')}</span>
- </div>
  ),
  },
  {
  accessorKey: 'createdBy',
  header: t('requested_by'),
  cell: ({ row }) => (
- <div className="flex flex-col min-w-0">
  <span className="opacity-90 font-bold text-body-md text-start">{row.original.createdBy}</span>
- <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold text-start">{t('requested_by')}</span>
- </div>
  ),
  },
  {
@@ -152,17 +143,23 @@ const [page, setPage] = useState(1);
  const approvedCount = data?.data?.filter(p => isApprovedStatus('PR', p.status as DocumentStatus)).length || 0;
  const pendingCount = data?.data?.filter(p => isPendingStatus('PR', p.status as DocumentStatus)).length || 0;
 
+ const pageTitle = t('title') || 'PURCHASE REQUESTS';
+ const titleParts = pageTitle.split(' ');
+ const titleFirst = titleParts[0];
+ const titleHighlight = titleParts.length > 1 ? titleParts.slice(1).join(' ') : '';
+
  return (
- <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+ <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden gap-6 p-4 md:p-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <div className="space-y-4">
  <Breadcrumb items={breadcrumbs} />
  <PageHeader 
- title={t('title')} 
- description={t('description')}
- actions={
+ title={titleFirst} 
+ highlight={titleHighlight}
+ subtitle={t('description')}
+ children={
  <PermissionGate action="create" resource="pr">
- <Link href="/purchase-requests/new">
-       <Button className="h-14 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-operational-cyan/30 border-none">
+ <Link href="/purchase-requests/new" className="shrink-0 w-full sm:w-auto">
+       <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
         <Plus className="w-5 h-5 me-3" />
         {t('create_new')}
        </Button>
@@ -172,7 +169,7 @@ const [page, setPage] = useState(1);
  />
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full min-w-0">
  <MetricCard
  label={t('metrics.total')}
  value={totalPRs}
@@ -193,53 +190,56 @@ const [page, setPage] = useState(1);
  />
  </div>
 
- <div className="bg-card border border-border shadow-sm rounded-sm overflow-hidden border border-surface-variant/10 shadow-2xl shadow-primary/5">
- <DataTable 
- columns={columns}
- data={data?.data || []}
- isLoading={isLoading}
- onRowClick={(row: PRSummary) => router.push(`/purchase-requests/${row.id}`)}
- collectionName="procurement_pr"
- emptyState={
- <EmptyState 
- variant="minimal"
- title={tc('datatable.no_records')} action={
- <PermissionGate action="create" resource="pr">
- <Link href="/purchase-requests/new">
- <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-operational-cyan/20">
- <Plus className="w-3.5 h-3.5 me-2" />
- {t('create_new')}
- </Button>
- </Link>
- </PermissionGate>
- }
- />
- }
- pagination={data?.meta ? {
- page: page,
- pageSize: 10,
- total: data.meta.total,
- totalPages: data.meta.totalPages,
- onPageChange: setPage
- } : undefined}
- filters={
-       <div className="flex w-full gap-3 items-center flex-row">
-        <div className="relative flex-1 min-w-[180px] max-w-sm">
-         <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-         <Input
-          placeholder={tc('search')}
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }} 
-          className="w-full h-11 ps-10 bg-background border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
-         />
+ <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+  <div className="hidden md:block">
+   <DataTable 
+   columns={columns}
+   data={data?.data || []}
+   isLoading={isLoading}
+   onRowClick={(row: PRSummary) => router.push(`/purchase-requests/${row.id}`)}
+   collectionName="procurement_pr"
+   emptyState={
+   <EmptyState 
+   variant="minimal"
+   title={tc('datatable.no_records')} action={
+   <PermissionGate action="create" resource="pr">
+   <Link href="/purchase-requests/new" className="shrink-0 w-full sm:w-auto">
+   <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+   <Plus className="w-3.5 h-3.5 me-2" />
+   {t('create_new')}
+   </Button>
+   </Link>
+   </PermissionGate>
+   }
+   />
+   }
+   pagination={data?.meta ? {
+   page: page,
+   pageSize: 10,
+   total: data.meta.total,
+   totalPages: data.meta.totalPages,
+   onPageChange: setPage
+   } : undefined}
+    filters={
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <div className="w-full sm:w-64">
+         <div className="relative w-full">
+          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+           placeholder={tc('search')}
+           value={search}
+           onChange={(e) => { setSearch(e.target.value); setPage(1); }} 
+           className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+          />
+         </div>
         </div>
-        <div className="relative w-[180px] shrink-0 group">
+        <div className="w-full sm:w-48 relative group">
          <SmartCombobox
           items={statusItems}
           value={status || 'ALL'}
           onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
           placeholder={tc('statuses.all')}
-          triggerClassName={status ? "h-11 bg-background border-border shadow-sm pr-8" : "h-11 bg-background border-border shadow-sm"}
+          triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
          />
          {status && (
            <Button
@@ -252,9 +252,64 @@ const [page, setPage] = useState(1);
            </Button>
          )}
         </div>
-       </div>
-      }
- />
+      </div>
+    }
+   />
+  </div>
+
+  <div className="flex flex-col gap-3 md:hidden">
+   {data?.data?.map((pr) => (
+    <div 
+     key={pr.id} 
+     onClick={() => router.push(`/purchase-requests/${pr.id}`)} 
+     className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer"
+    >
+     {/* TOP TIER: Document ID & Status */}
+     <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
+      <div className="flex flex-col gap-1">
+       <span className="text-sm font-black text-[#0B1220] dark:text-white uppercase tracking-tight">{pr.documentNumber}</span>
+       <span className="text-[10px] text-gray-400 uppercase tracking-widest">{tc('doc_number')}</span>
+      </div>
+      <StatusBadge status={pr.status as BadgeStatus} />
+     </div>
+
+     {/* MID TIER: Audit Data */}
+     <div className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-800/50">
+      <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+       <User className="w-3.5 h-3.5 text-gray-400"/>
+       <span>{pr.createdBy || 'مسؤول مشتريات'}</span>
+      </div>
+      
+      <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-500 dark:text-gray-400" dir="ltr">
+       <Clock className="w-3.5 h-3.5 text-gray-400"/>
+       <span><ClientOnlyTime date={pr.createdAt} mode="datetime" /></span>
+      </div>
+     </div>
+
+     {/* BOTTOM TIER: Warehouse & Action */}
+     <div className="flex justify-between items-end pt-1">
+      <div className="flex flex-col">
+       <span className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">{tc('warehouse')}</span>
+       <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 flex items-center gap-1.5">
+        <Building2 className="w-3.5 h-3.5 text-[#b48e67]" />
+        {pr.warehouseName || '—'}
+       </span>
+      </div>
+      
+      {/* Standardized Touch-Friendly Action Button */}
+      <button className="h-8 px-4 flex items-center justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-[#b48e67] rounded-md text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+       {tc('view') || 'عرض'}
+      </button>
+     </div>
+    </div>
+   ))}
+
+   {(!data?.data || data.data.length === 0) && !isLoading && (
+    <div className="text-center p-8 text-gray-500 text-sm">
+     {tc('datatable.no_records')}
+    </div>
+   )}
+  </div>
  </div>
  </div>
  );

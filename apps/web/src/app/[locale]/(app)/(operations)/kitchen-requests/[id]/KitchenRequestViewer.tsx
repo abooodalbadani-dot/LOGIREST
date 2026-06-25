@@ -83,7 +83,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
  }
 
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm">
+  <div className="min-h-screen">
    <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
      <div className="space-y-4">

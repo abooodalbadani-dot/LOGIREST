@@ -2,11 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { 
  ArrowLeft, 
  CheckCircle2, 
- XCircle, 
  PackageCheck, 
  Clock, 
  User, 
@@ -14,8 +13,7 @@ import {
  Warehouse, 
  FileText,
  History,
- AlertCircle,
- Sparkles
+ AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,21 +28,12 @@ import {
  KitchenRequestDetail, 
  KitchenRequestItem 
 } from '@/features/operations/types/kitchen-request';
-import { 
- Dialog, 
- DialogContent, 
- DialogHeader, 
- DialogTitle, 
- DialogFooter,
- DialogDescription
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { useAuth } from '@/providers/AuthProvider';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
-import { FormFooter } from '@/components/layouts/FormLayout';
 import { 
  canPerformActionV2,
  isDocumentLocked,
@@ -52,14 +41,12 @@ import {
 } from '@logirest/shared-types';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { KITCHEN_REQUEST_STATUS, KitchenRequestStatus } from '@logirest/shared-types';
+import { KITCHEN_REQUEST_STATUS } from '@logirest/shared-types';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { audioAlerts } from '@/utils/audio';
 import { toast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api/client';
-import { z } from 'zod';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 
 interface KitchenRequestLineItem extends LineItem {
@@ -87,10 +74,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
  
  const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
  const [fulfillmentData, setFulfillmentData] = useState<{ itemId: string; fulfilledQty: number }[]>([]);
- const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
 
  const { data: warehouseLockState } = useWarehouseLock(request.warehouseId || null);
- const isWriteBlocked = updateStatus.isPending || fulfillRequest.isPending || !!warehouseLockState?.isLocked;
+ const isWriteBlocked = updateStatus.isPending || fulfillRequest.isPending || fulfillRequest.isSuccess || !!warehouseLockState?.isLocked;
 
  const status = request.status as DocumentStatus;
 
@@ -103,7 +89,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
    id: item.id,
    item: {
     id: item.itemId,
-    code: item.itemId,
+    code: item.itemCode || 'N/A',
     nameEn: item.itemName,
     nameAr: item.itemName,
     primaryUom: { code: item.uom }
@@ -237,6 +223,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
    setFulfillDialogOpen(false);
   } catch (error) {
    console.error('Failed to fulfill request', error);
+   throw error;
   }
  };
 
@@ -250,113 +237,62 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   setFulfillDialogOpen(true);
  };
 
- const handleSuggestFIFO = async () => {
-  if (!request.warehouseId) return;
-  setIsSuggestingFIFO(true);
-  try {
-   const itemIds = request.items.map(i => i.itemId);
-   const qs = new URLSearchParams();
-   qs.append('warehouse_id', request.warehouseId);
-   itemIds.forEach(id => qs.append('item_id', id));
-
-   const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
-    data: z.array(z.object({
-     itemId: z.string(),
-     lotNumber: z.string(),
-     expiryDate: z.string().nullable().optional(),
-     qtyAvailable: z.number().optional(),
-    }))
-   }));
-
-   const lots = res.data;
-   const prioritized: Record<string, number> = {};
-   for (const item of request.items) {
-    const itemLots = lots
-     .filter(l => l.itemId === item.itemId)
-     .sort((a, b) => {
-      if (!a.expiryDate) return 1;
-      if (!b.expiryDate) return -1;
-      return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
-     });
-    const totalAvailable = itemLots.reduce((sum, l) => sum + (l.qtyAvailable || 0), 0);
-    prioritized[item.itemId] = Math.min(totalAvailable, item.quantity);
-   }
-
-   setFulfillmentData(prev => prev.map(f => ({
-    ...f,
-    fulfilledQty: prioritized[f.itemId] ?? f.fulfilledQty,
-   })));
-
-   toast.success(locale === 'ar' ? 'تم تطبيق اقتراح FIFO بناءً على تواريخ انتهاء الصلاحية' : 'FIFO suggestion applied based on expiry dates');
-  } catch {
-   toast.error(locale === 'ar' ? 'فشل جلب بيانات FIFO' : 'Failed to fetch FIFO data');
-  } finally {
-   setIsSuggestingFIFO(false);
-  }
- };
-
  const isDocLocked = isDocumentLocked('KITCHEN_REQUEST', status);
- const isPending = updateStatus.isPending || fulfillRequest.isPending;
 
  const workflowActions = (
-  <>
-   <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
+  <div className="flex flex-col md:flex-row-reverse justify-end items-center gap-4 mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+   <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role}>
     <Button 
      disabled={isWriteBlocked}
-     className="bg-primary hover:bg-primary/95 text-white rounded-2xl h-14 px-10 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-primary/30 border-none"
-     onClick={handleSubmit}
+     variant="outline"
+     className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
+     onClick={openFulfillDialog}
     >
-     <CheckCircle2 className="w-5 h-5 me-3" />
-     {t('submit_request') || 'Submit Request'}
+     <PackageCheck className="w-5 h-5" />
+     {t('fulfill')}
     </Button>
    </ActionGuard>
-   <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="CANCEL" role={user?.role}>
-    <Button 
-     variant="outline" 
-     disabled={isWriteBlocked}
-     className="rounded-2xl border-red-500/30 text-red-500 hover:bg-red-500/5 h-14 px-8 text-label-xs font-black uppercase tracking-widest transition-all"
-     onClick={() => setRejectDialogOpen(true)}
-    >
-     <XCircle className="w-5 h-5 me-3" />
-     {t('cancel_request') || 'Cancel Request'}
-    </Button>
-   </ActionGuard>
+
    <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role}>
     <Button 
      disabled={isWriteBlocked}
-     className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-10 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-600/30 border-none"
+     variant="outline"
+     className="w-full md:w-auto px-6 py-2.5 bg-emerald-600 dark:bg-emerald-500 text-white dark:text-black font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
      onClick={handleApprove}
     >
-     <CheckCircle2 className="w-5 h-5 me-3" />
+     <CheckCircle2 className="w-5 h-5" />
      {t('approve')}
     </Button>
    </ActionGuard>
-   <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role}>
-    <div className="flex items-center gap-2">
-     <Button
-      type="button"
-      onClick={handleSuggestFIFO}
-      disabled={isWriteBlocked || isSuggestingFIFO}
-      variant="outline"
-      className="rounded-2xl border-amber-500/30 text-amber-500 hover:bg-amber-500/10 h-14 px-4 text-label-xxs font-black uppercase tracking-widest transition-all"
-     >
-      <Sparkles className={`w-4 h-4 ${isSuggestingFIFO ? 'animate-spin' : ''}`} />
-     </Button>
-     <Button 
-      disabled={isWriteBlocked}
-      className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
-      onClick={openFulfillDialog}
-     >
-      <PackageCheck className="w-5 h-5 me-3" />
-      {t('fulfill')}
-     </Button>
-    </div>
+
+   <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
+    <Button 
+     disabled={isWriteBlocked}
+     variant="outline"
+     className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
+     onClick={handleSubmit}
+    >
+     <CheckCircle2 className="w-5 h-5" />
+     {t('submit_request') || 'Submit Request'}
+    </Button>
    </ActionGuard>
-  </>
+
+   <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="CANCEL" role={user?.role}>
+    <Button 
+     type="button"
+     variant="ghost"
+     disabled={isWriteBlocked}
+     className="text-red-500 font-bold px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors w-full md:w-auto text-center border-none shadow-none"
+     onClick={() => setRejectDialogOpen(true)}
+    >
+     {t('cancel_request') || 'Cancel Request'}
+    </Button>
+   </ActionGuard>
+  </div>
  );
 
  return (
-  <div className="min-h-screen bg-card border border-border shadow-sm flex flex-col animate-in fade-in duration-1000 pb-32">
+  <div className="min-h-screen flex flex-col animate-in fade-in duration-1000 pb-32">
    <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 w-full space-y-8">
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
      <div data-slot="page-header" className="space-y-4">
@@ -372,7 +308,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
        </Button>
        <div>
-        <h1 className="text-headline-lg font-semibold uppercase italic">{request.requestNumber}</h1>
+        <h1 className="text-2xl font-black not-italic text-[#0B1220] dark:text-white uppercase">{request.requestNumber}</h1>
         <div className="flex items-center gap-3 mt-1">
          <StatusBadge status={request.status} />
          <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
@@ -396,7 +332,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
        {/* Left Column: Details and Items */}
        <div className="lg:col-span-8 space-y-8">
-        <div className="bg-card border border-border shadow-sm p-5 px-6 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className={cn(
+          "bg-card border border-border shadow-sm p-5 px-6 rounded-lg border border-surface-container-high/20 grid grid-cols-1 gap-8",
+          request.issueId ? "md:grid-cols-4" : "md:grid-cols-3"
+         )}>
          <div className="space-y-1">
           <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
            <Building2 className="w-3.5 h-3.5" />
@@ -418,8 +357,27 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           </span>
           <p className="text-body-md font-bold">{request.requestedBy}</p>
          </div>
+         {request.issueId && (
+          <div className="space-y-1">
+           <span className="text-label-xs font-semibold uppercase text-cyan-500 flex items-center gap-2">
+            <FileText className="w-3.5 h-3.5" />
+            {t('stock_issue')}
+           </span>
+           <p className="text-body-md font-bold">
+            <Link 
+             href={`/issues/${request.issueId}`} 
+             className="text-cyan-600 hover:text-cyan-500 underline decoration-cyan-500/30 hover:decoration-cyan-500 transition-colors"
+            >
+             {t('view_stock_issue')}
+            </Link>
+           </p>
+          </div>
+         )}
          {request.notes && (
-          <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
+          <div className={cn(
+           "pt-4 border-t border-surface-container-high/50 space-y-1",
+           request.issueId ? "md:col-span-4" : "md:col-span-3"
+          )}>
            <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
             <FileText className="w-3.5 h-3.5" />
             {tCommon('notes')}
@@ -428,7 +386,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           </div>
          )}
          {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejectionReason && (
-          <div className="md:col-span-3 p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1">
+          <div className={cn(
+           "p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1",
+           request.issueId ? "md:col-span-4" : "md:col-span-3"
+          )}>
            <span className="text-label-xs font-semibold uppercase text-red-500/60 flex items-center gap-2">
             <AlertCircle className="w-3.5 h-3.5" />
             {t('rejection_reason_label')}
@@ -441,46 +402,89 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         <div className="bg-card border border-border shadow-sm rounded-lg border border-surface-container-high/20 overflow-hidden">
          <div className="p-5 px-6 border-b border-surface-container-high/50 flex justify-between items-center">
           <div className="flex items-center gap-4">
-           <div className="w-1.5 h-6 bg-cyan-500 rounded-full" />
+           <div className="w-1.5 h-6 bg-[#b48e67] rounded-full" />
            <h3 className="text-label-sm font-semibold uppercase">{t('items')}</h3>
           </div>
           <Badge variant="outline" className="rounded-lg text-label-xxs font-semibold px-3 py-1 border-none bg-surface-container-high text-muted-foreground/60">
            {request.items.length} {t('entries')}
           </Badge>
          </div>
-       <DocumentLineItemTable
-        lines={tableLines}
-        locale={locale}
-        isReadOnly={true}
-        hideLotColumns={true}
-        headers={{
-         code: tCommon('table_headers.code'),
-         name: tCommon('table_headers.name'),
-         qty: tCommon('table_headers.qty'),
-         uom: tCommon('table_headers.uom'),
-        }}
-        renderQty={(line) => (
-         <span className="text-body-md font-semibold text-foreground tabular-nums">
-          {line.qty}
-         </span>
-        )}
-        renderUom={(line) => (
-         <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">
-          {line.item.primaryUom?.code || '---'}
-         </span>
-        )}
-        extraColumns={extraColumns}
-       />
+       <div className="hidden md:block">
+        <DocumentLineItemTable
+         lines={tableLines}
+         locale={locale}
+         isReadOnly={true}
+         hideLotColumns={true}
+         headers={{
+          code: tCommon('table_headers.code'),
+          name: tCommon('table_headers.name'),
+          qty: tCommon('table_headers.qty'),
+          uom: tCommon('table_headers.uom'),
+         }}
+         renderQty={(line) => (
+          <span className="text-body-md font-semibold text-foreground tabular-nums">
+           {line.qty}
+          </span>
+         )}
+         renderUom={(line) => (
+          <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">
+           {line.item.primaryUom?.code || '---'}
+          </span>
+         )}
+         extraColumns={extraColumns}
+        />
+       </div>
+
+       <div className="flex flex-col gap-3 md:hidden p-4">
+        {tableLines.map((line) => (
+         <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-2">
+          <div className="flex justify-between items-start gap-2">
+           <span className="font-bold text-[#0B1220] dark:text-white">
+            {locale === 'ar' ? (line.item.nameAr || line.item.nameEn) : (line.item.nameEn || line.item.nameAr)}
+           </span>
+           <span className="font-mono text-xs text-gray-400 tracking-wider">
+            {line.item.code}
+           </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-1">
+           <div className="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 flex flex-col">
+            <span className="text-[10px] text-gray-400 font-semibold uppercase">{tCommon('table_headers.qty')}</span>
+            <span className="text-sm font-bold text-[#0B1220] dark:text-white mt-0.5">{line.qty}</span>
+           </div>
+           <div className="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 flex flex-col">
+            <span className="text-[10px] text-gray-400 font-semibold uppercase">{tCommon('table_headers.uom')}</span>
+            <span className="text-sm font-bold text-[#0B1220] dark:text-white mt-0.5">{line.item.primaryUom?.code || '---'}</span>
+           </div>
+          </div>
+
+          {showFulfilled && (
+           <div className="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 flex flex-col">
+            <span className="text-[10px] text-gray-400 font-semibold uppercase">{t('fulfilled') || 'Fulfilled'}</span>
+            <span className={cn(
+             "text-sm font-bold mt-0.5",
+             (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-[#0B1220] dark:text-white"
+            )}>{line.fulfilledQty || 0}</span>
+           </div>
+          )}
+
+          {/* Notes Section - Mobile Card */}
+          <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+             <span className="text-[10px] font-bold text-gray-400 uppercase block mb-1">NOTES</span>
+             <span className="text-xs text-[#0B1220] dark:text-gray-300">{line.notes || '—'}</span>
+          </div>
+         </div>
+        ))}
+       </div>
       </div>
        </div>
 
        {/* Right Column: Timeline and Meta */}
        <div className="lg:col-span-4 space-y-8">
-        <div className="bg-card border border-border shadow-sm p-8 rounded-lg border border-surface-container-high/20 relative overflow-hidden group">
-         <div className="absolute top-0 end-0 w-32 h-32 bg-muted/50 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-muted/50 transition-all duration-700" />
+        <div className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 p-8 rounded-lg relative overflow-hidden group">
          <div className="relative space-y-8">
           <div className="flex items-center gap-4">
-           <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+           <div className="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-900/40 flex items-center justify-center">
             <History className="w-5 h-5 text-foreground" />
            </div>
            <h4 className="text-label-xs font-semibold uppercase">{tCommon('history')}</h4>
@@ -493,13 +497,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
        </div>
       </div>
      </DocumentLockWrapper>
-
-     <FormFooter 
-      isLocked={isDocLocked && status !== KITCHEN_REQUEST_STATUS.SUBMITTED}
-      onCancel={() => router.push('/kitchen-requests')}
-      actions={workflowActions}
-      isSaving={isPending}
-     />
+     {workflowActions}
     </form>
    </div>
 
@@ -565,7 +563,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
          dir="ltr"
          disabled={isWriteBlocked}
          aria-label={t('fulfilling') + " " + item.itemName}
-         className="bg-surface-container-highest/50 border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30 w-full"
+         className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/50 dark:border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all dark:text-white focus:ring-1 focus:ring-operational-cyan/30 w-full"
          value={fulfillmentData.find(f => f.itemId === item.itemId)?.fulfilledQty || 0}
          onChange={(e) => {
           const val = Number(e.target.value);

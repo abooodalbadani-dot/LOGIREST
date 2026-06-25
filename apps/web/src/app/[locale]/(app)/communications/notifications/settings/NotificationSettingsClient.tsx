@@ -38,7 +38,7 @@ export function NotificationSettingsClient() {
  };
 
  return (
-  <div className="min-w-0 gap-6 flex-1 max-w-4xl fade-in slide-in-from-bottom-4 p-8 mx-auto animate-in flex-col flex duration-700 space-y-12 w-full">
+  <div className="min-w-0 gap-6 flex-1 max-w-4xl fade-in slide-in-from-bottom-4 mx-auto animate-in flex-col flex duration-700 space-y-12 w-full">
    <div className="flex flex-col gap-4 border-b border-outline-low pb-8 min-w-0">
     <Link 
      href="/communications/notifications"
@@ -60,7 +60,7 @@ export function NotificationSettingsClient() {
      <Button
       onClick={handleSave}
       disabled={isSaving}
-      className="h-12 px-8 bg-operational-cyan text-white hover:bg-operational-cyan/90 transition-all font-semibold uppercase text-label-xs gap-2 rounded-sm"
+      className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
      >
       {isSaving ? (
        <Loader2 className="w-4 h-4 animate-spin" />

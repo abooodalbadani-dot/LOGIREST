@@ -8,7 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType, Prisma } from '@prisma/client';
+import { DocumentType, Prisma, GRStatus } from '@prisma/client';
 
 @Injectable()
 export class GrnService {
@@ -40,6 +40,7 @@ export class GrnService {
         where: { id: body.poId },
         include: {
           purchaseRequest: true,
+          currency: true,
         },
       });
 
@@ -80,6 +81,36 @@ export class GrnService {
         branchId,
       );
 
+      // Task 1.1: Capture FX Rate at Creation
+      let capturedFxRate = new Prisma.Decimal(1); // Default to 1 if PO is in base currency
+      const fxRateCapturedAt = new Date();
+
+      if (!po.currency.isBase) {
+        const baseCurrency = await tx.currency.findFirst({
+          where: { isBase: true },
+        });
+
+        if (!baseCurrency) {
+          throw new BadRequestException('System base currency is not defined.');
+        }
+
+        const fx = await tx.fXRate.findFirst({
+          where: {
+            fromCurrencyId: po.currencyId,
+            toCurrencyId: baseCurrency.id,
+            effectiveFrom: { lte: fxRateCapturedAt },
+          },
+          orderBy: { effectiveFrom: 'desc' },
+        });
+
+        if (!fx) {
+          throw new BadRequestException(
+            `No active FX rate found for ${po.currency.code} to ${baseCurrency.code}`,
+          );
+        }
+        capturedFxRate = fx.rate;
+      }
+
       const processedLines = [];
       for (const line of body.lines) {
         const lotId = await this.resolveOrCreateLot(
@@ -89,11 +120,17 @@ export class GrnService {
           line.lotNumber,
           line.expiryDate,
         );
+
+        const foreignPrice = new Prisma.Decimal(line.unitPrice);
+        const basePrice = foreignPrice.mul(capturedFxRate).toDecimalPlaces(4);
+
         processedLines.push({
           itemId: line.itemId,
           lotId,
           quantityReceived: line.quantity,
-          unitPrice: line.unitPrice,
+          unitPrice: line.unitPrice, // Keep legacy field populated for compat
+          unitPriceForeign: foreignPrice,
+          unitPriceBase: basePrice,
         });
       }
 
@@ -103,6 +140,10 @@ export class GrnService {
           poId: body.poId,
           warehouseId: body.warehouseId,
           status: 'DRAFT',
+          notes: body.notes || null,
+          createdById: userId,
+          fxRate: capturedFxRate,
+          fxRateCapturedAt,
           lines: {
             create: processedLines,
           },
@@ -141,7 +182,7 @@ export class GrnService {
 
     const where: Prisma.GoodsReceivedNoteWhereInput = {};
     if (params.status) {
-      where.status = params.status;
+      where.status = params.status as GRStatus;
     }
 
     const andConditions: Prisma.GoodsReceivedNoteWhereInput[] = [];
@@ -237,6 +278,9 @@ export class GrnService {
           },
         },
         warehouse: true,
+        createdBy: {
+          select: { id: true, name: true, email: true },
+        },
       },
     });
 
@@ -246,7 +290,18 @@ export class GrnService {
       );
     }
 
-    return grn;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: {
+        documentId: id,
+        documentType: DocumentType.GOODS_RECEIVED_NOTE,
+      },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
+      orderBy: { stepNumber: 'asc' },
+    });
+
+    return { ...grn, approvalEvents };
   }
 
   async update(

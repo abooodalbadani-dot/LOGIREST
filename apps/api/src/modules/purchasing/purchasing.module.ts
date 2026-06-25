@@ -3,15 +3,25 @@ import { PrismaModule } from '../../database/database.module';
 import { LedgerModule } from '../ledger/ledger.module';
 import { DocumentSequenceModule } from '../sequencing/document-sequence.module';
 import { GrnPostService } from './grn-post.service';
+import { OutboxModule } from '../outbox/outbox.module';
 import { GrnController } from './grn/grn.controller';
 import { GrnService } from './grn/grn.service';
 import { PurchaseOrderController } from './purchase-orders/po.controller';
 import { PurchaseOrderService } from './purchase-orders/po.service';
 
+import { GrnVoidService } from '../operations/grn-void.service';
+import { PdfModule } from '../pdf/pdf.module';
+
 @Module({
-  imports: [PrismaModule, LedgerModule, DocumentSequenceModule],
+  imports: [
+    PrismaModule,
+    LedgerModule,
+    DocumentSequenceModule,
+    OutboxModule,
+    PdfModule,
+  ],
   controllers: [GrnController, PurchaseOrderController],
-  providers: [GrnPostService, PurchaseOrderService, GrnService],
+  providers: [GrnPostService, PurchaseOrderService, GrnService, GrnVoidService],
   exports: [GrnPostService, PurchaseOrderService, GrnService],
 })
 export class PurchasingModule {}

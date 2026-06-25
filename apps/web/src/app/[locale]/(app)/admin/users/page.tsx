@@ -13,14 +13,14 @@ export default async function UsersPage(props: { params: Promise<{ locale: strin
 
  return (
   <ProtectedRoute requiredResource="admin" requiredAction="view">
-   <div className="p-8 max-w-[1600px] mx-auto space-y-10">
+   <div className="flex-1 w-full max-w-full overflow-x-hidden flex flex-col gap-6 p-8 mx-auto xl:max-w-[1600px]">
     <PageHeader 
      title={t('title') || 'Access Management'} 
-     description={t('description') || 'Authorized identity registry and operational scoping'} 
-     actions={
+     subtitle={t('description') || 'Authorized identity registry and operational scoping'} 
+     children={
       <ProtectedRoute requiredAction="create" requiredResource="admin">
        <Link href="/admin/users/new">
-        <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-sm shadow-cyan-900/20">
+        <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
          <Plus className="w-3.5 h-3.5 me-2" />
          {t('create_user')}
         </Button>

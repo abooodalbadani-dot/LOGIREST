@@ -9,7 +9,7 @@ import { useItems } from '@/features/items/hooks/useItems';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
-import { formatDate, formatQuantity, formatCurrency } from '@/lib/utils';
+import { formatDate, formatQuantity, formatCurrency, cn } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 
@@ -73,7 +73,7 @@ export default function WacHistoryReportClient() {
    id: d.documentId || String(index),
    date: d.postedAt,
    document_type: d.documentType || 'N/A',
-   document_number: d.documentId || 'N/A',
+   document_number: d.documentNumber || d.documentId || 'N/A',
    document_id: d.documentId || '',
    item: d.item ? `${d.item.name} (${d.item.sku})` : 'N/A',
    quantity: d.quantity || 0,
@@ -87,7 +87,7 @@ export default function WacHistoryReportClient() {
    accessorKey: 'date',
    header: t('wac_history_table.date'),
    cell: ({ row }) => (
-    <span dir="ltr" className="font-mono">
+    <span dir="ltr" className="font-mono [font-variant-numeric:tabular-nums]">
      {formatDate(row.getValue('date'), locale)}
     </span>
    ),
@@ -95,6 +95,42 @@ export default function WacHistoryReportClient() {
   {
    accessorKey: 'document_type',
    header: t('wac_history_table.document_type'),
+   cell: ({ row }) => {
+    const type = row.getValue('document_type') as string;
+    if (type === 'GOODS_RECEIVED_NOTE') {
+     return (
+      <span className="px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 rounded-full border border-emerald-200 dark:border-emerald-800">
+       استلام بضاعة
+      </span>
+     );
+    }
+    if (type === 'ADJUSTMENT') {
+     return (
+      <span className="px-2.5 py-1 text-[11px] font-bold text-orange-700 bg-orange-100 dark:bg-orange-900/30 rounded-full border border-orange-200 dark:border-orange-800">
+       تسوية مخزون
+      </span>
+     );
+    }
+    if (type === 'TRANSFER') {
+     return (
+      <span className="px-2.5 py-1 text-[11px] font-bold text-blue-700 bg-blue-100 dark:bg-blue-900/30 rounded-full border border-blue-200 dark:border-blue-800">
+       تحويل مخزني
+      </span>
+     );
+    }
+    if (type === 'INVENTORY_ISSUE') {
+     return (
+      <span className="px-2.5 py-1 text-[11px] font-bold text-red-700 bg-red-100 dark:bg-red-900/30 rounded-full border border-red-200 dark:border-red-800">
+       صرف مخزني
+      </span>
+     );
+    }
+    return (
+     <span className="px-2.5 py-1 text-[11px] font-bold text-gray-700 bg-gray-100 dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700">
+      {type}
+     </span>
+    );
+   }
   },
   {
    accessorKey: 'document_number',
@@ -102,12 +138,23 @@ export default function WacHistoryReportClient() {
    cell: ({ row }) => {
     const doc = row.original;
     const href = getDocumentHref(doc);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(doc.document_number);
     return (
      <Link
       href={href}
-      className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 decoration-cyan-500/30 font-mono transition-colors"
+      className={cn(
+       isUuid 
+        ? "inline-block transition-opacity hover:opacity-80"
+        : "text-cyan-400 hover:text-cyan-300 underline underline-offset-2 decoration-cyan-500/30 font-mono transition-colors"
+      )}
      >
-      {doc.document_number}
+      {isUuid ? (
+       <span className="font-mono text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded" dir="ltr">
+        {doc.document_number.slice(0, 8)}
+       </span>
+      ) : (
+       doc.document_number
+      )}
      </Link>
     );
    },
@@ -121,27 +168,31 @@ export default function WacHistoryReportClient() {
    header: t('wac_history_table.quantity'),
    meta: { numeric: true },
    cell: ({ row }) => (
-    <span dir="ltr" className="font-mono">
+    <span dir="ltr" className="font-mono [font-variant-numeric:tabular-nums]">
      {formatQuantity(row.getValue('quantity'), locale)}
     </span>
    ),
   },
   {
    accessorKey: 'unit_cost',
-   header: t('wac_history_table.unit_cost'),
+   header: () => (
+    <span className="min-w-[140px] inline-block text-end w-full">{t('wac_history_table.unit_cost')}</span>
+   ),
    meta: { numeric: true },
    cell: ({ row }) => (
-    <span dir="ltr" className="font-mono text-amber-400">
+    <span dir="ltr" className="font-mono text-amber-400 [font-variant-numeric:tabular-nums]">
      {formatCurrency(row.getValue('unit_cost'), baseCurrency, locale)}
     </span>
    ),
   },
   {
    accessorKey: 'new_wac',
-   header: t('wac_history_table.new_wac'),
+   header: () => (
+    <span className="min-w-[160px] inline-block text-end w-full">{t('wac_history_table.new_wac')}</span>
+   ),
    meta: { numeric: true },
    cell: ({ row }) => (
-    <span dir="ltr" className="font-mono text-cyan-400 font-semibold">
+    <span dir="ltr" className="font-mono text-cyan-400 font-semibold [font-variant-numeric:tabular-nums]">
      {formatCurrency(row.getValue('new_wac'), baseCurrency, locale)}
     </span>
    ),
@@ -149,13 +200,13 @@ export default function WacHistoryReportClient() {
  ];
 
  const exportColumns = [
-  { header: t('wac_history_table.date'), key: 'date', width: 20 },
+  { header: t('wac_history_table.date'), key: 'date', width: 15 },
   { header: t('wac_history_table.document_type'), key: 'document_type', width: 15 },
-  { header: t('wac_history_table.document_number'), key: 'document_number', width: 15 },
-  { header: t('wac_history_table.item'), key: 'item', width: 20 },
-  { header: t('wac_history_table.quantity'), key: 'quantity', width: 10 },
-  { header: t('wac_history_table.unit_cost'), key: 'unit_cost', width: 10 },
-  { header: t('wac_history_table.new_wac'), key: 'new_wac', width: 10 },
+  { header: t('wac_history_table.document_number'), key: 'document_number', width: 18 },
+  { header: t('wac_history_table.item'), key: 'item', width: 27 },
+  { header: t('wac_history_table.quantity'), key: 'quantity', width: 8 },
+  { header: t('wac_history_table.unit_cost'), key: 'unit_cost', width: 9 },
+  { header: t('wac_history_table.new_wac'), key: 'new_wac', width: 8 },
  ];
 
  return (

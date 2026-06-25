@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OutboxService } from './outbox.service';
 import { getQueueToken } from '@nestjs/bullmq';
+import { transactionLifecycleStore } from '../../common/transaction-lifecycle.context';
 
 describe('OutboxService', () => {
   let service: OutboxService;
@@ -113,5 +114,42 @@ describe('OutboxService', () => {
     expect(mockTxSpy.outboxEvent.create).not.toHaveBeenCalled();
     expect(mockQueue.add).not.toHaveBeenCalled();
     expect(event.id).toBe('existing-event-1');
+  });
+
+  it('should defer enqueuing BullMQ job when running inside a lifecycle-managed transaction context', async () => {
+    const mockTx = {
+      outboxEvent: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({
+          id: 'event-deferred',
+          eventType: 'PR_SUBMITTED',
+          payload: { id: 'pr-1' },
+          status: 'PENDING',
+          attempts: 0,
+        }),
+      },
+    } as unknown as Parameters<OutboxService['writeEvent']>[0];
+
+    const callbacks: Array<() => Promise<void> | void> = [];
+    await transactionLifecycleStore.run(callbacks, async () => {
+      const event = await service.writeEvent(mockTx, 'PR_SUBMITTED', {
+        id: 'pr-1',
+      });
+
+      // Should NOT have enqueued yet
+      expect(mockQueue.add).not.toHaveBeenCalled();
+      expect(callbacks.length).toBe(1);
+
+      // Run the callback (simulating commit)
+      await callbacks[0]();
+
+      // Now it should be enqueued
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'process-event',
+        { eventId: 'event-deferred', correlationId: undefined },
+        expect.any(Object),
+      );
+      expect(event.id).toBe('event-deferred');
+    });
   });
 });

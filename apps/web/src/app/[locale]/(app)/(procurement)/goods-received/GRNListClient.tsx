@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
 
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -45,11 +46,14 @@ export function GRNListClient({
  const [sortField, setSortField] = useState<string>('');
  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
- const statusItems = useMemo(() => [
-  { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
-  { id: GRN_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
-  { id: GRN_STATUS.POSTED, name_en: tc('statuses.posted'), name_ar: tc('statuses.posted') },
- ], [tc]);
+  const statusItems = useMemo(() => [
+   { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
+   { id: GRN_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
+   { id: GRN_STATUS.RECEIVED, name_en: tc('statuses.received'), name_ar: tc('statuses.received') },
+   { id: GRN_STATUS.POSTED, name_en: tc('statuses.posted'), name_ar: tc('statuses.posted') },
+   { id: GRN_STATUS.CANCELLED, name_en: tc('statuses.cancelled'), name_ar: tc('statuses.cancelled') },
+   { id: GRN_STATUS.VOIDED, name_en: tc('statuses.voided'), name_ar: tc('statuses.voided') },
+  ], [tc]);
 
  // Debounce search input
  useEffect(() => {
@@ -57,7 +61,8 @@ export function GRNListClient({
  return () => clearTimeout(timer);
  }, [search]);
 
- const { data, isLoading } = useGRNList({ status, page, search: debouncedSearch, sortField, sortOrder });
+  const activeStatusQuery = status === 'ALL' || !status ? undefined : status;
+  const { data, isLoading } = useGRNList({ status: activeStatusQuery, page, search: debouncedSearch, sortField, sortOrder });
 
  const toggleSort = (field: string) => {
   setSortField(prev => {
@@ -191,7 +196,7 @@ export function GRNListClient({
  const draftCount = data?.data?.filter(p => isPendingStatus('GRN', p.status as DocumentStatus)).length || 0;
 
  return (
- <div className="p-10 max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+ <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
  <div className="space-y-4">
  <Breadcrumb 
  items={[
@@ -201,12 +206,12 @@ export function GRNListClient({
  />
  <PageHeader
  title={t('title')}
- description={t('description')}
- actions={
+ subtitle={t('description')}
+ children={
  <div className="flex items-center gap-6">
  <PermissionGate action="create" resource="grn">
-  <Link href="/goods-received/new">
- <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-sm shadow-cyan-900/10 border-none">
+  <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
+ <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
  </Button>
@@ -243,49 +248,147 @@ export function GRNListClient({
      />
     </div>
 
-    <div className="bg-card border border-border shadow-sm border border-surface-variant/5 rounded-lg p-1">
-     <DataTable
-      columns={columns}
-      data={data?.data || []}
-      onRowClick={(row: GRNSummary) => router.push(`/goods-received/${row.id}`)}
-      collectionName="procurement_grn"
-      enableVirtualization={true}
-      containerHeight="600px"
-      emptyState={
-       <EmptyState 
-        variant="minimal"
-        title={t('no_grns_title') || 'No Goods Received Notes'} 
-        description={t('no_grns_desc') || 'Create a new GRN when goods are delivered to update stock levels.'} 
-        action={
-         <PermissionGate action="create" resource="grn">
-          <Link href="/goods-received/new">
-           <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-label-xs font-semibold uppercase rounded-md transition-all">
-            <Plus className="w-3.5 h-3.5 me-2" />
-            {t('create_new')}
-           </Button>
-          </Link>
-         </PermissionGate>
-        }
-       />
-      }
-      pagination={data?.meta ? {
-       page: data.meta.page,
-       pageSize: data.meta.pageSize,
-       total: data.meta.total,
-       totalPages: data.meta.totalPages,
-       onPageChange: setPage
-      } : undefined}
-      filters={
-      <div className="relative w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <Input
-         placeholder={tc('statuses.all')}
-         value={status || 'ALL'}
-         onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-full ps-10 bg-background border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all"
+     <div className="flex w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <Tabs value={status || 'ALL'} onValueChange={(val) => { setStatus(val); setPage(1); }} className="w-full">
+       <TabsList variant="line" className="w-full justify-start overflow-x-auto overflow-y-hidden hide-scrollbar border-b border-border/10 pb-0 gap-6">
+        {statusItems.map((tab) => (
+         <TabsTrigger key={tab.id} value={tab.id} className="pb-3 text-label-xs font-bold uppercase tracking-wider h-auto">
+          {locale === 'ar' ? tab.name_ar : tab.name_en}
+         </TabsTrigger>
+        ))}
+       </TabsList>
+      </Tabs>
+     </div>
+
+    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+     <div className="hidden md:block w-full">
+      <DataTable
+       columns={columns}
+       data={data?.data || []}
+       onRowClick={(row: GRNSummary) => router.push(`/goods-received/${row.id}`)}
+       collectionName="procurement_grn"
+       enableVirtualization={true}
+       containerHeight="600px"
+       emptyState={
+        <EmptyState 
+         variant="minimal"
+         title={t('no_grns_title') || 'No Goods Received Notes'} 
+         description={t('no_grns_desc') || 'Create a new GRN when goods are delivered to update stock levels.'} 
+         action={
+          <PermissionGate action="create" resource="grn">
+           <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
+            <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+             <Plus className="w-3.5 h-3.5 me-2" />
+             {t('create_new')}
+            </Button>
+           </Link>
+          </PermissionGate>
+         }
         />
-       </div>
-     }
-     />
+       }
+       pagination={data?.meta ? {
+        page: data.meta.page,
+        pageSize: data.meta.pageSize,
+        total: data.meta.total,
+        totalPages: data.meta.totalPages,
+        onPageChange: setPage
+       } : undefined}
+       filters={
+         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+           <div className="w-full sm:w-64">
+             <div className="relative w-full">
+               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+               <Input
+                 placeholder={tc('search')}
+                 value={search}
+                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                 className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+               />
+             </div>
+           </div>
+         </div>
+       }
+      />
+     </div>
+
+     {(!isLoading && data?.data && data.data.length > 0) && (
+      <div className="flex flex-col gap-3 md:hidden mt-4 p-4">
+       {data.data.map((grn) => {
+        const isDraft = grn.status === GRN_STATUS.DRAFT;
+        return (
+        <div 
+         key={grn.id} 
+         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+         onClick={() => router.push(`/goods-received/${grn.id}`)}
+        >
+         {/* TOP TIER: Identity */}
+         <div className="flex justify-between items-start">
+           <div className="flex flex-col gap-1 w-full">
+             <div className="flex justify-between items-start gap-2">
+               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{grn.documentNumber}</span>
+               <StatusBadge status={grn.status as BadgeStatus} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+             </div>
+             <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{grn.supplierName || '—'}</span>
+           </div>
+         </div>
+
+         {/* MIDDLE TIER: Meta */}
+         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+           <div className="flex flex-col">
+             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tc('warehouse')}</span>
+             <span className="text-sm font-bold text-foreground">
+               {grn.warehouseName || grn.warehouseId || '-'}
+             </span>
+           </div>
+         </div>
+
+         {/* BOTTOM TIER: Actions */}
+         <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            {grn.postedAt ? (
+              <ClientOnlyTime 
+               date={grn.postedAt} 
+               mode="date" 
+               className="font-mono font-medium" 
+              />
+            ) : <span className="opacity-50 italic">{t('pending_label')}</span>}
+           </div>
+           
+           <div className="flex gap-2 shrink-0">
+            <PermissionGate action="view" resource="grn">
+             <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20"
+              onClick={(e) => {
+               e.stopPropagation();
+               router.push(`/goods-received/${grn.id}`);
+              }}
+             >
+              {tc('view')}
+             </Button>
+            </PermissionGate>
+            {isDraft && (
+             <PermissionGate action="delete" resource="grn">
+              <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-status-error bg-status-error/10 hover:bg-status-error/20"
+               onClick={async (e) => {
+                e.stopPropagation();
+                const confirmed = window.confirm('Are you sure you want to delete this draft goods received note?');
+                if (!confirmed) return;
+                try {
+                 await deleteGRN.mutateAsync({ id: grn.id });
+                } catch (err) {
+                 console.error(err);
+                }
+               }}
+              >
+               <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+             </PermissionGate>
+            )}
+           </div>
+         </div>
+        </div>
+       )})}
+      </div>
+     )}
     </div>
    </QueryBoundary>
  </div>

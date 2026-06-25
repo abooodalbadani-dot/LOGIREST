@@ -5,7 +5,7 @@ import { useStocktake, useApproveStocktake, useRejectStocktake } from "@/feature
 import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useBaseCurrency } from "@/hooks/useBaseCurrency";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter, Link } from "@/i18n/navigation";
 import { 
  BarChart3, 
  CheckCircle2, 
@@ -13,7 +13,8 @@ import {
  AlertTriangle,
  ArrowUpRight,
  ArrowDownRight,
- Calculator
+ Calculator,
+ ArrowLeft
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/AuthProvider";
@@ -117,13 +118,15 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
  }));
  }, [session?.items]);
 
- if (isLoading) return <LoadingSkeleton />
- if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
+  React.useEffect(() => {
+    if (!isLoading && session && !canApprove) {
+      router.replace(`/stocktake/${id}`);
+    }
+  }, [isLoading, session, canApprove, router, id]);
 
- if (!canApprove) {
- router.replace(`/stocktake/${id}`);
- return null;
- }
+  if (isLoading) return <LoadingSkeleton />
+  if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
+  if (!canApprove) return null;
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? warehouse.name || warehouse.code : (session.warehouseName || session.warehouseId);
@@ -171,51 +174,57 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   <ScopeGuard warehouseId={session?.warehouseId}>
    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <PermissionGate action="approve" resource="operations_stocktake">
- <PageHeader
- title={
- <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
- <BarChart3 className="w-6 h-6 text-primary" />
- </div>
- <div className="flex flex-col min-w-0">
- <span className="font-semibold text-headline-lg">
- {session.sessionName}
- </span>
- <div className="flex items-center gap-2 mt-1 text-muted-foreground">
-  <StatusBadge status={session.status} configMap={STOCKTAKE_STATUS_UI} />
- <span className="text-label-xs font-semibold opacity-20 uppercase leading-none">|</span>
- <span className="text-label-xs uppercase font-semibold opacity-40">{warehouseName}</span>
- </div>
- </div>
- </div>
- }
- actions={
- <div className="flex items-center gap-3">
- <ActionGuard documentType="STOCKTAKE" action="REJECT" status={session.status} role={user?.role || ''}>
- <Button 
- variant="outline" 
- className="border-status-error/20 text-status-error hover:bg-status-error/10 rounded-xl"
- onClick={() => setIsRejectDialogOpen(true)}
- >
- <XCircle className="w-4 h-4 me-2" />
- {t('reject_session')}
- </Button>
- </ActionGuard>
- <PostConfirmDialog
- title={t('confirm_approve_title')}
- description={t('confirm_approve_desc')}
- onConfirm={handleApprove}
- trigger={
- <Button className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors shadow-sm shadow-primary/20 px-8 rounded-xl">
- <CheckCircle2 className="w-4 h-4 me-2" />
- {t('approve_session_action')}
- </Button>
- }
- />
- </div>
- }
- backHref={`/stocktake/${id}`}
- />
+  <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-4 mb-8">
+    
+    {/* Right Side (RTL Start): Back Arrow, Title, and Badge */}
+    <div className="flex items-center gap-4">
+      <Link 
+        href={`/stocktake/${id}`}
+        className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0"
+      >
+        <ArrowLeft className="w-6 h-6 rtl:rotate-180" />
+      </Link>
+      <div className="flex flex-col items-start gap-1">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight uppercase">
+            {session.sessionName}
+          </h1>
+          {/* TAMED BADGE */}
+          <span className="px-3 py-1 text-xs font-semibold bg-brand-gold/10 text-brand-gold border border-brand-gold/20 rounded-full">
+            {t('variance_review')}
+          </span>
+        </div>
+        <span className="text-sm text-muted-foreground uppercase">{warehouseName}</span>
+      </div>
+    </div>
+
+    {/* Left Side (RTL End): Action Buttons */}
+    <div className="w-full md:w-auto flex flex-col-reverse md:flex-row items-stretch md:items-center gap-3">
+      <ActionGuard documentType="STOCKTAKE" action="REJECT" status={session.status} role={user?.role || ''}>
+        <Button 
+          variant="outline" 
+          className="w-full md:w-auto flex items-center justify-center px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20 hover:border-destructive/30 rounded-xl font-semibold text-label-xs uppercase tracking-wide transition-all active:scale-[0.98] h-11"
+          onClick={() => setIsRejectDialogOpen(true)}
+        >
+          <XCircle className="w-4 h-4 me-2" />
+          {t('reject_session')}
+        </Button>
+      </ActionGuard>
+
+      <PostConfirmDialog
+        title={t('confirm_approve_title')}
+        description={t('confirm_approve_desc')}
+        onConfirm={handleApprove}
+        trigger={
+          <Button className="w-full md:w-auto flex items-center justify-center px-6 py-2 bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold text-label-xs uppercase tracking-wide transition-all active:scale-[0.98] rounded-xl shadow-lg shadow-brand-gold/10 h-11">
+            <CheckCircle2 className="w-4 h-4 me-2" />
+            {t('approve_session_action')}
+          </Button>
+        }
+      />
+    </div>
+
+  </div>
 
  {/* Metrics Grid */}
  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -265,12 +274,10 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   </div>
  )}
 
- <Card className="bg-card border border-border shadow-sm border-none shadow-none rounded-[2rem] overflow-hidden">
-   <div className="p-8 bg-card/[0.01]">
-    <h3 className="text-body-md font-semibold uppercase text-muted-foreground/40">
-     {t('variance_details_table')}
-    </h3>
-   </div>
+  <h2 className="text-lg font-semibold text-foreground text-start w-full mb-4">
+    {t('variance_details_table')}
+  </h2>
+  <Card className="hidden md:block bg-card border border-border shadow-sm border-none shadow-none rounded-[2rem] overflow-hidden">
   <DocumentLineItemTable<StocktakeLineItem>
    lines={tableLines}
    locale={locale}
@@ -278,7 +285,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
    hideLotColumns={true}
    headers={{ qty: t('counted_qty') }}
    renderQty={(line) => (
-    <span className="font-mono text-label-sm font-semibold text-foreground">
+    <span className="font-mono text-label-sm font-semibold text-foreground tabular-nums">
      {formatNumber(line.countedQty, locale, 3)}
     </span>
    )}
@@ -291,8 +298,8 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
     {
      header: t('snapshot_qty'),
      cell: (line) => (
-      <span className="font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
-       {formatNumber(line.snapshotQty, locale, 3)} {line.uom}
+      <span className="font-mono text-label-sm font-bold text-muted-foreground/60 tabular-nums" dir="ltr">
+       {formatNumber(line.snapshotQty, locale, 3)}
       </span>
      )
     },
@@ -302,9 +309,9 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       const variance = line.variance ?? 0;
       return (
        <div className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold text-label-xs",
-        variance === 0 ? "bg-status-success/10 text-status-success" : 
-        variance > 0 ? "bg-status-info/10 text-status-info" : "bg-status-error/10 text-status-error"
+        "inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold text-label-xs tabular-nums",
+        variance === 0 ? "bg-slate-100 dark:bg-slate-800 text-[#0B1220] dark:text-slate-400" : 
+        variance > 0 ? "bg-amber-50/50 dark:bg-amber-950/10 text-[#b48e67]" : "bg-red-500/10 text-red-800/80 dark:text-red-400/80"
        )} dir="ltr">
         {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)}
        </div>
@@ -317,7 +324,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       const variance = line.variance ?? 0;
       const varianceValue = variance * line.unitCost;
       return (
-       <span className={cn("font-mono text-label-sm font-semibold", varianceValue > 0 ? "text-status-info" : varianceValue < 0 ? "text-status-error" : "text-muted-foreground/40")}>
+       <span className={cn("font-mono text-label-sm font-semibold tabular-nums", varianceValue > 0 ? "text-[#b48e67]" : varianceValue < 0 ? "text-red-800/80 dark:text-red-400/80" : "text-muted-foreground/40")}>
         {formatCurrency(varianceValue, currencyCode, locale)}
        </span>
       );
@@ -333,7 +340,78 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
     }
    ]}
   />
- </Card>
+  </Card>
+
+  {/* Variance Cards for Mobile */}
+  <div className="flex flex-col gap-3 md:hidden w-full mt-4">
+    {tableLines.map(item => {
+      const variance = item.variance ?? 0;
+      const varianceValue = variance * item.unitCost;
+      
+      return (
+        <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+          
+          {/* TOP: Item Identity */}
+          <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
+            <div className="flex flex-col">
+              <span className="text-sm font-black text-[#0B1220] dark:text-white leading-tight">
+                {locale === 'ar' ? item.item.nameAr || item.item.nameEn : item.item.nameEn}
+              </span>
+              <span className="text-[10px] text-[#b48e67] font-medium font-mono tracking-widest uppercase tabular-nums">{item.item.code}</span>
+            </div>
+          </div>
+
+          {/* MIDDLE: Variance Metrics (The Audit Grid) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+              <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">{t('snapshot_qty') || 'SYS QTY'}</span>
+              <p className="text-xs font-bold text-[#0B1220] dark:text-gray-200 font-mono tabular-nums" dir="ltr">
+                {formatNumber(item.snapshotQty, locale, 3)} {item.uom}
+              </p>
+            </div>
+            <div className="bg-[#b48e67]/5 p-2 rounded-lg border border-[#b48e67]/30">
+              <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">{t('counted_qty') || 'COUNTED'}</span>
+              <p className="text-xs font-black text-[#0B1220] dark:text-white font-mono tabular-nums" dir="ltr">
+                {formatNumber(item.countedQty, locale, 3)} {item.uom}
+              </p>
+            </div>
+          </div>
+
+          {/* BOTTOM: Variance Result & Reason */}
+          <div 
+            className={cn(
+              "p-3 rounded-lg border",
+              variance === 0 ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800' :
+              variance < 0 ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30' :
+              'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/30'
+            )}
+          >
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase">{t('variance') || 'VARIANCE'}</span>
+              <span 
+                className={cn(
+                  "text-xs font-black font-mono tabular-nums",
+                  variance < 0 ? 'text-red-600 dark:text-red-400' :
+                  variance > 0 ? 'text-emerald-600 dark:text-emerald-400' :
+                  'text-gray-400 font-bold'
+                )} 
+                dir="ltr"
+              >
+                 {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)} ({formatCurrency(varianceValue, currencyCode, locale)})
+              </span>
+            </div>
+            {/* Variance Reason Display */}
+            {variance !== 0 && (
+              <div className="w-full mt-2 text-xs p-2 bg-white dark:bg-[#0B1220] border border-gray-300 dark:border-gray-700 rounded-md text-muted-foreground/80 outline-none block text-start min-h-[36px]">
+                {item.varianceReason || "—"}
+              </div>
+            )}
+          </div>
+
+        </div>
+      );
+    })}
+  </div>
 
  {/* Rejection Dialog */}
  <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>

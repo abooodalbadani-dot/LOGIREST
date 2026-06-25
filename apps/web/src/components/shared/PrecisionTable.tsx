@@ -103,7 +103,7 @@ export function PrecisionTable<T>({
 
     /* RTL Specific adjustments for typography */
     [dir="rtl"] .precision-table-container {
-     font-family: var(--font-ibm-plex-arabic), sans-serif;
+     font-family: var(--font-sans);
     }
    `}</style>
   </div>

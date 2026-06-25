@@ -29,12 +29,44 @@ const UpdateAdjustmentPayloadSchema = z.object({
 
 export type UpdateAdjustmentPayload = z.infer<typeof UpdateAdjustmentPayloadSchema>;
 
+const mapToBackendReason = (reason: string): 'THEFT' | 'DAMAGE' | 'SPOILAGE' | 'CORRECTION' | 'ADMIN_OVERRIDE' => {
+  const upper = reason.toUpperCase();
+  if (upper === 'THEFT') return 'THEFT';
+  if (upper === 'DAMAGE') return 'DAMAGE';
+  if (upper === 'SPOILAGE' || upper === 'EXPIRY') return 'SPOILAGE';
+  if (upper === 'ADMIN_OVERRIDE') return 'ADMIN_OVERRIDE';
+  return 'CORRECTION';
+};
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUuid(value: string | undefined | null): value is string {
+  return !!value && UUID_REGEX.test(value);
+}
+
 export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
  return useSafeMutation({
   onConflict: options?.onConflict,
-  mutationFn: ({ id, payload, signal, headers }: { id: string; payload: UpdateAdjustmentPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
-   apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload), { signal, headers }),
+  mutationFn: ({ id, payload, signal, headers }: { id: string; payload: UpdateAdjustmentPayload; signal?: AbortSignal; headers?: Record<string, string> }) => {
+   const parsed = UpdateAdjustmentPayloadSchema.parse(payload);
+   const backendPayload = {
+    version: parsed.version,
+    warehouseId: parsed.warehouseId,
+    reason: parsed.reason ? mapToBackendReason(parsed.reason) : undefined,
+    notes: parsed.notes,
+    lines: parsed.lines?.map(l => ({
+     id: l.id,
+     itemId: l.itemId,
+     qty: l.qty,
+     uomId: l.uomId,
+     direction: l.direction,
+     unitCost: l.unitCost ?? null,
+     lotId: isValidUuid(l.lotAllocations?.[0]?.lotId) ? l.lotAllocations![0].lotId : null,
+    }))
+   };
+   return apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, backendPayload, { signal, headers });
+  },
   onSuccess: (data) => {
    queryClient.setQueryData(['adjustments', data.id], data);
    queryClient.invalidateQueries({ queryKey: ['adjustments'] });
@@ -45,4 +77,5 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
   }
  });
 }
+
 

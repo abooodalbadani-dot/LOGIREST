@@ -58,13 +58,14 @@ export const TRANSFER_STATUS = {
   DRAFT: 'DRAFT',
   IN_TRANSIT: 'IN_TRANSIT',
   RECEIVED: 'RECEIVED',
+  DISPUTED: 'DISPUTED',
   POSTED: 'POSTED',
   CANCELLED: 'CANCELLED',
   VOIDED: 'VOIDED',
 } as const;
 
 export type TransferStatus = typeof TRANSFER_STATUS[keyof typeof TRANSFER_STATUS];
-export const ALL_TRANSFER_STATUSES = ['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'POSTED', 'CANCELLED', 'VOIDED'] as const;
+export const ALL_TRANSFER_STATUSES = ['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'DISPUTED', 'POSTED', 'CANCELLED', 'VOIDED'] as const;
 
 export const ISSUE_STATUS = {
   DRAFT: 'DRAFT',
@@ -119,6 +120,7 @@ export const ALL_STATUSES = [
   'STARTED',
   'COUNTING',
   'IN_TRANSIT',
+  'DISPUTED',
   'OPEN',
   'VOIDED',
   'REVIEW',

@@ -26,15 +26,21 @@ export function getExportBranding(): RestaurantProfile | null {
  * Prepares branding header rows for Excel exports.
  */
 export function getExcelBrandingHeader() {
- const branding = getExportBranding();
- if (!branding) return [];
+ const branding = getExportBranding() || {
+   name: 'Otantik Restaurant Enterprise',
+   address: '',
+   phone: '',
+   email: '',
+   taxNumber: '',
+   commercialRegistration: ''
+ };
 
  return [
  [branding.name],
- [branding.address],
- [`Tel: ${branding.phone} | Email: ${branding.email}`],
+ branding.address ? [branding.address] : [],
+ [(branding.phone || branding.email) ? `Tel: ${branding.phone || ''} | Email: ${branding.email || ''}` : ''],
  branding.taxNumber ? [`Tax No: ${branding.taxNumber}`] : [],
  branding.commercialRegistration ? [`CR No: ${branding.commercialRegistration}`] : [],
  [''], // Spacing
- ].filter(row => row.length > 0);
+ ].filter(row => row.length > 0 && row[0] !== '');
 }

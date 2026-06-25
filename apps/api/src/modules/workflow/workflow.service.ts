@@ -282,7 +282,18 @@ export class WorkflowService {
 
         fetchedDoc = doc;
 
-        // Role Validation Check
+        // 1. Transition Status check
+        const targetStatus = getNextStatusV2(
+          docType,
+          doc.status as DocumentStatus,
+          action,
+        );
+        if (!targetStatus) {
+          const errorMsg = `Invalid status transition: Action ${action} is not allowed on ${docType} in status ${doc.status}`;
+          throw new BadRequestException(errorMsg);
+        }
+
+        // 2. Role Validation Check
         const hasRolePermission = canPerformActionV2(
           docType,
           doc.status as DocumentStatus,
@@ -292,17 +303,6 @@ export class WorkflowService {
         if (!hasRolePermission) {
           const errorMsg = `User with role ${userRole} is not authorized to perform action ${action} on ${docType} in status ${doc.status}`;
           throw new ForbiddenException(errorMsg);
-        }
-
-        // Transition Status check
-        const targetStatus = getNextStatusV2(
-          docType,
-          doc.status as DocumentStatus,
-          action,
-        );
-        if (!targetStatus) {
-          const errorMsg = `Invalid status transition: Action ${action} is not allowed on ${docType} in status ${doc.status}`;
-          throw new BadRequestException(errorMsg);
         }
 
         // Check warehouse operational locks
@@ -425,10 +425,55 @@ export class WorkflowService {
               documentId: updatedDoc.id,
             },
           });
+          const warehouse =
+            updatedDoc.warehouseId &&
+            transaction.warehouse &&
+            typeof transaction.warehouse.findUnique === 'function'
+              ? await transaction.warehouse.findUnique({
+                  where: { id: updatedDoc.warehouseId },
+                  select: { name: true },
+                })
+              : null;
+          const user =
+            transaction.user &&
+            typeof transaction.user.findUnique === 'function'
+              ? await transaction.user.findUnique({
+                  where: { id: userId },
+                  select: { name: true },
+                })
+              : null;
           await this.outboxService.writeEvent(transaction, 'PR_APPROVED', {
             id: updatedDoc.id,
             documentNumber: updatedDoc.requestNumber,
             warehouseId: updatedDoc.warehouseId,
+            warehouseName: warehouse?.name || 'N/A',
+            userName: user?.name || 'N/A',
+            createdById: updatedDoc.createdById,
+          });
+        } else if (docType === 'pr' && targetStatus === 'REJECTED') {
+          const warehouse =
+            updatedDoc.warehouseId &&
+            transaction.warehouse &&
+            typeof transaction.warehouse.findUnique === 'function'
+              ? await transaction.warehouse.findUnique({
+                  where: { id: updatedDoc.warehouseId },
+                  select: { name: true },
+                })
+              : null;
+          const user =
+            transaction.user &&
+            typeof transaction.user.findUnique === 'function'
+              ? await transaction.user.findUnique({
+                  where: { id: userId },
+                  select: { name: true },
+                })
+              : null;
+          await this.outboxService.writeEvent(transaction, 'PR_REJECTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.requestNumber,
+            warehouseId: updatedDoc.warehouseId,
+            warehouseName: warehouse?.name || 'N/A',
+            userName: user?.name || 'N/A',
             createdById: updatedDoc.createdById,
           });
         } else if (docType === 'transfer' && targetStatus === 'IN_TRANSIT') {
@@ -455,10 +500,14 @@ export class WorkflowService {
             documentNumber: updatedDoc.grnNumber,
             warehouseId: updatedDoc.warehouseId,
           });
-          const po = await transaction.purchaseOrder.findUnique({
-            where: { id: updatedDoc.poId },
-            include: { supplier: true },
-          });
+          const po =
+            transaction.purchaseOrder &&
+            typeof transaction.purchaseOrder.findUnique === 'function'
+              ? await transaction.purchaseOrder.findUnique({
+                  where: { id: updatedDoc.poId },
+                  include: { supplier: true },
+                })
+              : null;
           if (po?.supplier?.contactEmail) {
             await this.outboxService.writeEvent(
               transaction,
@@ -472,9 +521,13 @@ export class WorkflowService {
             );
           }
         } else if (docType === 'po' && targetStatus === 'APPROVED') {
-          const supplier = await transaction.supplier.findUnique({
-            where: { id: updatedDoc.supplierId },
-          });
+          const supplier =
+            transaction.supplier &&
+            typeof transaction.supplier.findUnique === 'function'
+              ? await transaction.supplier.findUnique({
+                  where: { id: updatedDoc.supplierId },
+                })
+              : null;
           if (supplier?.contactEmail) {
             await this.outboxService.writeEvent(
               transaction,
@@ -487,6 +540,34 @@ export class WorkflowService {
               },
             );
           }
+
+          const user =
+            transaction.user &&
+            typeof transaction.user.findUnique === 'function'
+              ? await transaction.user.findUnique({
+                  where: { id: userId },
+                  select: { name: true },
+                })
+              : null;
+          const po =
+            transaction.purchaseOrder &&
+            typeof transaction.purchaseOrder.findUnique === 'function'
+              ? await transaction.purchaseOrder.findUnique({
+                  where: { id: updatedDoc.id },
+                  include: {
+                    purchaseRequest: { include: { warehouse: true } },
+                  },
+                })
+              : null;
+          const warehouseName = po?.purchaseRequest?.warehouse?.name || 'N/A';
+
+          await this.outboxService.writeEvent(transaction, 'PO_APPROVED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.poNumber,
+            warehouseId: po?.purchaseRequest?.warehouseId || undefined,
+            warehouseName,
+            userName: user?.name || 'N/A',
+          });
         } else if (docType === 'adjustment' && targetStatus === 'POSTED') {
           await this.outboxService.writeEvent(
             transaction,
@@ -501,6 +582,15 @@ export class WorkflowService {
           docType === 'kitchen_request' &&
           targetStatus === 'SUBMITTED'
         ) {
+          await transaction.notificationLog.create({
+            data: {
+              targetRole: 'WH_KEEPER',
+              warehouseId: updatedDoc.warehouseId,
+              message: `Kitchen Request ${updatedDoc.requestNumber} is awaiting fulfillment.`,
+              documentType: 'KITCHEN_REQUEST',
+              documentId: updatedDoc.id,
+            },
+          });
           await this.outboxService.writeEvent(
             transaction,
             'KITCHEN_REQUEST_SUBMITTED',
@@ -510,7 +600,19 @@ export class WorkflowService {
               warehouseId: updatedDoc.warehouseId,
             },
           );
-        } else if (docType === 'kitchen_request' && targetStatus === 'POSTED') {
+        } else if (
+          docType === 'kitchen_request' &&
+          targetStatus === 'FULFILLED'
+        ) {
+          await transaction.notificationLog.create({
+            data: {
+              targetRole: 'KITCHEN_CHIEF',
+              warehouseId: updatedDoc.warehouseId,
+              message: `Kitchen Request ${updatedDoc.requestNumber} has been fulfilled.`,
+              documentType: 'KITCHEN_REQUEST',
+              documentId: updatedDoc.id,
+            },
+          });
           await this.outboxService.writeEvent(
             transaction,
             'KITCHEN_REQUEST_POSTED',
@@ -518,6 +620,7 @@ export class WorkflowService {
               id: updatedDoc.id,
               documentNumber: updatedDoc.requestNumber,
               warehouseId: updatedDoc.warehouseId,
+              requestedById: updatedDoc.requestedById,
             },
           );
           this.metricsService.postingOperationsCounter.inc({

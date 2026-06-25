@@ -29,6 +29,7 @@ export const StockMovementBackendItemSchema = z.object({
  quantity: z.number().or(z.string()).transform((val) => Number(val)),
  documentId: z.string(),
  documentType: z.string(),
+ documentNumber: z.string().nullable().optional(),
  item: z.object({
   id: z.string(),
   name: z.string(),
@@ -166,7 +167,7 @@ export function useStockMovementsReport() {
    const response = await apiClient.get('/reports/movements', PaginatedStockMovementsSchema, { signal });
    return response.data.map((m) => ({
     date: m.postedAt,
-    reference: m.documentId,
+    reference: m.documentNumber || m.documentId,
     type: m.documentType,
     from: '-',
     to: '-',

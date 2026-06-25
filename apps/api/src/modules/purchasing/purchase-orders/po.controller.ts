@@ -15,8 +15,10 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Res,
 } from '@nestjs/common';
 import { PurchaseOrderService } from './po.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -30,21 +32,19 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreatePoDto } from './dto/create-po.dto';
 import { UpdatePoDto } from './dto/update-po.dto';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 // Map database fields to match the frontend expected schemas
 function mapPODetail(po: Record<string, unknown>) {
   const poLines = (po.lines as Record<string, unknown>[]) || [];
   const supplier = po.supplier as Record<string, unknown> | null;
   const purchaseRequest = po.purchaseRequest as Record<string, unknown> | null;
-  const warehouse = purchaseRequest?.warehouse as Record<
-    string,
-    unknown
-  > | null;
+  const warehouse = po.warehouse as Record<string, unknown> | null;
   const currency = po.currency as Record<string, unknown> | null;
 
   const lines = poLines.map((line: Record<string, unknown>) => {
@@ -105,7 +105,7 @@ function mapPODetail(po: Record<string, unknown>) {
     exchangeRate: 1.0,
     expectedDate: createdAtIso,
     expectedDeliveryDate: createdAtIso,
-    targetWarehouseId: (purchaseRequest?.warehouseId as string) || undefined,
+    targetWarehouseId: (po.warehouseId as string) || undefined,
     lines,
     supplierTotalAmount: supplierTotalAmount,
     baseTotalAmount: supplierTotalAmount,
@@ -122,11 +122,7 @@ function mapPOSummary(po: Record<string, unknown>) {
   const lines = (po.lines as Record<string, unknown>[]) || [];
   const supplier = po.supplier as Record<string, unknown> | null;
   const currency = po.currency as Record<string, unknown> | null;
-  const purchaseRequest = po.purchaseRequest as Record<string, unknown> | null;
-  const warehouse = purchaseRequest?.warehouse as Record<
-    string,
-    unknown
-  > | null;
+  const warehouse = po.warehouse as Record<string, unknown> | null;
 
   const supplierTotalAmount = lines.reduce(
     (sum: number, line: Record<string, unknown>) =>
@@ -163,16 +159,11 @@ export class PurchaseOrderController {
     private readonly poService: PurchaseOrderService,
     private readonly prisma: PrismaService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Post()
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -233,6 +224,7 @@ export class PurchaseOrderController {
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query()
     query: {
@@ -259,18 +251,60 @@ export class PurchaseOrderController {
     };
   }
 
+  @Get(':id/pdf')
+  @AllRoles()
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const po = await this.poService.findOne(id);
+    if (po.warehouseId) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        po.warehouseId,
+      );
+    } else if (
+      role !== Role.ADMIN &&
+      role !== Role.GM &&
+      role !== Role.PROC_MGR &&
+      role !== Role.PROC_OFFICER
+    ) {
+      throw new ForbiddenException(
+        'Access denied: Purchase Order lacks warehouse scope.',
+      );
+    }
+
+    const buffer = await this.pdfGeneratorService.generatePurchaseOrderPdf(
+      id,
+      locale,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=PO_${po.poNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
+  }
+
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
     const po = await this.poService.findOne(id);
-    if (po.purchaseRequest?.warehouseId) {
+    if (po.warehouseId) {
       await this.scopeValidationService.validateWarehouse(
         userId,
         role,
-        po.purchaseRequest.warehouseId,
+        po.warehouseId,
       );
     } else if (
       role !== Role.ADMIN &&
@@ -286,13 +320,7 @@ export class PurchaseOrderController {
   }
 
   @Put(':id')
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -357,13 +385,7 @@ export class PurchaseOrderController {
   }
 
   @Delete(':id')
-  @Roles(
-    Role.ADMIN,
-    Role.INV_MGR,
-    Role.PROC_OFFICER,
-    Role.PROC_MGR,
-    Role.BRANCH_MGR,
-  )
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -392,6 +414,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/submit')
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -421,6 +444,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/approve')
+  @Roles(Role.ADMIN, Role.GM, Role.BRANCH_MGR, Role.PROC_MGR, Role.APPROVER)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -450,6 +474,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/reject')
+  @Roles(Role.ADMIN, Role.GM, Role.BRANCH_MGR, Role.PROC_MGR, Role.APPROVER)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',
@@ -479,6 +504,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/cancel')
+  @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'po',

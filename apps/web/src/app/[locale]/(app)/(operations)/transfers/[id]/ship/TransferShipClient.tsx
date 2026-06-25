@@ -19,7 +19,7 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@logirest/shared-types';
 import { useAuth } from '@/providers/AuthProvider';
-import { AlertCircle, Truck, ArrowLeft, Printer, RefreshCw } from 'lucide-react';
+import { AlertCircle, Truck, ArrowLeft, RefreshCw } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/layouts/FormLayout';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -91,7 +91,10 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
    throw new Error('WarehouseLocked');
   }
 
-  const line = transfer?.lines.find(l => l.item?.code === barcode);
+  const line = transfer?.lines.find(l => 
+    l.item?.code === barcode || 
+    l.item?.barcodes?.some(b => b.barcode === barcode)
+  );
   if (line) {
    const currentScanned = scannedLines[line.id] ?? 0;
    if (currentScanned >= line.qty) {
@@ -186,19 +189,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
 
    <PageHeader
     title={t('ship_transfer')}
-    description={t('ship_confirm_desc')}
-    actions={
-     <PermissionGate action="post" resource="transfer">
-      <Button
-       variant="outline"
-       className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
-       onClick={() => window.print()}
-      >
-       <Printer className="w-4 h-4 me-2" />
-       {tCommon('print')}
-      </Button>
-     </PermissionGate>
-    }
+    subtitle={t('ship_confirm_desc')}
    />
 
    <form 
@@ -297,6 +288,13 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
           qty: t('transfer_qty'),
           uom: tCommon('table_headers.uom'),
          }}
+         renderQty={(line) => (
+          <div className="flex justify-center">
+           <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+            {line.qty}
+           </div>
+          </div>
+         )}
          extraColumns={[
           {
            header: tCommon('status'),
@@ -311,7 +309,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
                ? "bg-muted/50 text-foreground border border-emerald-500/20" 
                : scanned > 0 
                ? "bg-muted/50 text-foreground border border-cyan-500/20"
-               : "bg-surface-container-highest text-muted-foreground/40 border border-white/5"
+               : "border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]"
               )}>
                {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
               </div>
@@ -325,26 +323,32 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       </div>
      </div>
 
-    <FormFooter 
-     onCancel={() => router.push(`/transfers/${id}`, { skipGuard: true })}
-     onSubmit={handleShip}
-     isSaving={shipTransfer.isPending}
-     isLocked={isWorkflowLocked}
-     isDirty={isDirty}
-     isValid={allScanned}
-     actions={
-      <PermissionGate action="post" resource="transfer">
-       <Button
-        disabled={isMutationBlocked || shipTransfer.isPending || !allScanned}
-        onClick={() => setConfirmDialogOpen(true)}
-        className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
-       >
-        <Truck className="w-5 h-5 me-3" />
-        {t('confirm_shipment')}
-       </Button>
-      </PermissionGate>
-     }
-    />
+     {!allScanned && (
+      <div className="flex items-start gap-2.5 text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 text-xs font-semibold leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-300">
+       <AlertCircle className="w-4.5 h-4.5 shrink-0 mt-0.5" />
+       <span>{t('scanning_required_hint')}</span>
+      </div>
+     )}
+
+    <div className="flex flex-col-reverse md:flex-row justify-end items-center gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 w-full">
+     <Button
+      type="button"
+      onClick={() => router.push(`/transfers/${id}`, { skipGuard: true })}
+      className="w-full md:w-auto px-6 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+     >
+      {tCommon('cancel') || 'Cancel'}
+     </Button>
+     <PermissionGate action="ship" resource="transfer">
+      <Button
+       disabled={isMutationBlocked || shipTransfer.isPending || !allScanned || isWorkflowLocked}
+       onClick={() => setConfirmDialogOpen(true)}
+       className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-sm"
+      >
+       <Truck className="w-5 h-5" />
+       {t('confirm_shipment')}
+      </Button>
+     </PermissionGate>
+    </div>
 
     <PostConfirmDialog
      open={confirmDialogOpen}

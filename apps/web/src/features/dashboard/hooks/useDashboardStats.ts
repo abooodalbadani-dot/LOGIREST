@@ -22,6 +22,7 @@ export const DashboardStatsSchema = z.object({
  nearExpiryCount: z.number(),
  todayConsumption: z.number(),
  stockHealth: z.number(),
+ lastBackupTimestamp: z.string().optional(),
  // Procurement specific
  activePos: z.number(),
  pendingGrns: z.number(),

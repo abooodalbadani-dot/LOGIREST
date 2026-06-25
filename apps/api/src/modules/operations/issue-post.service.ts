@@ -78,14 +78,7 @@ export class IssuePostService {
       for (const line of issue.lines) {
         const item = line.item;
 
-        // Historical posting guard
-        const latestLedger = await tx.stockLedger.findFirst({
-          where: { warehouseId: issue.warehouseId, itemId: item.id },
-          orderBy: { postedAt: 'desc' },
-        });
-        if (latestLedger && issue.createdAt < latestLedger.postedAt) {
-          throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
-        }
+        // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
 
         // Check if item is frozen in source warehouse
         await this.scopeValidationService.checkWarehouseItemQuarantine(
@@ -161,6 +154,75 @@ export class IssuePostService {
         throw new NotFoundException(
           `Inventory Issue with ID ${issueId} not found`,
         );
+      }
+
+      // 3.5. If there is a linked KitchenRequest, transition it to FULFILLED and update item fulfillment quantities
+      const kitchenRequest = await tx.kitchenRequest.findFirst({
+        where: { issueId: issue.id },
+      });
+      if (kitchenRequest && kitchenRequest.status !== 'FULFILLED') {
+        // Update KitchenRequestItem fulfillment quantities
+        for (const line of issue.lines) {
+          const krItem = await tx.kitchenRequestItem.findFirst({
+            where: { requestId: kitchenRequest.id, itemId: line.itemId },
+          });
+          if (krItem) {
+            await tx.kitchenRequestItem.update({
+              where: { id: krItem.id },
+              data: { quantityFulfilled: line.quantity },
+            });
+          }
+        }
+
+        // Transition status to FULFILLED
+        await tx.kitchenRequest.update({
+          where: { id: kitchenRequest.id },
+          data: {
+            status: 'FULFILLED',
+            version: { increment: 1 },
+          },
+        });
+
+        // Write outbox event for kitchen request posted
+        await this.outboxService.writeEvent(tx, 'KITCHEN_REQUEST_POSTED', {
+          id: kitchenRequest.id,
+          documentNumber: kitchenRequest.requestNumber,
+          warehouseId: kitchenRequest.warehouseId,
+        });
+
+        // Write KITCHEN_CHIEF in-app notice
+        await tx.notificationLog.create({
+          data: {
+            targetRole: Role.KITCHEN_CHIEF,
+            warehouseId: kitchenRequest.warehouseId,
+            message: `Kitchen Request ${kitchenRequest.requestNumber} has been fulfilled.`,
+            isRead: false,
+            documentType: DocumentType.KITCHEN_REQUEST,
+            documentId: kitchenRequest.id,
+          },
+        });
+
+        // Write ApprovalEvent for kitchen request fulfillment
+        const krStep =
+          (await tx.approvalEvent.count({
+            where: {
+              documentId: kitchenRequest.id,
+              documentType: DocumentType.KITCHEN_REQUEST,
+            },
+          })) + 1;
+
+        await tx.approvalEvent.create({
+          data: {
+            documentId: kitchenRequest.id,
+            documentType: DocumentType.KITCHEN_REQUEST,
+            fromStatus: kitchenRequest.status,
+            toStatus: 'FULFILLED',
+            actionPerformed: 'FULFILL',
+            userId,
+            userRole: userRole,
+            stepNumber: krStep,
+          },
+        });
       }
 
       this.metricsService.postingOperationsCounter.inc({

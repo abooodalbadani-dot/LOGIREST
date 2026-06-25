@@ -60,12 +60,12 @@ export default function AvailableInventoryClient() {
  ];
 
  const exportColumns = [
- { header: t('table.sku'), key: 'sku', width: 15 },
- { header: t('table.name'), key: 'name', width: 30 },
+ { header: t('table.sku'), key: 'sku', width: 12 },
+ { header: t('table.name'), key: 'name', width: 35 },
  { header: t('table.category'), key: 'category', width: 20 },
- { header: t('table.qty_physical'), key: 'qtyPhysical', width: 15 },
- { header: t('table.qty_reserved'), key: 'qtyReserved', width: 15 },
- { header: t('table.qty_available'), key: 'qtyAvailable', width: 15 },
+ { header: t('table.qty_physical'), key: 'qtyPhysical', width: 11 },
+ { header: t('table.qty_reserved'), key: 'qtyReserved', width: 11 },
+ { header: t('table.qty_available'), key: 'qtyAvailable', width: 11 },
  ];
 
  return (

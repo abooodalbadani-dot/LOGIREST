@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GrnController } from './grn/grn.controller';
 import { GrnPostService } from './grn-post.service';
+import { GrnVoidService } from '../operations/grn-void.service';
 import { GrnService } from './grn/grn.service';
 import { PurchaseOrderController } from './purchase-orders/po.controller';
 import { PurchaseOrderService } from './purchase-orders/po.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import type { Request } from 'express';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
@@ -17,6 +19,9 @@ describe('Purchasing Controllers', () => {
   };
   const mockGrnPostService = {
     post: jest.fn(),
+  };
+  const mockGrnVoidService = {
+    void: jest.fn(),
   };
 
   const mockGrnService = {};
@@ -30,6 +35,7 @@ describe('Purchasing Controllers', () => {
     cancel: jest.fn(),
   };
 
+  const mockPdfGeneratorService = {};
   const mockPrismaService = {};
   const mockWorkflowService = {};
 
@@ -47,8 +53,10 @@ describe('Purchasing Controllers', () => {
         providers: [
           { provide: GrnService, useValue: mockGrnService },
           { provide: GrnPostService, useValue: mockGrnPostService },
+          { provide: GrnVoidService, useValue: mockGrnVoidService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,
@@ -107,6 +115,7 @@ describe('Purchasing Controllers', () => {
           { provide: PurchaseOrderService, useValue: mockPurchaseOrderService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,

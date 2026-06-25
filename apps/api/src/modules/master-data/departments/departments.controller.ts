@@ -22,6 +22,7 @@ import { ApiSecureController } from '../../../decorators/swagger-docs.decorator'
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
@@ -32,6 +33,7 @@ export class DepartmentsController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
+  @AllRoles()
   async findAll(
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
@@ -86,6 +88,7 @@ export class DepartmentsController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

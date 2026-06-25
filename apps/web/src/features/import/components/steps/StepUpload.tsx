@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Download, Upload, FileIcon, X, Loader2 } from 'lucide-react';
@@ -56,7 +57,7 @@ export function StepUpload({ wizard, locale }: StepUploadProps) {
  reader.onload = (e) => {
  try {
  const data = new Uint8Array(e.target?.result as ArrayBuffer);
- const workbook = XLSX.read(data, { type: 'array' });
+ const workbook = XLSX.read(data, { type: 'array', cellDates: true });
  const sheet = workbook.Sheets[workbook.SheetNames[0]];
  const json = XLSX.utils.sheet_to_json(sheet);
  
@@ -66,7 +67,7 @@ export function StepUpload({ wizard, locale }: StepUploadProps) {
  return;
  }
 
- wizard.setFileData(file.name, file.size, json as Record<string, unknown>[]);
+ wizard.setFileData(file.name, file.size, json as Record<string, unknown>[], file);
  } catch (error) {
  console.error('Error parsing file:', error);
  alert(t('parse_error'));
@@ -102,7 +103,7 @@ export function StepUpload({ wizard, locale }: StepUploadProps) {
  <p className="font-bold text-body-md mb-1">{t('click_to_upload')}</p>
  <p className="text-label-sm text-muted-foreground font-medium opacity-60">{t('upload_hint')}</p>
  </div>
- <input 
+ <Input 
  type="file" 
  ref={fileInputRef} 
  className="hidden" 

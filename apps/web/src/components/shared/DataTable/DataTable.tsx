@@ -32,6 +32,48 @@ import { TableSkeleton } from '@/components/shared/TableSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ExportMenu } from '../ExportMenu';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import { ChevronRight } from 'lucide-react';
+
+const getHeaderString = (header: unknown): string => {
+  if (header === null || header === undefined) return '';
+  if (typeof header === 'string') return header;
+  if (typeof header === 'number') return String(header);
+  if (typeof header === 'function') {
+    try {
+      const fn = header as (props: { column: unknown; header: unknown; table: unknown }) => unknown;
+      const evaluated = fn({
+        column: {},
+        header: {},
+        table: {},
+      });
+      return getHeaderString(evaluated);
+    } catch {
+      return '';
+    }
+  }
+  if (React.isValidElement(header)) {
+    const props: unknown = header.props;
+    if (props && typeof props === 'object') {
+      if ('title' in props && props.title) {
+        const titleStr = getHeaderString(props.title);
+        if (titleStr) return titleStr;
+      }
+      if ('children' in props && props.children) {
+        const children = props.children;
+        if (Array.isArray(children)) {
+          return children
+            .map((child: unknown) => getHeaderString(child))
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+        }
+        return getHeaderString(children);
+      }
+    }
+  }
+  return '';
+};
 
 interface DataTableProps<T> {
  data: T[];
@@ -63,7 +105,21 @@ interface DataTableProps<T> {
  containerHeight?: string | number;
  sorting?: SortingState;
  onSortingChange?: (sorting: SortingState) => void;
+ renderMobileCard?: (item: T) => React.ReactNode;
 }
+
+const formatLocalTime = (isoString: string) => {
+ if (!isoString) return '';
+ const date = new Date(isoString);
+ if (isNaN(date.getTime())) return '';
+ const pad = (n: number) => String(n).padStart(2, '0');
+ const d = pad(date.getDate());
+ const m = pad(date.getMonth() + 1);
+ const y = date.getFullYear();
+ const hr = pad(date.getHours());
+ const min = pad(date.getMinutes());
+ return `${d}/${m}/${y} ${hr}:${min}`;
+};
 
 export function DataTable<T>({
  data,
@@ -89,27 +145,32 @@ export function DataTable<T>({
  containerHeight = '600px',
  sorting: controlledSorting,
  onSortingChange: controlledOnSortingChange,
+ renderMobileCard,
 }: DataTableProps<T>) {
  const t = useTranslations('common.datatable');
  const locale = useLocale();
  const parentRef = React.useRef<HTMLDivElement>(null);
 
- const exportColumns = React.useMemo(() => {
-  return columns
-   .map(col => {
-    const key = ('accessorKey' in col ? (col.accessorKey as string | undefined) : undefined) || col.id;
-    if (!key || key === 'actions') return null;
+  const exportColumns = React.useMemo(() => {
+   return columns
+    .map(col => {
+     const key = ('accessorKey' in col ? (col.accessorKey as string | undefined) : undefined) || col.id;
+     if (!key) return null;
 
-    let headerStr = '';
-    if (typeof col.header === 'string') {
-     headerStr = col.header;
-    } else {
-     headerStr = String(key);
-    }
-    return { header: headerStr, key };
-   })
-   .filter((col): col is { header: string; key: string } => !!col && !!col.header);
- }, [columns]);
+     // Exclude standard UI-only columns: select, actions, expander
+     const excludedKeys = ['select', 'actions', 'expander'];
+     if (excludedKeys.includes(key.toLowerCase())) return null;
+
+     // Exclude any columns that do not have a valid, printable string header
+     const resolvedHeader = getHeaderString(col.header);
+     if (!resolvedHeader || !resolvedHeader.trim()) {
+      return null;
+     }
+
+     return { header: resolvedHeader, key };
+    })
+    .filter((col): col is { header: string; key: string } => !!col);
+  }, [columns]);
 
  const [internalSorting, setInternalSorting] = React.useState<SortingState>([]);
 
@@ -154,7 +215,8 @@ export function DataTable<T>({
  ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
  : 0;
 
- const isRtl = locale === 'ar';
+  const isRtl = locale === 'ar';
+  const isIssuesList = collectionName === 'operations_issues';
 
  const getSortIndicator = (column: Header<T, unknown>) => {
   const sort = sorting.find((s: ColumnSort) => s.id === column.id);
@@ -168,16 +230,15 @@ export function DataTable<T>({
  };
 
  return (
- <div className="flex flex-col gap-6 w-full">
+ <div className="flex flex-col gap-6 w-full min-w-0">
  {(filters || onExport || exportComponent || (enableExport && data && data.length > 0)) && (
- <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
- <div className="w-full flex-1 shrink-0 sm:max-w-xl lg:max-w-2xl min-w-[200px]">
- {filters}
- </div>
- { (onExport || exportComponent || (enableExport && data && data.length > 0)) && (
- <PermissionGate action="export" resource={collectionName || 'generic_table'}>
- <div className="w-full sm:w-auto flex items-center gap-2">
- {exportComponent}
+  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full mb-6 min-w-0">
+   {filters}
+   <div className="hidden md:block flex-1" />
+   { (onExport || exportComponent || (enableExport && data && data.length > 0)) && (
+   <PermissionGate action="export" resource={collectionName || 'generic_table'}>
+   <div className="flex items-center w-full md:w-auto mt-2 md:mt-0 justify-end">
+  {exportComponent}
  {!exportComponent && enableExport && data && data.length > 0 && (
   <ExportMenu
    data={data as Record<string, unknown>[]}
@@ -220,15 +281,22 @@ export function DataTable<T>({
     )}
    </div>
   ) : (
-    <div 
-     ref={parentRef}
-     className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm"
-     style={enableVirtualization ? { height: containerHeight } : {}}
-    >
-     <table 
-      className="w-full text-start border-collapse text-sm whitespace-nowrap min-w-[800px]"
+     <div 
+      ref={parentRef}
+      className={cn(
+       "w-full min-w-0 -mx-4 px-4 md:mx-0 md:px-0 md:border md:rounded-xl overflow-x-auto bg-card md:bg-transparent custom-scrollbar",
+       isIssuesList ? "md:border-brand-gold" : "md:border-border/50",
+       renderMobileCard ? "hidden md:block" : ""
+      )}
+      style={enableVirtualization ? { height: containerHeight } : {}}
      >
-      <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider sticky top-0 z-20">
+      <table 
+       className={cn(
+        "w-full text-start border-collapse text-sm whitespace-nowrap",
+        collectionName === 'operations_issues' ? "min-w-0 md:min-w-[800px]" : "min-w-[800px]"
+       )}
+      >
+      <thead className="hidden md:table-header-group bg-muted/50 border-b border-border text-slate-300 font-semibold text-xs uppercase tracking-wider sticky top-0 z-20">
        {table.getHeaderGroups().map(headerGroup => (
         <tr key={headerGroup.id}>
          {headerGroup.headers.map((header, idx) => {
@@ -240,7 +308,7 @@ export function DataTable<T>({
             <th 
              key={header.id} 
              className={cn(
-              "px-6 py-4 font-medium text-start whitespace-nowrap backdrop-blur-sm bg-muted/50",
+              "px-6 py-4 font-medium text-start whitespace-nowrap backdrop-blur-sm bg-muted/50 group/header",
               isNumeric ? 'text-end' : 'text-start',
               isFirst ? 'sticky start-0 z-30 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[-4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]' : '',
               sortable && 'cursor-pointer select-none'
@@ -251,7 +319,10 @@ export function DataTable<T>({
              {flexRender(header.column.columnDef.header, header.getContext())}
              {sortIndicator && (
               <span className={cn(
-               "text-xs opacity-60 inline-block",
+               "text-xs inline-block transition-opacity duration-150",
+               sorting.some((s: ColumnSort) => s.id === header.column.id)
+                 ? "opacity-100 text-primary"
+                 : "opacity-0 group-hover/header:opacity-50",
                isRtl ? "order-first" : "order-last"
               )}>
                {sortIndicator}
@@ -264,7 +335,12 @@ export function DataTable<T>({
         </tr>
        ))}
       </thead>
-      <tbody className="divide-y divide-border border-none bg-card">
+      <tbody className={cn(
+       "border-none bg-card",
+       collectionName === 'operations_issues'
+        ? "flex flex-col gap-4 bg-transparent md:table-row-group md:bg-card md:divide-y md:divide-border"
+        : "divide-y divide-border"
+      )}>
        {enableVirtualization ? (
         <>
          {paddingTop > 0 && (
@@ -274,30 +350,112 @@ export function DataTable<T>({
          )}
          {virtualRows.map((virtualRow) => {
           const row = rows[virtualRow.index];
+          const isIssuesList = collectionName === 'operations_issues';
+          let documentNumber = '';
+          let statusVal = '';
+          let destination = '';
+          let warehouseName = '';
+          let createdAt = '';
+
+          if (isIssuesList && row.original && typeof row.original === 'object') {
+           if ('documentNumber' in row.original) {
+            documentNumber = String(row.original.documentNumber);
+           }
+           if ('status' in row.original) {
+            statusVal = String(row.original.status);
+           }
+           if ('destinationDepartmentName' in row.original) {
+            destination = String(row.original.destinationDepartmentName || '');
+           }
+           if ('warehouseName' in row.original) {
+            warehouseName = String(row.original.warehouseName || '');
+           }
+           if ('createdAt' in row.original) {
+            createdAt = String(row.original.createdAt || '');
+           }
+          }
+
            return (
-            <tr 
-             key={row.id} 
-             className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors group ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
-             style={{ height: `${virtualRowHeight}px` }}
+              <tr 
+               key={row.id} 
+               className={cn(
+                "group hover:bg-surface-container-highest/20 transition-colors",
+                isIssuesList
+                 ? "flex flex-col md:table-row bg-card border border-solid border-brand-gold rounded-xl p-4 md:border-0 md:border-b md:border-border/50 md:rounded-none md:p-0"
+                 : "border-b border-border/50 last:border-0",
+                onRowClick ? "cursor-pointer" : "",
+                rowClassName ? rowClassName(row.original) : ""
+               )}
+             style={isIssuesList ? {} : { height: `${virtualRowHeight}px` }}
              onClick={() => onRowClick && onRowClick(row.original)}
             >
-            {row.getVisibleCells().map((cell, idx) => {
-             const isNumeric = cell.column.columnDef.meta?.numeric === true;
-             const isFirst = idx === 0;
-              return (
-               <td 
-                key={cell.id} 
-                className={cn(
-                  "px-6 py-4 text-foreground text-sm whitespace-nowrap",
-                  isNumeric ? 'text-end font-mono text-muted-foreground' : 'text-start',
-                  isFirst ? 'sticky start-0 z-10 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[-4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]' : ''
+            {isIssuesList ? (
+             <>
+              <td className="md:hidden w-full p-0 flex flex-row items-center justify-between gap-3">
+               <div className="flex-1 flex flex-col gap-2 min-w-0">
+                <div className="flex items-center justify-between w-full gap-2">
+                 <span className="font-semibold text-foreground truncate font-mono text-sm">
+                  {documentNumber}
+                 </span>
+                 <StatusBadge status={statusVal} />
+                </div>
+                {warehouseName && (
+                 <div className="text-muted-foreground text-xs truncate">
+                  {warehouseName}
+                 </div>
                 )}
-                dir={isNumeric ? 'ltr' : undefined}
-               >
-               {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                <div className="flex items-center justify-between w-full text-xs gap-2">
+                 <span className="text-slate-700 dark:text-slate-300 truncate max-w-[50%]">
+                  {destination || '—'}
+                 </span>
+                 {createdAt && (
+                  <span className="text-muted-foreground font-mono flex-shrink-0">
+                   {formatLocalTime(createdAt)}
+                  </span>
+                 )}
+                </div>
+               </div>
+               <div className="flex-shrink-0 text-brand-gold bg-brand-gold/10 p-1.5 rounded-lg border border-brand-gold">
+                <ChevronRight className="w-4 h-4 rtl:rotate-180" />
+               </div>
               </td>
-             );
-            })}
+              {row.getVisibleCells().map((cell, idx) => {
+               const isNumeric = cell.column.columnDef.meta?.numeric === true;
+               const isFirst = idx === 0;
+               return (
+                <td 
+                 key={cell.id} 
+                 className={cn(
+                   "hidden md:table-cell px-6 py-4 text-foreground text-sm whitespace-nowrap",
+                   isNumeric ? 'text-end font-mono text-muted-foreground' : 'text-start',
+                   isFirst ? 'sticky start-0 z-10 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)]' : ''
+                 )}
+                 dir={isNumeric ? 'ltr' : undefined}
+                >
+                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+               );
+              })}
+             </>
+            ) : (
+             row.getVisibleCells().map((cell, idx) => {
+              const isNumeric = cell.column.columnDef.meta?.numeric === true;
+              const isFirst = idx === 0;
+               return (
+                <td 
+                 key={cell.id} 
+                 className={cn(
+                   "px-6 py-4 text-foreground text-sm whitespace-nowrap",
+                   isNumeric ? 'text-end font-mono text-muted-foreground' : 'text-start',
+                   isFirst ? 'sticky start-0 z-10 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[-4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]' : ''
+                 )}
+                 dir={isNumeric ? 'ltr' : undefined}
+                >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+               </td>
+              );
+             })
+            )}
            </tr>
           );
          })}
@@ -308,35 +466,127 @@ export function DataTable<T>({
          )}
         </>
        ) : (
-        table.getRowModel().rows.map((row) => (
-         <tr 
-          key={row.id} 
-          className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors group ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
-          style={{ height: `${virtualRowHeight}px` }}
-          onClick={() => onRowClick && onRowClick(row.original)}
-         >
-          {row.getVisibleCells().map((cell, idx) => {
-           const isNumeric = cell.column.columnDef.meta?.numeric === true;
-           const isFirst = idx === 0;
-           return (
-            <td 
-             key={cell.id} 
-             className={cn(
-               "px-6 py-4 text-foreground text-sm whitespace-nowrap",
-               isNumeric ? 'text-end font-mono text-muted-foreground' : 'text-start',
-               isFirst ? 'sticky start-0 z-10 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[-4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]' : ''
-             )}
-             dir={isNumeric ? 'ltr' : undefined}
-            >
-             {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </td>
-           );
-          })}
-         </tr>
-        ))
+        table.getRowModel().rows.map((row) => {
+         const isIssuesList = collectionName === 'operations_issues';
+         let documentNumber = '';
+         let statusVal = '';
+         let destination = '';
+         let warehouseName = '';
+         let createdAt = '';
+
+         if (isIssuesList && row.original && typeof row.original === 'object') {
+          if ('documentNumber' in row.original) {
+           documentNumber = String(row.original.documentNumber);
+          }
+          if ('status' in row.original) {
+           statusVal = String(row.original.status);
+          }
+          if ('destinationDepartmentName' in row.original) {
+           destination = String(row.original.destinationDepartmentName || '');
+          }
+          if ('warehouseName' in row.original) {
+           warehouseName = String(row.original.warehouseName || '');
+          }
+          if ('createdAt' in row.original) {
+           createdAt = String(row.original.createdAt || '');
+          }
+         }
+
+         return (
+          <tr 
+           key={row.id} 
+           className={cn(
+            isIssuesList
+             ? "flex flex-col md:table-row bg-card border border-solid border-brand-gold rounded-xl p-4 md:border-0 md:border-b md:border-border/50 md:rounded-none md:p-0 hover:bg-surface-container-highest/20 transition-colors group"
+             : "border-b border-border/50 last:border-0 hover:bg-surface-container-highest/20 transition-colors group",
+            onRowClick ? "cursor-pointer" : "",
+            rowClassName ? rowClassName(row.original) : ""
+           )}
+           style={isIssuesList ? {} : { height: `${virtualRowHeight}px` }}
+           onClick={() => onRowClick && onRowClick(row.original)}
+          >
+           {isIssuesList ? (
+            <>
+             <td className="md:hidden w-full p-0 flex flex-row items-center justify-between gap-3">
+              <div className="flex-1 flex flex-col gap-2 min-w-0">
+               <div className="flex items-center justify-between w-full gap-2">
+                <span className="font-semibold text-foreground truncate font-mono text-sm">
+                 {documentNumber}
+                </span>
+                <StatusBadge status={statusVal} />
+               </div>
+               {warehouseName && (
+                <div className="text-muted-foreground text-xs truncate">
+                 {warehouseName}
+                </div>
+               )}
+               <div className="flex items-center justify-between w-full text-xs gap-2">
+                <span className="text-slate-700 dark:text-slate-300 truncate max-w-[50%]">
+                 {destination || '—'}
+                </span>
+                {createdAt && (
+                 <span className="text-muted-foreground font-mono flex-shrink-0">
+                  {formatLocalTime(createdAt)}
+                 </span>
+                )}
+               </div>
+              </div>
+              <div className="flex-shrink-0 text-brand-gold bg-brand-gold/10 p-1.5 rounded-lg border border-brand-gold">
+               <ChevronRight className="w-4 h-4 rtl:rotate-180" />
+              </div>
+             </td>
+             {row.getVisibleCells().map((cell, idx) => {
+              const isNumeric = cell.column.columnDef.meta?.numeric === true;
+              const isFirst = idx === 0;
+              return (
+               <td 
+                key={cell.id} 
+                className={cn(
+                  "hidden md:table-cell px-6 py-4 text-foreground text-sm whitespace-nowrap",
+                  isNumeric ? 'text-end font-mono text-muted-foreground' : 'text-start',
+                  isFirst ? 'sticky start-0 z-10 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)]' : ''
+                )}
+                dir={isNumeric ? 'ltr' : undefined}
+               >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+               </td>
+              );
+             })}
+            </>
+           ) : (
+            row.getVisibleCells().map((cell, idx) => {
+             const isNumeric = cell.column.columnDef.meta?.numeric === true;
+             const isFirst = idx === 0;
+             return (
+              <td 
+               key={cell.id} 
+               className={cn(
+                 "px-6 py-4 text-foreground text-sm whitespace-nowrap",
+                 isNumeric ? 'text-end font-mono text-muted-foreground' : 'text-start',
+                 isFirst ? 'sticky start-0 z-10 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)]' : ''
+               )}
+               dir={isNumeric ? 'ltr' : undefined}
+              >
+               {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </td>
+             );
+            })
+           )}
+          </tr>
+         );
+        })
        )}
       </tbody>
      </table>
+    </div>
+  )}
+  {renderMobileCard && !isLoading && data.length > 0 && (
+    <div className="flex flex-col gap-4 md:hidden w-full mt-4">
+      {data.map((item, idx) => (
+      <React.Fragment key={idx}>
+        {renderMobileCard(item)}
+      </React.Fragment>
+      ))}
     </div>
   )}
 

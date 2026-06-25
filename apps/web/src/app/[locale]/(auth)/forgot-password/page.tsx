@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -64,7 +65,7 @@ export default function ForgotPasswordPage() {
       </p>
       <Button
         onClick={() => router.push('/login')}
-        className="w-full h-10 flex items-center justify-center gap-2 text-[10px] font-bold bg-black dark:bg-card text-white dark:text-[#050505] hover:bg-operational-cyan transition-all rounded-lg uppercase tracking-widest shadow-sm shadow-black/5 dark:shadow-white/5 border-none"
+        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         {t('back_to_login')}
@@ -182,7 +183,7 @@ export default function ForgotPasswordPage() {
                     {t('email')}
                   </label>
                   <div className="relative group">
-                    <input
+                    <Input
                       type="email"
                       placeholder={t('login.operator_placeholder')}
                       className="w-full bg-black/[0.02] dark:bg-card/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-card/[0.05] transition-all h-9 rounded text-[11px] px-4 outline-none placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"

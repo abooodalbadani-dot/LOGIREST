@@ -12,8 +12,10 @@ import {
   HttpStatus,
   BadRequestException,
   ForbiddenException,
+  Res,
 } from '@nestjs/common';
 import { StocktakePostService } from './stocktake-post.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import { StocktakeService } from './stocktake.service';
 import { WorkflowStateGuard } from '../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../decorators/workflow-action.decorator';
@@ -30,32 +32,39 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
+
+function safeIsoString(val: unknown): string | undefined {
+  if (!val) return undefined;
+  const d = val instanceof Date ? val : new Date(val as string);
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
 
 function mapStocktakeDetail(session: Record<string, unknown>) {
-  const counts = (session.counts as Record<string, unknown>[]) || [];
-  const snapshots = (session.snapshots as Record<string, unknown>[]) || [];
-  const warehouse = session.warehouse as Record<string, unknown> | null;
+  const counts = (session?.counts as Record<string, unknown>[]) || [];
+  const snapshots = (session?.snapshots as Record<string, unknown>[]) || [];
+  const warehouse = session?.warehouse as Record<string, unknown> | null;
+  const sessionNumber = (session?.sessionNumber as string) || '';
 
   const items = snapshots.map((snapshot: Record<string, unknown>) => {
-    const item = snapshot.item as Record<string, unknown> | null;
-    const lot = snapshot.lot as Record<string, unknown> | null;
+    const item = snapshot?.item as Record<string, unknown> | null;
+    const lot = snapshot?.lot as Record<string, unknown> | null;
     const barcodeMappings =
       (item?.barcodeMappings as Record<string, unknown>[]) || [];
     const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
 
     const count = counts.find(
       (c: Record<string, unknown>) =>
-        c.itemId === snapshot.itemId && c.lotId === snapshot.lotId,
+        c && c.itemId === snapshot?.itemId && c.lotId === snapshot?.lotId,
     );
 
     const countedQty = count ? Number(count.qtyCounted) : null;
-    const snapshotQty = Number(snapshot.qtySnapshot);
+    const snapshotQty = snapshot ? Number(snapshot.qtySnapshot) : 0;
     const variance = countedQty !== null ? countedQty - snapshotQty : null;
 
     return {
-      id: snapshot.id as string,
-      itemId: snapshot.itemId as string,
+      id: (snapshot?.id as string) || '',
+      itemId: (snapshot?.itemId as string) || '',
       itemName: (item?.name as string) || '',
       barcode: (barcodeMappings[0]?.barcode as string) || '',
       uom: (unitOfMeasure?.code as string) || 'PCS',
@@ -64,61 +73,40 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
       variance: variance,
       varianceReason: null,
       lotNumber: (lot?.lotNumber as string) || undefined,
-      expiryDate: lot?.expiryDate
-        ? (lot.expiryDate instanceof Date
-            ? lot.expiryDate
-            : new Date(lot.expiryDate as string)
-          ).toISOString()
-        : undefined,
-      unitCost: Number(snapshot.wacSnapshot),
+      expiryDate: safeIsoString(lot?.expiryDate),
+      unitCost: snapshot ? Number(snapshot.wacSnapshot) : 0,
     };
   });
 
+  const totalItems = snapshots.length;
+  const countedItems = counts.length;
+
   return {
-    id: session.id as string,
-    sessionNumber: session.sessionNumber as number,
-    sessionName: `Stocktake ${String(session.sessionNumber)}`,
-    warehouseId: session.warehouseId as string,
+    id: (session?.id as string) || '',
+    sessionNumber,
+    sessionName: `Stocktake ${sessionNumber}`,
+    warehouseId: (session?.warehouseId as string) || '',
     warehouseName: (warehouse?.name as string) || '',
-    status: session.status as string,
-    snapshotAt: session.createdAt
-      ? (session.createdAt instanceof Date
-          ? session.createdAt
-          : new Date(session.createdAt as string)
-        ).toISOString()
-      : new Date().toISOString(),
+    status: (session?.status as string) || 'DRAFT',
+    snapshotAt: safeIsoString(session?.createdAt) || new Date().toISOString(),
     startedBy: 'System',
-    startedAt: session.createdAt
-      ? (session.createdAt instanceof Date
-          ? session.createdAt
-          : new Date(session.createdAt as string)
-        ).toISOString()
-      : new Date().toISOString(),
+    startedAt: safeIsoString(session?.createdAt) || new Date().toISOString(),
     postedAt:
-      session.status === 'POSTED' && session.createdAt
-        ? (session.createdAt instanceof Date
-            ? session.createdAt
-            : new Date(session.createdAt as string)
-          ).toISOString()
+      session?.status === 'POSTED' && session?.createdAt
+        ? safeIsoString(session.createdAt) || null
         : null,
     postedBy: null,
     items,
-    version: session.version as number,
+    totalItems,
+    countedItems,
+    version: typeof session?.version === 'number' ? session.version : 1,
     description: '',
     approverComment: '',
     approvedAt: undefined,
-    createdAt: session.createdAt
-      ? (session.createdAt instanceof Date
-          ? session.createdAt
-          : new Date(session.createdAt as string)
-        ).toISOString()
-      : new Date().toISOString(),
-    updatedAt: session.createdAt
-      ? (session.createdAt instanceof Date
-          ? session.createdAt
-          : new Date(session.createdAt as string)
-        ).toISOString()
-      : new Date().toISOString(),
+    createdAt: safeIsoString(session?.createdAt) || new Date().toISOString(),
+    updatedAt:
+      safeIsoString(session?.updatedAt || session?.createdAt) ||
+      new Date().toISOString(),
     auditLog: [],
   };
 }
@@ -143,6 +131,7 @@ export class StocktakeController {
     private readonly stocktakePostService: StocktakePostService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   private async validateSessionScope(
@@ -233,7 +222,43 @@ export class StocktakeController {
     return mapStocktakeDetail(session);
   }
 
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const session = await this.stocktakeService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      session.warehouseId,
+    );
+
+    const buffer = await this.pdfGeneratorService.generateStocktakePdf(
+      id,
+      locale,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=STOCKTAKE_${session.sessionNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
+  }
+
   @Put(':stocktakeId/items/:lineId')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   async updateLineItem(
     @Param('stocktakeId') stocktakeId: string,
     @Param('lineId') lineId: string,
@@ -263,6 +288,13 @@ export class StocktakeController {
   }
 
   @Put(':sessionId/counts/:countId')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   async updateCountAlias(
     @Param('sessionId') sessionId: string,
     @Param('countId') countId: string,
@@ -328,6 +360,13 @@ export class StocktakeController {
   }
 
   @Post(':id/count')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async count(
     @Param('id') id: string,
@@ -339,7 +378,7 @@ export class StocktakeController {
     @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
     await this.validateSessionScope(id, activeWarehouseId);
-    await this.stocktakeService.count(id, body.counts, userId);
+    await this.stocktakeService.count(id, body?.counts ?? [], userId);
     return mapStocktakeDetail(await this.stocktakeService.findOne(id));
   }
 
@@ -380,7 +419,7 @@ export class StocktakeController {
   }
 
   @Post(':id/approve')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -411,7 +450,7 @@ export class StocktakeController {
   }
 
   @Post(':id/reject')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -442,6 +481,7 @@ export class StocktakeController {
   }
 
   @Post(':id/recount')
+  @Roles(Role.ADMIN, Role.INV_MGR)
   @HttpCode(HttpStatus.OK)
   async recount(
     @Param('id') id: string,
@@ -474,6 +514,7 @@ export class StocktakeController {
   }
 
   @Post(':id/review_variance')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
   @HttpCode(HttpStatus.OK)
   async reviewVariance(
     @Param('id') id: string,
@@ -512,7 +553,13 @@ export class StocktakeController {
   }
 
   @Post(':id/cancel')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -543,7 +590,7 @@ export class StocktakeController {
   }
 
   @Post(':id/post')
-  @Roles(Role.ADMIN, Role.INV_MGR)
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',

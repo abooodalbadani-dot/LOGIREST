@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import '@testing-library/jest-dom';
 import { FEFOLotAllocator } from './FEFOLotAllocator';
 import type { Lot } from '@/types/master-data';
 
@@ -142,7 +143,7 @@ describe('FEFOLotAllocator', () => {
    onClose: () => {}
   });
 
-  const inputs = screen.getAllByRole('spinbutton');
+  const inputs = screen.getAllByLabelText('Allocate Quantity');
   fireEvent.change(inputs[0], { target: { value: '5' } });
   fireEvent.change(inputs[1], { target: { value: '5' } });
 
@@ -291,8 +292,8 @@ describe('FEFOLotAllocator', () => {
   assertAllocated(5, 5);
   
   // Z1 should show 0 allocated
-  const z1Input = screen.getAllByRole('spinbutton')[0];
-  expect(z1Input).toHaveValue(null);
+  const z1Input = screen.getAllByLabelText('Allocate Quantity')[0];
+  expect(z1Input).toHaveValue('');
  });
 
  it('handles clearing an input field', () => {

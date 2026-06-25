@@ -1,3 +1,7 @@
+/**
+ * Centralized Domain Statuses
+ * These constants represent the definitive statuses for each document domain.
+ */
 export declare const PR_STATUS: {
     readonly DRAFT: "DRAFT";
     readonly SUBMITTED: "SUBMITTED";
@@ -45,12 +49,13 @@ export declare const TRANSFER_STATUS: {
     readonly DRAFT: "DRAFT";
     readonly IN_TRANSIT: "IN_TRANSIT";
     readonly RECEIVED: "RECEIVED";
+    readonly DISPUTED: "DISPUTED";
     readonly POSTED: "POSTED";
     readonly CANCELLED: "CANCELLED";
     readonly VOIDED: "VOIDED";
 };
 export type TransferStatus = typeof TRANSFER_STATUS[keyof typeof TRANSFER_STATUS];
-export declare const ALL_TRANSFER_STATUSES: readonly ["DRAFT", "IN_TRANSIT", "RECEIVED", "POSTED", "CANCELLED", "VOIDED"];
+export declare const ALL_TRANSFER_STATUSES: readonly ["DRAFT", "IN_TRANSIT", "RECEIVED", "DISPUTED", "POSTED", "CANCELLED", "VOIDED"];
 export declare const ISSUE_STATUS: {
     readonly DRAFT: "DRAFT";
     readonly SUBMITTED: "SUBMITTED";
@@ -82,6 +87,12 @@ export declare const KITCHEN_REQUEST_STATUS: {
 };
 export type KitchenRequestStatus = typeof KITCHEN_REQUEST_STATUS[keyof typeof KITCHEN_REQUEST_STATUS];
 export declare const ALL_KITCHEN_REQUEST_STATUSES: readonly ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "FULFILLED", "CANCELLED", "VOIDED"];
-export declare const ALL_STATUSES: readonly ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "POSTED", "CANCELLED", "RECEIVED", "FULFILLED", "PARTIAL", "STARTED", "COUNTING", "IN_TRANSIT", "OPEN", "VOIDED", "REVIEW", "CLOSED", "VARIANCE_SUBMITTED", "COUNTING_COMPLETED", "ACTIVE", "INACTIVE"];
+/**
+ * Union of all possible document statuses (Static Tuple for Zod)
+ */
+export declare const ALL_STATUSES: readonly ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "POSTED", "CANCELLED", "RECEIVED", "FULFILLED", "PARTIAL", "STARTED", "COUNTING", "IN_TRANSIT", "DISPUTED", "OPEN", "VOIDED", "REVIEW", "CLOSED", "VARIANCE_SUBMITTED", "COUNTING_COMPLETED", "ACTIVE", "INACTIVE"];
 export type DocumentStatus = typeof ALL_STATUSES[number];
+/**
+ * Exhaustive check helper
+ */
 export declare function assertNever(x: never): never;

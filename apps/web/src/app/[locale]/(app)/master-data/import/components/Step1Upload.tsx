@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
 import { Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,7 @@ export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
  </p>
  </div>
 
- <input 
+ <Input 
  type="file" 
  aria-label={t('drop_file') || "Upload File"}
  className="absolute inset-0 opacity-0 cursor-pointer" 

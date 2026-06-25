@@ -12,6 +12,7 @@ import { KitchenRequestsController } from '../kitchen-requests/kitchen-requests.
 import { KitchenRequestsService } from '../kitchen-requests/kitchen-requests.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import type { Request } from 'express';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
@@ -65,6 +66,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
     cancel: jest.fn(),
   };
 
+  const mockPdfGeneratorService = {};
   const mockPrismaService = {};
   const mockWorkflowService = {};
 
@@ -96,7 +98,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
     });
 
     it('should call create', async () => {
-      const body = { departmentId: 'dept-1', lines: [] };
+      const body = {
+        destinationDeptId: 'dept-1',
+        lines: [{ itemId: 'item-1', requestedQty: 5 }],
+        kitchenRequestId: 'req-1',
+        notes: 'test notes',
+      };
       mockIssuesService.create.mockResolvedValue({ id: 'iss-1' });
 
       const result = await controller.create(
@@ -107,7 +114,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
       );
       expect(result.id).toBe('iss-1');
       expect(mockIssuesService.create).toHaveBeenCalledWith(
-        body,
+        {
+          departmentId: 'dept-1',
+          lines: [{ itemId: 'item-1', quantity: 5 }],
+          kitchenRequestId: 'req-1',
+          notes: 'test notes',
+        },
         'user-1',
         'wh-1',
       );
@@ -186,6 +198,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
           { provide: TransferPostService, useValue: mockTransferPostService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,
@@ -286,6 +299,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
           },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,

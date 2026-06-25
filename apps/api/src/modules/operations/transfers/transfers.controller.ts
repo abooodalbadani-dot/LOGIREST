@@ -9,10 +9,12 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { TransferPostService } from '../transfer-post.service';
 import { TransfersService } from './transfers.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -27,7 +29,7 @@ import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 function mapTransferDetail(transfer: Record<string, unknown>) {
   const fromWarehouse = transfer.fromWarehouse as Record<
@@ -61,6 +63,11 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
                     nameEn: unitOfMeasure.name as string,
                   }
                 : { id: '', code: '', nameAr: '', nameEn: '' },
+              barcodes: (
+                (item.barcodeMappings as Record<string, unknown>[]) || []
+              ).map((b) => ({
+                barcode: b.barcode as string,
+              })),
             }
           : {
               id: '',
@@ -68,6 +75,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
               nameAr: '',
               nameEn: '',
               primaryUom: { id: '', code: '', nameAr: '', nameEn: '' },
+              barcodes: [],
             },
         lotId: null,
         lot: null,
@@ -79,6 +87,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
         uomId: (item?.uomId as string) || '',
         unitCost: item?.wac ? Number(item.wac) : null,
         lotAllocations: [],
+        notes: (line.notes as string) || '',
       };
     },
   );
@@ -107,7 +116,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
     toWarehouseName: (toWarehouse?.name as string) || '',
     warehouseId: transfer.fromWarehouseId as string,
     branchId: (fromWarehouse?.branchId as string) || '',
-    notes: '',
+    notes: (transfer.notes as string) || '',
     shippedAt: isShipped ? createdAtIso : null,
     receivedAt: isReceived ? createdAtIso : null,
     varianceReason: null,
@@ -129,6 +138,7 @@ export class TransfersController {
     private readonly transferPostService: TransferPostService,
     private readonly transfersService: TransfersService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
@@ -147,7 +157,8 @@ export class TransfersController {
     body: {
       fromWarehouseId: string;
       toWarehouseId: string;
-      lines: Array<{ itemId: string; quantityShipped: number }>;
+      notes?: string;
+      lines: Array<{ itemId: string; quantityShipped: number; notes?: string }>;
     },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
@@ -189,6 +200,35 @@ export class TransfersController {
   @Get('summary')
   async getSummary(@ActiveScope('warehouseId') warehouseId?: string) {
     return this.transfersService.getSummary(warehouseId);
+  }
+
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const transfer = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateAtLeastOneWarehouse(
+      userId,
+      role,
+      [transfer.fromWarehouseId, transfer.toWarehouseId],
+    );
+
+    const buffer = await this.pdfGeneratorService.generateTransferPdf(
+      id,
+      locale,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=Transfer_${transfer.transferNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
   }
 
   @Get(':id')
@@ -391,6 +431,54 @@ export class TransfersController {
         ipAddress,
       },
     );
+    return mapTransferDetail(transfer);
+  }
+
+  @Post(':id/dispute')
+  @Roles(
+    Role.ADMIN,
+    Role.WH_KEEPER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'transfer',
+    action: 'DISPUTE',
+    modelName: 'transfer',
+  })
+  @HttpCode(HttpStatus.OK)
+  async dispute(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body()
+    body: {
+      version?: number;
+      comments: string;
+      disputedLines: Array<{ lineId: string; receivedQty: number }>;
+    },
+    @Req() req: Request,
+  ) {
+    const t = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      t.toWarehouseId,
+    );
+
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const transfer = await this.transfersService.dispute(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
     return mapTransferDetail(transfer);
   }
 }

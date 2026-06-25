@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useLocale } from 'next-intl';
@@ -275,18 +276,19 @@ export function SmartCombobox<T extends ComboboxItem>({
  const defaultFont = size === 'sm' ? 'font-semibold' : 'font-bold';
  const defaultRounded = size === 'sm' ? 'rounded-lg' : 'rounded-xl';
 
+ const isBorderNone = styleTokens.includes('border-none') || styleTokens.includes('border-transparent');
  const finalTriggerClasses = cn(
   "flex-1 w-full min-w-[200px] justify-between text-start flex items-center transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed",
   !hasHeight && defaultHeight,
-  !hasBg && "bg-card border border-border shadow-sm/40 hover:bg-card border border-border shadow-sm focus:bg-card border border-border shadow-sm",
-  !hasBorder && "border border-white/5",
+  !hasBg && "bg-background/50 backdrop-blur-sm",
+  !hasBorder && "border border-brand-gold/40 hover:border-brand-gold/70",
   !hasRounded && defaultRounded,
   !hasPadding && defaultPadding,
   !hasText && defaultText,
   !hasFont && defaultFont,
-  "focus:ring-2 focus:ring-operational-cyan/20",
-  isOpen && "ring-2 ring-operational-cyan/20 bg-card border border-border shadow-sm",
-  error && "ring-2 ring-status-error/20 border-status-error/30",
+  !isBorderNone && "transition-colors duration-200 focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold",
+  (!isBorderNone && isOpen) && "ring-1 ring-brand-gold/50 border-brand-gold bg-background/50",
+  error && "ring-1 ring-red-500/50 border-red-500",
   styleClasses,
   triggerClassName
  );
@@ -347,7 +349,7 @@ export function SmartCombobox<T extends ComboboxItem>({
        {/* Search Header */}
        <div className="relative flex items-center">
         <Search className={cn("absolute w-4 h-4 text-muted-foreground/30", isRTL ? "right-4" : "left-4")} />
-        <input
+        <Input
          ref={inputRef}
          type="text"
          value={searchQuery}

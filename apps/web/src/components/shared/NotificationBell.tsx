@@ -96,26 +96,26 @@ export function NotificationBell() {
 
  return (
   <DropdownMenu>
-   <DropdownMenuTrigger asChild>
-    <button
-     className="relative p-2.5 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all active:scale-95 group focus:outline-none"
-     aria-label={isAr ? 'الإشعارات' : 'Notifications'}
-    >
-     <Bell className="w-5 h-5 group-hover:scale-105 transition-transform" />
-     {unreadNotifications.length > 0 && (
-      <span
-       className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-status-warning px-1 text-[10px] font-bold text-white border border-surface-container-lowest"
-       dir="ltr"
-      >
-       {unreadNotifications.length}
-      </span>
-     )}
-    </button>
-   </DropdownMenuTrigger>
+    <DropdownMenuTrigger asChild>
+     <button
+      className="p-2 text-[#0B1220] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1A2234] rounded-lg transition-colors relative group"
+      aria-label={isAr ? 'الإشعارات' : 'Notifications'}
+     >
+      <Bell className="w-5 h-5 group-hover:scale-105 transition-transform" />
+      {unreadNotifications.length > 0 && (
+       <span
+        className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-status-warning px-1 text-[10px] font-bold text-white border border-surface-container-lowest"
+        dir="ltr"
+       >
+        {unreadNotifications.length}
+       </span>
+      )}
+     </button>
+    </DropdownMenuTrigger>
 
    <DropdownMenuContent
     align={isAr ? 'start' : 'end'}
-    className="w-[350px] max-w-[95vw] p-0 z-50 rounded-2xl border border-border bg-card shadow-xl"
+    className="w-[350px] max-w-[95vw] p-0 z-50 rounded-2xl border border-border shadow-xl bg-white dark:bg-[#1A2234]"
    >
      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
       <span className="text-body-md font-bold text-foreground">
@@ -174,9 +174,9 @@ export function NotificationBell() {
          >
           {notif.message}
          </span>
-         {!notif.isRead && (
-          <span className="w-2 h-2 rounded-full bg-operational-cyan mt-1.5 shrink-0" />
-         )}
+          {!notif.isRead && (
+           <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-operational-cyan" />
+          )}
         </div>
         <span className="text-[10px] text-muted-foreground/60 font-medium shrink-0">
          {formatRelativeTime(notif.createdAt, locale)}

@@ -35,8 +35,8 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
  ];
 
  return (
-  <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-   <div className="flex items-center justify-between">
+  <div className="flex flex-col flex-1 w-full max-w-full min-w-0 overflow-x-hidden p-4 sm:p-6 md:p-8 pb-32 md:pb-8 mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+   <div className="flex flex-wrap items-center justify-between gap-4 w-full max-w-full min-w-0">
     <Breadcrumb 
      items={[
       { label: tCommon('modules.operations'), href: `/transfers` },
@@ -47,7 +47,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     <Button
      variant="ghost"
      onClick={() => router.back()}
-     className="text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors"
+     className="text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors border border-border/50 rounded-lg px-4 bg-muted/20 hover:bg-muted/40"
     >
      <ArrowLeft className="w-3 h-3 me-2" />
      {tCommon('back')}
@@ -56,124 +56,139 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
 
    <PageHeader
     title={t('detail_title')}
-    description={
-     <div className="flex items-center gap-2">
+    subtitle={
+     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
       <span>{tCommon('doc_number')}</span>
       <span dir="ltr" className="font-mono text-foreground/80">{transfer?.documentNumber}</span>
      </div>
     }
-    actions={
-     <div className="flex gap-4 items-center">
+    children={
+     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
       <StatusBadge status={transferStatus as BadgeStatus} />
-      <DocumentExportMenu />
+       <DocumentExportMenu documentType="TRANSFER" documentId={transfer.id} documentNumber={transfer.documentNumber} />
      </div>
     }
    />
 
-   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 bg-card border border-border shadow-sm/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-2xl">
+   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 bg-card border border-border shadow-sm/50 p-4 sm:p-6 md:p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-2xl">
     <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
 
-    <div className="space-y-2">
-     <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('from_warehouse')}</label>
-     <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-bold text-body-md">
+    <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30">
+     <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('from_warehouse')}</label>
+     <div className="font-semibold text-body-md text-foreground break-words">
       {transfer?.fromWarehouseName}
      </div>
     </div>
 
-    <div className="space-y-2">
-     <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('to_warehouse')}</label>
-     <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-bold text-body-md">
+    <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30">
+     <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('to_warehouse')}</label>
+     <div className="font-semibold text-body-md text-foreground break-words">
       {transfer?.toWarehouseName}
      </div>
     </div>
 
     {transfer?.shippedAt && (
-     <div className="space-y-2">
-      <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
-      <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+     <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30 relative overflow-hidden group">
+      <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('shipped_at')}</label>
+      <div className="font-medium text-body-md text-foreground flex items-center justify-between">
        <ClientOnlyTime 
         date={transfer.shippedAt} 
         mode="datetime" 
-        className="font-mono text-body-md font-bold text-foreground/80"
+        className="font-mono text-sm"
        />
-       <Truck className="w-4 h-4 text-foreground/40" />
+       <Truck className="w-4 h-4 shrink-0 text-foreground/20 absolute bottom-4 end-4 group-hover:text-foreground/40 transition-colors" />
       </div>
      </div>
     )}
 
     {transfer?.receivedAt && (
-     <div className="space-y-2">
-      <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('received_at')}</label>
-      <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+     <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30 relative overflow-hidden group">
+      <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{t('received_at')}</label>
+      <div className="font-medium text-body-md text-foreground flex items-center justify-between">
        <ClientOnlyTime 
         date={transfer.receivedAt} 
         mode="datetime" 
-        className="font-mono text-body-md font-bold text-foreground/80"
+        className="font-mono text-sm"
        />
-       <PackageCheck className="w-4 h-4 text-foreground/40" />
+       <PackageCheck className="w-4 h-4 shrink-0 text-foreground/20 absolute bottom-4 end-4 group-hover:text-foreground/40 transition-colors" />
       </div>
      </div>
     )}
 
-    <div className="col-span-1 md:col-span-4 space-y-2">
-     <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{tCommon('notes')}</label>
-     <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-medium text-body-md min-h-[60px]">
+    <div className="col-span-1 md:col-span-4 flex flex-col gap-1.5 p-4 rounded-xl bg-muted/20 border border-border/30">
+     <label className="text-[10px] font-semibold uppercase text-muted-foreground/60">{tCommon('notes')}</label>
+     <div className="font-medium text-body-md text-foreground/80 min-h-[40px] break-words">
       {transfer?.notes || '—'}
      </div>
     </div>
 
     {transfer?.varianceReason && (
-     <div className="col-span-1 md:col-span-4 space-y-2">
-      <label className="text-label-xs font-semibold uppercase text-status-warning/80 ms-1">{t('variance_reason')}</label>
-      <div className="bg-status-warning/5 border border-status-warning/20 rounded-xl p-4 font-medium text-body-md">
+     <div className="col-span-1 md:col-span-4 flex flex-col gap-1.5 p-4 rounded-xl bg-status-warning/5 border border-status-warning/20">
+      <label className="text-[10px] font-semibold uppercase text-status-warning/80">{t('variance_reason')}</label>
+      <div className="font-medium text-body-md text-status-warning break-words">
        {transfer.varianceReason}
       </div>
      </div>
     )}
    </div>
 
-   <div className="bg-card border border-border shadow-sm/30 rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
-    <DocumentLineItemTable
-     lines={transfer?.lines ?? []}
-     locale={locale as 'ar' | 'en'} 
-     isReadOnly={true}
-     onRemoveLine={() => {}}
-     hideLotColumns={true}
-     headers={{
-      code: tCommon('table_headers.code'),
-      name: tCommon('table_headers.name'),
-      qty: t('transfer_qty'),
-      uom: tCommon('table_headers.uom'),
-     }}
-     extraColumns={[
-      {
-       header: t('shipped_qty'),
-       cell: (line: TransferLine) => (
-        <div className="flex justify-center">
-         <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
-          {line.shippedQty ?? line.qty}
-         </span>
+    <div className="w-full max-w-full min-w-0 overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
+     <DocumentLineItemTable
+      lines={transfer?.lines ?? []}
+      locale={locale as 'ar' | 'en'} 
+      isReadOnly={true}
+      onRemoveLine={() => {}}
+      hideLotColumns={true}
+      headers={{
+       code: tCommon('table_headers.code'),
+       name: tCommon('table_headers.name'),
+       qty: t('transfer_qty'),
+       uom: tCommon('table_headers.uom'),
+      }}
+      renderQty={(line) => (
+       <div className="flex justify-center">
+        <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+         {line.qty}
         </div>
-       ),
-      },
-      {
-       header: t('received_qty'),
-       cell: (line: TransferLine) => (
-        <div className="flex justify-center">
-         <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.receivedQty ? 'bg-muted/50 text-foreground border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
-          {line.receivedQty ?? '—'}
-         </span>
-        </div>
-       ),
-      },
-     ]}
-    />
-   </div>
+       </div>
+      )}
+      extraColumns={[
+       {
+        header: t('shipped_qty'),
+        cell: (line: TransferLine) => (
+         <div className="flex justify-center">
+          <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] px-3 py-1 rounded-lg">
+           {line.shippedQty ?? line.qty}
+          </span>
+         </div>
+        ),
+       },
+       {
+        header: t('received_qty'),
+        cell: (line: TransferLine) => (
+         <div className="flex justify-center">
+          <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]'}`}>
+           {line.receivedQty ?? '—'}
+          </span>
+         </div>
+        ),
+       },
+       {
+        header: tCommon('notes'),
+        cell: (line: TransferLine) => (
+         <div className="flex justify-center">
+          <span className="text-xs text-[#0B1220] dark:text-gray-300">{line.notes || '—'}</span>
+         </div>
+        ),
+       },
+      ]}
+     />
+    </div>
 
    {/* Audit Trail */}
-   <div className="bg-card border border-border shadow-sm p-8 rounded-2xl border border-white/5 shadow-sm transition-all">
-    <div className="flex items-center gap-3 mb-10">
-     <History className="w-4 h-4 text-primary opacity-20" />
+   <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-2xl border border-white/5 shadow-sm transition-all overflow-x-auto">
+    <div className="flex items-center gap-3 mb-6 sm:mb-10">
+     <History className="w-4 h-4 text-primary opacity-20 shrink-0" />
      <h3 className="text-label-xs font-semibold uppercase text-primary/30">{tCommon('audit_trail')}</h3>
     </div>
     <StatusTimeline entries={timelineEntries} />

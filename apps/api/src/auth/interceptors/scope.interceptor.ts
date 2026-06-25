@@ -126,6 +126,15 @@ export class ScopeInterceptor implements NestInterceptor {
     }
 
     if (isGlobal) {
+      if (warehouseId) {
+        const wh = await this.prisma.warehouse.findUnique({
+          where: { id: warehouseId },
+          select: { branchId: true },
+        });
+        if (!wh || wh.branchId !== branchId) {
+          throw new ForbiddenException('Access denied: Scope not authorized');
+        }
+      }
       request.activeScope = {
         warehouseId: warehouseId || '',
         branchId: branchId!,

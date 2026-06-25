@@ -77,7 +77,7 @@ export function DataTable<TData, TValue>({
   placeholder={searchPlaceholder || t("table.search")} value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""} onChange={(event) =>
   table.getColumn(searchKey)?.setFilterValue(event.target.value)
   }
-  className="w-full ps-10 bg-background border-border text-foreground transition-colors focus:border-brand-gold"
+  className="w-full ps-10 bg-background border-input text-foreground transition-colors focus:border-brand-gold"
   />
   </div>
   ) : <div />}

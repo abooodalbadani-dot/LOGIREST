@@ -7,7 +7,14 @@ import { z } from 'zod';
 export function useNotifications() {
  return useQuery<NotificationLog[]>({
   queryKey: ['notifications'],
-  queryFn: () => apiClient.get('/notifications', NotificationLogSchema.array()),
+  queryFn: async () => {
+   try {
+    return await apiClient.get('/notifications', NotificationLogSchema.array(), { skipAutoToast: true });
+   } catch (err) {
+    console.warn('Silent degradation: Failed to fetch notifications in background:', err);
+    return [];
+   }
+  },
   refetchInterval: 30000, // Poll every 30 seconds
  });
 }

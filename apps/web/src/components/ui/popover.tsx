@@ -46,7 +46,7 @@ function PopoverContent({
  >
  <PopoverPrimitive.Popup
  className={cn(
- "z-50 w-72 rounded-lg bg-card border border-border shadow-sm p-4 !text-black ambient-shadow outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-side-bottom:slide-in-from-top-2 data-side-left:slide-in-from-right-2 data-side-right:slide-in-from-left-2 data-side-top:slide-in-from-bottom-2",
+ "z-50 w-72 rounded-lg bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-lg p-4 !text-black ambient-shadow outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-side-bottom:slide-in-from-top-2 data-side-left:slide-in-from-right-2 data-side-right:slide-in-from-left-2 data-side-top:slide-in-from-bottom-2",
  className
  )}
  {...props}

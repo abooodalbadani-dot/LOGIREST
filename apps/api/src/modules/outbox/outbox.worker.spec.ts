@@ -17,6 +17,9 @@ describe('OutboxWorker', () => {
       findUnique: jest.Mock;
       findMany: jest.Mock;
     };
+    warehouse: {
+      findUnique: jest.Mock;
+    };
     notificationLog: {
       create: jest.Mock;
     };
@@ -40,6 +43,9 @@ describe('OutboxWorker', () => {
         findUnique: jest.fn(),
         findMany: jest.fn(),
       },
+      warehouse: {
+        findUnique: jest.fn(),
+      },
       notificationLog: {
         create: jest.fn(),
       },
@@ -48,6 +54,14 @@ describe('OutboxWorker', () => {
     mockEmail = {
       sendEmail: jest.fn().mockResolvedValue({ ok: true }),
     };
+
+    mockPrisma.warehouse.findUnique.mockResolvedValue({
+      name: 'HQ Main Warehouse',
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({
+      name: 'System Admin',
+      email: 'admin@example.com',
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -143,6 +157,8 @@ describe('OutboxWorker', () => {
       ['approver1@example.com', 'approver2@example.com'],
       'Purchase Request PR-2026-0001 awaiting approval',
       expect.stringContaining('PR-2026-0001'),
+      'PR_SUBMITTED',
+      mockEvent.payload,
     );
 
     expect(mockPrisma.outboxEvent.update).toHaveBeenCalledWith({
@@ -265,11 +281,15 @@ describe('OutboxWorker', () => {
       ['admin1@example.com', 'admin2@example.com'],
       '🚨 SECURITY ALERT: Token Replay Attack Detected',
       expect.stringContaining('user-123'),
+      'SECURITY_ALERT_REPLAY_ATTACK',
+      mockEvent.payload,
     );
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['admin1@example.com', 'admin2@example.com'],
       '🚨 SECURITY ALERT: Token Replay Attack Detected',
       expect.stringContaining('192.168.1.1'),
+      'SECURITY_ALERT_REPLAY_ATTACK',
+      mockEvent.payload,
     );
   });
 
@@ -303,6 +323,8 @@ describe('OutboxWorker', () => {
       ['admin1@example.com'],
       '🚨 SECURITY ALERT: Token Replay Attack Detected',
       expect.stringContaining('Unknown'),
+      'SECURITY_ALERT_REPLAY_ATTACK',
+      mockEvent.payload,
     );
   });
 
@@ -346,15 +368,39 @@ describe('OutboxWorker', () => {
       },
     });
 
+    expect(mockPrisma.warehouse.findUnique).toHaveBeenCalledWith({
+      where: { id: 'warehouse-456' },
+      select: { name: true },
+    });
+
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 'user-789' },
+      select: { name: true, email: true },
+    });
+
+    const expectedEnrichedPayload = {
+      ...mockEvent.payload,
+      warehouseName: 'HQ Main Warehouse',
+      postedByName: 'System Admin',
+      formattedDate: '25-05-2026 15:00',
+      warehouseId: 'HQ Main Warehouse',
+      postedByUserId: 'System Admin',
+      timestamp: '25-05-2026 15:00',
+    };
+
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['admin@example.com', 'manager@example.com'],
       'Stock Issue Posted — ISS-2026-001 / تم ترحيل صرف مخزون',
       expect.stringContaining('Inventory Issue Posted / تم ترحيل صرف مخزون'),
+      'ISSUE_POSTED',
+      expectedEnrichedPayload,
     );
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['admin@example.com', 'manager@example.com'],
       'Stock Issue Posted — ISS-2026-001 / تم ترحيل صرف مخزون',
       expect.stringContaining('ISS-2026-001'),
+      'ISSUE_POSTED',
+      expectedEnrichedPayload,
     );
   });
 
@@ -448,16 +494,148 @@ describe('OutboxWorker', () => {
       ['manager@example.com'],
       '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
       expect.stringContaining('Expiry Warning / تحذير انتهاء الصلاحية'),
+      'EXPIRY_WARNING',
+      mockEvent.payload,
     );
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['manager@example.com'],
       '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
       expect.stringContaining('LOT-2026-05'),
+      'EXPIRY_WARNING',
+      mockEvent.payload,
     );
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['manager@example.com'],
       '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
       expect.stringContaining('150 PCS'),
+      'EXPIRY_WARNING',
+      mockEvent.payload,
+    );
+  });
+
+  it('should process KITCHEN_REQUEST_SUBMITTED event and scope recipients to warehouse keepers', async () => {
+    const mockEvent = {
+      id: 'event-kr-1',
+      eventType: 'KITCHEN_REQUEST_SUBMITTED',
+      payload: {
+        id: 'kr-123',
+        documentNumber: 'KR-2026-001',
+        warehouseId: 'wh-123',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockResolvedValue([
+      { email: 'keeper@example.com' },
+    ]);
+
+    const mockJob = {
+      id: 'job-kr-1',
+      data: { eventId: 'event-kr-1' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+      where: {
+        role: Role.WH_KEEPER,
+        isActive: true,
+        warehouseScopes: {
+          some: { warehouseId: 'wh-123' },
+        },
+      },
+      select: { email: true },
+    });
+
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['keeper@example.com'],
+      'Kitchen Request KR-2026-001 submitted',
+      expect.stringContaining('KR-2026-001'),
+      'KITCHEN_REQUEST_SUBMITTED',
+      mockEvent.payload,
+    );
+  });
+
+  it('should process KITCHEN_REQUEST_POSTED event and send only to requesting chef', async () => {
+    const mockEvent = {
+      id: 'event-kr-2',
+      eventType: 'KITCHEN_REQUEST_POSTED',
+      payload: {
+        id: 'kr-123',
+        documentNumber: 'KR-2026-001',
+        requestedById: 'chef-1',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'chef-1',
+      email: 'chef@example.com',
+    });
+
+    const mockJob = {
+      id: 'job-kr-2',
+      data: { eventId: 'event-kr-2' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 'chef-1', isActive: true },
+    });
+
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['chef@example.com'],
+      'Kitchen Request KR-2026-001 Fulfilled',
+      expect.stringContaining('KR-2026-001'),
+      'KITCHEN_REQUEST_POSTED',
+      mockEvent.payload,
+    );
+  });
+
+  it('should process EXPIRY_WARNING_ALERT event and scope to INV_MGR and warehouse keepers', async () => {
+    const mockEvent = {
+      id: 'event-ewa-1',
+      eventType: 'EXPIRY_WARNING_ALERT',
+      payload: {
+        lotId: 'lot-1',
+        lotNumber: 'LOT-30D',
+        itemId: 'item-1',
+        itemName: 'Butter',
+        sku: 'BUT-1',
+        warehouseId: 'wh-123',
+        qtyOnHand: 50,
+        expiryDate: '2026-07-21T00:00:00Z',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockImplementation((args) => {
+      if (args.where.role === Role.INV_MGR) {
+        return Promise.resolve([{ email: 'mgr@example.com' }]);
+      }
+      return Promise.resolve([{ email: 'keeper@example.com' }]);
+    });
+
+    const mockJob = {
+      id: 'job-ewa-1',
+      data: { eventId: 'event-ewa-1' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['keeper@example.com', 'mgr@example.com'],
+      '⚠️ Lot Expiry Warning (30 Days): LOT-30D',
+      expect.stringContaining('within 30 days'),
+      'EXPIRY_WARNING_ALERT',
+      mockEvent.payload,
     );
   });
 });

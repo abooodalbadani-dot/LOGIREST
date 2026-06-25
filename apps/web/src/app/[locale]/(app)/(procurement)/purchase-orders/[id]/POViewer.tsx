@@ -109,7 +109,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
     actions={
      <div className="flex items-center gap-3">
       <StatusBadge status={document.status as BadgeStatus} />
-      <DocumentExportMenu />
+      <DocumentExportMenu documentType="PO" documentId={document.id} documentNumber={document.documentNumber} />
       {actions && (
        <>
         <div className="w-px h-8 bg-surface-variant/10 mx-1" />
@@ -162,6 +162,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
         isReadOnly={true}
         hideLotColumns={true}
         extraColumns={extraColumns}
+        noCollapse={false}
        />
 
        <div className="p-8 bg-card border border-border shadow-sm/30 border-t border-outline-variant/50 flex justify-end">

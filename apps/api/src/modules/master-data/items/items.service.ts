@@ -90,7 +90,7 @@ export class ItemsService {
     limit?: string;
   }) {
     const pageNum = filters.page ? parseInt(filters.page, 10) : 1;
-    const limitNum = filters.limit ? parseInt(filters.limit, 10) : 10;
+    const limitNum = filters.limit ? parseInt(filters.limit, 10) : 1000;
     const skip = (pageNum - 1) * limitNum;
 
     const where: Prisma.ItemWhereInput = {};

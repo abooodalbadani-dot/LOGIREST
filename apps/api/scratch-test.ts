@@ -1,23 +1,19 @@
-import { ValidationPipe } from '@nestjs/common';
-import { CreateSupplierDto } from './src/modules/master-data/suppliers/dto/supplier.dto';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
-const pipe = new ValidationPipe({
-  whitelist: true,
-  transform: true,
-});
-
-const payload = {
-  name: 'Test',
-  contactEmail: null,
-  contactPhone: null,
-  contactName: null,
-  isActive: true,
-};
-
-pipe.transform(payload, { type: 'body', metatype: CreateSupplierDto })
-  .then(res => {
-    console.log('SUCCESS:', res);
-  })
-  .catch(err => {
-    console.log('ERROR:', err.getResponse());
+async function main() {
+  const po = await prisma.purchaseOrder.findFirst({
+    where: { poNumber: 'PO-2026-BR-001-00001' },
+    include: {
+      lines: {
+        include: {
+          item: true,
+        }
+      }
+    }
   });
+  console.log('--- PO LINES ---');
+  console.log(JSON.stringify(po?.lines, null, 2));
+}
+
+main().catch(console.error).finally(() => prisma.$disconnect());

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
@@ -62,20 +63,19 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  <span className="font-mono text-muted-foreground bg-card border border-border shadow-sm px-4 py-3 rounded-xl border border-outline-low text-body-md">
  1 {fromCurrencyCode} =
  </span>
- <input 
- dir="ltr"
- type="number"
- min="0.0001"
- step="0.0001"
- value={rate}
- onChange={(e) => {
- const val = e.target.value;
- setRate(val === '' ? '' : Number(val));
- }}
- disabled={isLoading}
- aria-label="Exchange Rate"
- className="flex-1 bg-card border border-border shadow-sm border border-outline-low text-foreground rounded-xl px-4 py-3 focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 outline-none font-mono text-title-sm shadow-inner transition-all"
- />
+ <Input 
+  type="number"
+  min="0.0001"
+  step="0.0001"
+  value={rate}
+  onChange={(e) => {
+  const val = e.target.value;
+  setRate(val === '' ? '' : Number(val));
+  }}
+  disabled={isLoading}
+  aria-label="Exchange Rate"
+  className="flex-1 bg-card border border-border shadow-sm border border-outline-low text-foreground rounded-xl px-4 py-3 focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 outline-none font-mono text-title-sm shadow-inner transition-all"
+  />
  <span className="font-mono text-muted-foreground bg-card border border-border shadow-sm px-4 py-3 rounded-xl border border-outline-low text-body-md">
  {toCurrencyCode}
  </span>

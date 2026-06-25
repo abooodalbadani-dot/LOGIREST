@@ -22,7 +22,6 @@ import {
  Plus, 
  Download, 
  Scan, 
- Printer, 
  Scale, 
  Edit2, 
  Trash2,
@@ -36,6 +35,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ReportHeader } from '@/components/shared/ReportHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export default function StockBalanceClient() {
  const t = useTranslations('operational.inventory');
@@ -204,24 +204,16 @@ export default function StockBalanceClient() {
  }, [data?.data]);
 
  return (
-  <div className="text-foreground min-w-0 bg-card flex-1 gap-6 selection:bg-operational-cyan/30 border shadow-sm selection:text-operational-cyan flex-col flex min-h-screen border-border w-full">
-   <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+  <div className="text-foreground min-w-0 bg-card flex-1 gap-6 selection:bg-operational-cyan/30 selection:text-operational-cyan flex-col flex min-h-screen w-full overflow-hidden">
+   <div className="flex-1 w-full max-w-full min-w-0 overflow-hidden px-4 md:px-6 pb-32 mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
     
     <ReportHeader />
 
-    {/* Header Section */}
-    <div className="flex flex-col md:flex-row items-center justify-between gap-6 min-w-0">
-     <div className="flex flex-col gap-1 w-full md:w-auto text-start min-w-0">
-      <h1 className="text-headline-lg font-semibold text-foreground">
-       {t('title')}
-      </h1>
-      <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase">
-       {t('subtitle')}
-      </p>
-     </div>
+    <PageHeader title={isRtl ? 'نظرة عامة على' : 'Inventory'} highlight={isRtl ? 'المخزون' : 'Overview'} />
 
-     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-      <div className="relative group w-full sm:w-80">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6 min-w-0 w-full max-w-full">
+     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto max-w-full">
+      <div className="relative group w-full max-w-full sm:w-80">
        <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-operational-cyan transition-colors z-10" />
        <Input 
         type="text"
@@ -231,10 +223,10 @@ export default function StockBalanceClient() {
         className="w-full h-12 ps-12 pe-4 bg-card border border-border shadow-sm/50 border-none rounded-2xl text-label-xs font-bold transition-all"
        />
       </div>
-      <div className="flex items-center gap-4 justify-end">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 justify-end w-full sm:w-auto">
        <PermissionGate action="create" resource="inventory">
-        <Link href="/master-data/items/new">
-         <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-sm shadow-primary/20">
+        <Link href="/master-data/items/new" className="w-full sm:w-auto">
+         <Button className="w-full sm:w-auto h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-sm shadow-primary/20">
           <Plus className="w-4 h-4" />
           <span className="text-label-xs font-semibold uppercase">{t('add_item')}</span>
          </Button>
@@ -243,7 +235,7 @@ export default function StockBalanceClient() {
        <Button 
         variant="default" 
         onClick={handleExport}
-        className="h-12 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl shadow-sm shadow-operational-cyan/20 transition-all border-none group"
+        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        >
         <Download className="w-4 h-4 text-white me-3 transition-transform group-hover:-translate-y-0.5" />
         <span className="text-label-xs font-semibold uppercase">{t('export')}</span>
@@ -253,7 +245,7 @@ export default function StockBalanceClient() {
     </div>
 
     {/* KPI Cards */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full min-w-0">
      <MetricCard
       label={t('total_value')}
       value={formatCurrency(totalValue, baseCurrency, currentLocale as 'ar' | 'en')}
@@ -308,92 +300,124 @@ export default function StockBalanceClient() {
      </div>
      
      <div className="flex-1" />
-
-     <div className="flex items-center gap-2">
-      <Button 
-       variant="ghost" 
-       size="icon" 
-       onClick={() => setPage(p => Math.max(1, p - 1))}
-       className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm/50"
-      >
-       <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
-      </Button>
-      <div className="text-label-xs font-semibold uppercase px-4 text-muted-foreground/80">
-       {t('pagination_info', { 
-        start: ((page - 1) * 15) + 1, 
-        end: Math.min(page * 15, totalItems), 
-        total: formatNumber(totalItems, currentLocale as 'ar' | 'en') 
-       })}
-      </div>
-      <Button 
-       variant="ghost" 
-       size="icon" 
-       onClick={() => setPage(p => p + 1)}
-       className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm/50"
-      >
-       <ChevronRight className="w-4 h-4 rtl:rotate-180" />
-      </Button>
-     </div>
     </div>
 
     {/* Data Table */}
-    <div className="bg-card border border-border shadow-sm/20 rounded-[2.5rem] overflow-hidden shadow-2xl">
-     <DataTable
-      columns={columns}
-      data={filteredItems}
-      isLoading={isLoading}
-      collectionName="inventory_orchestration_feed"
-      pagination={{
-       page,
-       pageSize: data?.meta?.pageSize ?? 15,
-       total: data?.meta?.total ?? 0,
-       totalPages: data?.meta?.totalPages ?? 0,
-       onPageChange: setPage,
-      }}
-      emptyState={<EmptyState variant="minimal" title={t('empty_title') || 'No Stock Records'} description={t('empty_description') || 'No inventory items found. Try adjusting your filters or add items via master data.'} />}
-     />
+    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+     <div className="hidden md:block w-full">
+      <DataTable
+       columns={columns}
+       data={filteredItems}
+       isLoading={isLoading}
+       collectionName="inventory_orchestration_feed"
+       pagination={{
+        page,
+        pageSize: data?.meta?.pageSize ?? 15,
+        total: data?.meta?.total ?? 0,
+        totalPages: data?.meta?.totalPages ?? 0,
+        onPageChange: setPage,
+       }}
+       emptyState={<EmptyState variant="minimal" title={t('empty_title') || 'No Stock Records'} description={t('empty_description') || 'No inventory items found. Try adjusting your filters or add items via master data.'} />}
+      />
+     </div>
+
+     {!isLoading && filteredItems.length > 0 && (
+      <div className="flex flex-col gap-3 md:hidden mt-4">
+       {filteredItems.map((item) => {
+        const qty = item.qtyAvailable;
+        const reorderPoint = item.reorderPoint;
+        const isOutOfStock = qty === 0;
+        const isLowStock = qty <= reorderPoint;
+        
+        return (
+        <div 
+         key={`${item.itemCode}-${item.warehouseId}`} 
+         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+        >
+         {/* TOP TIER: Identity */}
+         <div className="flex justify-between items-start">
+           <div className="flex flex-col gap-1 w-full">
+             <div className="flex justify-between items-start gap-2">
+               <div className="flex items-center gap-2">
+                 <div className="w-6 h-6 rounded-md bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 shrink-0">
+                  <Package className="w-3 h-3 text-muted-foreground/60" />
+                 </div>
+                 <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{item.itemName}</span>
+               </div>
+               {isOutOfStock ? (
+                <StatusBadge status="OUT_OF_STOCK" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+               ) : isLowStock ? (
+                <StatusBadge status="LOW_STOCK" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+               ) : (
+                <StatusBadge status="HEALTHY" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+               )}
+             </div>
+             <div className="flex items-center justify-between gap-2 mt-1">
+               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{item.itemCode}#</span>
+               <span className="text-[10px] font-bold text-muted-foreground truncate">{item.warehouseName}</span>
+             </div>
+           </div>
+         </div>
+
+         {/* MIDDLE TIER: Financial/Qty */}
+         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+           <div className="flex flex-col">
+             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tc('table_headers.available')}</span>
+             <span dir="ltr" className={`font-mono text-sm font-bold ${isOutOfStock ? 'text-status-error' : isLowStock ? 'text-status-warning' : 'text-foreground'}`}>
+               {formatNumber(qty, currentLocale as 'ar' | 'en', 2)} <span className="text-[10px] text-muted-foreground ml-1">{item.uomCode || tc('uoms.kg')}</span>
+             </span>
+           </div>
+         </div>
+
+         {/* BOTTOM TIER: Actions */}
+         <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+           <div className="flex gap-2 shrink-0">
+            <PermissionGate action="update" resource="inventory">
+             <Button variant="ghost" size="sm" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+              <Edit2 className="w-3.5 h-3.5" />
+             </Button>
+            </PermissionGate>
+            <PermissionGate action="delete" resource="inventory">
+             <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-status-error bg-status-error/10 hover:bg-status-error/20">
+              <Trash2 className="w-3.5 h-3.5" />
+             </Button>
+            </PermissionGate>
+           </div>
+         </div>
+        </div>
+       )})}
+      </div>
+     )}
     </div>
 
     {/* Floating Quick Actions Bar */}
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-fit">
-     <div className="flex items-center gap-4 md:gap-8 bg-surface-ledger/95 backdrop-blur-2xl border border-border/80 dark:border-white/15 px-6 md:px-10 h-14 md:h-16 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_20px_rgba(var(--primary-rgb),0.15)] transition-all animate-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center gap-3 border-e border-border/80 dark:border-white/15 pe-6 md:pe-8 shrink-0">
-       <span className="text-[10px] md:text-label-xs font-black uppercase tracking-widest text-operational-cyan leading-none">{t('quick_actions')}</span>
-      </div>
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-between gap-3 md:gap-6 bg-card/70 backdrop-blur-xl border border-brand-gold/30 shadow-2xl rounded-full px-6 py-3 z-50 w-[95vw] md:w-max max-w-2xl transition-all overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden animate-in slide-in-from-bottom-4 duration-500">
+     <div className="flex items-center gap-2 border-e border-brand-gold/20 pe-4 md:pe-6 shrink-0">
+      <span className="text-muted-foreground text-xs tracking-wider uppercase font-medium leading-none">{t('quick_actions')}</span>
+     </div>
     
-      <div className="flex items-center gap-4 md:gap-8">
-       <PermissionGate action="view" resource="inventory">
-        <button 
-         onClick={() => router.push('/inventory/scan-mode')}
-         className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:text-operational-cyan transition-all active:scale-95 group"
-        >
-         <Scan className="w-4 h-4 md:w-5 md:h-5 text-operational-cyan transition-transform group-hover:scale-110" />
-         <span className="hidden sm:inline">{t('barcode_scanner')}</span>
-        </button>
-       </PermissionGate>
-       
-       <div className="w-px h-6 bg-border/80 dark:bg-card/15" />
-       
+     <div className="flex items-center gap-2 md:gap-4 shrink-0">
+      <PermissionGate action="view" resource="inventory">
        <button 
-        onClick={() => window.print()}
-        className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:text-operational-cyan transition-all active:scale-95 group"
+        onClick={() => router.push('/inventory/scan-mode')}
+        className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:bg-brand-gold/10 hover:text-brand-gold transition-colors rounded-lg active:scale-95 group shrink-0"
        >
-        <Printer className="w-4 h-4 md:w-5 md:h-5 text-operational-cyan transition-transform group-hover:scale-110" />
-        <span className="hidden sm:inline">{t('print_labels')}</span>
+        <Scan className="w-4 h-4 md:w-5 md:h-5 text-brand-gold transition-transform group-hover:scale-110" />
+        <span className="hidden sm:inline">{t('barcode_scanner')}</span>
        </button>
-       
-       <div className="w-px h-6 bg-border/80 dark:bg-card/15" />
-       
-       <PermissionGate action="create" resource="adjustment">
-        <button 
-         onClick={() => router.push('/adjustments/new')}
-         className="flex items-center gap-2 md:gap-3 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:text-operational-cyan transition-all active:scale-95 group"
-        >
-         <Scale className="w-4 h-4 md:w-5 md:h-5 text-operational-cyan transition-transform group-hover:scale-110" />
-         <span className="hidden sm:inline">{t('reconciliation')}</span>
-        </button>
-       </PermissionGate>
-      </div>
+      </PermissionGate>
+      
+      <div className="w-px h-6 bg-brand-gold/20 shrink-0" />
+      
+      <PermissionGate action="create" resource="adjustment">
+       <button 
+        onClick={() => router.push('/adjustments/new')}
+        className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:bg-brand-gold/10 hover:text-brand-gold transition-colors rounded-lg active:scale-95 group shrink-0"
+       >
+        <Scale className="w-4 h-4 md:w-5 md:h-5 text-brand-gold transition-transform group-hover:scale-110" />
+        <span className="hidden sm:inline">{t('reconciliation')}</span>
+       </button>
+      </PermissionGate>
      </div>
     </div>
    </div>
