@@ -34,6 +34,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useDebounce } from '@/hooks/useDebounce';
 import { apiClient } from '@/lib/api/client';
 import { AdjustmentDetailSchema } from '@/features/operations/hooks/useAdjustment';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 // Reason → Semantic visual styling (Hardened for LogiRest)
 const REASON_CHIP: Record<string, string> = {
@@ -63,13 +64,29 @@ const t = useTranslations('operations.adjustment');
 
  const warehouseItems = useMemo(() => {
   const list = warehousesData?.data ?? [];
-  return list.map((w) => ({
+  const allItem = {
+   id: 'ALL',
+   name_en: 'All Warehouses',
+   name_ar: 'كل المستودعات',
+   code: 'ALL',
+  };
+  const mapped = list.map((w) => ({
    id: w.id,
    name_en: w.name || '',
    name_ar: w.name || '',
    code: w.code,
   }));
+  return [allItem, ...mapped];
  }, [warehousesData]);
+
+ const exportColumns = useMemo(() => [
+  { header: t('doc_number') || 'Document #', key: 'documentNumber' },
+  { header: t('reason') || 'Reason', key: 'reason' },
+  { header: tCommon('warehouse') || 'Warehouse', key: 'warehouseName' },
+  { header: t('approved_by') || 'Approved By', key: 'approvedBy' },
+  { header: tCommon('created_at') || 'Created At', key: 'createdAt' },
+  { header: tCommon('status_label') || 'Status', key: 'status' }
+ ], [t, tCommon]);
 
  const [page, setPage] = useState(1);
  const [status, setStatus] = useState<string>('');
@@ -432,6 +449,50 @@ const t = useTranslations('operations.adjustment');
    )}
 
    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    {/* Unified Toolbar */}
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 w-full">
+        <div className="relative w-full sm:w-80 md:w-96 group">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder={tCommon('search') || "Search..."}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+          />
+        </div>
+
+        <SmartCombobox
+          items={statusItems}
+          value={status || 'ALL'}
+          onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+          placeholder={tCommon('statuses.all') || "All Statuses"}
+          triggerClassName="w-full sm:w-[160px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold uppercase rounded-xl shadow-sm whitespace-nowrap"
+        />
+
+        <SmartCombobox
+          items={warehouseItems}
+          value={isWarehouseLocked ? (warehouseId || '') : warehouseFilter}
+          onSelect={(item) => { if (!isWarehouseLocked) { setWarehouseFilter(item.id === 'ALL' ? '' : String(item.id)); setPage(1); } }}
+          placeholder={tFilters('warehouse')}
+          disabled={isWarehouseLocked}
+          triggerClassName="w-full sm:w-[180px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold rounded-xl shadow-sm whitespace-nowrap"
+        />
+      </div>
+
+      <div className="flex items-center justify-end shrink-0 gap-3 w-full sm:w-auto">
+        <PermissionGate action="export" resource="adjustment">
+          <ExportMenu
+            data={allData}
+            columns={exportColumns}
+            filename="operations_adjustments"
+            title="Inventory Adjustments Report"
+            isCompactMobile={true}
+          />
+        </PermissionGate>
+      </div>
+    </div>
+
     <div className="hidden md:block w-full">
      <DataTable
       columns={columns}
@@ -441,6 +502,7 @@ const t = useTranslations('operations.adjustment');
       collectionName="operations_adjustments"
       sorting={sorting}
       onSortingChange={setSorting}
+      enableExport={false}
       emptyState={
        <EmptyState
         variant="minimal"
@@ -464,21 +526,6 @@ const t = useTranslations('operations.adjustment');
        totalPages: data.meta.totalPages,
        onPageChange: setPage
       } : undefined}
-      filters={
-         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-           <div className="w-full sm:w-80 md:w-96">
-             <div className="relative w-full group">
-               <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-               <Input
-                 placeholder={tCommon('search') || "Search..."}
-                 value={search}
-                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                 className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold shrink-0 rounded-lg transition-all shadow-sm"
-               />
-             </div>
-           </div>
-         </div>
-        }
      />
     </div>
 
