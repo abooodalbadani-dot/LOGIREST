@@ -115,4 +115,5 @@ EXPOSE 4000
 CMD ["sh", "-c", \
   "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; fi \
    && ./node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma \
-   && node dist/src/main"]
+   && node dist/apps/api/src/main"]
+
