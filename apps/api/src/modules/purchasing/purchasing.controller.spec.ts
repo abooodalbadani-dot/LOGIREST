@@ -7,6 +7,7 @@ import { PurchaseOrderController } from './purchase-orders/po.controller';
 import { PurchaseOrderService } from './purchase-orders/po.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import type { Request } from 'express';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
@@ -34,6 +35,7 @@ describe('Purchasing Controllers', () => {
     cancel: jest.fn(),
   };
 
+  const mockPdfGeneratorService = {};
   const mockPrismaService = {};
   const mockWorkflowService = {};
 
@@ -54,6 +56,7 @@ describe('Purchasing Controllers', () => {
           { provide: GrnVoidService, useValue: mockGrnVoidService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,
@@ -112,6 +115,7 @@ describe('Purchasing Controllers', () => {
           { provide: PurchaseOrderService, useValue: mockPurchaseOrderService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,

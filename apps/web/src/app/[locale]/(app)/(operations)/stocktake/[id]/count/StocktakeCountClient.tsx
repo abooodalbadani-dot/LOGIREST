@@ -401,7 +401,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                       <span className="text-sm font-black text-[#0B1220] dark:text-white leading-tight">
                         {line.itemName}
                       </span>
-                      <span className="text-[10px] text-gray-400 font-mono tracking-widest mt-0.5">
+                      <span className="text-[10px] text-[#b48e67] font-medium font-mono tracking-widest mt-0.5">
                         {line.barcode || '—'}
                       </span>
                     </div>

@@ -146,22 +146,21 @@ const { data, isLoading } = useStocktakeList({
    ),
   },
   {
-   accessorKey: 'warehouseId',
+   accessorKey: 'warehouseName',
    header: tc('warehouse') || 'Warehouse',
    cell: ({ row }) => {
-    const display = warehouseMap.get(row.original.warehouseId) || '—';
     return (
      <div className="gap-2 min-w-0 items-center flex-1 gap-6 flex-col flex w-full">
       <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
        <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
       </div>
-      <span className="font-bold text-label-sm text-foreground/80">{display}</span>
+      <span className="font-bold text-label-sm text-foreground/80">{row.original.warehouseName}</span>
      </div>
     );
    },
   },
   {
-   id: 'progress',
+   accessorKey: 'progress',
    header: t('items_counted') || 'Progress',
    cell: ({ row }) => {
     const total = row.original.totalItems || 0;
@@ -209,11 +208,28 @@ const { data, isLoading } = useStocktakeList({
  </div>
  ),
  },
- ], [t, tc, locale, router, warehouseMap]);
+  ], [t, tc, locale, router, warehouseMap]);
 
 const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
 const inProgressCount = summaryData?.active ?? 0;
 const postedCount = summaryData?.completed ?? 0;
+
+const processedData = useMemo(() => {
+  const rawData = data?.data || [];
+  return rawData.map((item) => {
+    const total = item.totalItems || 0;
+    const counted = item.countedItems || 0;
+    const resolvedWarehouseName =
+      item.warehouseName ||
+      warehouseMap.get(item.warehouseId) ||
+      '—';
+    return {
+      ...item,
+      warehouseName: resolvedWarehouseName,
+      progress: total > 0 ? `${counted}/${total}` : '0',
+    };
+  });
+}, [data?.data, warehouseMap]);
 
  return (
  <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -223,7 +239,7 @@ const postedCount = summaryData?.completed ?? 0;
  { label: tc('inventory'), href: '#' },
  { label: t('title'), href: `/stocktake` }
  ]} 
- />
+  />
  <PageHeader
  title={t('title')}
  subtitle={t('description') || 'Physical inventory verification and variance auditing'} children={
@@ -282,7 +298,7 @@ const postedCount = summaryData?.completed ?? 0;
       <div className="flex-1 w-full min-h-[400px] md:min-h-0">
        <DataTable
         columns={columns}
-        data={data?.data || []}
+        data={processedData}
         isLoading={false}
         onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
         collectionName="operations_stocktake"

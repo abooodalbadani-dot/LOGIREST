@@ -10,6 +10,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AdjustmentPostService } from '../adjustment-post.service';
@@ -29,7 +30,8 @@ import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
-import type { Request } from 'express';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
+import type { Request, Response } from 'express';
 
 function mapAdjustmentDetail(adj: Record<string, unknown>) {
   const rawLines = (adj.lines as Record<string, unknown>[]) || [];
@@ -118,6 +120,7 @@ export class AdjustmentsController {
     private readonly adjustmentsService: AdjustmentsService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
@@ -194,6 +197,35 @@ export class AdjustmentsController {
       adj.warehouseId,
     );
     return mapAdjustmentDetail(adj);
+  }
+
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const adj = await this.adjustmentsService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      adj.warehouseId,
+    );
+
+    const buffer = await this.pdfGeneratorService.generateAdjustmentPdf(
+      id,
+      locale,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=ADJUSTMENT_${adj.adjustmentNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
   }
 
   @Put(':id')

@@ -1,7 +1,7 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
@@ -35,8 +35,10 @@ import {
  XCircle as XCircleIcon,
  CheckCircle as CheckCircleIcon
 } from 'lucide-react';
+import { AlertCircle as AlertCircleIcon, History as HistoryIcon, Package as PackageIcon, Send as SendIcon, CheckCircle as CheckCircleCircle, Clock as ClockIcon, Save, FileText, ArrowLeft, Scan, Trash2, Loader2 } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { useItems } from '@/features/items/hooks/useItems';
@@ -132,6 +134,47 @@ function UnitCostInput({
       onBlur={handleBlur}
       className={className}
     />
+  );
+}
+
+function AdjustmentLotSelector({ 
+  itemId, 
+  warehouseId, 
+  value, 
+  onChange, 
+  disabled 
+}: { 
+  itemId: string; 
+  warehouseId: string; 
+  value?: string; 
+  onChange: (lotId: string, lotNumber: string, expiryDate?: string) => void;
+  disabled: boolean;
+}) {
+  const { data: lots } = useLotsByItem({ itemId, warehouseId });
+  const items = useMemo(() => {
+    return (lots || []).map(lot => ({
+      id: lot.id,
+      name: lot.lotNumber + (lot.isExpired ? ` (Expired)` : ''),
+      code: lot.lotNumber,
+    }));
+  }, [lots]);
+
+  return (
+    <div className="flex items-center justify-center w-full" dir="ltr">
+      <SmartCombobox
+        items={items}
+        value={value || ''}
+        disabled={disabled}
+        onSelect={(item) => {
+          const selected = lots?.find(l => l.id === item.id);
+          if (selected) {
+            onChange(selected.id, selected.lotNumber, selected.expiryDate || undefined);
+          }
+        }}
+        placeholder={"Select Lot"}
+        triggerClassName="w-32 md:w-40 h-7 rounded-sm border border-gray-600 bg-transparent text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-white focus:ring-1 focus:ring-primary shadow-none"
+      />
+    </div>
   );
 }
 
@@ -320,55 +363,34 @@ export function AdjustmentForm({
    toast.error(t('errors.negative_stock_not_allowed'));
    return;
   }
-  try {
-   await submitAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
-   toast.success(t('submit_success'));
-   setSubmitDialogOpen(false);
-  } catch (e) {
-   console.error(e);
-   toast.error(tc('error_occurred'));
-  }
+  await submitAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
+  toast.success(t('submit_success'));
+  setSubmitDialogOpen(false);
  };
 
  const handleApprove = async () => {
-  try {
-   await approveAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
-   toast.success(t('approve_success'));
-   setApproveDialogOpen(false);
-  } catch (e) {
-   console.error(e);
-   toast.error(tc('error_occurred'));
-  }
+  await approveAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
+  toast.success(t('approve_success'));
+  setApproveDialogOpen(false);
  };
 
  const handleReject = async () => {
   const trimmedComment = rejectionComment.trim();
   if (trimmedComment.length < 15) return;
-  try {
-   await rejectAdjustment.mutateAsync({ 
-    id,
-    version: document?.version || 0, 
-    reject: trimmedComment,
-    signal: abortController.signal 
-   });
-   toast.success(t('reject_success'));
-   setRejectDialogOpen(false);
-  } catch (e) {
-   console.error(e);
-   toast.error(tc('error_occurred'));
-  }
+  await rejectAdjustment.mutateAsync({ 
+   id,
+   version: document?.version || 0, 
+   reject: trimmedComment,
+   signal: abortController.signal 
+  });
+  toast.success(t('reject_success'));
+  setRejectDialogOpen(false);
  };
 
  const handlePost = async () => {
-  try {
-   await postAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
-   setPostDialogOpen(false);
-   router.push(`/adjustments`);
-  } catch (e) {
-   console.error(e);
-   const message = e instanceof Error ? e.message : tc('error_occurred');
-   toast.error(message);
-  }
+  await postAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
+  setPostDialogOpen(false);
+  router.push(`/adjustments`);
  };
 
  const handleScan = async (barcode: string) => {
@@ -455,10 +477,10 @@ export function AdjustmentForm({
   setLines(prev => prev.filter(l => l.id !== id));
  };
 
- const updateLine = (id: string, updates: Partial<AdjustmentLine>) => {
+ const updateLine = useCallback((id: string, updates: Partial<AdjustmentLine>) => {
   if (!canEdit) return;
   setLines(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
- };
+ }, [canEdit]);
 
  const timelineEntries = useMemo(() => {
   if (!document?.timeline) return [];
@@ -468,6 +490,112 @@ export function AdjustmentForm({
    by: e.by
   }));
  }, [document]);
+
+ const extraColumns = useMemo(() => [
+  {
+   header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
+   cell: (line: AdjustmentLine) => {
+    const isIncrease = line.direction === 'INCREASE';
+    return (
+     <div className="flex justify-center w-full">
+      <UnitCostInput
+       value={line.unitCost}
+       disabled={!isIncrease || !canEdit}
+       placeholder={isIncrease ? '0' : '-'}
+       onChange={(val) => {
+        updateLine(line.id, { unitCost: val });
+       }}
+        className={cn(
+          "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all disabled:opacity-30",
+          isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
+         )}
+      />
+     </div>
+    );
+   }
+  },
+  {
+   header: t('direction') || 'Direction',
+   cell: (line: AdjustmentLine) => (
+    <div className="flex justify-center bg-gray-50 border border-gray-200 dark:bg-[#0B1220] dark:border-gray-700 rounded h-8 w-full max-w-[140px] p-0.5 mx-auto">
+     <button
+      type="button"
+      disabled={!canEdit}
+      onClick={() => updateLine(line.id, { direction: 'INCREASE' })}
+      className={cn(
+       "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+       line.direction === 'INCREASE'
+        ? "bg-[#b48e67]/15 text-[#b48e67] shadow-sm"
+        : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
+      )}
+     >
+      <ArrowUp className="w-2.5 h-2.5" />
+      {t('direction_increase') || (locale === 'ar' ? 'زيادة' : 'Inc')}
+     </button>
+     <button
+      type="button"
+      disabled={!canEdit}
+      onClick={() => updateLine(line.id, { direction: 'DECREASE' })}
+      className={cn(
+       "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+       line.direction === 'DECREASE'
+        ? "bg-status-error/15 text-status-error shadow-sm"
+        : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
+      )}
+     >
+      <ArrowDown className="w-2.5 h-2.5" />
+      {t('direction_decrease') || (locale === 'ar' ? 'نقص' : 'Dec')}
+     </button>
+    </div>
+   )
+  },
+  {
+   header: t('qty_before') || 'Qty Before',
+   cell: (line: AdjustmentLine) => (
+    <div className="flex flex-col items-center gap-0.5 tabular-nums">
+     <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
+      {Number(line.qtyBefore).toLocaleString('en-US')}
+     </span>
+    </div>
+   )
+  },
+  {
+   header: tc('table_headers.lot') || 'Lot',
+   cell: (line: AdjustmentLine) => (
+    <AdjustmentLotSelector
+     itemId={line.item.id}
+     warehouseId={warehouseId}
+     value={line.lotAllocations?.[0]?.lotId}
+     disabled={!canEdit || !!lockState?.isLocked}
+     onChange={(lotId) => {
+       updateLine(line.id, {
+         lotAllocations: [{ lotId, qty: line.qtyAdjusted }]
+       });
+     }}
+    />
+   )
+  },
+  {
+   header: t('qty_after') || 'Qty After',
+   cell: (line: AdjustmentLine) => {
+    const after = line.direction === 'INCREASE' ? line.qtyBefore + line.qtyAdjusted : line.qtyBefore - line.qtyAdjusted;
+    return (
+     <div className="flex flex-col items-center gap-0.5 tabular-nums">
+      <span className={cn(
+       "text-body-md font-bold",
+       after < 0 ? "text-red-500" : "text-foreground"
+      )} lang="en" dir="ltr">
+       {Number(after).toLocaleString('en-US')}
+      </span>
+      {after < 0 && (
+       <span className="text-xs text-red-500">{t('errors.exceeds_available_stock')}</span>
+      )}
+     </div>
+    );
+   }
+  }
+ ], [locale, t, tc, canEdit, updateLine, warehouseId, lockState?.isLocked]);
+
  return (
   <div className="min-h-screen pb-12 animate-in fade-in duration-500 print:bg-card print:p-0 print:m-0 print:pb-0 print:animate-none">
    {/* Print header (visible only when printing) */}
@@ -496,7 +624,7 @@ export function AdjustmentForm({
       />
      </>
     ) : undefined}
-    actions={<DocumentExportMenu />}
+    actions={<DocumentExportMenu documentType="ADJUSTMENT" documentId={isNew ? undefined : id} documentNumber={document?.documentNumber} />}
     isEditing={true}
    />
 
@@ -615,7 +743,16 @@ export function AdjustmentForm({
        </div>
        <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 mx-4 mb-4 overflow-hidden">
         <DocumentLineItemTable
-         lines={lines.map(l => ({ ...l, qty: l.qtyAdjusted, lotAllocations: undefined }))}
+         lines={lines.map(l => ({
+          ...l,
+          qty: l.qtyAdjusted,
+          lotAllocations: l.lotAllocations?.map(la => ({
+           lotId: la.lotId,
+           lotNumber: '',
+           allocatedQty: la.qty,
+           qty: la.qty,
+          }))
+         }))}
          locale={locale as 'ar' | 'en'}
          isReadOnly={!canEdit || !!lockState?.isLocked}
          onRemoveLine={(id) => removeLine(id)}
@@ -640,98 +777,11 @@ export function AdjustmentForm({
              const val = parseFloat(e.target.value);
              updateLine(line.id, { qtyAdjusted: val || 0 });
             }}
-             className="h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center font-sans"
+             className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
            />
           </div>
          )}
-         extraColumns={[
-          {
-           header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
-           cell: (line: AdjustmentLine) => {
-            const isIncrease = line.direction === 'INCREASE';
-            return (
-             <div className="flex justify-center w-full">
-              <UnitCostInput
-               value={line.unitCost}
-               disabled={!isIncrease || !canEdit}
-               placeholder={isIncrease ? '0' : '-'}
-               onChange={(val) => {
-                updateLine(line.id, { unitCost: val });
-               }}
-                className={cn(
-                 "h-8 w-full md:w-20 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-sm px-2 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center disabled:opacity-30 font-sans",
-                 isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
-                )}
-              />
-             </div>
-            );
-           }
-          },
-          {
-           header: t('direction') || 'Direction',
-           cell: (line: AdjustmentLine) => (
-            <div className="flex justify-center bg-gray-50 border border-gray-200 dark:bg-[#0B1220] dark:border-gray-700 rounded h-8 w-full max-w-[140px] p-0.5 mx-auto">
-             <button
-              type="button"
-              disabled={!canEdit}
-              onClick={() => updateLine(line.id, { direction: 'INCREASE' })}
-              className={cn(
-               "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-               line.direction === 'INCREASE'
-                ? "bg-[#b48e67]/15 text-[#b48e67] shadow-sm"
-                : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
-              )}
-             >
-              <ArrowUp className="w-2.5 h-2.5" />
-              {t('direction_increase') || (locale === 'ar' ? 'زيادة' : 'Inc')}
-             </button>
-             <button
-              type="button"
-              disabled={!canEdit}
-              onClick={() => updateLine(line.id, { direction: 'DECREASE' })}
-              className={cn(
-               "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-               line.direction === 'DECREASE'
-                ? "bg-status-error/15 text-status-error shadow-sm"
-                : "text-gray-500 hover:text-[#0B1220] dark:hover:text-gray-300"
-              )}
-             >
-              <ArrowDown className="w-2.5 h-2.5" />
-              {t('direction_decrease') || (locale === 'ar' ? 'نقص' : 'Dec')}
-             </button>
-            </div>
-           )
-          },
-          {
-           header: t('qty_before') || 'Qty Before',
-           cell: (line: AdjustmentLine) => (
-            <div className="flex flex-col items-center gap-0.5 tabular-nums">
-             <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
-              {Number(line.qtyBefore).toLocaleString('en-US')}
-             </span>
-            </div>
-           )
-          },
-          {
-           header: t('qty_after') || 'Qty After',
-           cell: (line: AdjustmentLine) => {
-            const after = line.direction === 'INCREASE' ? line.qtyBefore + line.qtyAdjusted : line.qtyBefore - line.qtyAdjusted;
-            return (
-             <div className="flex flex-col items-center gap-0.5 tabular-nums">
-              <span className={cn(
-               "text-body-md font-bold",
-               after < 0 ? "text-red-500" : "text-foreground"
-              )} lang="en" dir="ltr">
-               {Number(after).toLocaleString('en-US')}
-              </span>
-              {after < 0 && (
-               <span className="text-xs text-red-500">{t('errors.exceeds_available_stock')}</span>
-              )}
-             </div>
-            );
-           }
-          }
-         ]}
+         extraColumns={extraColumns}
         />
        </div>
       </div>
@@ -900,14 +950,14 @@ export function AdjustmentForm({
       className="print-hidden"
       actions={
        !isNew && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full md:w-auto md:me-auto">
          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role || ''} disabled={hasNegativeStock}>
           <Button 
            variant="outline"
            onClick={() => setSubmitDialogOpen(true)}
-           className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+           className="w-full md:w-auto h-12 md:h-10 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-md shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none uppercase text-sm tracking-wider px-8"
           >
-           <Send className="w-5 h-5 me-3" />
+           <Send className="w-5 h-5 me-2" />
            {t('submit_for_approval')}
           </Button>
          </ActionGuard>

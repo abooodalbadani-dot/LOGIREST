@@ -6,6 +6,7 @@ import { GrnVoidService } from '../../operations/grn-void.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
@@ -35,6 +36,8 @@ describe('GrnController', () => {
     void: jest.fn(),
   };
 
+  const mockPdfGeneratorService = {};
+
   const mockPrismaService = {
     goodsReceivedNote: {
       findUnique: jest.fn(),
@@ -56,6 +59,7 @@ describe('GrnController', () => {
         { provide: GrnVoidService, useValue: mockGrnVoidService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
         {
           provide: ScopeValidationService,
           useValue: mockScopeValidationService,

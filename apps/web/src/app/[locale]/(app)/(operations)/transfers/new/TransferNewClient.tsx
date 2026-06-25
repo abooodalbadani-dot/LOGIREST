@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useParams } from 'next/navigation';
@@ -46,6 +46,94 @@ interface NewTransferLine {
  qty: number;
  uomId: string;
  notes?: string;
+}
+
+interface TransferLineNotesCellProps {
+ locale: 'ar' | 'en';
+ lineId: string;
+ notes?: string;
+ onChange: (val: string) => void;
+}
+
+function TransferLineNotesCell({ locale, lineId, notes, onChange }: TransferLineNotesCellProps) {
+ const [localNotes, setLocalNotes] = useState(notes || '');
+
+ useEffect(() => {
+  setLocalNotes(notes || '');
+ }, [notes]);
+
+ return (
+  <div className="flex justify-center min-w-[200px] w-full">
+   <Input
+    value={localNotes}
+    onChange={(e) => setLocalNotes(e.target.value)}
+    onBlur={() => onChange(localNotes)}
+    placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
+    className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
+   />
+  </div>
+ );
+}
+
+interface TransferLineQtyCellProps {
+ lineId: string;
+ qty: number;
+ isExceeded: boolean;
+ onChange: (val: number) => void;
+}
+
+function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLineQtyCellProps) {
+ const [localQty, setLocalQty] = useState(qty !== undefined && qty !== null ? String(qty) : '1');
+
+ useEffect(() => {
+  setLocalQty(qty !== undefined && qty !== null ? String(qty) : '1');
+ }, [qty]);
+
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const rawVal = e.target.value;
+  if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+   setLocalQty(rawVal);
+   if (rawVal !== '' && rawVal !== '.') {
+    const parsed = parseFloat(rawVal);
+    if (!isNaN(parsed) && parsed > 0) {
+     onChange(parsed);
+    }
+   }
+  }
+ };
+
+ const handleBlur = () => {
+  let finalVal = 1;
+  if (localQty === '' || localQty === '.') {
+   finalVal = 1;
+  } else {
+   const parsed = parseFloat(localQty);
+   if (isNaN(parsed) || parsed <= 0) {
+    finalVal = 1;
+   } else {
+    finalVal = parsed;
+   }
+  }
+  setLocalQty(String(finalVal));
+  onChange(finalVal);
+ };
+
+ return (
+  <div className="flex items-center justify-end w-full">
+   <Input
+    dir="ltr"
+    type="text"
+    inputMode="decimal"
+    value={localQty}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    className={cn(
+     "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all",
+     isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
+    )}
+   />
+  </div>
+ );
 }
 
 export function TransferNewClient() {
@@ -240,11 +328,47 @@ export function TransferNewClient() {
   });
  };
 
- const hasQuantityErrors = !!inventoryBalances?.data && lines.some(line => {
-  const balance = inventoryBalances.data.find(b => b.itemId === line.itemId);
-  const availableQty = balance ? balance.qtyAvailable : 0;
-  return line.qty > availableQty || line.qty <= 0;
- });
+  const hasQuantityErrors = !!inventoryBalances?.data && lines.some(line => {
+   const balance = inventoryBalances.data.find(b => b.itemId === line.itemId);
+   const availableQty = balance ? balance.qtyAvailable : 0;
+   return line.qty > availableQty || line.qty <= 0;
+  });
+
+  const handleNotesChange = useCallback((lineId: string, val: string) => {
+   setLines(prev => prev.map(l => l.id === lineId ? { ...l, notes: val } : l));
+  }, []);
+
+  const handleQtyChange = useCallback((lineId: string, val: number) => {
+   setLines(prev => prev.map(l => l.id === lineId ? { ...l, qty: val } : l));
+  }, []);
+
+  const renderQty = useCallback((line: NewTransferLine) => {
+   const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
+   const availableQty = balance ? balance.qtyAvailable : 0;
+   const isExceeded = balance ? line.qty > availableQty : false;
+   return (
+    <TransferLineQtyCell
+     lineId={line.id}
+     qty={line.qty}
+     isExceeded={isExceeded}
+     onChange={(val) => handleQtyChange(line.id, val)}
+    />
+   );
+  }, [inventoryBalances?.data, handleQtyChange]);
+
+  const extraColumns = useMemo(() => [
+   {
+    header: tCommon('notes'),
+    cell: (line: NewTransferLine) => (
+     <TransferLineNotesCell
+      locale={locale as 'ar' | 'en'}
+      lineId={line.id}
+      notes={line.notes}
+      onChange={(val) => handleNotesChange(line.id, val)}
+     />
+    )
+   }
+  ], [locale, tCommon, handleNotesChange]);
 
  const isValid = !!(
   fromWarehouseId && 
@@ -454,48 +578,8 @@ export function TransferNewClient() {
            </span>
           );
         }}
-        renderQty={(line) => {
-         const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
-         const availableQty = balance ? balance.qtyAvailable : 0;
-         const isExceeded = balance ? line.qty > availableQty : false;
-         return (
-          <div className="flex items-center justify-end w-full">
-            <Input
-             dir="ltr"
-             type="number"
-             min="0.001"
-             step="0.001"
-             value={line.qty}
-             onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
-             }}
-              className={cn(
-               "w-full text-center font-black text-lg bg-white dark:bg-[#0B1220] text-[#0B1220] dark:text-white border border-gray-300 dark:border-gray-700 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none transition-colors [font-variant-numeric:lining-nums_tabular-nums]",
-               isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
-              )}
-            />
-          </div>
-         );
-        }}
-        extraColumns={[
-         {
-          header: tCommon('notes'),
-          cell: (line) => (
-           <div className="flex justify-center min-w-[200px] w-full">
-            <Input
-             value={line.notes || ''}
-             onChange={(e) => {
-              const val = e.target.value;
-              setLines(prev => prev.map(l => l.id === line.id ? { ...l, notes: val } : l));
-             }}
-             placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
-             className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 rounded-lg h-9 px-3 text-label-sm font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
-            />
-           </div>
-          )
-         }
-        ]}
+        renderQty={renderQty}
+        extraColumns={extraColumns}
        />
       </div>
      </div>

@@ -111,7 +111,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
     actions={
      <div className="flex items-center gap-3">
       {actions}
-      <DocumentExportMenu />
+      <DocumentExportMenu documentType="STOCKTAKE" documentId={session.id} documentNumber={session.sessionNumber} />
      </div>
     }
    />

@@ -50,6 +50,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       PORT: 4000
       NODE_ENV: development
+      CHROMIUM_PATH: /usr/bin/chromium
       NODE_OPTIONS: --max-old-space-size=1024
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
@@ -69,7 +70,7 @@ services:
       resources:
         limits:
           cpus: '1.5'
-          memory: 1536M
+          memory: 2560M
         reservations:
           cpus: '0.5'
           memory: 768M
@@ -189,14 +190,16 @@ services:
       PGPASSWORD: ${DB_PASSWORD}
       PGHOST: db
       PGPORT: 5432
-      BACKUP_S3_ACCESS_KEY: ${BACKUP_S3_ACCESS_KEY:-logirest_minio}
-      BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:-logirest_minio_secret}
+      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID:-logirest_minio}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY:-logirest_minio_secret}
       BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-logirest-backups}
       BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-http://minio:9000}
       BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
     volumes:
       - ./scripts:/scripts:ro
       - ./backups:/backups
+      - uploads_data:/uploads:ro
     entrypoint: [ "sh", "-c", "while true; do sh /scripts/db-backup.sh; sleep 86400; done" ]
 
   prometheus:
@@ -225,3 +228,4 @@ volumes:
   caddy_data:
   caddy_config:
   minio_data:
+  uploads_data:

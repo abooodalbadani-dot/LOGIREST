@@ -13,6 +13,19 @@
   --color-card-dark: var(--card-bg);
   --color-bg-light: var(--background);
 
+  /* Override default Tailwind cyan with #b48e67 (Gold) across all system components */
+  --color-cyan-50: color-mix(in srgb, #b48e67 10%, white);
+  --color-cyan-100: color-mix(in srgb, #b48e67 20%, white);
+  --color-cyan-200: color-mix(in srgb, #b48e67 30%, white);
+  --color-cyan-300: color-mix(in srgb, #b48e67 40%, white);
+  --color-cyan-400: color-mix(in srgb, #b48e67 60%, white);
+  --color-cyan-500: #b48e67;
+  --color-cyan-600: color-mix(in srgb, #b48e67 80%, black);
+  --color-cyan-700: color-mix(in srgb, #b48e67 60%, black);
+  --color-cyan-800: color-mix(in srgb, #b48e67 40%, black);
+  --color-cyan-900: color-mix(in srgb, #b48e67 20%, black);
+  --color-cyan-950: color-mix(in srgb, #b48e67 10%, black);
+
   /* Fonts */
   --font-sans: var(--font-ibm-plex), var(--font-ibm-plex-arabic), sans-serif;
   --font-display: var(--font-be-vietnam-pro), sans-serif;
@@ -143,7 +156,7 @@
 
 :root {
   /* Light Mode: Operational Elegance & Luxury Enterprise */
-  --operational-cyan: #CAAE85;
+  --operational-cyan: #b48e67;
   --operational-red: #ba1a1a;
   --surface-ledger: #FCFBF8;
 
@@ -167,7 +180,7 @@
   /* Surface Foundation */
   --foreground: #1A1A1A;
 
-  --primary: #CAAE85;
+  --primary: #b48e67;
   --primary-foreground: #ffffff;
   --primary-container: #715b38;
 
@@ -182,7 +195,7 @@
   --muted-foreground: #2C2C2C;
   /* Darkened from #544C42 for high readability and contrast */
 
-  --accent: #CAAE85;
+  --accent: #b48e67;
   --accent-foreground: #ffffff;
 
   --destructive: #ba1a1a;
@@ -209,7 +222,7 @@
   --border-surface: #E6D5C1;
   --border-muted: #F0E6D8;
   --input: #E6D5C1;
-  --ring: #caae85;
+  --ring: #b48e67;
 
   --outline-low: rgba(113, 91, 56, 0.05);
   --outline-medium: rgba(113, 91, 56, 0.1);
@@ -231,11 +244,11 @@
 
 .dark {
   /* Dark Mode: Luxury Enterprise */
-  --operational-cyan: #CAAE85;
+  --operational-cyan: #b48e67;
   --operational-red: #ffb4ab;
   --surface-ledger: #121212;
 
-  --status-success: #caae85;
+  --status-success: #b48e67;
   --status-warning: #eb8f3b;
   --status-error: #ffb4ab;
   --status-info: #a6b2cd;
@@ -255,7 +268,7 @@
   --surface: #18181B;
   --foreground: #F9FAFB;
 
-  --primary: #CAAE85;
+  --primary: #b48e67;
   --primary-foreground: #0a0a0a;
   --primary-container: #715b38;
   --primary-fixed-dim: #dfc298;
@@ -270,7 +283,7 @@
   --muted: #374151;
   --muted-foreground: #a3a3a3;
 
-  --accent: #CAAE85;
+  --accent: #b48e67;
   --accent-foreground: #fcfbf8;
 
   --destructive: #ffb4ab;
@@ -295,16 +308,16 @@
   --border-surface: #524433;
   --border-muted: #3D3326;
   --input: #524433;
-  --ring: #caae85;
+  --ring: #b48e67;
 
-  --outline-low: rgba(202, 174, 133, 0.05);
-  --outline-medium: rgba(202, 174, 133, 0.1);
-  --outline-strong: rgba(202, 174, 133, 0.2);
+  --outline-low: rgba(180, 142, 103, 0.05);
+  --outline-medium: rgba(180, 142, 103, 0.1);
+  --outline-strong: rgba(180, 142, 103, 0.2);
 
-  --primary-rgb: 202, 174, 133;
-  --operational-cyan-rgb: 202, 174, 133;
+  --primary-rgb: 180, 142, 103;
+  --operational-cyan-rgb: 180, 142, 103;
   --operational-red-rgb: 255, 180, 171;
-  --status-success-rgb: 202, 174, 133;
+  --status-success-rgb: 180, 142, 103;
   --status-warning-rgb: 235, 143, 59;
   --status-error-rgb: 255, 180, 171;
   --on-surface-rgb: 247, 239, 234;

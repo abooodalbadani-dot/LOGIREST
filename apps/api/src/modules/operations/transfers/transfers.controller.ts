@@ -9,10 +9,12 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { TransferPostService } from '../transfer-post.service';
 import { TransfersService } from './transfers.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -27,7 +29,7 @@ import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 function mapTransferDetail(transfer: Record<string, unknown>) {
   const fromWarehouse = transfer.fromWarehouse as Record<
@@ -136,6 +138,7 @@ export class TransfersController {
     private readonly transferPostService: TransferPostService,
     private readonly transfersService: TransfersService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
@@ -197,6 +200,35 @@ export class TransfersController {
   @Get('summary')
   async getSummary(@ActiveScope('warehouseId') warehouseId?: string) {
     return this.transfersService.getSummary(warehouseId);
+  }
+
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const transfer = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateAtLeastOneWarehouse(
+      userId,
+      role,
+      [transfer.fromWarehouseId, transfer.toWarehouseId],
+    );
+
+    const buffer = await this.pdfGeneratorService.generateTransferPdf(
+      id,
+      locale,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=Transfer_${transfer.transferNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
   }
 
   @Get(':id')

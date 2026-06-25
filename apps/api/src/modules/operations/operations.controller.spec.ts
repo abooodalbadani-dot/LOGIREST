@@ -12,6 +12,7 @@ import { KitchenRequestsController } from '../kitchen-requests/kitchen-requests.
 import { KitchenRequestsService } from '../kitchen-requests/kitchen-requests.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import type { Request } from 'express';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
@@ -65,6 +66,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
     cancel: jest.fn(),
   };
 
+  const mockPdfGeneratorService = {};
   const mockPrismaService = {};
   const mockWorkflowService = {};
 
@@ -196,6 +198,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
           { provide: TransferPostService, useValue: mockTransferPostService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,
@@ -296,6 +299,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
           },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
           {
             provide: ScopeValidationService,
             useValue: mockScopeValidationService,

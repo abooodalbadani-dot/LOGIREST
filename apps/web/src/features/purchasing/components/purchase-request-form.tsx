@@ -640,10 +640,10 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                             <QuantityInput
                               value={form.watch(`lines.${index}.req_qty`)}
                               onChange={(val) => {
-                                form.setValue(`lines.${index}.req_qty`, val as any, { shouldDirty: true, shouldValidate: true });
+                                form.setValue(`lines.${index}.req_qty`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                               }}
                               disabled={isFormDisabled || isSubmitting}
-                              className="w-24 text-center font-black text-lg bg-white border border-[#b48e67]/40 text-[#0B1220] focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+                              className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
                             />
                           )}
                           {(minStock !== undefined || reorderPt !== undefined) && (

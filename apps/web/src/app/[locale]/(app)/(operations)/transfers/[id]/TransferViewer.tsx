@@ -65,7 +65,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
     children={
      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
       <StatusBadge status={transferStatus as BadgeStatus} />
-      <DocumentExportMenu />
+       <DocumentExportMenu documentType="TRANSFER" documentId={transfer.id} documentNumber={transfer.documentNumber} />
      </div>
     }
    />

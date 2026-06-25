@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useMemo, useEffect, useState } from 'react';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, type UseFormRegister } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -12,10 +12,10 @@ import { Input } from '@/components/ui/input';
 import { 
  useCreateKitchenRequest,
  useUpdateKitchenRequestStatus
-} from '@/features/operations/hooks/useKitchenRequests';
+ } from '@/features/operations/hooks/useKitchenRequests';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
-import { useItems } from '@/features/items/hooks/useItems';
+import { useWarehouseInventory } from '@/features/inventory/hooks/useWarehouseInventory';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { 
@@ -38,6 +38,7 @@ import { mapWarehouseToCombobox, mapItemToCombobox } from '@/utils/mappers';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useAuth } from '@/providers/AuthProvider';
+import { useItems } from '@/features/items/hooks/useItems';
 import { onFormError } from '@/hooks/useFormError';
 
 type KitchenRequestFormValues = CreateKitchenRequestDTO;
@@ -99,9 +100,41 @@ function QuantityInput({ value, onChange, disabled, className }: QuantityInputPr
  );
 }
 
+interface ScopedItem extends Item {
+  qtyAvailable: number;
+}
+
 interface KitchenRequestFormLineItem extends LineItem {
  index: number;
- selectedItem?: Item;
+ selectedItem?: ScopedItem;
+}
+
+interface KitchenRequestNotesCellProps {
+ value: string;
+ onChange: (val: string) => void;
+ placeholder?: string;
+ disabled?: boolean;
+}
+
+function KitchenRequestNotesCell({ value, onChange, placeholder, disabled }: KitchenRequestNotesCellProps) {
+ const [localVal, setLocalVal] = useState(value);
+
+ useEffect(() => {
+  setLocalVal(value);
+ }, [value]);
+
+ return (
+  <div className="flex justify-center min-w-[200px] w-full">
+   <Input 
+    value={localVal}
+    onChange={(e) => setLocalVal(e.target.value)}
+    onBlur={() => onChange(localVal)}
+    placeholder={placeholder}
+    disabled={disabled}
+    className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
+   />
+  </div>
+ );
 }
 
 export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
@@ -125,8 +158,52 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  const { data: departmentsData, isLoading: isLoadingDepartments, error: errorDepartments } = useDepartments();
  const departmentsList = useMemo(() => departmentsData?.data || [], [departmentsData]);
 
- const { data: itemsData, isLoading: isLoadingItems, error: errorItems } = useItems();
- const items = useMemo(() => itemsData?.data || [], [itemsData]);
+  const watchedWarehouseId = useWatch({
+    control: form.control,
+    name: 'warehouseId',
+  });
+
+  const { data: inventoryData, isLoading: isLoadingItems, error: errorItems } = useWarehouseInventory(
+    watchedWarehouseId,
+    { enabled: !!watchedWarehouseId }
+  );
+
+  const items = useMemo<ScopedItem[]>(() => {
+    return (inventoryData?.data || []).map((b) => ({
+      id: b.itemId,
+      code: b.itemCode,
+      barcode: b.itemCode,
+      name: b.itemName,
+      qtyAvailable: b.qtyAvailable,
+      categoryId: '',
+      primaryUom: { id: '', code: b.uomCode || '', name: '' },
+      uomConversions: [],
+      trackLots: false,
+      minStockLevel: 0,
+      reorderPoint: b.reorderPoint || 0,
+      isActive: true,
+    }));
+  }, [inventoryData]);
+
+  const [prevWarehouseId, setPrevWarehouseId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (watchedWarehouseId) {
+      if (prevWarehouseId !== undefined && prevWarehouseId !== watchedWarehouseId) {
+        const currentItems = form.getValues('items') || [];
+        if (currentItems.length > 0) {
+          form.setValue('items', [], { shouldDirty: true, shouldValidate: true });
+        }
+      }
+      setPrevWarehouseId(watchedWarehouseId);
+    } else {
+      const currentItems = form.getValues('items') || [];
+      if (currentItems.length > 0) {
+        form.setValue('items', [], { shouldDirty: true, shouldValidate: true });
+      }
+      setPrevWarehouseId(undefined);
+    }
+  }, [watchedWarehouseId, prevWarehouseId, form]);
 
  const createRequest = useCreateKitchenRequest();
  const updateStatus = useUpdateKitchenRequestStatus();
@@ -140,6 +217,20 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  control: form.control,
  name: "items",
  });
+
+   const extraColumns = useMemo(() => [
+    {
+     header: tCommon('notes'),
+     cell: (line: KitchenRequestFormLineItem) => (
+      <KitchenRequestNotesCell
+       value={watchedItems?.[line.index]?.notes || ''}
+       onChange={(val) => form.setValue(`items.${line.index}.notes`, val, { shouldDirty: true, shouldValidate: true })}
+       placeholder={t('line_notes_placeholder')}
+       disabled={form.formState.isSubmitting}
+      />
+     )
+    }
+   ], [t, tCommon, form.setValue, form.formState.isSubmitting, watchedItems]);
 
  // Derive assigned warehouses and departments from user scopes
  const assignedWarehouseIds = useMemo(() => {
@@ -184,9 +275,19 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   }
  }, [departmentItems, form]);
 
- const itemItems = useMemo(() => {
-  return items.map(item => mapItemToCombobox(item));
- }, [items]);
+  const itemItems = useMemo(() => {
+    return items.map((item) => {
+      const balanceText = item.qtyAvailable > 0
+        ? `${locale === 'ar' ? 'المتاح' : 'Available'}: ${item.qtyAvailable} ${item.primaryUom?.code || ''}`
+        : (locale === 'ar' ? 'غير متوفر' : 'Out of Stock');
+      return {
+        id: item.id,
+        name: `${item.name} - ${balanceText}`,
+        code: item.code,
+        barcode: item.barcode,
+      };
+    });
+  }, [items, locale]);
 
  const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
   try {
@@ -309,21 +410,22 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
       {/* Search / Add Item Bar */}
       <div className="w-full mb-4">
-       <SmartCombobox
-        items={itemItems}
-        onSelect={(item) => {
-         const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
-         if (existingIndex !== -1) {
-          const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
-          form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
-         } else {
-          append({ itemId: String(item.id), quantity: 1, notes: '' });
-         }
-        }}
-        getPrimaryLabel={(item) => item.name}
-        placeholder={tCommon('select_item')}
-        triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white h-12 rounded-xl px-4 shadow-sm"
-       />
+        <SmartCombobox
+         items={itemItems}
+         disabled={!watchedWarehouseId || isLoadingItems}
+         onSelect={(item) => {
+          const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
+          if (existingIndex !== -1) {
+           const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
+           form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+          } else {
+           append({ itemId: String(item.id), quantity: 1, notes: '' });
+          }
+         }}
+         getPrimaryLabel={(item) => item.name}
+         placeholder={tCommon('select_item')}
+         triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white h-12 rounded-xl px-4 shadow-sm"
+        />
       </div>
 
      <div className="space-y-4">
@@ -374,10 +476,10 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
               <QuantityInput 
                value={form.watch(`items.${line.index}.quantity`)}
                onChange={(val) => {
-                form.setValue(`items.${line.index}.quantity`, val as any, { shouldDirty: true, shouldValidate: true });
+                form.setValue(`items.${line.index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                }}
                disabled={form.formState.isSubmitting}
-               className="w-24 text-center font-black text-lg bg-white border border-[#b48e67]/40 text-[#0B1220] focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+               className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
               />
             </div>
             {form.formState.errors.items?.[line.index]?.quantity && (
@@ -390,20 +492,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
             {line.selectedItem?.primaryUom?.code || '---'}
            </span>
           )}
-          extraColumns={[
-           {
-            header: tCommon('notes'),
-            cell: (line) => (
-             <div className="flex justify-center min-w-[200px]">
-              <Input 
-               {...form.register(`items.${line.index}.notes`)}
-               placeholder={t('line_notes_placeholder')}
-               className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/60 dark:border-white/5 rounded-lg h-9 px-3 text-label-sm font-semibold dark:text-white focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-gray-100 dark:hover:bg-surface-container-highest/80 disabled:opacity-50 h-10"
-              />
-             </div>
-            )
-           }
-          ]}
+          extraColumns={extraColumns}
          />
         </div>
 
@@ -435,10 +524,10 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                <QuantityInput 
                 value={form.watch(`items.${index}.quantity`)}
                 onChange={(val) => {
-                 form.setValue(`items.${index}.quantity`, val as any, { shouldDirty: true, shouldValidate: true });
+                 form.setValue(`items.${index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                 }}
                 disabled={form.formState.isSubmitting}
-                className="w-full text-center font-black text-lg bg-white dark:bg-[#0B1220] text-[#0B1220] dark:text-white border border-gray-300 dark:border-gray-700 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none transition-colors h-10 [font-variant-numeric:lining-nums_tabular-nums]" 
+                className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all" 
                />
                <span className="text-xs font-bold text-gray-500 px-2">{selectedItem.primaryUom?.code || '---'}</span>
               </div>

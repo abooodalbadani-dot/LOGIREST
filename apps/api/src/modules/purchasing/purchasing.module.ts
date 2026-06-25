@@ -10,9 +10,16 @@ import { PurchaseOrderController } from './purchase-orders/po.controller';
 import { PurchaseOrderService } from './purchase-orders/po.service';
 
 import { GrnVoidService } from '../operations/grn-void.service';
+import { PdfModule } from '../pdf/pdf.module';
 
 @Module({
-  imports: [PrismaModule, LedgerModule, DocumentSequenceModule, OutboxModule],
+  imports: [
+    PrismaModule,
+    LedgerModule,
+    DocumentSequenceModule,
+    OutboxModule,
+    PdfModule,
+  ],
   controllers: [GrnController, PurchaseOrderController],
   providers: [GrnPostService, PurchaseOrderService, GrnService, GrnVoidService],
   exports: [GrnPostService, PurchaseOrderService, GrnService],

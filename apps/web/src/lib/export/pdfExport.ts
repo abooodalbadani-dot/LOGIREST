@@ -80,14 +80,31 @@ export async function generatePDF(
   let base64Logo = undefined;
   if (branding?.logo) {
     try {
-      if (branding.logo.toLowerCase().endsWith('.svg') || branding.logo.startsWith('data:image/svg+xml')) {
-        const res = await fetch(branding.logo);
+      const trimmedLogo = branding.logo.trim();
+      if (trimmedLogo.startsWith('<svg') || trimmedLogo.startsWith('<?xml')) {
+        if (options && options.brandingConfig) {
+          options.brandingConfig.logoSvgContent = trimmedLogo;
+        }
+      } else if (trimmedLogo.startsWith('data:image/svg+xml')) {
+        let svgText = '';
+        if (trimmedLogo.includes('base64,')) {
+          const base64Part = trimmedLogo.split('base64,')[1];
+          svgText = atob(base64Part);
+        } else {
+          const urlEncodedPart = trimmedLogo.split(',')[1];
+          svgText = decodeURIComponent(urlEncodedPart);
+        }
+        if (options && options.brandingConfig) {
+          options.brandingConfig.logoSvgContent = svgText;
+        }
+      } else if (trimmedLogo.toLowerCase().endsWith('.svg')) {
+        const res = await fetch(trimmedLogo);
         const svgText = await res.text();
         if (options && options.brandingConfig) {
           options.brandingConfig.logoSvgContent = svgText;
         }
       } else {
-        const res = await fetch(branding.logo);
+        const res = await fetch(trimmedLogo);
         const blob = await res.blob();
         base64Logo = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -97,7 +114,7 @@ export async function generatePDF(
         });
       }
     } catch (e) {
-      console.warn('Failed to fetch logo', e);
+      console.warn('Failed to fetch or decode logo', e);
     }
   }
 

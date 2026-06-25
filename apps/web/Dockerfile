@@ -1,5 +1,6 @@
 # Stage 1: Builder
-FROM node:20-slim AS builder
+FROM node:24-slim AS builder
+RUN rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg
 WORKDIR /app
 
 ARG NEXT_PUBLIC_API_URL
@@ -12,10 +13,10 @@ COPY apps/web/ apps/web/
 
 # Install dependencies and build Next.js Standalone
 #RUN npm ci --workspace=apps/web
-RUN npm config set fetch-retries 5 \
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set fetch-retries 5 \
     && npm config set fetch-retry-mintimeout 20000 \
     && npm config set fetch-retry-maxtimeout 120000 \
-    && npm cache clean --force \
     && npm ci --workspace=apps/web
 ENV EXPERIMENTAL_CPUS=1
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -23,7 +24,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build --workspace=apps/web
 
 # Stage 2: Production Runner
-FROM node:20-slim AS production
+FROM node:24-slim AS production
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 

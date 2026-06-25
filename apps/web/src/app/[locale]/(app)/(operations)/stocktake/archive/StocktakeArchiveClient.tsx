@@ -22,6 +22,7 @@ import { STOCKTAKE_STATUS } from '@logirest/shared-types';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { apiClient } from '@/infrastructure/api/client';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 
 export function StocktakeArchiveClient({
  initialPage,
@@ -38,6 +39,12 @@ export function StocktakeArchiveClient({
  const pathname = usePathname();
  const searchParams = useSearchParams();
 
+ const { data: warehousesData } = useWarehouses();
+ const warehouseMap = useMemo(() => {
+  const list = warehousesData?.data ?? [];
+  return new Map(list.map((w) => [w.id, w.name]));
+ }, [warehousesData]);
+
  // For Archive, we only show POSTED and CLOSED sessions
  const { data, isLoading, error } = useStocktakeList({
   status: STOCKTAKE_STATUS.POSTED, // In a real scenario, this might support multiple archive statuses
@@ -50,6 +57,23 @@ export function StocktakeArchiveClient({
   params.set('page', newPage.toString());
   router.push(`${pathname}?${params.toString()}`);
  };
+
+ const processedData = useMemo(() => {
+  const rawData = data?.data || [];
+  return rawData.map((item) => {
+    const total = item.totalItems || 0;
+    const counted = item.countedItems || 0;
+    const resolvedWarehouseName =
+      item.warehouseName ||
+      warehouseMap.get(item.warehouseId) ||
+      '—';
+    return {
+      ...item,
+      warehouseName: resolvedWarehouseName,
+      progress: total > 0 ? `${counted}/${total}` : '0',
+    };
+  });
+ }, [data?.data, warehouseMap]);
 
  const columns = useMemo<ColumnDef<StocktakeSummary>[]>(() => [
   {
@@ -73,7 +97,7 @@ export function StocktakeArchiveClient({
    ),
   },
   {
-   accessorKey: 'warehouseId',
+   accessorKey: 'warehouseName',
    header: tc('warehouse') || 'Warehouse',
    cell: ({ row }) => (
     <div className="flex items-center gap-2">
@@ -81,6 +105,29 @@ export function StocktakeArchiveClient({
      <span className="font-medium text-label-sm">{row.original.warehouseName || '—'}</span>
     </div>
    ),
+  },
+  {
+   accessorKey: 'progress',
+   header: t('items_counted') || 'Progress',
+   cell: ({ row }) => {
+    const total = row.original.totalItems || 0;
+    const counted = row.original.countedItems || 0;
+    const pct = total > 0 ? Math.round((counted / total) * 100) : 0;
+    return (
+     <div className="flex flex-col gap-1.5 min-w-[140px] min-w-0">
+      <div className="flex items-center justify-between text-label-xxs font-semibold text-muted-foreground/60">
+       <span>{counted}/{total} {t('items_count')}</span>
+       <span>{pct}%</span>
+      </div>
+      <div className="w-full h-2 bg-surface-container-highest/30 rounded-full overflow-hidden">
+       <div
+        className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+        style={{ width: `${pct}%` }}
+       />
+      </div>
+     </div>
+    );
+   },
   },
   {
    accessorKey: 'status',
@@ -106,7 +153,7 @@ export function StocktakeArchiveClient({
     </div>
    ),
   },
- ], [t, tc, locale, router]);
+ ], [t, tc, locale, router, warehouseMap]);
 
  return (
   <div className="min-w-0 max-w-[1600px] flex-1 fade-in gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex space-y-10 w-full">
@@ -193,7 +240,7 @@ export function StocktakeArchiveClient({
      <div className="flex-1 w-full min-h-[400px] md:min-h-0">
       <DataTable
        columns={columns}
-       data={data?.data || []}
+       data={processedData}
        isLoading={false}
        onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
        collectionName="operations_stocktake"

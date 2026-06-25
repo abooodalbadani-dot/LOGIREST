@@ -357,31 +357,46 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
               <span className="text-sm font-black text-[#0B1220] dark:text-white leading-tight">
                 {locale === 'ar' ? item.item.nameAr || item.item.nameEn : item.item.nameEn}
               </span>
-              <span className="text-[10px] text-gray-400 font-mono tracking-widest uppercase tabular-nums">{item.item.code}</span>
+              <span className="text-[10px] text-[#b48e67] font-medium font-mono tracking-widest uppercase tabular-nums">{item.item.code}</span>
             </div>
           </div>
 
           {/* MIDDLE: Variance Metrics (The Audit Grid) */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
-              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('snapshot_qty') || 'SYS QTY'}</span>
+              <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">{t('snapshot_qty') || 'SYS QTY'}</span>
               <p className="text-xs font-bold text-[#0B1220] dark:text-gray-200 font-mono tabular-nums" dir="ltr">
                 {formatNumber(item.snapshotQty, locale, 3)} {item.uom}
               </p>
             </div>
-            <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
-              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('counted_qty') || 'COUNTED'}</span>
-              <p className="text-xs font-bold text-[#0B1220] dark:text-gray-200 font-mono tabular-nums" dir="ltr">
+            <div className="bg-[#b48e67]/5 p-2 rounded-lg border border-[#b48e67]/30">
+              <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">{t('counted_qty') || 'COUNTED'}</span>
+              <p className="text-xs font-black text-[#0B1220] dark:text-white font-mono tabular-nums" dir="ltr">
                 {formatNumber(item.countedQty, locale, 3)} {item.uom}
               </p>
             </div>
           </div>
 
           {/* BOTTOM: Variance Result & Reason */}
-          <div className={`p-3 rounded-lg border ${variance === 0 ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800' : 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30'}`}>
+          <div 
+            className={cn(
+              "p-3 rounded-lg border",
+              variance === 0 ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800' :
+              variance < 0 ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30' :
+              'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/30'
+            )}
+          >
             <div className="flex justify-between items-center mb-1">
-              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('variance') || 'VARIANCE'}</span>
-              <span className={`text-xs font-black font-mono tabular-nums ${variance !== 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600'}`} dir="ltr">
+              <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase">{t('variance') || 'VARIANCE'}</span>
+              <span 
+                className={cn(
+                  "text-xs font-black font-mono tabular-nums",
+                  variance < 0 ? 'text-red-600 dark:text-red-400' :
+                  variance > 0 ? 'text-emerald-600 dark:text-emerald-400' :
+                  'text-gray-400 font-bold'
+                )} 
+                dir="ltr"
+              >
                  {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)} ({formatCurrency(varianceValue, currencyCode, locale)})
               </span>
             </div>

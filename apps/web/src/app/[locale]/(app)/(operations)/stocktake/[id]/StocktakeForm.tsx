@@ -116,7 +116,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
       className="h-6 px-2 text-label-xxs font-semibold border-none" 
      />
     }
-    actions={<DocumentExportMenu />}
+    actions={<DocumentExportMenu documentType="STOCKTAKE" documentId={session.id} documentNumber={session.sessionNumber} />}
     isEditing={true}
    />
    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
@@ -239,13 +239,13 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
              cell: (line) => {
               const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
               return hasCounted ? (
-               <Badge variant="outline" className="bg-[#0B1220] text-white dark:bg-[#1A2234] dark:text-[#B7C3E2] border border-transparent text-label-xxs font-semibold uppercase h-6">
+               <span className="inline-flex h-6 items-center justify-center px-2.5 rounded-full bg-[#b48e67]/15 text-[#b48e67] border border-[#b48e67]/30 text-label-xxs font-semibold uppercase">
                 {common('completed')}
-               </Badge>
+               </span>
               ) : (
-               <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
+               <span className="inline-flex h-6 items-center justify-center px-2.5 rounded-full bg-surface-container-highest text-muted-foreground/60 text-label-xxs font-semibold uppercase">
                 {common('pending')}
-               </Badge>
+               </span>
               );
              }
             }
@@ -271,16 +271,16 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                   <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">
                     {line.item.nameEn}
                   </span>
-                  <span className="text-[10px] text-[#b48e67] font-mono tracking-widest mt-0.5">
+                  <span className="text-[10px] text-[#b48e67] font-medium font-mono tracking-widest mt-0.5">
                     {line.item.code || '—'}
                   </span>
                 </div>
                 {/* Render the COMPLETED / PENDING status badge here */}
                 <div className="scale-90 origin-top-right shrink-0">
                   {hasCounted ? (
-                    <Badge variant="outline" className="bg-[#0B1220] text-white dark:bg-[#1A2234] dark:text-[#B7C3E2] border border-transparent text-label-xxs font-semibold uppercase h-6">
+                    <span className="px-2.5 py-1 text-[10px] uppercase font-black tracking-wider rounded-full bg-[#b48e67]/15 text-[#b48e67] border border-[#b48e67]/30">
                       {common('completed')}
-                    </Badge>
+                    </span>
                   ) : (
                     <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
                       {common('pending')}
@@ -293,7 +293,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
               <div className="grid grid-cols-3 gap-2">
                 {/* System Snapshot */}
                 <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">SNAPSHOT</span>
+                  <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">SNAPSHOT</span>
                   <span className="text-xs font-bold text-gray-500 dark:text-gray-400 tabular-nums" dir="ltr">
                     {snapshotVal !== null ? (
                       <>
@@ -304,9 +304,9 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                 </div>
 
                 {/* Actual Counted (Highlighted) */}
-                <div className="flex flex-col bg-cyan-50 dark:bg-cyan-900/10 p-2 rounded-lg border border-cyan-100 dark:border-cyan-800/30">
-                  <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-1">COUNTED</span>
-                  <span className="text-xs font-black text-cyan-700 dark:text-cyan-300 tabular-nums" dir="ltr">
+                <div className="flex flex-col bg-[#b48e67]/5 p-2 rounded-lg border border-[#b48e67]/30">
+                  <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">COUNTED</span>
+                  <span className="text-xs font-black text-[#0B1220] dark:text-white tabular-nums" dir="ltr">
                     {hasCounted ? (
                       <>
                         {line.countedQty} <span className="text-[9px]">{line.uom}</span>
@@ -317,13 +317,14 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
 
                 {/* Variance */}
                 <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">VARIANCE</span>
+                  <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">VARIANCE</span>
                   <span 
                     className={cn(
-                      "text-xs font-bold tabular-nums",
-                      !showVariance ? 'text-[#0B1220] dark:text-white' : 
-                      variance < 0 ? 'text-red-800/80 dark:text-red-400/80' : 
-                      variance > 0 ? 'text-[#b48e67]' : 'text-[#0B1220] dark:text-slate-400'
+                      "text-xs tabular-nums",
+                      !showVariance ? 'text-gray-400 font-bold' : 
+                      variance < 0 ? 'text-red-600 dark:text-red-400 font-black' : 
+                      variance > 0 ? 'text-emerald-600 dark:text-emerald-400 font-black' : 
+                      'text-gray-400 font-bold'
                     )} 
                     dir="ltr"
                   >

@@ -124,7 +124,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                 <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role}>
                     <button
                         onClick={() => router.push(`/goods-received/${id}/post`)}
-                        className="w-full md:w-auto px-6 py-2.5 bg-[#caae85] text-[#0B1220] font-bold rounded-lg shadow-md hover:bg-[#b5952f] transition-all flex justify-center items-center gap-2"
+                        className="w-full md:w-auto px-6 py-2.5 bg-[#b48e67] text-[#0B1220] font-bold rounded-lg shadow-md hover:bg-[#b5952f] transition-all flex justify-center items-center gap-2"
                     >
                         <Send className="w-4 h-4" />
                         {t('post_grn')}

@@ -108,14 +108,14 @@ export default function SearchClient() {
  };
 
  const sections = [
-  { id: 'item', title: t('sections.products') || 'PRODUCTS', icon: Package, color: 'text-[#CAAE85]' },
+  { id: 'item', title: t('sections.products') || 'PRODUCTS', icon: Package, color: 'text-[#b48e67]' },
   { id: 'supplier', title: t('sections.suppliers') || 'SUPPLIERS', icon: Truck, color: 'text-blue-400' },
   { id: 'lot', title: t('sections.warehouse') || 'WAREHOUSE', icon: Database, color: 'text-green-400' },
   { id: 'document', title: t('sections.transactions') || 'TRANSACTIONS', icon: FileText, color: 'text-orange-400' },
  ];
 
  return (
-  <div className="flex flex-col min-h-screen w-full bg-gray-50 dark:bg-[#0B1220] md:bg-white md:dark:bg-[#0B1220] text-[#0B1220] dark:text-white selection:bg-[#CAAE85]/30">
+  <div className="flex flex-col min-h-screen w-full bg-gray-50 dark:bg-[#0B1220] md:bg-white md:dark:bg-[#0B1220] text-[#0B1220] dark:text-white selection:bg-[#b48e67]/30">
    <div className="max-w-[1400px] mx-auto w-full pt-12 pb-8 px-6 lg:px-12">
     
     {/* Header & Global Search */}
@@ -133,7 +133,7 @@ export default function SearchClient() {
     
     <div className="flex justify-center mb-6">
      <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-white dark:bg-[#121A2F] border border-gray-200 dark:border-gray-800 shadow-sm">
-      <Command className="w-3.5 h-3.5 text-[#CAAE85]" />
+      <Command className="w-3.5 h-3.5 text-[#b48e67]" />
       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
        {t('shortcut_hint') || 'PRESS / FOR FAST SEARCH'}
       </span>
@@ -166,7 +166,7 @@ export default function SearchClient() {
       <div className="p-6 rounded-3xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-xl">
        <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-         <Filter className="w-4 h-4 text-[#CAAE85]" />
+         <Filter className="w-4 h-4 text-[#b48e67]" />
          <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#0B1220] dark:text-white">{t('refine') || 'REFINE RESULTS'}</h4>
         </div>
         <button type="button" className="text-gray-500 hover:text-white transition-colors">
@@ -178,9 +178,9 @@ export default function SearchClient() {
         <div className="space-y-4">
          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t('main_category') || 'MAIN CATEGORY'}</span>
           <div className="flex flex-col gap-2">
-           <button onClick={() => setActiveCategory('ALL')} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${'ALL' === activeCategory ? 'border-[#CAAE85]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
+           <button onClick={() => setActiveCategory('ALL')} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${'ALL' === activeCategory ? 'border-[#b48e67]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
             <span className={`text-xs font-bold uppercase transition-colors ${'ALL' === activeCategory ? 'text-[#0B1220] dark:text-white' : 'text-gray-800 dark:text-gray-400 group-hover:text-[#0B1220] dark:group-hover:text-white'}`}>ALL</span>
-            <div className={`w-2 h-2 rounded-full transition-colors ${'ALL' === activeCategory ? 'bg-[#CAAE85]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#CAAE85]/50'}`} />
+            <div className={`w-2 h-2 rounded-full transition-colors ${'ALL' === activeCategory ? 'bg-[#b48e67]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#b48e67]/50'}`} />
            </button>
            
            {isCategoriesLoading ? (
@@ -193,9 +193,9 @@ export default function SearchClient() {
             dbCategories.map((category) => {
              const isActive = category.id === activeCategory;
              return (
-              <button key={category.id} onClick={() => setActiveCategory(category.id)} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${isActive ? 'border-[#CAAE85]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
+              <button key={category.id} onClick={() => setActiveCategory(category.id)} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${isActive ? 'border-[#b48e67]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
                <span className={`text-xs font-bold uppercase transition-colors ${isActive ? 'text-[#0B1220] dark:text-white' : 'text-gray-800 dark:text-gray-400 group-hover:text-[#0B1220] dark:group-hover:text-white'}`}>{category.name}</span>
-               <div className={`w-2 h-2 rounded-full transition-colors ${isActive ? 'bg-[#CAAE85]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#CAAE85]/50'}`} />
+               <div className={`w-2 h-2 rounded-full transition-colors ${isActive ? 'bg-[#b48e67]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#b48e67]/50'}`} />
               </button>
              );
             })
@@ -222,7 +222,7 @@ export default function SearchClient() {
       {/* Recent Searches */}
       <div className="p-6 rounded-3xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-xl">
        <div className="flex items-center gap-3 mb-6">
-        <Clock className="w-4 h-4 text-[#CAAE85]" />
+        <Clock className="w-4 h-4 text-[#b48e67]" />
         <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#0B1220] dark:text-white">{t('recent_searches') || 'RECENT SEARCHES'}</h4>
        </div>
        <div className="space-y-3">
@@ -237,8 +237,8 @@ export default function SearchClient() {
      <div className="flex-1 space-y-12 min-w-0">
       {isLoading ? (
        <div className="flex flex-col items-center justify-center py-32 gap-6">
-        <div className="w-16 h-16 border-2 border-[#CAAE85]/20 border-t-[#CAAE85] rounded-full animate-spin" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-[#CAAE85] animate-pulse">
+        <div className="w-16 h-16 border-2 border-[#b48e67]/20 border-t-[#b48e67] rounded-full animate-spin" />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#b48e67] animate-pulse">
          {t('syncing') || 'SYNCING DATABASE...'}
         </p>
        </div>
@@ -254,7 +254,7 @@ export default function SearchClient() {
            </div>
            <div className="flex flex-col gap-0.5">
             <h3 className="text-sm font-bold text-[#0B1220] dark:text-white uppercase tracking-wider">{section.title}</h3>
-            <span className="text-[10px] font-bold text-[#CAAE85] uppercase tracking-widest">{sectionResults.length} {t('records') || 'RECORDS'}</span>
+            <span className="text-[10px] font-bold text-[#b48e67] uppercase tracking-widest">{sectionResults.length} {t('records') || 'RECORDS'}</span>
            </div>
            <div className="flex-1 h-px bg-gradient-to-r from-gray-800 to-transparent" />
           </div>
@@ -263,8 +263,8 @@ export default function SearchClient() {
            {sectionResults.map(result => (
             <Link key={result.id} href={result.link} className="group flex flex-col p-6 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-2xl hover:scale-[0.98] active:scale-95 transition-all duration-300 relative overflow-hidden">
              <div className="flex items-start justify-between mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-[#0B1220] flex items-center justify-center border border-gray-200 dark:border-gray-800 group-hover:border-[#CAAE85]/30 transition-colors">
-               {result.type === 'item' ? <Package className="w-5 h-5 text-[#CAAE85]" /> : <Database className="w-5 h-5 text-gray-400" />}
+              <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-[#0B1220] flex items-center justify-center border border-gray-200 dark:border-gray-800 group-hover:border-[#b48e67]/30 transition-colors">
+               {result.type === 'item' ? <Package className="w-5 h-5 text-[#b48e67]" /> : <Database className="w-5 h-5 text-gray-400" />}
               </div>
               {result.status && (
                <div className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-[9px] font-bold px-3 py-1.5 rounded-md uppercase tracking-widest">
@@ -274,7 +274,7 @@ export default function SearchClient() {
              </div>
 
              <div className="space-y-1 mb-6 flex-1">
-              <h5 className="text-sm font-bold text-[#0B1220] dark:text-white group-hover:text-[#CAAE85] transition-colors">{result.title}</h5>
+              <h5 className="text-sm font-bold text-[#0B1220] dark:text-white group-hover:text-[#b48e67] transition-colors">{result.title}</h5>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{result.subtitle}</p>
              </div>
 
@@ -317,8 +317,8 @@ export default function SearchClient() {
          { title: t('tips.suppliers') || 'SUPPLIERS', icon: Truck, desc: t('tips.suppliers_desc') || 'Find vendors by name or code.' },
         ].map((tip, i) => (
          <div key={i} className="p-8 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 space-y-4 text-center hover:border-gray-300 dark:hover:border-gray-700 transition-colors group">
-          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 flex items-center justify-center mx-auto group-hover:border-[#CAAE85]/50 transition-colors">
-           <tip.icon className="w-5 h-5 text-gray-500 group-hover:text-[#CAAE85] transition-colors" />
+          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 flex items-center justify-center mx-auto group-hover:border-[#b48e67]/50 transition-colors">
+           <tip.icon className="w-5 h-5 text-gray-500 group-hover:text-[#b48e67] transition-colors" />
           </div>
           <div className="space-y-1">
            <h4 className="text-[10px] font-bold text-[#0B1220] dark:text-white uppercase tracking-widest">{tip.title}</h4>

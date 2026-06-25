@@ -482,7 +482,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     !hasInvalidCosts
   );
 
-  const extraColumns = [
+  const extraColumns = useMemo(() => [
     {
       header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
       cell: (line: NewAdjustmentLine) => {
@@ -497,7 +497,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
               }}
               className={cn(
-                "h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded px-2 text-sm focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center disabled:opacity-30",
+                "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all disabled:opacity-30",
                 isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500 focus:ring-red-500/30"
               )}
             />
@@ -575,7 +575,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         </div>
       )
     }
-  ];
+  ], [locale, t, tCommon]);
 
   return (
     <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex pb-32 w-full">
@@ -770,7 +770,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                         const val = parseFloat(e.target.value);
                         setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: isNaN(val) ? 0 : val } : l));
                       }}
-                      className="h-8 w-full md:w-20 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all text-center"
+                      className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
                     />
                   </div>
                 )}

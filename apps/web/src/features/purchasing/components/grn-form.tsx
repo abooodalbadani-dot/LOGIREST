@@ -1,10 +1,10 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useForm, Controller, useWatch, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useWatch, useFieldArray, type UseFormRegister } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,77 @@ interface GRNFormProps {
    initialData?: GRNDetail;
    id: string;
    onConflict?: () => void;
+}
+
+interface GRNReceivedQtyCellProps {
+ register: UseFormRegister<GRNFormValues>;
+ index: number;
+ isLocked: boolean;
+ isWarehouseLocked: boolean;
+ qty: number;
+ receivedQty: number;
+ hasError: boolean;
+}
+
+function GRNReceivedQtyCell({
+ register,
+ index,
+ isLocked,
+ isWarehouseLocked,
+ qty,
+ receivedQty,
+ hasError
+}: GRNReceivedQtyCellProps) {
+ const isOver = receivedQty > qty;
+ return (
+  <Input
+   type="number"
+   dir="ltr"
+   lang="en"
+   style={{ WebkitLocale: '"en"' }}
+   disabled={isLocked || isWarehouseLocked}
+   className={cn(
+    "w-16 md:w-20 h-7 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50",
+    hasError
+     ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
+     : isOver
+       ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
+       : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-background/50 dark:border-brand-gold/40 dark:text-white focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
+   )}
+   {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
+  />
+ );
+}
+
+interface GRNLotAllocationCellProps {
+ field: LineItem;
+ hasLot: boolean;
+ label: string;
+ onClick: () => void;
+}
+
+function GRNLotAllocationCell({ field, hasLot, label, onClick }: GRNLotAllocationCellProps) {
+ return (
+  <button
+   type="button"
+   className={cn(
+    'inline-flex items-center justify-center transition-all text-[10px] font-bold uppercase rounded px-2 md:px-2.5 py-0.5 md:py-1 h-7 border',
+    hasLot
+       ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 w-auto font-mono gap-1.5'
+       : 'border-[#b48e67] text-[#b48e67] hover:bg-[#b48e67] hover:text-black w-auto'
+   )}
+   onClick={onClick}
+  >
+   {hasLot ? (
+      <>
+       <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shrink-0" />
+       <span dir="ltr" className="font-mono">{field.lot!.lotNumber}</span>
+      </>
+   ) : (
+      label
+   )}
+  </button>
+ );
 }
 
 export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) {
@@ -186,6 +257,21 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       name: "lines"
    });
 
+    const handleLotClick = useCallback((line: LineItem) => {
+       const index = fields.findIndex(f => f.id === line.id);
+       if (index < 0) return;
+       setLotDialogState({
+          open: true,
+          lineId: line.id,
+          lineIndex: index,
+          itemName: line.item.name || line.item.nameEn || line.item.nameAr || '',
+          receivedQty: line.receivedQty,
+          currentLot: line.lot,
+       });
+    }, [fields]);
+
+
+
    const { router } = useUnsavedChangesGuard(isDirty);
 
    const currencyId = useWatch({ control, name: 'currencyId' });
@@ -193,6 +279,42 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    const { data: warehouseLock } = useWarehouseLock(warehouseId || null);
    const isWarehouseLocked = !!warehouseLock?.isLocked;
    const watchedLines = useWatch({ control, name: 'lines' });
+
+   const extraColumns = useMemo(() => [
+      {
+         header: tc('table_headers.received_qty'),
+         cell: (field: LineItem) => {
+            const index = fields.findIndex(f => f.id === field.id);
+            const hasError = !!errors.lines?.[index]?.receivedQty;
+            return (
+               <GRNReceivedQtyCell
+                  register={register}
+                  index={index}
+                  isLocked={isLocked}
+                  isWarehouseLocked={isWarehouseLocked}
+                  qty={field.qty}
+                  receivedQty={field.receivedQty}
+                  hasError={hasError}
+               />
+            );
+         }
+      },
+      {
+         header: tc('table_headers.lot_allocation'),
+         isAction: true,
+         cell: (field: LineItem) => {
+            const hasLot = !!field.lot;
+            return (
+               <GRNLotAllocationCell
+                  field={field}
+                  hasLot={hasLot}
+                  label={t('allocate_lot')}
+                  onClick={() => handleLotClick(field)}
+               />
+            );
+         }
+      }
+   ], [tc, fields, errors.lines, isLocked, isWarehouseLocked, register, t, handleLotClick]);
 
    const selectedCurrencyCode = useMemo(() => {
       return currencies?.find(c => c.id === currencyId)?.code || '';
@@ -333,19 +455,6 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          toast.error(tc('item_not_found'));
          throw new Error('ItemNotFound');
       }
-   };
-
-   const handleLotClick = (line: LineItem) => {
-      const index = fields.findIndex(f => f.id === line.id);
-      if (index < 0) return;
-      setLotDialogState({
-         open: true,
-         lineId: line.id,
-         lineIndex: index,
-         itemName: line.item.name || line.item.nameEn || line.item.nameAr || '',
-         receivedQty: line.receivedQty,
-         currentLot: line.lot,
-      });
    };
 
    const handleLotConfirm = (lot: LotAllocation) => {
@@ -724,61 +833,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                  const idx = fields.findIndex(f => f.id === id);
                                  if (idx >= 0) remove(idx);
                               }}
-                              extraColumns={[
-                                 {
-                                    header: tc('table_headers.received_qty'),
-                                    cell: (field: LineItem) => {
-                                       const index = fields.findIndex(f => f.id === field.id);
-                                       const isOver = field.receivedQty > field.qty;
-                                       const hasError = !!errors.lines?.[index]?.receivedQty;
-                                       return (
-                                          <Input type="number"
-                                             dir="ltr"
-                                             lang="en"
-                                             style={{ WebkitLocale: '"en"' }}
-                                             disabled={isLocked || isWarehouseLocked}
-                                             className={cn(
-                                                "w-16 md:w-20 h-7 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50",
-                                                hasError
-                                                   ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
-                                                   : isOver
-                                                      ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
-                                                      : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-background/50 dark:border-brand-gold/40 dark:text-white focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
-                                             )}
-                                             {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
-                                          />
-                                       );
-                                    }
-                                 },
-                                 {
-                                    header: tc('table_headers.lot_allocation'),
-                                    isAction: true,
-                                    cell: (field: LineItem) => {
-                                       const hasLot = !!field.lot;
-                                       return (
-                                          <button
-                                             type="button"
-                                             className={cn(
-                                                'inline-flex items-center justify-center transition-all text-[10px] font-bold uppercase rounded px-2 md:px-2.5 py-0.5 md:py-1 h-7 border',
-                                                hasLot
-                                                   ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 w-auto font-mono gap-1.5'
-                                                   : 'border-[#b48e67] text-[#b48e67] hover:bg-[#b48e67] hover:text-black w-auto'
-                                             )}
-                                             onClick={() => handleLotClick(field)}
-                                          >
-                                             {hasLot ? (
-                                                <>
-                                                   <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shrink-0" />
-                                                   <span dir="ltr" className="font-mono">{field.lot!.lotNumber}</span>
-                                                </>
-                                             ) : (
-                                                t('allocate_lot')
-                                             )}
-                                          </button>
-                                       );
-                                    }
-                                 }
-                              ]}
+                              extraColumns={extraColumns}
                            />
                         </div>
                      </div>

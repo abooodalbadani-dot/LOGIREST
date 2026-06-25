@@ -457,7 +457,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
               </h3>
               <div className="flex gap-2 items-center flex-shrink-0 min-w-0 max-w-full">
-                <DocumentExportMenu />
+                {initialData?.id && (
+                  <DocumentExportMenu 
+                    documentType="PO" 
+                    documentId={initialData.id} 
+                    documentNumber={initialData.documentNumber} 
+                  />
+                )}
                 <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase shrink-0">{/* i18n-ignore */}PO_ENGINE_V2</span>
                 {initialData?.documentNumber && (
                   <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight whitespace-nowrap truncate max-w-full block">

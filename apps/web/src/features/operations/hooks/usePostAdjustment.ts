@@ -33,11 +33,6 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
    queryClient.invalidateQueries({ queryKey: ['adjustments'] });
    queryClient.invalidateQueries({ queryKey: ['adjustments', id] });
    queryClient.invalidateQueries({ queryKey: ['adjustments', 'summary'] });
-  },
-  onError: (error) => {
-   console.error('Failed to post adjustment:', error);
-   const message = error instanceof Error ? error.message : 'Operation failed';
-   toast.error(message);
   }
  });
 }

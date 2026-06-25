@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { GrnService } from './grn.service';
@@ -30,7 +31,8 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreateGrnDto } from './dto/create-grn.dto';
 import { UpdateGrnDto } from './dto/update-grn.dto';
-import type { Request } from 'express';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
+import type { Request, Response } from 'express';
 
 function mapGRNDetail(grn: Record<string, unknown>) {
   const grnLines = (grn.lines as Record<string, unknown>[]) || [];
@@ -201,6 +203,7 @@ export class GrnController {
     private readonly grnVoidService: GrnVoidService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Post()
@@ -296,6 +299,32 @@ export class GrnController {
       grn.warehouseId,
     );
     return { data: mapGRNDetail(grn) };
+  }
+
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const grn = await this.grnService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      grn.warehouseId,
+    );
+
+    const buffer = await this.pdfGeneratorService.generateGrnPdf(id, locale);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=GRN_${grn.grnNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
   }
 
   @Put(':id')

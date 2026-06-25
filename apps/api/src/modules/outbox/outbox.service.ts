@@ -5,6 +5,7 @@ import { Queue } from 'bullmq';
 import { createHash } from 'crypto';
 
 import { correlationStorage } from '../../common/correlation.context';
+import { transactionLifecycleStore } from '../../common/transaction-lifecycle.context';
 
 @Injectable()
 export class OutboxService {
@@ -61,20 +62,28 @@ export class OutboxService {
 
     const correlationId = correlationStorage.getStore();
 
-    // Enqueue background processing job in BullMQ.
-    await this.outboxQueue.add(
-      'process-event',
-      { eventId: event.id, correlationId },
-      {
-        delay: 500,
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 1000,
+    const enqueueJob = async () => {
+      await this.outboxQueue.add(
+        'process-event',
+        { eventId: event.id, correlationId },
+        {
+          delay: 500,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+          removeOnComplete: true,
         },
-        removeOnComplete: true,
-      },
-    );
+      );
+    };
+
+    const callbacks = transactionLifecycleStore.getStore();
+    if (callbacks) {
+      callbacks.push(enqueueJob);
+    } else {
+      await enqueueJob();
+    }
 
     return event;
   }

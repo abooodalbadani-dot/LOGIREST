@@ -132,7 +132,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
     }
     actions={
      <>
-      <DocumentExportMenu />
+      <DocumentExportMenu documentType="ADJUSTMENT" documentId={document?.id} documentNumber={document?.documentNumber} />
       {actions}
      </>
     }

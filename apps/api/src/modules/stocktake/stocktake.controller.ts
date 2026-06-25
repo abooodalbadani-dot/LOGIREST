@@ -12,8 +12,10 @@ import {
   HttpStatus,
   BadRequestException,
   ForbiddenException,
+  Res,
 } from '@nestjs/common';
 import { StocktakePostService } from './stocktake-post.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import { StocktakeService } from './stocktake.service';
 import { WorkflowStateGuard } from '../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../decorators/workflow-action.decorator';
@@ -30,7 +32,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 function safeIsoString(val: unknown): string | undefined {
   if (!val) return undefined;
@@ -76,6 +78,9 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
     };
   });
 
+  const totalItems = snapshots.length;
+  const countedItems = counts.length;
+
   return {
     id: (session?.id as string) || '',
     sessionNumber,
@@ -92,6 +97,8 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
         : null,
     postedBy: null,
     items,
+    totalItems,
+    countedItems,
     version: typeof session?.version === 'number' ? session.version : 1,
     description: '',
     approverComment: '',
@@ -124,6 +131,7 @@ export class StocktakeController {
     private readonly stocktakePostService: StocktakePostService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   private async validateSessionScope(
@@ -212,6 +220,35 @@ export class StocktakeController {
       session.warehouseId,
     );
     return mapStocktakeDetail(session);
+  }
+
+  @Get(':id/pdf')
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Res() res: Response,
+  ) {
+    const session = await this.stocktakeService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      session.warehouseId,
+    );
+
+    const buffer = await this.pdfGeneratorService.generateStocktakePdf(
+      id,
+      locale,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=STOCKTAKE_${session.sessionNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+
+    res.end(buffer);
   }
 
   @Put(':stocktakeId/items/:lineId')

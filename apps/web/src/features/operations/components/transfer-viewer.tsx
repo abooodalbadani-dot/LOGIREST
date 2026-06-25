@@ -73,7 +73,11 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
      <div className="flex flex-col md:flex-row md:items-center justify-start md:justify-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
       <div className="flex items-center gap-2">
        <StatusBadge status={transferStatus as BadgeStatus} />
-       <DocumentExportMenu />
+       <DocumentExportMenu 
+        documentType="TRANSFER" 
+        documentId={transfer.id} 
+        documentNumber={transfer.documentNumber} 
+       />
        <VoidButton
         documentId={transfer.id}
         documentType="TRANSFER"

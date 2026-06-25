@@ -77,6 +77,7 @@ const titleDictionary: Record<string, Record<string, string>> = {
     'stocktake_variance': 'تقرير فروقات الجرد',
     'expiry_report': 'تقرير صلاحية المواد',
     'items': 'الأصناف',
+    'operations_stocktake': 'بيان جرد - Stocktake Manifest',
   },
   en: {
     'master_data_items': 'Master Data Items Report',
@@ -86,6 +87,7 @@ const titleDictionary: Record<string, Record<string, string>> = {
     'stocktake_variance': 'Stocktake Variance Report',
     'expiry_report': 'Expiry Report',
     'items': 'Items',
+    'operations_stocktake': 'بيان جرد - Stocktake Manifest',
   }
 };
 
@@ -199,7 +201,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
     return safeKey;
   };
 
-  const displayTitle = (titleDictionary[lang] && titleDictionary[lang][title.toLowerCase()]) || title;
+  const displayTitle = ((titleDictionary[lang] && titleDictionary[lang][title.toLowerCase()]) || title).replace(/_/g, ' ');
 
   const labels = {
     phone: lang === 'ar' ? 'هاتف' : 'Tel',
@@ -214,7 +216,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
 
   const src = brandingConfig?.logoUrl || branding?.logo || "/logo.svg";
   const type = brandingConfig?.logoType || 'MARK';
-  
+
   // Patching backend typo if present in database configuration
   let sysName = brandingConfig?.systemName !== undefined ? brandingConfig.systemName : (branding?.name || 'Otantik Restaurant Enterprise');
   if (typeof sysName === 'string') {
@@ -359,10 +361,10 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             lineHeight: '1.625',
             textAlign: lang === 'ar' ? 'right' : 'left'
           }}>
-            <span 
-              dir={isEnglishText(sysName) ? "ltr" : undefined} 
-              style={{ 
-                fontWeight: 600, 
+            <span
+              dir={isEnglishText(sysName) ? "ltr" : undefined}
+              style={{
+                fontWeight: 600,
                 color: '#6b7280',
                 display: isEnglishText(sysName) ? 'inline-block' : 'inline'
               }}
@@ -372,10 +374,10 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             {branding?.address && (
               <>
                 {" - "}
-                <span 
-                  dir={isEnglishText(branding.address) ? "ltr" : undefined} 
-                  style={{ 
-                    display: isEnglishText(branding.address) ? 'inline-block' : 'inline' 
+                <span
+                  dir={isEnglishText(branding.address) ? "ltr" : undefined}
+                  style={{
+                    display: isEnglishText(branding.address) ? 'inline-block' : 'inline'
                   }}
                 >
                   {branding.address}
@@ -437,11 +439,11 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
               const headerAlign = isCentered ? 'center' : (lang === 'ar' ? 'right' : 'left');
 
               return (
-                <th 
-                  key={idx} 
-                  style={{ 
-                    width: colWidth, 
-                    minWidth: colWidth, 
+                <th
+                  key={idx}
+                  style={{
+                    width: colWidth,
+                    minWidth: colWidth,
                     textAlign: headerAlign,
                     backgroundColor: '#0B1220',
                     color: '#ffffff',

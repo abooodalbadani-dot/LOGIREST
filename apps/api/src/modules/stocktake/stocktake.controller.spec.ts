@@ -4,9 +4,10 @@ import { StocktakeService } from './stocktake.service';
 import { StocktakePostService } from './stocktake-post.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import type { Request } from 'express';
 import { Role } from '@prisma/client';
-import { ScopeValidationService } from '../../auth/scope-validation.service';
 
 describe('StocktakeController', () => {
   const mockScopeValidationService = {
@@ -31,6 +32,8 @@ describe('StocktakeController', () => {
     post: jest.fn(),
   };
 
+  const mockPdfGeneratorService = {};
+
   const mockStocktakeSessionFindUnique = jest.fn();
 
   const mockPrismaService = {
@@ -54,6 +57,7 @@ describe('StocktakeController', () => {
         { provide: StocktakePostService, useValue: mockStocktakePostService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
         {
           provide: ScopeValidationService,
           useValue: mockScopeValidationService,

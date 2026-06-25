@@ -35,6 +35,74 @@ import { formatDate } from '@/utils/currency';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
+interface TransferReceiveQtyCellProps {
+ line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> };
+ isMutationBlocked: boolean;
+ hasLots: boolean;
+ onChange: (val: number) => void;
+}
+
+function TransferReceiveQtyCell({ line, isMutationBlocked, hasLots, onChange }: TransferReceiveQtyCellProps) {
+ const displayQty = hasLots && line._lotReceives
+  ? Object.values(line._lotReceives).reduce((sum, q) => sum + q, 0)
+  : (line._receivedQty ?? line.qty);
+
+ const [localQty, setLocalQty] = useState(String(displayQty));
+
+ useEffect(() => {
+  setLocalQty(String(displayQty));
+ }, [displayQty]);
+
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const rawVal = e.target.value;
+  if (rawVal === '' || /^\d*\.?\d*$/.test(rawVal)) {
+   setLocalQty(rawVal);
+   if (rawVal !== '' && rawVal !== '.') {
+    const parsed = parseFloat(rawVal);
+    if (!isNaN(parsed) && parsed >= 0) {
+     onChange(parsed);
+    }
+   }
+  }
+ };
+
+ const handleBlur = () => {
+  let finalVal = 0;
+  if (localQty === '' || localQty === '.') {
+   finalVal = 0;
+  } else {
+   const parsed = parseFloat(localQty);
+   if (isNaN(parsed) || parsed < 0) {
+    finalVal = 0;
+   } else {
+    finalVal = parsed;
+   }
+  }
+  setLocalQty(String(finalVal));
+  onChange(finalVal);
+ };
+
+ return (
+  <div className="flex justify-center">
+   <Input
+    type="text"
+    inputMode="decimal"
+    disabled={isMutationBlocked || hasLots}
+    className={cn(
+     "w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all",
+     isMutationBlocked || hasLots ? 'opacity-40 cursor-not-allowed' : '',
+     displayQty !== (line.shippedQty ?? line.qty) 
+      ? 'text-status-warning border-status-warning/40 focus:ring-status-warning/30 shadow-[0_0_15px_rgba(255,152,0,0.1)]' 
+      : 'text-foreground border-emerald-500/20 focus:ring-emerald-500/30'
+    )}
+    value={localQty}
+    onChange={handleChange}
+    onBlur={handleBlur}
+   />
+  </div>
+ );
+}
+
 export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.transfer');
  const tCommon = useTranslations('common');
@@ -110,6 +178,67 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
  }, [varianceReason, lines, transfer]);
 
  const { router, registerDirty } = useUnsavedChangesGuard(isDirty);
+
+  const handleQtyChange = useCallback((lineId: string, val: number) => {
+   setLines(prev =>
+    prev.map(l => l.id === lineId ? { ...l, _receivedQty: val } : l)
+   );
+  }, []);
+
+  const hasAnyLots = useMemo(() => lines.some(l => l.lotAllocations && l.lotAllocations.length > 0), [lines]);
+
+  const extraColumns = useMemo(() => {
+   const cols = [
+    {
+     header: t('shipped_qty'),
+     cell: (line: TransferLine & { _receivedQty?: number }) => (
+      <div className="flex justify-center">
+       <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
+        {line.shippedQty ?? line.qty}
+       </span>
+      </div>
+     ),
+    },
+    {
+     header: t('received_qty'),
+     cell: (line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> }) => {
+      const hasLots = line.lotAllocations && line.lotAllocations.length > 0;
+      return (
+       <TransferReceiveQtyCell
+        line={line}
+        isMutationBlocked={isMutationBlocked}
+        hasLots={!!hasLots}
+        onChange={(val) => handleQtyChange(line.id, val)}
+       />
+      );
+     },
+    }
+   ];
+
+   if (hasAnyLots) {
+    cols.push({
+     header: t('lot') || 'Lots',
+     cell: (line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> }) => {
+      const hasLots = line.lotAllocations && line.lotAllocations.length > 0;
+      if (!hasLots) return <span className="text-muted-foreground/30 text-label-xs">—</span>;
+      return (
+       <div className="flex justify-center">
+        <button
+         type="button"
+         disabled={isMutationBlocked}
+         onClick={() => setLotModalLine(line)}
+         className="text-primary underline underline-offset-4 decoration-dotted decoration-primary/40 hover:decoration-primary text-label-xs font-semibold uppercase transition-all disabled:opacity-40"
+        >
+         {t('allocate_lot') || 'Lots'}
+        </button>
+       </div>
+      );
+     },
+    });
+   }
+
+   return cols;
+  }, [t, isMutationBlocked, hasAnyLots, handleQtyChange]);
 
   const handleScan = useCallback((barcode: string) => {
    if (isMutationBlocked) {
@@ -417,70 +546,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
         qty: t('transfer_qty'),
         uom: tCommon('table_headers.uom'),
        }}
-       extraColumns={[
-        {
-         header: t('shipped_qty'),
-         cell: (line: TransferLine & { _receivedQty?: number }) => (
-          <div className="flex justify-center">
-           <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
-            {line.shippedQty ?? line.qty}
-           </span>
-          </div>
-         ),
-        },
-        {
-         header: t('received_qty'),
-         cell: (line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> }) => {
-          const hasLots = line.lotAllocations && line.lotAllocations.length > 0;
-          const displayQty = hasLots && line._lotReceives
-           ? Object.values(line._lotReceives).reduce((sum, q) => sum + q, 0)
-           : (line._receivedQty ?? line.qty);
-          return (
-           <div className="flex justify-center">
-            <Input
-             type="number"
-             disabled={isMutationBlocked || hasLots}
-             className={cn(
-              "w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all",
-              isMutationBlocked || hasLots ? 'opacity-40 cursor-not-allowed' : '',
-              displayQty !== (line.shippedQty ?? line.qty) 
-               ? 'text-status-warning border-status-warning/40 focus:ring-status-warning/30 shadow-[0_0_15px_rgba(255,152,0,0.1)]' 
-               : 'text-foreground border-emerald-500/20 focus:ring-emerald-500/30'
-             )}
-             value={displayQty}
-             onChange={e => {
-              const val = Number(e.target.value);
-              setLines(prev =>
-               prev.map(l => l.id === line.id ? { ...l, _receivedQty: val } : l)
-              );
-             }}
-            />
-           </div>
-          );
-         },
-        },
-        ...(lines.some(l => l.lotAllocations && l.lotAllocations.length > 0)
-         ? [{
-           header: t('lot') || 'Lots',
-           cell: (line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> }) => {
-            const hasLots = line.lotAllocations && line.lotAllocations.length > 0;
-            if (!hasLots) return <span className="text-muted-foreground/30 text-label-xs">—</span>;
-            return (
-             <div className="flex justify-center">
-              <button
-               type="button"
-               disabled={isMutationBlocked}
-               onClick={() => setLotModalLine(line)}
-               className="text-primary underline underline-offset-4 decoration-dotted decoration-primary/40 hover:decoration-primary text-label-xs font-semibold uppercase transition-all disabled:opacity-40"
-              >
-               {t('allocate_lot') || 'Lots'}
-              </button>
-             </div>
-            );
-           },
-          } as { header: string; cell: (line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> }) => React.ReactNode }]
-         : []),
-       ]}
+       extraColumns={extraColumns}
       />
      </div>
     </div>

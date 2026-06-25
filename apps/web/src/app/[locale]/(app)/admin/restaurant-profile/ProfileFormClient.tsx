@@ -161,7 +161,7 @@ export function ProfileFormClient({ locale: _locale }: { locale: string }) {
            <Input 
             id="logo-upload"
             type="file" 
-            accept="image/*" 
+            accept="image/*,.svg,image/svg+xml" 
             className="hidden" 
             onChange={(e) => {
              const file = e.target.files?.[0];

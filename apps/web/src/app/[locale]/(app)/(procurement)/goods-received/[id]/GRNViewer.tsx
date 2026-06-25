@@ -95,7 +95,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
       <div className="flex flex-row items-center gap-2 w-full md:w-auto">
        <StatusBadge status={document?.status as BadgeStatus} />
-       <DocumentExportMenu />
+       <DocumentExportMenu documentType="GRN" documentId={document?.id} documentNumber={document?.documentNumber} />
       </div>
       {actions && (
        <>
