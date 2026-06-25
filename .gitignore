@@ -73,6 +73,9 @@ dist/
 check_results.txt
 commit_diffs.txt
 lint_results.txt
+# API runtime logs (large, never commit)
+api_logs*.txt
+scratch/*.txt
 tsc-errors.txt
 lint-results.json
 tsc-output.txt
@@ -122,4 +125,11 @@ Thumbs.db
 
 # Graphify cache
 graphify-out/cache/
+graphify-out/graph.json
 
+# Playwright test results & artifacts
+tests/tests/results/
+
+# ESLint / TSC JSON reports (generated, not source)
+apps/web/eslint_report.json
+apps/web/lint_report.json
