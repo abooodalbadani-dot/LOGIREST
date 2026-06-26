@@ -38,7 +38,10 @@ COPY apps/api/package*.json              ./apps/api/
 # Single npm ci: installs all deps (devDeps required for nest build)
 # BuildKit cache mount avoids re-downloading on every build
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --workspace=apps/api --include-workspace-root \
+    npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm ci --workspace=apps/api --include-workspace-root \
         --no-audit --no-fund
 
 # ── Copy source after install to keep install layer cached ──

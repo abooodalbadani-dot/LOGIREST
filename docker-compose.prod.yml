@@ -27,7 +27,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-logirest}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-logirest}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,7 +47,7 @@ services:
         limits:
           memory: 128M
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -105,7 +105,7 @@ services:
       - uploads_data:/app/apps/web/public/uploads
       - ./backups:/backups:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:4000/v1/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -fs http://localhost:4000/v1/health || exit 1" ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -142,7 +142,7 @@ services:
     expose:
       - "3000"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://127.0.0.1:3000/ || exit 1"]
+      test: [ "CMD-SHELL", "curl -fs http://127.0.0.1:3000/ || exit 1" ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -184,7 +184,7 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: [ "CMD", "mc", "ready", "local" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -214,7 +214,7 @@ services:
       - ./scripts:/scripts:ro
       - ./backups:/backups
       - uploads_data:/uploads:ro
-    entrypoint: ["sh", "-c", "while true; do sh /scripts/db-backup.sh; sleep 86400; done"]
+    entrypoint: [ "sh", "-c", "while true; do sh /scripts/db-backup.sh; sleep 86400; done" ]
 
 volumes:
   db_data:
