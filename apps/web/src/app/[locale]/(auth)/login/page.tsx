@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from '@/i18n/navigation';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +37,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const t = useTranslations('auth');
     const router = useRouter();
+    const params = useParams();
 
     const { login, user, isLoading: authLoading } = useAuth();
     const [error, setError] = useState<string | null>(null);
@@ -75,8 +77,51 @@ export default function LoginPage() {
 
             // Explicitly redirect after successful login to bypass the isAuthReason useEffect lock
             const searchParams = new URLSearchParams(window.location.search);
-            const redirectUrl = searchParams.get('redirect') || '/dashboard';
-            router.replace(redirectUrl);
+            const callbackUrl = searchParams.get('callbackUrl') || searchParams.get('redirect');
+            const currentLocale = (params?.locale as string) || 'ar';
+
+            let targetUrl = '';
+            try {
+                if (!callbackUrl || callbackUrl.trim() === '' || callbackUrl === '/') {
+                    targetUrl = `/${currentLocale}/dashboard`;
+                } else {
+                    let sanitized = callbackUrl.trim();
+
+                    // Sanitize double slashes at the beginning
+                    while (sanitized.startsWith('//')) {
+                        sanitized = sanitized.substring(1);
+                    }
+
+                    if (sanitized === '/' || sanitized === '') {
+                        targetUrl = `/${currentLocale}/dashboard`;
+                    } else {
+                        // Ensure it starts with /
+                        if (!sanitized.startsWith('/')) {
+                            sanitized = '/' + sanitized;
+                        }
+
+                        // Check if it already starts with a valid locale (e.g., /ar/ or /en/ or exactly /ar or /en)
+                        const validLocales = ['ar', 'en'];
+                        const segments = sanitized.split('/');
+                        const firstSegment = segments[1] || '';
+
+                        if (validLocales.includes(firstSegment)) {
+                            targetUrl = sanitized;
+                        } else {
+                            targetUrl = `/${currentLocale}${sanitized}`;
+                        }
+                    }
+                }
+
+                // Final sanitization of double slashes just in case
+                while (targetUrl.startsWith('//')) {
+                    targetUrl = targetUrl.substring(1);
+                }
+            } catch {
+                targetUrl = `/${currentLocale}/dashboard`;
+            }
+
+            window.location.replace(targetUrl);
 
         } catch (_err: unknown) {
             setError(t('invalid_credentials'));

@@ -542,7 +542,7 @@ export class AuthService {
 
     const frontendUrl =
       this.config.get<string>('FRONTEND_URL') || 'http://localhost:3000';
-    const resetUrl = `${frontendUrl}/auth/reset-password?token=${rawToken}`;
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
 
     await this.prisma.$transaction(async (tx) => {
       await tx.passwordResetToken.create({

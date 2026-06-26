@@ -396,7 +396,7 @@ export class NotificationTemplateService implements OnModuleInit {
       case 'SUPPLIER_GRN_NOTIFIED':
         return `Goods Receipt Confirmed for PO/GRN ${docNo}`;
       case 'PASSWORD_RESET_REQUESTED':
-        return '🔐 Otantik Restuarant Password Reset Request';
+        return '🔐 Otantik Restaurant Password Reset Request';
       case 'ADJUSTMENT_POSTED':
         return `Stock Adjustment Posted — ${docNo}`;
       case 'STOCKTAKE_POSTED':

@@ -115,8 +115,35 @@ export function proxy(request: NextRequest) {
 
   // B. Unauthenticated -> Login (Locale-Safe)
   if (!token && !isPublicPage) {
-    console.log(`[Proxy] Unauthenticated access to protected route: ${pathname} -> Redirecting to /login`);
-    return NextResponse.redirect(constructUrl('/login'));
+    // Sanitize any potential double slashes in pathname first
+    let cleanPath = pathname;
+    while (cleanPath.startsWith('//')) {
+      cleanPath = cleanPath.substring(1);
+    }
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = '/' + cleanPath;
+    }
+
+    // Determine the redirect path with locale prefix
+    let callbackPath = cleanPath;
+    const parts = cleanPath.split('/');
+    const firstSegment = parts[1] || '';
+    if (!supportedLocales.includes(firstSegment)) {
+      callbackPath = `/${locale}${cleanPath}`;
+    }
+
+    // Double check double slashes
+    while (callbackPath.startsWith('//')) {
+      callbackPath = callbackPath.substring(1);
+    }
+
+    const callbackUrl = callbackPath + request.nextUrl.search;
+    console.log(`[Proxy] Unauthenticated access to protected route: ${pathname} -> Redirecting to /login with callbackUrl=${callbackUrl}`);
+
+    const loginUrl = constructUrl('/login');
+    loginUrl.searchParams.set('callbackUrl', callbackUrl);
+    loginUrl.searchParams.set('redirect', callbackUrl);
+    return NextResponse.redirect(loginUrl);
   }
 
   // D. Role-based route protection (UX layer)
@@ -160,7 +187,7 @@ export function proxy(request: NextRequest) {
     return response;
   }
 
-  if (token && (isPublicPage || isRoot)) {
+  if (token && (isPublicPage || isRoot) && normalizedPath !== '/reset-password') {
     console.log(`[Proxy] Authenticated user on public/root page: ${pathname} -> Redirecting to /dashboard`);
     return NextResponse.redirect(constructUrl('/dashboard'));
   }

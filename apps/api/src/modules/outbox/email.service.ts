@@ -222,7 +222,7 @@ export class EmailService {
       }
     }
 
-    let fromName = 'Otantik Restuarant Alerts';
+    let fromName = 'Otantik Restaurant Alerts';
     let fromEmail = '';
 
     try {
@@ -370,7 +370,7 @@ export class EmailService {
             background-color: #f7f9fc;
             margin: 0;
             padding: 20px;
-            color: #333333;
+            color: #1A1A1A;
           }
           .container {
             max-width: 600px;
@@ -379,34 +379,38 @@ export class EmailService {
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e1e8ed;
+            border: 1px solid #E5E7EB;
           }
           .header {
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-            color: #ffffff;
-            padding: 30px 20px;
+            background-color: #ffffff;
+            padding: 25px 20px;
             text-align: center;
-          }
-          .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 600;
+            border-bottom: 1px solid #E5E7EB;
           }
           .content {
             padding: 30px 20px;
             line-height: 1.6;
+            color: #1A1A1A;
+          }
+          .content h2 {
+            color: #715b38;
+            font-family: 'Georgia', serif;
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: bold;
           }
           .footer {
-            background-color: #f1f5f9;
-            color: #64748b;
+            background-color: #f9fafb;
+            color: #5c5f5e;
             padding: 20px;
             text-align: center;
             font-size: 12px;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #E5E7EB;
           }
           .btn {
             display: inline-block;
-            background-color: #3b82f6;
+            background-color: #b48e67;
             color: #ffffff;
             padding: 12px 24px;
             text-decoration: none;
@@ -424,18 +428,18 @@ export class EmailService {
           }
         </style>
       </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Otantik Restuarant Inventory Management</h1>
+      <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f7f9fc; margin: 0; padding: 20px; color: #1A1A1A;">
+        <div class="container" style="max-width: 600px; background-color: #ffffff; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); border: 1px solid #E5E7EB;">
+          <div class="header" style="background-color: #ffffff; padding: 25px 20px; text-align: center; border-bottom: 1px solid #E5E7EB;">
+            <img src="https://otantikkitchen.com/Otantik-Restaurant-logo-BANNER.png" alt="OTANTIK RESTAURANT" style="display: block; margin: 0 auto; max-height: 45px; width: auto; border: 0; font-family: 'Georgia', serif; font-size: 20px; color: #715b38; letter-spacing: 2px; font-weight: bold; text-align: center;" />
           </div>
-          <div class="content">
-            <h2>${title}</h2>
+          <div class="content" style="padding: 30px 20px; line-height: 1.6; color: #1A1A1A;">
+            <h2 style="color: #715b38; font-family: 'Georgia', serif; font-size: 20px; margin-top: 0; margin-bottom: 15px; font-weight: bold;">${title}</h2>
             ${body}
           </div>
-          <div class="footer">
-            <p>This is an automated notification from the Otantik Restuarant Enterprise system.</p>
-            <p>&copy; 2026 Otantik Restuarant. All rights reserved.</p>
+          <div class="footer" style="background-color: #f9fafb; color: #5c5f5e; padding: 20px; text-align: center; font-size: 12px; border-top: 1px solid #E5E7EB;">
+            <p style="margin: 0 0 10px 0;">This is an automated notification from the Otantik Restaurant Enterprise system.</p>
+            <p style="margin: 0;">&copy; 2026 Otantik Restaurant. All rights reserved.</p>
           </div>
         </div>
       </body>

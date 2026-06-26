@@ -121,6 +121,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: logirest-web
+    command: ["node", "/app/apps/web/server.js"]
     restart: unless-stopped
     environment:
       PORT: 3000

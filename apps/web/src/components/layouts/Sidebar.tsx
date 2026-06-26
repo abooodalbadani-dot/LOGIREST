@@ -32,6 +32,7 @@ import {
   TrendingUp,
   Store,
   LucideIcon,
+  Globe,
   LogOut as LogOutIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -114,6 +115,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('common.sidebar');
   const tCommon = useTranslations('common');
+  const tContext = useTranslations('context');
   const { user, isLoading, logout } = useAuth();
 
   const groups: NavGroup[] = [
@@ -279,7 +281,17 @@ export function Sidebar({ onClose }: SidebarProps) {
         </div>
 
         {user && (
-          <div className="mt-auto border-t border-white/10 p-4 md:hidden">
+          <div className="mt-auto border-t border-white/10 p-4 md:hidden flex flex-col gap-2">
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+                window.dispatchEvent(new CustomEvent('open-context-selector'));
+              }}
+              className="flex items-center justify-start gap-3 w-full px-4 py-3 text-foreground hover:bg-muted rounded-lg transition-colors text-start"
+            >
+              <Globe className="w-5 h-5 text-operational-cyan shrink-0" />
+              <span className="font-semibold text-body-md uppercase">{tContext('switch_context')}</span>
+            </button>
             <button onClick={() => logout()} className="flex items-center justify-start gap-3 w-full px-4 py-3 text-destructive hover:bg-destructive/10 hover:text-red-400 rounded-lg transition-colors text-start">
               <LogOutIcon className="w-5 h-5 rtl:rotate-180" />
               <span className="font-semibold">{tCommon('logout')}</span>

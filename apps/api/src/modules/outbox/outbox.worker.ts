@@ -446,7 +446,7 @@ export class OutboxWorker extends WorkerHost {
           <p>Hello,</p>
           <p>Purchase Request <strong>${docNo}</strong> has been submitted and is currently awaiting your review and approval.</p>
           <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
-          <p>Please log in to the Otantik Restuarant console to view the details.</p>
+          <p>Please log in to the Otantik Restaurant console to view the details.</p>
         `;
         break;
       case 'PR_APPROVED':
@@ -543,12 +543,12 @@ export class OutboxWorker extends WorkerHost {
         `;
         break;
       case 'PASSWORD_RESET_REQUESTED':
-        subject = '🔐 Otantik Restuarant Password Reset Request';
+        subject = '🔐 Otantik Restaurant Password Reset Request';
         body = `
           <p>Dear ${data.name || 'User'},</p>
-          <p>We received a request to reset the password for your Otantik Restuarant account.</p>
+          <p>We received a request to reset the password for your Otantik Restaurant account.</p>
           <p>Please click the button below to choose a new password. This link is valid for 1 hour.</p>
-          <p><a href="${data.resetUrl || '#'}" class="btn" style="color:#ffffff;">Reset Password</a></p>
+          <p><a href="${data.resetUrl || '#'}" class="btn" style="background-color: #b48e67; color: #ffffff; border-radius: 6px; text-decoration: none; padding: 12px 24px; font-weight: bold; display: inline-block; margin-top: 20px;">Reset Password</a></p>
           <p>If you did not request this, you can safely ignore this email.</p>
         `;
         break;

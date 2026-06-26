@@ -98,10 +98,10 @@ export function NotificationBell() {
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
      <button
-      className="p-2 text-[#0B1220] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1A2234] rounded-lg transition-colors relative group"
+      className="p-2 text-[#0B1220] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1A2234] rounded-lg transition-colors relative group shrink-0"
       aria-label={isAr ? 'الإشعارات' : 'Notifications'}
      >
-      <Bell className="w-5 h-5 group-hover:scale-105 transition-transform" />
+      <Bell className="w-5 h-5 group-hover:scale-105 transition-transform shrink-0" />
       {unreadNotifications.length > 0 && (
        <span
         className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-status-warning px-1 text-[10px] font-bold text-white border border-surface-container-lowest"

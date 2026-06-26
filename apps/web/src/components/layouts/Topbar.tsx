@@ -76,7 +76,7 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
         {user && (
           <button
             onClick={() => setIsSelectorOpen(true)}
-            className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 rounded-xl bg-card border border-border shadow-sm hover:bg-muted transition-all group relative overflow-hidden shrink min-w-0 ${isScopeMissing ? 'ring-2 ring-status-warning ring-offset-2 animate-pulse' : ''
+            className={`hidden md:flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 rounded-xl bg-card border border-border shadow-sm hover:bg-muted transition-all group relative overflow-hidden shrink min-w-0 ${isScopeMissing ? 'ring-2 ring-status-warning ring-offset-2 animate-pulse' : ''
               }`}
           >
             {/* Subtle glow effect */}

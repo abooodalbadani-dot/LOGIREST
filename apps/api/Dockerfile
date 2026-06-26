@@ -56,8 +56,10 @@ RUN ./node_modules/.bin/prisma generate --schema=apps/api/prisma/schema.prisma
 # so entry compiles to: apps/api/dist/apps/api/src/main.js
 RUN npm run build --workspace=apps/api
 
-# Prune devDependencies IN PLACE after compilation.
-# This avoids a second full npm ci in a separate stage, saving ~600MB peak RAM.
+# ─────────────────────────────────────────────────
+# Stage 1.5: Pruner
+# ─────────────────────────────────────────────────
+FROM builder AS pruner
 RUN npm prune --omit=dev --workspace=apps/api
 
 # ─────────────────────────────────────────────────
@@ -77,8 +79,8 @@ ENV CHROMIUM_PATH=/usr/bin/chromium
 ENV NODE_OPTIONS="--max-old-space-size=1024"
 ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 
-# Pruned node_modules (devDeps stripped by npm prune in builder)
-COPY --from=builder /app/node_modules          ./node_modules
+# Pruned node_modules (devDeps stripped by npm prune in pruner)
+COPY --from=pruner /app/node_modules          ./node_modules
 COPY --from=builder /app/packages              ./packages
 
 # Compiled NestJS output

@@ -24,14 +24,14 @@ export function ThemeToggle() {
   return (
    <button
     onClick={handleToggle}
-    className="p-2 text-[#0B1220] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1A2234] rounded-lg transition-colors group"
+    className="p-2 text-[#0B1220] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1A2234] rounded-lg transition-colors group shrink-0"
     aria-label={t('ui.toggle_theme')}
    >
-    <div className="relative z-10">
+    <div className="relative z-10 flex shrink-0">
      {theme === 'dark' ? (
-      <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform duration-200" />
+      <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform duration-200 shrink-0" />
      ) : (
-      <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform duration-200" />
+      <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform duration-200 shrink-0" />
      )}
     </div>
    </button>
