@@ -133,3 +133,8 @@ tests/tests/results/
 # ESLint / TSC JSON reports (generated, not source)
 apps/web/eslint_report.json
 apps/web/lint_report.json
+
+# Deployment Archives
+*.tar.gz
+*.zip
+
