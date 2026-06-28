@@ -50,6 +50,7 @@ export interface AuthUser {
     poFinalized: boolean;
     security: boolean;
   };
+  defaultDepartmentId?: string | null;
 }
 export interface AuthContextValue {
   user: AuthUser | null;
@@ -79,9 +80,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const t = useTranslations('auth');
   const queryClient = useQueryClient();
 
+  const resolveScope = (scope: ActiveScope, currentUser: AuthUser | null): ActiveScope => {
+    if (!currentUser) return scope;
+    const resolvedScope = { ...scope };
+    
+    const isKitchenStaff = currentUser.role === 'KITCHEN_CHIEF' || (currentUser.role as string) === 'KITCHEN_MANAGER';
+    if (!isKitchenStaff) {
+      resolvedScope.departmentId = null;
+    } else if (!resolvedScope.departmentId && resolvedScope.branchId) {
+      const defaultDeptId = currentUser.defaultDepartmentId;
+      if (defaultDeptId) {
+        resolvedScope.departmentId = defaultDeptId;
+      } else {
+        const branchDepts = currentUser.scopes
+          .filter((s: UserScope) => s.branchId === resolvedScope.branchId && s.departmentId)
+          .map((s: UserScope) => s.departmentId as string);
+        const uniqueDepts = Array.from(new Set(branchDepts));
+        if (uniqueDepts.length === 1) {
+          resolvedScope.departmentId = uniqueDepts[0];
+        }
+      }
+    }
+    
+    return resolvedScope;
+  };
+
   const setActiveScope = (scope: ActiveScope) => {
-    setActiveScopeState(scope);
-    localStorage.setItem('logirest_active_scope', JSON.stringify(scope));
+    const resolved = resolveScope(scope, user);
+    setActiveScopeState(resolved);
+    localStorage.setItem('logirest_active_scope', JSON.stringify(resolved));
   };
 
   // Track whether this is the initial mount so we don't invalidate on first render.
@@ -195,7 +222,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return s.branchId === scopeObj.branchId && s.warehouseId === scopeObj.warehouseId;
               });
             if (isValid) {
-              setActiveScopeState(scopeObj);
+              const resolved = resolveScope(scopeObj, finalUser);
+              setActiveScopeState(resolved);
+              localStorage.setItem('logirest_active_scope', JSON.stringify(resolved));
             } else {
               setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
               localStorage.removeItem('logirest_active_scope');
@@ -211,8 +240,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             warehouseId: first.warehouseId,
             departmentId: first.departmentId
           };
-          setActiveScopeState(defaultScope);
-          localStorage.setItem('logirest_active_scope', JSON.stringify(defaultScope));
+          const resolved = resolveScope(defaultScope, finalUser);
+          setActiveScopeState(resolved);
+          localStorage.setItem('logirest_active_scope', JSON.stringify(resolved));
         }
         setIsLoading(false);
       } catch (err) {
@@ -352,7 +382,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Forcefully overwrite or initialize active scope in LocalStorage and state
       if (parsedUser.scopes && parsedUser.scopes.length > 0) {
-        const validScope = parsedUser.scopes.find(s => s.branchId && s.warehouseId);
+        const validScope = parsedUser.role === 'KITCHEN_CHIEF'
+          ? parsedUser.scopes.find(s => s.branchId && s.departmentId)
+          : parsedUser.scopes.find(s => s.branchId && s.warehouseId);
         const targetScope = validScope || parsedUser.scopes[0];
         if (targetScope) {
           const newScope = {
@@ -360,8 +392,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             warehouseId: targetScope.warehouseId || null,
             departmentId: targetScope.departmentId || null
           };
-          setActiveScopeState(newScope);
-          localStorage.setItem('logirest_active_scope', JSON.stringify(newScope));
+          const resolved = resolveScope(newScope, parsedUser);
+          setActiveScopeState(resolved);
+          localStorage.setItem('logirest_active_scope', JSON.stringify(resolved));
         }
       }
     } catch (err) {

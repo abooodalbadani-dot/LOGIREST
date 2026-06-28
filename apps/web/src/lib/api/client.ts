@@ -324,10 +324,11 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
               const validScope = user.scopes.find((s: { branchId?: string; warehouseId?: string; departmentId?: string | null }) => s.branchId && s.warehouseId);
               const targetScope = validScope || user.scopes[0];
               if (targetScope) {
+                const isKitchenStaff = user.role === 'KITCHEN_CHIEF' || (user.role as string) === 'KITCHEN_MANAGER';
                 const newScope = {
                   branchId: targetScope.branchId || '',
                   warehouseId: targetScope.warehouseId || '',
-                  departmentId: targetScope.departmentId || null
+                  departmentId: isKitchenStaff ? (targetScope.departmentId || null) : null
                 };
                 if (newScope.branchId && newScope.warehouseId) {
                   localStorage.setItem('logirest_active_scope', JSON.stringify(newScope));
@@ -522,6 +523,7 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
       return schema.parse(normalizedData);
     } catch (parseError: unknown) {
       if (parseError instanceof z.ZodError) {
+        console.error("Zod Validation Failed on:", parseError.issues);
         console.error(`[Zod Parsing Error] Failed to parse response for ${method} ${path}`, {
           error: JSON.stringify(parseError.issues, null, 2),
           payload: JSON.stringify(data, null, 2)

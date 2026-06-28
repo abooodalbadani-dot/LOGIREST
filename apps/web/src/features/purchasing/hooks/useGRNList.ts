@@ -5,19 +5,28 @@ import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
+const RobustDateSchema = z.union([z.string(), z.date()])
+ .nullable()
+ .optional()
+ .transform((val) => {
+  if (val === null || val === undefined || val === '') return null;
+  if (val instanceof Date) return val.toISOString();
+  return val;
+ });
+
 const GRNSummarySchema = z.object({ 
  id: z.string(), 
  documentNumber: z.string(), 
  status: BadgeStatusSchema, 
- supplierId: z.string().optional(), 
+ supplierId: z.string().optional().nullable(), 
  supplierName: z.string().optional().nullable(), 
- poId: z.string().optional(), 
- poNumber: z.string().optional(), 
- warehouseId: z.string().optional(), 
+ poId: z.string().optional().nullable(), 
+ poNumber: z.string().optional().nullable(), 
+ warehouseId: z.string().optional().nullable(), 
  warehouseName: z.string().optional().nullable(), 
- createdAt: z.string().optional(), 
- supplierTotalAmount: z.number().optional(),
- postedAt: z.string().nullable().optional(),
+ createdAt: RobustDateSchema, 
+ supplierTotalAmount: z.number().optional().nullable(),
+ postedAt: RobustDateSchema,
 });
 
 export type GRNSummary = z.infer<typeof GRNSummarySchema>;

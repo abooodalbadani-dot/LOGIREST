@@ -181,7 +181,7 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
       } : undefined}
       filters={
          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-           <div className="w-full sm:max-w-md">
+           <div className="w-full sm:w-80 md:w-[28rem]">
              <div className="relative w-full group">
                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                <Input

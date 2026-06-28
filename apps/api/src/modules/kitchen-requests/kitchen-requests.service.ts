@@ -114,7 +114,7 @@ export class KitchenRequestsService {
   }
 
   async findAll(
-    params: { status?: string; search?: string; page?: number },
+    params: { status?: string; search?: string; page?: number; limit?: number },
     activeScope?: {
       branchId?: string;
       warehouseId?: string;
@@ -123,7 +123,7 @@ export class KitchenRequestsService {
     user?: { id: string; role: Role },
   ) {
     const page = Number(params.page) || 1;
-    const limit = 10;
+    const limit = Number(params.limit) || 50;
     const skip = (page - 1) * limit;
 
     const where: Prisma.KitchenRequestWhereInput = {};

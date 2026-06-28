@@ -281,7 +281,7 @@
       "select_language": "Select Language",
       "sender_name": "Sender Name",
       "print_section": "Print Settings",
-      "paper_size": "Default Paper Size",
+      "paper_size": "Receipt Paper Size",
       "show_logo": "Show Restaurant Logo on Receipt",
       "auto_print": "Auto-Print Receipt on Fulfillment",
       "settings_saved": "System settings updated successfully",
@@ -450,6 +450,7 @@
     "void_warning_description": "This operation is irreversible. This will offset inventory ledgers, adjust cost balances, and lock the document.",
     "void_reason_prompt": "Reason for voiding (minimum 5 characters):",
     "void_reason_placeholder": "Enter explanation...",
+    "void_success": "Document voided successfully.",
     "actions": {
       "all_branches": "All Branches",
       "approve": "Approve",
@@ -1161,7 +1162,9 @@
       "full_report": "Full Report",
       "processing": "Processing real-time stream...",
       "title": "Analytics Engine",
-      "velocity": "Stock Velocity"
+      "velocity": "Stock Velocity",
+      "empty": "No stock movements recorded yet",
+      "error": "Error loading stock velocity data"
     },
     "approval_workflow": "Pending Approvals & Workflow",
     "aria": {
@@ -1376,7 +1379,13 @@
       "efficiency": "Efficiency",
       "po_conversion_rate": "PO Conversion Rate",
       "avg_fulfillment_cycle": "Avg. Fulfillment Cycle: {days} days"
-    }
+    },
+    "movement_analytics": "Movement Analytics",
+    "movement_analytics_desc": "This feature will be available in Phase 2.",
+    "audit_logs": "Audit Logs",
+    "audit_logs_empty": "No recent audit activity found.",
+    "coming_soon": "Coming Soon",
+    "phase_2": "Phase 2"
   },
   "fefo": {
     "override_warning": "Warning: This product is expired — you must enter an override reason",
@@ -1971,7 +1980,7 @@
       "empty_file": "manifest contains no data records.",
       "entity_type": "Target Domain",
       "error": "Error",
-      "error_message": "Fault Description",
+      "error_message": "Error Message",
       "error_step": "Discrepancies",
       "errors": "Errors",
       "errors_found_description": "Structural or logical errors were found. Resolve these in your manifest and re-upload.",
@@ -2013,7 +2022,6 @@
       "failure_title": "Import Failed",
       "failure_description": "The import process encountered terminal errors. All {failedCount} records failed.",
       "error_log": "Error Log",
-      "error_message": "Error Message",
       "failed_records": "Failed Records",
       "reupload_cta": "Re-upload File",
       "title": "Bulk Import",

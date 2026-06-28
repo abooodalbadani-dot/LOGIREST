@@ -44,7 +44,9 @@ export async function dispatchPrintJob({
   locale,
   onThermalPrint,
 }: PrintDispatcherOptions) {
-  const paperSize = settings?.defaultPaperSize || 'A4';
+  // Enforce A4 for standard documents and reports, ignoring the receipt paper size setting.
+  const isReceiptOrOperational = docType === 'KITCHEN_REQUEST' || docType === 'INVENTORY_ISSUE';
+  const paperSize = isReceiptOrOperational ? (settings?.defaultPaperSize || 'A4') : 'A4';
   const showLogo = settings?.thermalShowLogo ?? true;
 
   const isAr = locale === 'ar';

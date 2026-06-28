@@ -62,10 +62,17 @@ export function formatNumber(
 }
 
 /**
- * Format a quantity with ERP standard 3-decimal precision.
+ * Format a quantity with dynamic precision (up to 3 decimals, stripping trailing zeros for whole numbers).
  */
 export function formatQuantity(value: number | null | undefined, locale: 'ar' | 'en' = 'en'): string {
-  return formatNumber(value, locale, 3);
+  const safeValue = value == null || isNaN(value) ? 0 : value;
+  const safeLocale = locale || 'en';
+  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  
+  return new Intl.NumberFormat(formatterLocale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 3,
+  }).format(safeValue);
 }
 
 /**

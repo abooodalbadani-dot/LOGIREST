@@ -461,14 +461,14 @@ export function SettingsClient({ locale }: { locale: string }) {
           {t('print_section')}
          </h3>
          <p className="text-[9px] text-muted-foreground/50 uppercase font-bold tracking-widest mt-1">
-          Manage default document sizes and receipt formats
+          Manage receipt paper sizes and print configurations
          </p>
         </div>
        </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {/* Default Paper Size Select Block */}
+        {/* Receipt Paper Size Select Block */}
         <div className="space-y-3">
          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 ms-1">
           {t('paper_size')}

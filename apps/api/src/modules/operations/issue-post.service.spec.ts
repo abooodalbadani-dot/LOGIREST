@@ -246,4 +246,76 @@ describe('IssuePostService', () => {
       service.post(issueId, userId, Role.INV_MGR, 1),
     ).rejects.toThrow(new BadRequestException('Cannot post issue: Item SKU1 is frozen/locked in source warehouse'));
   });
+
+  it('should post issue successfully and update linked KitchenRequest with requestedById in outbox event payload', async () => {
+    const issueId = 'issue-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockIssueFindUnique.mockResolvedValue({
+      id: issueId,
+      warehouseId,
+      status: 'SUBMITTED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          quantity: new Prisma.Decimal(10),
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: true,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    const mockKitchenRequest = {
+      id: 'kr-1',
+      requestNumber: 'KR-001',
+      warehouseId,
+      requestedById: 'chef-1',
+      status: 'SUBMITTED',
+    };
+
+    const mockKitchenRequestItem = {
+      id: 'kri-1',
+      requestId: 'kr-1',
+      itemId: 'item-1',
+      quantity: 10,
+      quantityFulfilled: 0,
+    };
+
+    (mockPrismaTx.kitchenRequest.findFirst as jest.Mock).mockResolvedValue(mockKitchenRequest);
+    (mockPrismaTx.kitchenRequestItem.findFirst as jest.Mock).mockResolvedValue(mockKitchenRequestItem);
+    mockIssueUpdate.mockResolvedValue({ id: issueId, status: 'POSTED' });
+    mockAllocationService.allocate = jest
+      .fn()
+      .mockResolvedValue([{ lotId: 'lot-1', quantityAllocated: 10 }]);
+    mockApprovalEventCount.mockResolvedValue(0);
+
+    const result = await service.post(issueId, userId, Role.INV_MGR, 1);
+
+    expect(result).toBeDefined();
+    expect(mockPrismaTx.kitchenRequest.update).toHaveBeenCalledWith({
+      where: { id: mockKitchenRequest.id },
+      data: {
+        status: 'FULFILLED',
+        version: { increment: 1 },
+      },
+    });
+
+    expect(mockOutboxService.writeEvent).toHaveBeenCalledWith(
+      mockPrismaTx,
+      'KITCHEN_REQUEST_POSTED',
+      {
+        id: mockKitchenRequest.id,
+        documentNumber: mockKitchenRequest.requestNumber,
+        warehouseId: mockKitchenRequest.warehouseId,
+        requestedById: mockKitchenRequest.requestedById,
+      },
+    );
+  });
 });

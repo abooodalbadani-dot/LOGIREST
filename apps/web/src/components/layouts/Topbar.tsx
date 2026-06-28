@@ -25,7 +25,7 @@ interface TopbarProps {
 export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarProps) {
   const { user, logout, activeScope } = useAuth();
   const { displayName, avatarUrl } = useUserProfile();
-  const { branchName, warehouseName, isLoading } = useContextScope();
+  const { branchName, warehouseName, departmentName, isLoading } = useContextScope();
   const { data: profile } = useRestaurantProfile();
 
   const brandingConfig = profile?.brandingConfig;
@@ -46,6 +46,12 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
     window.addEventListener('open-context-selector', handleOpen);
     return () => window.removeEventListener('open-context-selector', handleOpen);
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && isScopeMissing) {
+      setIsSelectorOpen(true);
+    }
+  }, [isLoading, isScopeMissing]);
 
   const t = useTranslations('context');
   const tc = useTranslations('common');
@@ -91,11 +97,17 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
                 {t('switch_context')}
               </span>
               <div className="flex items-center gap-1.5 shrink min-w-0">
-                <span className="text-label-sm font-bold text-foreground max-w-[90px] sm:max-w-[150px] truncate" dir="ltr">
+                <span className="text-label-sm font-bold text-foreground max-w-[90px] sm:max-w-[200px] truncate" dir="ltr">
                   {isLoading ? (
                     <Loader2 className="w-3 h-3 animate-spin text-operational-cyan" />
+                  ) : isMissingDepartment ? (
+                    <span className="text-status-warning text-xs font-semibold">Select Department to view data</span>
+                  ) : isMissingWarehouse ? (
+                    <span className="text-status-warning text-xs font-semibold">Select Warehouse to view data</span>
+                  ) : branchName ? (
+                    `${branchName}${warehouseName ? ` / ${warehouseName}` : ''}${departmentName ? ` / ${departmentName}` : ''}`
                   ) : (
-                    branchName ? `${branchName} ${warehouseName ? ` /${warehouseName}` : ''}` : t('no_selection')
+                    t('no_selection')
                   )}
                 </span>
               </div>

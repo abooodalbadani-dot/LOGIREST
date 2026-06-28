@@ -47,6 +47,7 @@ export const AuthUserSchema = z.object({
  phone: z.string().optional().nullable(),
  themePreferences: z.enum(['light', 'dark']).optional(),
  notificationPreferences: NotificationPreferencesSchema.optional(),
+ defaultDepartmentId: z.string().optional().nullable(),
 });
 
 export const ForgotPasswordSchema = z.object({

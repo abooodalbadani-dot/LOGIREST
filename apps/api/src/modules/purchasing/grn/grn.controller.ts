@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  NotFoundException,
   Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -325,6 +326,53 @@ export class GrnController {
     });
 
     res.end(buffer);
+  }
+
+  @Put(':id/lines')
+  @Roles(
+    Role.ADMIN,
+    Role.WH_KEEPER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
+  async updateLine(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: any,
+  ) {
+    const grnRecord = await this.prisma.goodsReceivedNote.findUnique({
+      where: { id },
+      select: { warehouseId: true, status: true },
+    });
+    if (!grnRecord) {
+      throw new NotFoundException(`Goods Received Note with ID ${id} not found`);
+    }
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      grnRecord.warehouseId,
+    );
+
+    if (grnRecord.status !== 'DRAFT') {
+      throw new BadRequestException(
+        'Only DRAFT Goods Received Notes can be updated.',
+      );
+    }
+
+    const unitPrice = body.unitCostForeign !== undefined ? body.unitCostForeign : (body.unitPrice !== undefined ? body.unitPrice : 0);
+
+    await this.grnService.updateLine(id, {
+      itemId: body.itemId,
+      lotId: body.lotId,
+      lotNumber: body.lotNumber,
+      expiryDate: body.expiryDate,
+      receivedQuantity: body.receivedQuantity,
+      unitPrice,
+    });
+
+    return { success: true };
   }
 
   @Put(':id')

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import {
@@ -13,6 +14,7 @@ import {
  Users,
  TrendingUp,
  History,
+ BarChart3,
 } from 'lucide-react';
 import { KPICard } from './KPICard';
 import { NearExpiryWidget } from './NearExpiryWidget';
@@ -29,6 +31,13 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PageHeader } from '@/components/shared/PageHeader';
 
 export function AdminDashboard() {
+ const [hoveredPoint, setHoveredPoint] = useState<{
+  x: number;
+  y: number;
+  value: number;
+  label: string;
+ } | null>(null);
+
  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
  const { data: stats, isLoading: loadingStats, error } = useDashboardStats();
  const t = useTranslations('dashboard');
@@ -55,6 +64,40 @@ export function AdminDashboard() {
    lastBackupTime = tc('time_ago.days', { count: Math.floor(diffHours / 24) });
   }
  }
+
+ // Localized month labels for the last 6 months
+ const getMonthLabels = (loc: string) => {
+  const labels = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+   const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+   try {
+    labels.push(d.toLocaleDateString(loc, { month: 'short' }));
+   } catch {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    labels.push(months[d.getMonth()]);
+   }
+  }
+  return labels;
+ };
+
+ const velocityData = stats.efficiencyMetrics?.velocityChart || [];
+ const isEmpty = velocityData.length === 0 || velocityData.every((v) => v === 0);
+ const monthLabels = getMonthLabels(locale);
+
+ const points = velocityData.map((v, i) => {
+  const x = 40 + i * 88;
+  const y = 130 - (v / 100) * 110;
+  return { x, y, value: v, label: monthLabels[i] || '' };
+ });
+
+ const linePath = points.reduce(
+  (acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`),
+  '',
+ );
+ const areaPath = points.length
+  ? `${linePath} L ${points[points.length - 1].x} 130 L ${points[0].x} 130 Z`
+  : '';
 
  return (
   <main role="main" className="space-y-10">
@@ -198,12 +241,120 @@ export function AdminDashboard() {
         </Link>
        </PermissionGate>
       </CardHeader>
-      <CardContent className="h-[200px] flex items-center justify-center">
-       <div className="text-center space-y-4">
-        <Activity className="w-12 h-12 text-muted-foreground/10 mx-auto animate-pulse" />
-        <span className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('analytics.processing')}</span>
-       </div>
-      </CardContent>
+       <CardContent className="h-[220px] flex items-center justify-center p-6 relative select-none">
+        {loadingStats ? (
+         <div className="text-center space-y-4">
+          <Activity className="w-12 h-12 text-muted-foreground/10 mx-auto animate-pulse" />
+          <span className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('analytics.processing')}</span>
+         </div>
+        ) : error ? (
+         <div className="text-center space-y-4 text-status-error">
+          <AlertTriangle className="w-12 h-12 mx-auto opacity-40 animate-bounce" />
+          <span className="text-label-xs font-semibold uppercase">{t('analytics.error')}</span>
+         </div>
+        ) : isEmpty ? (
+         <div className="text-center space-y-4">
+          <BarChart3 className="w-12 h-12 text-muted-foreground/10 mx-auto" />
+          <span className="text-label-xs font-semibold text-muted-foreground/30 uppercase text-center block max-w-xs">{t('analytics.empty')}</span>
+         </div>
+        ) : (
+         <div className="w-full h-full relative group/chart">
+          <svg 
+           className="w-full h-full" 
+           viewBox="0 0 500 160" 
+           preserveAspectRatio="xMidYMid meet"
+           role="img"
+           aria-label="Stock Velocity Chart"
+          >
+           <defs>
+            <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
+             <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.25" />
+             <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.00" />
+            </linearGradient>
+           </defs>
+
+           {/* Horizontal Grid Lines */}
+           <line x1="40" y1="20" x2="480" y2="20" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
+           <line x1="40" y1="75" x2="480" y2="75" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
+           <line x1="40" y1="130" x2="480" y2="130" stroke="rgba(255,255,255,0.12)" />
+
+           {/* Y-Axis Labels */}
+           <text x="30" y="24" textAnchor="end" fontSize="9" fontWeight="700" className="fill-muted-foreground/30 font-mono">100%</text>
+           <text x="30" y="79" textAnchor="end" fontSize="9" fontWeight="700" className="fill-muted-foreground/30 font-mono">50%</text>
+           <text x="30" y="134" textAnchor="end" fontSize="9" fontWeight="700" className="fill-muted-foreground/30 font-mono">0%</text>
+
+           {/* X-Axis Labels */}
+           {points.map((p, i) => (
+            <text 
+             key={i} 
+             x={p.x} 
+             y="152" 
+             textAnchor="middle" 
+             fontSize="9" 
+             fontWeight="700" 
+             className="fill-muted-foreground/30 uppercase font-sans tracking-wider"
+            >
+             {p.label}
+            </text>
+           ))}
+
+           {/* Area Path */}
+           {areaPath && (
+            <path d={areaPath} fill="url(#cyanGradient)" className="transition-all duration-300" />
+           )}
+
+           {/* Line Path */}
+           {linePath && (
+            <path 
+             d={linePath} 
+             fill="none" 
+             stroke="#06B6D4" 
+             strokeWidth="2.5" 
+             strokeLinecap="round" 
+             strokeLinejoin="round" 
+             className="drop-shadow-[0_0_8px_rgba(6,182,212,0.4)] transition-all duration-300" 
+            />
+           )}
+
+           {/* Interactive Points */}
+           {points.map((p, i) => (
+            <g key={i} className="group/point">
+             <circle 
+              cx={p.x} 
+              cy={p.y} 
+              r="4.5" 
+              className="fill-card stroke-[2.5px] stroke-operational-cyan transition-all duration-150 group-hover/point:r-[6px] group-hover/point:stroke-white cursor-pointer"
+             />
+             <circle 
+              cx={p.x} 
+              cy={p.y} 
+              r="16" 
+              fill="transparent" 
+              className="cursor-pointer"
+              onMouseEnter={() => setHoveredPoint(p)}
+              onMouseLeave={() => setHoveredPoint(null)}
+             />
+            </g>
+           ))}
+          </svg>
+
+          {/* Custom Tooltip */}
+          {hoveredPoint && (
+           <div 
+            className="absolute z-10 bg-[#0B1220] border border-border/80 shadow-2xl rounded-xl px-3 py-2 flex flex-col pointer-events-none transition-all duration-140 ease-industrial text-label-xxs font-bold uppercase min-w-[70px] text-center"
+            style={{
+             left: `${(hoveredPoint.x / 500) * 100}%`,
+             top: `${(hoveredPoint.y / 160) * 100 - 15}%`,
+             transform: 'translate(-50%, -100%)',
+            }}
+           >
+            <span className="text-muted-foreground/50 tracking-wider font-sans">{hoveredPoint.label}</span>
+            <span className="text-operational-cyan text-label-xs font-extrabold mt-0.5 font-mono">{hoveredPoint.value}%</span>
+           </div>
+          )}
+         </div>
+        )}
+       </CardContent>
      </Card>
     </section>
    </div>

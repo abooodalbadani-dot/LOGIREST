@@ -57,7 +57,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
     const isLocked = isDocumentLocked('GRN', status);
 
     const actions = (
-        <div className="flex flex-col items-stretch md:items-end w-full md:w-auto gap-2">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center w-full md:w-auto gap-2">
             {/* Scan Mode — always visible */}
             {isLocked ? (
                 <span className="text-[10px] md:text-xs font-bold text-[#b48e67] tracking-widest uppercase truncate w-full text-center md:text-right">

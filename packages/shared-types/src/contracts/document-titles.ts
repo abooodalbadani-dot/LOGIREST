@@ -77,6 +77,10 @@ export const DOCUMENT_TITLE_MAP: Record<string, DocumentTitle> = {
   operations_adjustments: {
     en: 'INVENTORY ADJUSTMENT',
     ar: 'تعديلات المخزون',
+  },
+  operational_requisitions: {
+    en: 'OPERATIONAL REQUISITIONS',
+    ar: 'طلبات التشغيل',
   }
 };
 
@@ -90,7 +94,7 @@ export function getDocumentTitle(key: string, locale: 'ar' | 'en'): string {
   if (match) {
     return locale === 'ar' ? match.ar : match.en;
   }
-  
+
   // Fallback replacing underscores with spaces
   return key.replace(/_/g, ' ');
 }

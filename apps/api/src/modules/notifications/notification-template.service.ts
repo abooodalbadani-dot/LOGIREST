@@ -196,7 +196,7 @@ export class NotificationTemplateService implements OnModuleInit {
     };
   }
 
-  private async resolveRecipientEmails(
+  public async resolveRecipientEmails(
     eventType: string,
     payload: unknown,
   ): Promise<string> {
@@ -269,7 +269,10 @@ export class NotificationTemplateService implements OnModuleInit {
       return Array.from(emails).join(', ');
     }
 
-    if (eventType === 'EXPIRY_WARNING_ALERT') {
+    if (
+      eventType === 'EXPIRY_WARNING' ||
+      eventType === 'EXPIRY_WARNING_ALERT'
+    ) {
       const whId = data.warehouseId;
       const keepers = whId
         ? await this.prisma.user.findMany({
@@ -292,6 +295,22 @@ export class NotificationTemplateService implements OnModuleInit {
         ...managers.map((u) => u.email),
       ]);
       return Array.from(emails).join(', ');
+    }
+
+    if (eventType === 'STOCKTAKE_STARTED') {
+      const whId = data.warehouseId;
+      if (!whId) return '';
+      const keepers = await this.prisma.user.findMany({
+        where: {
+          role: Role.WH_KEEPER,
+          isActive: true,
+          warehouseScopes: {
+            some: { warehouseId: whId },
+          },
+        },
+        select: { email: true },
+      });
+      return keepers.map((u) => u.email).join(', ');
     }
 
     if (eventType === 'KITCHEN_REQUEST_SUBMITTED') {
@@ -338,9 +357,6 @@ export class NotificationTemplateService implements OnModuleInit {
       case 'LOW_STOCK_ALERT':
         targetRoles = [Role.INV_MGR, Role.PROC_MGR];
         break;
-      case 'EXPIRY_WARNING':
-        targetRoles = [Role.INV_MGR];
-        break;
       case 'ADJUSTMENT_POSTED':
         targetRoles = [Role.ADMIN, Role.GM, Role.INV_MGR];
         break;
@@ -349,9 +365,6 @@ export class NotificationTemplateService implements OnModuleInit {
         break;
       case 'PO_APPROVED':
         targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
-        break;
-      case 'STOCKTAKE_STARTED':
-        targetRoles = [Role.WH_KEEPER];
         break;
       default:
         break;
@@ -365,7 +378,7 @@ export class NotificationTemplateService implements OnModuleInit {
     return users.map((u) => u.email).join(', ');
   }
 
-  private renderEventSubject(eventType: string, payload: unknown): string {
+  public renderEventSubject(eventType: string, payload: unknown): string {
     const data = (payload || {}) as Record<string, string | undefined>;
     const docNo = data.documentNumber || data.id || 'N/A';
     switch (eventType) {

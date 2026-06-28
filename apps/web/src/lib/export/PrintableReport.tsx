@@ -180,7 +180,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
     return safeKey;
   };
 
-  const displayTitle = getDocumentTitle(title, lang);
+  const displayTitle = getDocumentTitle(title, lang) || title || (lang === 'ar' ? 'تقرير' : 'REPORT');
 
   const labels = {
     phone: lang === 'ar' ? 'هاتف' : 'Tel',
@@ -220,6 +220,27 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+          
+          @media print {
+            @page {
+              size: A4 portrait !important;
+              margin: 10mm !important;
+            }
+            body {
+              width: 210mm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+              color: black !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            html, body {
+              width: 210mm !important;
+              height: auto !important;
+              overflow: visible !important;
+            }
+          }
           
           .printable-report-table {
             width: 100%;

@@ -87,6 +87,7 @@ interface DataTableProps<T> {
   total: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
  };
  onExport?: () => void;
  exportComponent?: React.ReactNode;
@@ -148,8 +149,28 @@ export function DataTable<T>({
  renderMobileCard,
 }: DataTableProps<T>) {
  const t = useTranslations('common.datatable');
- const locale = useLocale();
- const parentRef = React.useRef<HTMLDivElement>(null);
+  const locale = useLocale();
+  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  const pageValue = pagination?.page;
+  const totalValue = pagination?.total;
+  const onPageChange = pagination?.onPageChange;
+
+  React.useEffect(() => {
+    if (
+      !isLoading &&
+      !isError &&
+      data &&
+      data.length === 0 &&
+      pageValue &&
+      pageValue > 1 &&
+      totalValue &&
+      totalValue > 0 &&
+      onPageChange
+    ) {
+      onPageChange(1);
+    }
+  }, [isLoading, isError, data, pageValue, totalValue, onPageChange]);
 
   const exportColumns = React.useMemo(() => {
    return columns
@@ -590,18 +611,36 @@ export function DataTable<T>({
     </div>
   )}
 
- {pagination && !isLoading && data.length > 0 && (
- <div className="flex items-center justify-between mt-2 px-2">
- <div className={cn("text-label-xs font-bold text-muted-foreground uppercase opacity-70 whitespace-nowrap")}>
- {t('showing')} <span dir="ltr">{(pagination.page - 1) * pagination.pageSize + 1}</span> {t('to')} <span dir="ltr">{Math.min(pagination.page * pagination.pageSize, pagination.total)}</span> {t('of')} <span dir="ltr">{pagination.total}</span>
- </div>
- <Pagination 
- page={pagination.page} 
- totalPages={pagination.totalPages} 
- onPageChange={pagination.onPageChange} 
- />
- </div>
- )}
+  {pagination && !isLoading && data.length > 0 && (
+  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2 px-2 w-full">
+   <div className="flex items-center gap-4 flex-wrap">
+    <div className={cn("text-label-xs font-bold text-muted-foreground uppercase opacity-70 whitespace-nowrap")}>
+     {t('showing')} <span dir="ltr">{(pagination.page - 1) * pagination.pageSize + 1}</span> {t('to')} <span dir="ltr">{Math.min(pagination.page * pagination.pageSize, pagination.total)}</span> {t('of')} <span dir="ltr">{pagination.total}</span>
+    </div>
+    {pagination.onPageSizeChange && (
+     <div className="flex items-center gap-2 text-label-xs font-bold text-muted-foreground uppercase opacity-70">
+      <span>{locale === 'ar' ? 'الصفوف لكل صفحة:' : 'Rows per page:'}</span>
+      <select
+       value={pagination.pageSize}
+       onChange={(e) => pagination.onPageSizeChange?.(Number(e.target.value))}
+       className="bg-card border border-border rounded px-1.5 py-0.5 font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer hover:bg-muted/50 transition-colors"
+      >
+       {[10, 25, 50, 100].map((size) => (
+        <option key={size} value={size}>
+         {size}
+        </option>
+       ))}
+      </select>
+     </div>
+    )}
+   </div>
+   <Pagination 
+    page={pagination.page} 
+    totalPages={pagination.totalPages} 
+    onPageChange={pagination.onPageChange} 
+   />
+  </div>
+  )}
  </div>
  );
 }

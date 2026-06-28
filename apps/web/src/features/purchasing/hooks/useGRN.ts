@@ -60,10 +60,121 @@ export const GRNDetailSchema = z.object({
 
 export type GRNDetail = z.infer<typeof GRNDetailSchema>;
 
+const RobustDateSchema = z.union([z.string(), z.date()])
+ .nullable()
+ .optional()
+ .transform((val) => {
+  if (val === null || val === undefined || val === '') return null;
+  if (val instanceof Date) return val.toISOString();
+  return val;
+ });
+
+const GRNLineItemResponseSchema = z.object({
+ id: z.string().optional().nullable(),
+ item: z.object({
+  id: z.string(),
+  code: z.string().nullish(),
+  name: z.string().nullish(),
+  nameAr: z.string().optional().nullable(),
+  nameEn: z.string().optional().nullable(),
+  primaryUom: z.object({
+   id: z.string().optional().nullable(),
+   code: z.string().optional().nullable()
+  }).nullish()
+ }),
+ lot: z.object({
+  id: z.string().optional().nullable(),
+  lotNumber: z.string().optional().nullable(),
+  expiryDate: RobustDateSchema
+ }).nullish(),
+ qty: z.coerce.number().nullish(),
+ receivedQty: z.coerce.number().nullish(),
+ uomId: z.string().nullish(),
+ unitCostForeign: z.coerce.number().nullish(),
+ unitCostBase: z.coerce.number().nullish()
+}).transform((val) => {
+ return {
+  id: val.id ?? '',
+  item: {
+   id: val.item.id,
+   code: val.item.code ?? '',
+   name: val.item.name ?? '',
+   nameAr: val.item.nameAr ?? undefined,
+   nameEn: val.item.nameEn ?? undefined,
+   primaryUom: {
+    id: val.item.primaryUom?.id ?? '',
+    code: val.item.primaryUom?.code ?? ''
+   }
+  },
+  lot: val.lot ? {
+   id: val.lot.id ?? '',
+   lotNumber: val.lot.lotNumber ?? '',
+   expiryDate: val.lot.expiryDate ?? null
+  } : null,
+  qty: val.qty ?? 0,
+  receivedQty: val.receivedQty ?? 0,
+  uomId: val.uomId ?? '',
+  unitCostForeign: val.unitCostForeign ?? null,
+  unitCostBase: val.unitCostBase ?? null
+ };
+});
+
+const GRNDetailResponseSchema = z.object({
+ id: z.string(),
+ documentNumber: z.string(),
+ status: BadgeStatusSchema,
+ supplierId: z.string().nullish(),
+ supplier: z.object({
+  id: z.string(),
+  name: z.string()
+ }).optional().nullable(),
+ poId: z.string().nullish(),
+ poNumber: z.string().nullish(),
+ poFxRate: z.coerce.number().nullish(),
+ currencyId: z.string().nullish(),
+ currencyCode: z.string().nullish(),
+ warehouseId: z.string().nullish(),
+ warehouseName: z.string().nullish(),
+ fxRate: z.coerce.number().nullish(),
+ fxRateCapturedAt: RobustDateSchema,
+ version: z.coerce.number().nullish(),
+ notes: z.string().nullish(),
+ createdAt: RobustDateSchema,
+ createdBy: z.string().nullish(),
+ updatedAt: RobustDateSchema,
+ lines: z.array(GRNLineItemResponseSchema).default([])
+}).transform((val) => {
+ return {
+  id: val.id,
+  documentNumber: val.documentNumber,
+  status: val.status,
+  supplierId: val.supplierId ?? '',
+  supplier: val.supplier ? {
+   id: val.supplier.id,
+   name: val.supplier.name
+  } : undefined,
+  poId: val.poId ?? null,
+  poNumber: val.poNumber ?? null,
+  poFxRate: val.poFxRate ?? undefined,
+  currencyId: val.currencyId ?? '',
+  currencyCode: val.currencyCode ?? null,
+  warehouseId: val.warehouseId ?? '',
+  warehouseName: val.warehouseName ?? null,
+  fxRate: val.fxRate ?? null,
+  fxRateCapturedAt: val.fxRateCapturedAt ?? undefined,
+  version: val.version ?? 1,
+  notes: val.notes ?? null,
+  createdAt: val.createdAt ?? undefined,
+  createdBy: val.createdBy ?? undefined,
+  updatedAt: val.updatedAt ?? undefined,
+  lines: val.lines
+ };
+});
+
 export function useGRN(id: string | null) {
  return useQuery({
   queryKey: ['grn', id],
-  queryFn: ({ signal }) => apiClient.get(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema }), { signal }).then(res => res.data),
+  queryFn: ({ signal }) => apiClient.get(`/procurement/grns/${id}`, z.object({ data: GRNDetailResponseSchema }), { signal }).then(res => res.data),
   enabled: !!id && id !== 'new' && id !== 'undefined' && id !== 'null',
   staleTime: 60_000,
  });

@@ -1301,7 +1301,7 @@ export class ReportsService {
       }),
       // Pending purchase requests
       this.prisma.purchaseRequest.count({
-        where: { status: 'PENDING_APPROVAL' },
+        where: { status: 'SUBMITTED' },
       }),
       // Active stocktakes
       this.prisma.stocktakeSession.count({
@@ -1403,7 +1403,7 @@ export class ReportsService {
       }),
       // Pending approvals
       this.prisma.purchaseRequest.findMany({
-        where: { status: 'PENDING_APPROVAL' },
+        where: { status: 'SUBMITTED' },
         orderBy: { createdAt: 'desc' },
         take: 10,
         select: {

@@ -5,6 +5,7 @@ import { Role } from '@prisma/client';
 import { encrypt, decrypt } from './crypto.util';
 import { BcryptService } from '../../auth/bcrypt.service';
 import { ROLE_METADATA } from '@logirest/shared-types';
+import { NotificationTemplateService } from '../notifications/notification-template.service';
 
 process.env.ENCRYPTION_KEY = 'test-encryption-key-for-unit-testing-32-chars';
 process.env.BASE_CURRENCY_CODE = 'SAR';
@@ -64,12 +65,21 @@ describe('AdminService', () => {
     compare: jest.fn().mockResolvedValue(true),
   };
 
+  const mockNotificationTemplateService = {
+    resolveRecipientEmails: jest.fn().mockResolvedValue('test@recipient.com'),
+    renderEventSubject: jest.fn().mockReturnValue('Test Subject'),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: BcryptService, useValue: mockBcryptService },
+        {
+          provide: NotificationTemplateService,
+          useValue: mockNotificationTemplateService,
+        },
       ],
     }).compile();
 

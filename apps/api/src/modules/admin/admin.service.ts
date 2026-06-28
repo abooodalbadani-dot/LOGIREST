@@ -18,6 +18,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { BcryptService } from '../../auth/bcrypt.service';
 import { OutboxEvent, WarehouseItem, Prisma } from '@prisma/client';
+import { NotificationTemplateService } from '../notifications/notification-template.service';
 
 export interface FrozenItem {
   warehouseId: string;
@@ -42,6 +43,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bcrypt: BcryptService,
+    private readonly templateService: NotificationTemplateService,
   ) {}
 
   private getPermissionsForRole(role: UserRole): Permission[] {
@@ -436,8 +438,30 @@ export class AdminService {
         take: limit,
       }),
     ]);
+    const decoratedData = await Promise.all(
+      events.map(async (event) => {
+        const payload = (event.payload || {}) as Record<string, unknown>;
+        const recipientEmail =
+          await this.templateService.resolveRecipientEmails(
+            event.eventType,
+            payload,
+          );
+        const subject = this.templateService.renderEventSubject(
+          event.eventType,
+          payload,
+        );
+        return {
+          ...event,
+          payload: {
+            ...payload,
+            to: recipientEmail || 'Not Specified',
+            subject: subject || 'No Subject',
+          },
+        };
+      }),
+    );
     return {
-      data: events,
+      data: decoratedData,
       meta: {
         total,
         page,
@@ -469,8 +493,30 @@ export class AdminService {
         take: limit,
       }),
     ]);
+    const decoratedData = await Promise.all(
+      events.map(async (event) => {
+        const payload = (event.payload || {}) as Record<string, unknown>;
+        const recipientEmail =
+          await this.templateService.resolveRecipientEmails(
+            event.eventType,
+            payload,
+          );
+        const subject = this.templateService.renderEventSubject(
+          event.eventType,
+          payload,
+        );
+        return {
+          ...event,
+          payload: {
+            ...payload,
+            to: recipientEmail || 'Not Specified',
+            subject: subject || 'No Subject',
+          },
+        };
+      }),
+    );
     return {
-      data: events,
+      data: decoratedData,
       meta: {
         total,
         page,

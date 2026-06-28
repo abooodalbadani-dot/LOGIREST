@@ -75,6 +75,14 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  }
  }, [open, activeScope]);
 
+  // Auto-select if there is only 1 department available (ONLY for KITCHEN_CHIEF/KITCHEN_MANAGER)
+  useEffect(() => {
+    const isKitchenStaff = user?.role === 'KITCHEN_CHIEF' || (user?.role as string) === 'KITCHEN_MANAGER';
+    if (isKitchenStaff && departments.length === 1 && selectedDepartmentId !== departments[0].id) {
+      setSelectedDepartmentId(departments[0].id);
+    }
+  }, [departments, selectedDepartmentId, user?.role]);
+
  // Handle Escape key
  useEffect(() => {
  const handleKeyDown = (e: KeyboardEvent) => {

@@ -188,6 +188,7 @@ export class IssuePostService {
           id: kitchenRequest.id,
           documentNumber: kitchenRequest.requestNumber,
           warehouseId: kitchenRequest.warehouseId,
+          requestedById: kitchenRequest.requestedById,
         });
 
         // Write KITCHEN_CHIEF in-app notice

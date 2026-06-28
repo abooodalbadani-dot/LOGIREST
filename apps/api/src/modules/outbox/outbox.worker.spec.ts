@@ -458,6 +458,7 @@ describe('OutboxWorker', () => {
         itemName: 'Milk 1L',
         sku: 'SKU-MILK-1',
         lotNumber: 'LOT-2026-05',
+        warehouseId: 'wh-123',
         warehouseName: 'Main Store',
         qtyOnHand: 150,
         uomCode: 'PCS',
@@ -468,9 +469,12 @@ describe('OutboxWorker', () => {
     };
 
     mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
-    mockPrisma.user.findMany.mockResolvedValue([
-      { email: 'manager@example.com' },
-    ]);
+    mockPrisma.user.findMany.mockImplementation((args) => {
+      if (args.where.role === Role.INV_MGR) {
+        return Promise.resolve([{ email: 'manager@example.com' }]);
+      }
+      return Promise.resolve([{ email: 'keeper@example.com' }]);
+    });
 
     const mockJob = {
       id: 'job-expiry',
@@ -479,33 +483,22 @@ describe('OutboxWorker', () => {
 
     await worker.process(mockJob);
 
-    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
-      where: {
-        role: { in: [Role.INV_MGR] },
-        isActive: true,
-      },
-      select: {
-        email: true,
-        notificationPreferences: true,
-      },
-    });
-
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
-      ['manager@example.com'],
+      ['keeper@example.com', 'manager@example.com'],
       '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
       expect.stringContaining('Expiry Warning / تحذير انتهاء الصلاحية'),
       'EXPIRY_WARNING',
       mockEvent.payload,
     );
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
-      ['manager@example.com'],
+      ['keeper@example.com', 'manager@example.com'],
       '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
       expect.stringContaining('LOT-2026-05'),
       'EXPIRY_WARNING',
       mockEvent.payload,
     );
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
-      ['manager@example.com'],
+      ['keeper@example.com', 'manager@example.com'],
       '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
       expect.stringContaining('150 PCS'),
       'EXPIRY_WARNING',

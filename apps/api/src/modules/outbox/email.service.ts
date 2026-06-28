@@ -431,7 +431,7 @@ export class EmailService {
       <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f7f9fc; margin: 0; padding: 20px; color: #1A1A1A;">
         <div class="container" style="max-width: 600px; background-color: #ffffff; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); border: 1px solid #E5E7EB;">
           <div class="header" style="background-color: #ffffff; padding: 25px 20px; text-align: center; border-bottom: 1px solid #E5E7EB;">
-            <img src="https://otantikkitchen.com/Otantik-Restaurant-logo-BANNER.png" alt="OTANTIK RESTAURANT" style="display: block; margin: 0 auto; max-height: 45px; width: auto; border: 0; font-family: 'Georgia', serif; font-size: 20px; color: #715b38; letter-spacing: 2px; font-weight: bold; text-align: center;" />
+            <img src="${this.config.get<string>('FRONTEND_URL', 'http://localhost:3000')}/logoicon.png" alt="OTANTIK RESTAURANT" style="display: block; margin: 0 auto; max-height: 45px; width: auto; border: 0; font-family: 'Georgia', serif; font-size: 20px; color: #715b38; letter-spacing: 2px; font-weight: bold; text-align: center;" />
           </div>
           <div class="content" style="padding: 30px 20px; line-height: 1.6; color: #1A1A1A;">
             <h2 style="color: #715b38; font-family: 'Georgia', serif; font-size: 20px; margin-top: 0; margin-bottom: 15px; font-weight: bold;">${title}</h2>

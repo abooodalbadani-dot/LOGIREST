@@ -405,6 +405,86 @@ export class GrnService {
     });
   }
 
+  async updateLine(
+    grnId: string,
+    line: {
+      itemId: string;
+      lotId?: string | null;
+      lotNumber?: string | null;
+      expiryDate?: string | null;
+      receivedQuantity: number;
+      unitPrice: number;
+    },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const existingGrn = await tx.goodsReceivedNote.findUnique({
+        where: { id: grnId },
+        select: { fxRate: true, status: true },
+      });
+
+      if (!existingGrn) {
+        throw new NotFoundException(`Goods Received Note with ID ${grnId} not found`);
+      }
+
+      if (existingGrn.status !== 'DRAFT') {
+        throw new BadRequestException('Only DRAFT Goods Received Notes can be updated.');
+      }
+
+      const lotId = await this.resolveOrCreateLot(
+        tx,
+        line.itemId,
+        line.lotId,
+        line.lotNumber,
+        line.expiryDate,
+      );
+
+      const fxRate = existingGrn.fxRate ? new Prisma.Decimal(existingGrn.fxRate) : new Prisma.Decimal(1);
+      const foreignPrice = new Prisma.Decimal(line.unitPrice);
+      const basePrice = foreignPrice.mul(fxRate).toDecimalPlaces(4);
+
+      // Check if there is an existing line with this itemId and lotId
+      const existingLine = await tx.gRNLine.findFirst({
+        where: {
+          grnId,
+          itemId: line.itemId,
+          lotId,
+        },
+      });
+
+      if (existingLine) {
+        await tx.gRNLine.update({
+          where: { id: existingLine.id },
+          data: {
+            quantityReceived: line.receivedQuantity,
+            unitPrice: line.unitPrice,
+            unitPriceForeign: foreignPrice,
+            unitPriceBase: basePrice,
+          },
+        });
+      } else {
+        await tx.gRNLine.create({
+          data: {
+            grnId,
+            itemId: line.itemId,
+            lotId,
+            quantityReceived: line.receivedQuantity,
+            unitPrice: line.unitPrice,
+            unitPriceForeign: foreignPrice,
+            unitPriceBase: basePrice,
+          },
+        });
+      }
+
+      // Increment version of GRN
+      await tx.goodsReceivedNote.update({
+        where: { id: grnId },
+        data: { version: { increment: 1 } },
+      });
+
+      return { success: true };
+    });
+  }
+
   async remove(id: string, version?: number) {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.goodsReceivedNote.findUnique({

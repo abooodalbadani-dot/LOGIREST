@@ -41,18 +41,18 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="w-16 h-16 bg-status-error/10 rounded-full flex items-center justify-center mb-6 border border-status-error/20">
               <AlertTriangle className="w-8 h-8 text-status-error" />
             </div>
-            
+
             <h2 className="text-title-lg font-bold text-foreground uppercase mb-2 italic w-full text-center">
               System Fault Detected
             </h2>
-            <p className="text-body-md text-muted-foreground/60 max-w-xl mx-auto mb-8 font-medium w-full text-center leading-relaxed">
+            <p className="text-body-md text-muted-foreground/60 max-w-2xl mx-auto mb-8 font-medium w-full text-center leading-relaxed">
               An unexpected error occurred in the operational runtime. Diagnostic data has been logged.
             </p>
-            
+
             <div className="flex gap-4 max-w-sm w-full justify-center">
-              <button 
+              <button
                 onClick={this.handleReset}
-                className="flex items-center justify-center gap-2 h-11 px-8 w-full bg-brand-gold hover:bg-brand-gold/90 text-black text-label-xs font-bold uppercase rounded-xl transition-all duration-200 active:scale-[0.98] border-none shadow-lg shadow-brand-gold/10 cursor-pointer"
+                className="flex items-center justify-center gap-2 h-11 px-8 w-2xl bg-brand-gold hover:bg-brand-gold/90 text-black text-label-xs font-bold uppercase rounded-xl transition-all duration-200 active:scale-[0.98] border-none shadow-lg shadow-brand-gold/10 cursor-pointer"
               >
                 <RefreshCcw className="w-4 h-4 animate-spin-hover" />
                 <span>Reinitialize Module</span>

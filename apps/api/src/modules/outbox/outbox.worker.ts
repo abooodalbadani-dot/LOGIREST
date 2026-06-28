@@ -253,8 +253,6 @@ export class OutboxWorker extends WorkerHost {
         targetRoles = [Role.INV_MGR, Role.PROC_MGR];
         break;
       case 'EXPIRY_WARNING':
-        targetRoles = [Role.INV_MGR];
-        break;
       case 'EXPIRY_WARNING_ALERT': {
         const whId = data.warehouseId;
         const keepers = whId
@@ -266,18 +264,23 @@ export class OutboxWorker extends WorkerHost {
                   some: { warehouseId: whId },
                 },
               },
-              select: { email: true },
+              select: { email: true, notificationPreferences: true },
             })
           : [];
         const managers = await this.prisma.user.findMany({
           where: { role: Role.INV_MGR, isActive: true },
-          select: { email: true },
+          select: { email: true, notificationPreferences: true },
         });
-        const emails = new Set([
-          ...keepers.map((u) => u.email),
-          ...managers.map((u) => u.email),
-        ]);
-        return Array.from(emails);
+        const allUsers = [...keepers, ...managers];
+        const emails = allUsers
+          .filter((u) => {
+            if (!u.notificationPreferences) return true;
+            const prefs = u.notificationPreferences as Record<string, unknown>;
+            if (prefs.expiry === false) return false;
+            return true;
+          })
+          .map((u) => u.email);
+        return Array.from(new Set(emails));
       }
       case 'ADJUSTMENT_POSTED':
         targetRoles = [Role.ADMIN, Role.GM, Role.INV_MGR];
@@ -303,9 +306,21 @@ export class OutboxWorker extends WorkerHost {
         });
         return keepers.map((u) => u.email);
       }
-      case 'STOCKTAKE_STARTED':
-        targetRoles = [Role.WH_KEEPER];
-        break;
+      case 'STOCKTAKE_STARTED': {
+        const whId = data.warehouseId;
+        if (!whId) return [];
+        const keepers = await this.prisma.user.findMany({
+          where: {
+            role: Role.WH_KEEPER,
+            isActive: true,
+            warehouseScopes: {
+              some: { warehouseId: whId },
+            },
+          },
+          select: { email: true },
+        });
+        return keepers.map((u) => u.email);
+      }
       case 'TRANSFER_SHIPPED': {
         const receivingWhId = data.warehouseId || data.toWarehouseId;
         if (!receivingWhId) return [];
@@ -385,8 +400,6 @@ export class OutboxWorker extends WorkerHost {
         if (!u.notificationPreferences) return true;
         const prefs = u.notificationPreferences as Record<string, unknown>;
         if (eventType === 'LOW_STOCK_ALERT' && prefs.lowStock === false)
-          return false;
-        if (eventType === 'EXPIRY_WARNING' && prefs.expiry === false)
           return false;
         if (eventType === 'PR_SUBMITTED' && prefs.pendingApproval === false)
           return false;

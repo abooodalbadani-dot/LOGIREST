@@ -47,10 +47,12 @@ const KitchenRequestSummarySchema = z.object({
 
 export type KitchenRequestSummary = z.infer<typeof KitchenRequestSummarySchema>;
 
-export function useKitchenRequestList(filters: { status?: string; department_id?: string; page?: number } = {}) {
+export function useKitchenRequestList(filters: { status?: string; department_id?: string; page?: number; search?: string; limit?: number } = {}) {
  const params = new URLSearchParams();
  if (filters.status) params.set('status', filters.status);
  if (filters.department_id) params.set('department_id', filters.department_id);
+ if (filters.search) params.set('search', filters.search);
+ if (filters.limit) params.set('limit', String(filters.limit));
  params.set('page', String(filters.page ?? 1));
 
  return useQuery({
