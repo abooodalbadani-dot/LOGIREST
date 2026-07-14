@@ -47,6 +47,8 @@ function mapKitchenRequestDetail(
       itemId: item.itemId as string,
       itemName: (it?.name as string) || '',
       uom: (unitOfMeasure?.code as string) || 'PCS',
+      image: (it?.image as string) || null,
+      itemImage: (it?.image as string) || null,
       quantity: Number(item.quantityRequested),
       notes: (item.notes as string) || '',
       fulfilledQuantity: Number(item.quantityFulfilled),

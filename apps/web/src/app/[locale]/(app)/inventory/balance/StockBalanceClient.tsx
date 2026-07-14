@@ -83,16 +83,27 @@ export default function StockBalanceClient() {
   {
    id: 'item_name',
    header: tc('table_headers.name'),
-   cell: ({ row }) => (
-    <div className="flex items-center gap-3">
-     <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 group-hover:bg-operational-cyan/10 transition-colors">
-      <Package className="w-4 h-4 text-muted-foreground/60 transition-colors" />
+   cell: ({ row }) => {
+    const image = row.original.image;
+    return (
+     <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 group-hover:bg-operational-cyan/10 transition-colors overflow-hidden shrink-0">
+       {image ? (
+        <img
+         src={image}
+         alt={row.original.itemName || ''}
+         className="w-full h-full object-cover"
+        />
+       ) : (
+        <Package className="w-4 h-4 text-muted-foreground/60 transition-colors" />
+       )}
+      </div>
+      <span className="font-semibold text-label-sm text-foreground group-hover:text-operational-cyan transition-colors">
+       {row.original.itemName}
+      </span>
      </div>
-     <span className="font-semibold text-label-sm text-foreground group-hover:text-operational-cyan transition-colors">
-      {row.original.itemName}
-     </span>
-    </div>
-   ),
+    );
+   },
   },
   {
    id: 'warehouse',
@@ -205,7 +216,7 @@ export default function StockBalanceClient() {
 
  return (
   <div className="text-foreground min-w-0 bg-card flex-1 gap-6 selection:bg-operational-cyan/30 selection:text-operational-cyan flex-col flex min-h-screen w-full overflow-hidden">
-   <div className="flex-1 w-full max-w-full min-w-0 overflow-hidden px-4 md:px-6 pb-32 mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+   <div className="flex-1 w-full max-w-full min-w-0 overflow-hidden px-4 md:px-6 pb-32 mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
     
     <ReportHeader />
 
@@ -235,9 +246,9 @@ export default function StockBalanceClient() {
        <Button 
         variant="default" 
         onClick={handleExport}
-        className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+        className="px-6 py-2.5 bg-foreground text-background font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        >
-        <Download className="w-4 h-4 text-white me-3 transition-transform group-hover:-translate-y-0.5" />
+        <Download className="w-4 h-4 text-background me-3 transition-transform group-hover:-translate-y-0.5" />
         <span className="text-label-xs font-semibold uppercase">{t('export')}</span>
        </Button>
       </div>
@@ -332,7 +343,7 @@ export default function StockBalanceClient() {
         return (
         <div 
          key={`${item.itemCode}-${item.warehouseId}`} 
-         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+         className="bg-surface-lowest dark:bg-surface-container rounded-xl p-3 flex flex-col gap-2 shadow-sm border-0"
         >
          {/* TOP TIER: Identity */}
          <div className="flex justify-between items-start">
@@ -342,7 +353,7 @@ export default function StockBalanceClient() {
                  <div className="w-6 h-6 rounded-md bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 shrink-0">
                   <Package className="w-3 h-3 text-muted-foreground/60" />
                  </div>
-                 <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{item.itemName}</span>
+                 <span className="text-sm font-bold text-foreground line-clamp-1">{item.itemName}</span>
                </div>
                {isOutOfStock ? (
                 <StatusBadge status="OUT_OF_STOCK" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
@@ -351,16 +362,16 @@ export default function StockBalanceClient() {
                ) : (
                 <StatusBadge status="HEALTHY" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
                )}
-             </div>
-             <div className="flex items-center justify-between gap-2 mt-1">
-               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{item.itemCode}#</span>
+              </div>
+              <div className="flex items-center justify-between gap-2 mt-1">
+               <span className="text-[11px] font-mono font-bold text-operational-cyan uppercase">{item.itemCode}#</span>
                <span className="text-[10px] font-bold text-muted-foreground truncate">{item.warehouseName}</span>
-             </div>
+              </div>
            </div>
          </div>
 
          {/* MIDDLE TIER: Financial/Qty */}
-         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+         <div className="flex items-center justify-between mt-1 p-2 bg-surface-container rounded-md">
            <div className="flex flex-col">
              <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tc('table_headers.available')}</span>
              <span dir="ltr" className={`font-mono text-sm font-bold ${isOutOfStock ? 'text-status-error' : isLowStock ? 'text-status-warning' : 'text-foreground'}`}>
@@ -370,10 +381,10 @@ export default function StockBalanceClient() {
          </div>
 
          {/* BOTTOM TIER: Actions */}
-         <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+         <div className="flex justify-end items-end pt-2 mt-1 border-t border-border/20">
            <div className="flex gap-2 shrink-0">
             <PermissionGate action="update" resource="inventory">
-             <Button variant="ghost" size="sm" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+             <Button variant="ghost" size="sm" className="px-6 py-2.5 bg-foreground text-background font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
               <Edit2 className="w-3.5 h-3.5" />
              </Button>
             </PermissionGate>

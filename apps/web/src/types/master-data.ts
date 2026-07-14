@@ -16,7 +16,7 @@ export interface Department {
 export interface UoM { id: string; code: string; name: string; version?: number; }
 export interface UoMConversion { fromUomId: string; toUomId: string; factor: number; }
 export interface Category { id: string; code: string; name: string; isReferenced?: boolean; version?: number; }
-export interface Item { id: string; code: string; barcode: string; name: string; categoryId: string; primaryUom: UoM; uomConversions: UoMConversion[]; trackLots: boolean; minStockLevel: number; reorderPoint: number; lastPurchasePrice?: number; isActive: boolean; version?: number; hasTransactions?: boolean; category?: Category | null; }
+export interface Item { id: string; code: string; barcode: string; name: string; categoryId: string; primaryUom: UoM; uomConversions: UoMConversion[]; trackLots: boolean; minStockLevel: number; reorderPoint: number; lastPurchasePrice?: number; isActive: boolean; version?: number; hasTransactions?: boolean; category?: Category | null; image?: string | null; imageUrl?: string | null; }
 export interface Lot { id: string; itemId: string; warehouseId: string; lotNumber: string; expiryDate: string | null; qtyAvailable: number; isExpired: boolean; isNearExpiry: boolean; }
 export interface Supplier { id: string; code: string; name: string; contactEmail?: string | null; contactPhone?: string | null; contactName?: string | null; currencyId: string; paymentTerms: string; isActive: boolean; version?: number; }
 export interface Currency { id: string; code: string; name: string; symbol?: string | null; isBase: boolean; isActive: boolean; createdAt: string; version?: number; }
@@ -69,7 +69,9 @@ export const ItemSchema = z.object({
   trackLots: z.boolean(), minStockLevel: z.number(), reorderPoint: z.number(),
   lastPurchasePrice: z.number().optional(),
   isActive: z.boolean(),
-  version: z.number().optional()
+  version: z.number().optional(),
+  image: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable()
 });
 
 export const LotSchema = z.object({
@@ -241,7 +243,8 @@ export const ItemFormSchema = z.object({
   factor: z.number().positive()
   })),
   isActive: z.boolean().optional().nullable(),
-  version: z.number().optional().nullable()
+  version: z.number().optional().nullable(),
+  image: z.string().optional().nullable()
 });
 
 export const SupplierFormSchema = z.object({

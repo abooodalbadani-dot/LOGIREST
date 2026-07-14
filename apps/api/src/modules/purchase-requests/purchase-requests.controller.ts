@@ -50,6 +50,7 @@ function mapPRDetail(pr: Record<string, unknown>) {
         name: (item?.name as string) || '',
         nameAr: (item?.name as string) || '',
         nameEn: (item?.name as string) || '',
+        image: (item?.image as string) || null,
         primaryUom: unitOfMeasure
           ? {
               id: unitOfMeasure.id as string,

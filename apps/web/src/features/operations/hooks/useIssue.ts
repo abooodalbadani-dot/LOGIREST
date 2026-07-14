@@ -20,6 +20,7 @@ export const IssueLineItemSchema = z.object({
   id: z.string(),
   code: z.string(),
   name: z.string(),
+  image: z.string().optional().nullable(),
   nameAr: z.string().optional(),
   nameEn: z.string().optional(),
   primaryUom: z.object({

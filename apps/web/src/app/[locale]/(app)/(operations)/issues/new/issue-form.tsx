@@ -38,6 +38,8 @@ import { useItems } from "@/features/items/hooks/useItems";
 import { useLotsByItem } from "@/features/operations/hooks/useLotsByItem";
 import { type Item } from "@/features/items/types";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
+import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
+import { toast } from "sonner";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { DocumentLineItemTable, type LineItem, type ExtraColumn } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { cn } from "@/lib/utils";
@@ -74,10 +76,11 @@ interface QuantityInputProps {
   value: number | string;
   onChange: (val: number | "") => void;
   disabled?: boolean;
+  isInvalid?: boolean;
   className?: string;
 }
 
-function QuantityInput({ value, onChange, disabled, className }: QuantityInputProps) {
+const QuantityInput = React.memo(function QuantityInput({ value, onChange, disabled, isInvalid, className }: QuantityInputProps) {
   const [localValue, setLocalValue] = useState(value !== undefined && value !== null ? String(value) : "");
 
   useEffect(() => {
@@ -117,6 +120,7 @@ function QuantityInput({ value, onChange, disabled, className }: QuantityInputPr
     <Input
       type="text"
       inputMode="decimal"
+      aria-invalid={isInvalid}
       value={localValue}
       disabled={disabled}
       onChange={handleChange}
@@ -125,7 +129,7 @@ function QuantityInput({ value, onChange, disabled, className }: QuantityInputPr
       dir="ltr"
     />
   );
-}
+});
 
 export function IssueForm() {
   const t = useTranslations("operations.issue");
@@ -187,7 +191,7 @@ export function IssueForm() {
     control: form.control,
     name: "lines",
   });
-  
+
   const currentFields = fields || [];
 
   const watchedLines = useWatch({
@@ -212,6 +216,7 @@ export function IssueForm() {
           id: lineVal?.itemId || '',
           code: selectedItem?.barcode || selectedItem?.code || '',
           name: selectedItem?.name || '',
+          image: selectedItem?.image || null,
           primaryUom: {
             code: selectedItem?.primaryUom?.code || '',
           }
@@ -241,8 +246,8 @@ export function IssueForm() {
             <div className={cn(
               "h-8 px-3 rounded flex items-center justify-between gap-2 transition-all duration-300 font-mono text-[11px] font-bold w-full md:w-auto",
               isAllocated
-                ? "bg-[#b48e67]/15 text-[#b48e67] border border-[#b48e67]/30"
-                : "bg-gray-50 dark:bg-[#0B1220] text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                ? "bg-operational-cyan/15 text-operational-cyan border border-operational-cyan/30"
+                : "bg-surface-container text-muted-foreground border-0"
             )}>
               <span>{line.qtyAllocated || 0} / {line.qty || 0}</span>
               {isAllocated ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5 opacity-30" />}
@@ -264,8 +269,8 @@ export function IssueForm() {
               className={cn(
                 "h-8 px-3 text-[10px] font-bold uppercase rounded transition-all whitespace-nowrap w-full md:w-auto",
                 isAllocated
-                  ? "border border-[#b48e67] text-[#b48e67] bg-[#b48e67]/10 hover:bg-[#b48e67] hover:text-[#0B1220]"
-                  : "border border-gray-600 text-gray-400 bg-transparent hover:border-[#b48e67] hover:text-[#b48e67]"
+                  ? "border border-operational-cyan text-operational-cyan bg-operational-cyan/10 hover:bg-operational-cyan hover:text-foreground"
+                  : "border border-border text-muted-foreground bg-transparent hover:border-operational-cyan hover:text-operational-cyan"
               )}
               onClick={() => handleOpenAllocator(line.index)}
             >
@@ -283,6 +288,7 @@ export function IssueForm() {
       <div className="flex justify-center w-full">
         <QuantityInput
           value={form.watch(`lines.${line.index}.requestedQty`)}
+          isInvalid={!!form.formState.errors.lines?.[line.index]?.requestedQty}
           onChange={(val) => {
             form.setValue(`lines.${line.index}.requestedQty`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
           }}
@@ -291,7 +297,7 @@ export function IssueForm() {
         />
       </div>
       {form.formState.errors.lines?.[line.index]?.requestedQty && (
-        <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">
+        <p className="text-label-xxs font-bold text-status-error uppercase text-center mt-1">
           {t('validation.qty_positive')}
         </p>
       )}
@@ -327,6 +333,24 @@ export function IssueForm() {
     (f) => (f.qty ?? 0) >= (f.requestedQty ?? 0)
   );
 
+  const handleScan = (barcode: string) => {
+    const matchedItem = items?.find(i => i.barcode === barcode || i.code === barcode);
+    if (matchedItem) {
+      const existingIndex = watchedLines?.findIndex(i => i?.itemId === matchedItem.id) ?? -1;
+      if (existingIndex !== -1) {
+        const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
+        form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+      } else {
+        append({ itemId: matchedItem.id, requestedQty: 1, qty: 0, lotAllocations: [] });
+      }
+      playSound('success');
+      toast.success(isAr ? `تمت إضافة ${matchedItem.name}` : `Added ${matchedItem.name}`);
+    } else {
+      playSound('error');
+      toast.error(isAr ? 'الصنف غير موجود' : 'Item not found');
+    }
+  };
+
   const onSubmit = (data: IssueFormValues) => {
     if (!allLinesAllocated) return;
     const payload: CreateIssuePayload = {
@@ -358,7 +382,7 @@ export function IssueForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(() => setConfirmOpen(true), onFormError)} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
+      <form onSubmit={form.handleSubmit(() => setConfirmOpen(true), onFormError)} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-200 pb-24">
 
         {/* Fulfillment Orchestration Header */}
         <div className={cn(
@@ -366,10 +390,10 @@ export function IssueForm() {
           isAr && "text-right items-start"
         )}>
           <div className={cn(
-            "flex items-center gap-6 mb-10 border-b border-gray-200 dark:border-gray-800 pb-8 w-full",
+            "flex items-center gap-6 mb-10 border-b border-border/20 pb-8 w-full",
             isAr ? "flex-row-reverse" : "flex-row"
           )}>
-            <div className="p-4 rounded-[1.5rem] bg-[#b48e67]/10 border border-gray-700 hover:border-[#b48e67] text-gray-400 hover:text-[#b48e67] transition-all duration-300">
+            <div className="p-4 rounded-2xl bg-operational-cyan/10 text-operational-cyan transition-all duration-300">
               <Settings2 className="w-8 h-8" />
             </div>
             <div className={cn(
@@ -498,24 +522,45 @@ export function IssueForm() {
             </div>
           </div>
 
-          <div className="flex flex-col w-full gap-2 items-start mb-6">
-            <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block whitespace-nowrap">
-              {tc('select_item') || "Search Item"}
-            </label>
-            <SmartCombobox
-              items={items || []}
-              onSelect={(item) => {
-                const existingIndex = watchedLines?.findIndex(i => i?.itemId === item.id) ?? -1;
-                if (existingIndex !== -1) {
-                  const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
-                  form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
-                } else {
-                  append({ itemId: item.id, requestedQty: 1, qty: 0, lotAllocations: [] });
+          {/* Input Bars (Scanning + Combobox) */}
+          <div className="mb-6 w-full grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div className="space-y-2">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-start">
+                {isAr ? 'مسح الباركود' : 'Barcode Scanner'}
+              </label>
+              <ScanInput
+                onScan={handleScan}
+                placeholder={
+                  !watchedWarehouse
+                    ? (isAr ? 'يرجى تحديد المستودع أولاً...' : 'Please select a Warehouse first...')
+                    : (isAr ? 'امسح باركود الصنف...' : "Scan item barcode...")
                 }
-              }}
-              placeholder={tc('select_item') || "Search and Select Item"}
-              triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
-            />
+                className="w-full"
+                scannerMode={true}
+                size="lg"
+                disabled={!watchedWarehouse}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-start">
+                {isAr ? 'البحث عن صنف' : 'Search / Add Item'}
+              </label>
+              <SmartCombobox
+                items={items || []}
+                disabled={!watchedWarehouse}
+                onSelect={(item) => {
+                  const existingIndex = watchedLines?.findIndex(i => i?.itemId === item.id) ?? -1;
+                  if (existingIndex !== -1) {
+                    const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
+                    form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+                  } else {
+                    append({ itemId: item.id, requestedQty: 1, qty: 0, lotAllocations: [] });
+                  }
+                }}
+                placeholder={tc('select_item') || "Search and Select Item"}
+                triggerClassName="bg-background border border-border shadow-sm h-[52px] px-4 rounded-xl text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-5">

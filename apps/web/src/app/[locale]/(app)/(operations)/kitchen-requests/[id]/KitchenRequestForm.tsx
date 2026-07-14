@@ -92,7 +92,8 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     code: item.itemCode || 'N/A',
     nameEn: item.itemName,
     nameAr: item.itemName,
-    primaryUom: { code: item.uom }
+    primaryUom: { code: item.uom },
+    image: item.itemImage || item.image || null
    },
    qty: item.quantity,
    fulfilledQty: item.fulfilledQuantity ?? 0,
@@ -238,14 +239,13 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
  };
 
  const isDocLocked = isDocumentLocked('KITCHEN_REQUEST', status);
-
  const workflowActions = (
-  <div className="flex flex-col md:flex-row-reverse justify-end items-center gap-4 mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+  <div className="flex flex-col md:flex-row-reverse justify-end items-center gap-4 mt-6 pt-4 border-t border-border/20 w-full animate-in fade-in slide-in-from-bottom-2 duration-200">
    <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role}>
     <Button 
      disabled={isWriteBlocked}
      variant="outline"
-     className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
+     className="w-full md:w-auto px-6 py-2.5 bg-operational-cyan text-foreground font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
      onClick={openFulfillDialog}
     >
      <PackageCheck className="w-5 h-5" />
@@ -257,7 +257,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     <Button 
      disabled={isWriteBlocked}
      variant="outline"
-     className="w-full md:w-auto px-6 py-2.5 bg-emerald-600 dark:bg-emerald-500 text-white dark:text-black font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
+     className="w-full md:w-auto px-6 py-2.5 bg-status-success text-white font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
      onClick={handleApprove}
     >
      <CheckCircle2 className="w-5 h-5" />
@@ -269,7 +269,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     <Button 
      disabled={isWriteBlocked}
      variant="outline"
-     className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
+     className="w-full md:w-auto px-6 py-2.5 bg-operational-cyan text-foreground font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
      onClick={handleSubmit}
     >
      <CheckCircle2 className="w-5 h-5" />
@@ -282,7 +282,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
      type="button"
      variant="ghost"
      disabled={isWriteBlocked}
-     className="text-red-500 font-bold px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors w-full md:w-auto text-center border-none shadow-none"
+     className="text-status-error font-bold px-4 py-2 rounded-lg hover:bg-status-error/10 transition-colors w-full md:w-auto text-center border-none shadow-none"
      onClick={() => setRejectDialogOpen(true)}
     >
      {t('cancel_request') || 'Cancel Request'}
@@ -292,7 +292,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
  );
 
  return (
-  <div className="min-h-screen flex flex-col animate-in fade-in duration-1000 pb-32">
+  <div className="min-h-screen flex flex-col animate-in fade-in duration-200 pb-32">
    <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 w-full space-y-8">
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
      <div data-slot="page-header" className="space-y-4">
@@ -308,7 +308,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
        </Button>
        <div>
-        <h1 className="text-2xl font-black not-italic text-[#0B1220] dark:text-white uppercase">{request.requestNumber}</h1>
+        <h1 className="text-2xl font-black not-italic text-foreground uppercase">{request.requestNumber}</h1>
         <div className="flex items-center gap-3 mt-1">
          <StatusBadge status={request.status} />
          <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
@@ -333,7 +333,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
        {/* Left Column: Details and Items */}
        <div className="lg:col-span-8 space-y-8">
         <div className={cn(
-          "bg-card border border-border shadow-sm p-5 px-6 rounded-lg border border-surface-container-high/20 grid grid-cols-1 gap-8",
+          "bg-surface-lowest dark:bg-surface-container shadow-sm p-5 px-6 rounded-2xl border-0 grid grid-cols-1 gap-8",
           request.issueId ? "md:grid-cols-4" : "md:grid-cols-3"
          )}>
          <div className="space-y-1">
@@ -359,14 +359,14 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
          </div>
          {request.issueId && (
           <div className="space-y-1">
-           <span className="text-label-xs font-semibold uppercase text-cyan-500 flex items-center gap-2">
+           <span className="text-label-xs font-semibold uppercase text-operational-cyan flex items-center gap-2">
             <FileText className="w-3.5 h-3.5" />
             {t('stock_issue')}
            </span>
            <p className="text-body-md font-bold">
             <Link 
              href={`/issues/${request.issueId}`} 
-             className="text-cyan-600 hover:text-cyan-500 underline decoration-cyan-500/30 hover:decoration-cyan-500 transition-colors"
+             className="text-operational-cyan hover:underline transition-colors"
             >
              {t('view_stock_issue')}
             </Link>
@@ -375,7 +375,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
          )}
          {request.notes && (
           <div className={cn(
-           "pt-4 border-t border-surface-container-high/50 space-y-1",
+           "pt-4 border-t border-border/20 space-y-1",
            request.issueId ? "md:col-span-4" : "md:col-span-3"
           )}>
            <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
@@ -387,25 +387,25 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
          )}
          {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejectionReason && (
           <div className={cn(
-           "p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1",
+           "p-4 bg-status-error/5 border border-status-error/10 rounded-xl space-y-1",
            request.issueId ? "md:col-span-4" : "md:col-span-3"
           )}>
-           <span className="text-label-xs font-semibold uppercase text-red-500/60 flex items-center gap-2">
+           <span className="text-label-xs font-semibold uppercase text-status-error/60 flex items-center gap-2">
             <AlertCircle className="w-3.5 h-3.5" />
             {t('rejection_reason_label')}
            </span>
-           <p className="text-label-sm font-bold text-red-500">{request.rejectionReason}</p>
+           <p className="text-label-sm font-bold text-status-error">{request.rejectionReason}</p>
           </div>
          )}
         </div>
 
-        <div className="bg-card border border-border shadow-sm rounded-lg border border-surface-container-high/20 overflow-hidden">
-         <div className="p-5 px-6 border-b border-surface-container-high/50 flex justify-between items-center">
+        <div className="bg-surface-lowest dark:bg-surface-container shadow-sm rounded-2xl border-0 overflow-hidden">
+         <div className="p-5 px-6 border-b border-border/20 flex justify-between items-center">
           <div className="flex items-center gap-4">
-           <div className="w-1.5 h-6 bg-[#b48e67] rounded-full" />
+           <div className="w-1.5 h-6 bg-operational-cyan rounded-full" />
            <h3 className="text-label-sm font-semibold uppercase">{t('items')}</h3>
           </div>
-          <Badge variant="outline" className="rounded-lg text-label-xxs font-semibold px-3 py-1 border-none bg-surface-container-high text-muted-foreground/60">
+          <Badge variant="outline" className="rounded-lg text-label-xxs font-semibold px-3 py-1 border-none bg-surface-container-high text-muted-foreground">
            {request.items.length} {t('entries')}
           </Badge>
          </div>
@@ -427,7 +427,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           </span>
          )}
          renderUom={(line) => (
-          <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">
+          <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">
            {line.item.primaryUom?.code || '---'}
           </span>
          )}
@@ -437,41 +437,41 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
        <div className="flex flex-col gap-3 md:hidden p-4">
         {tableLines.map((line) => (
-         <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-2">
+         <div key={line.id} className="bg-surface-lowest dark:bg-surface-container-high border-0 rounded-xl p-3 shadow-sm flex flex-col gap-2">
           <div className="flex justify-between items-start gap-2">
-           <span className="font-bold text-[#0B1220] dark:text-white">
+           <span className="font-bold text-foreground">
             {locale === 'ar' ? (line.item.nameAr || line.item.nameEn) : (line.item.nameEn || line.item.nameAr)}
            </span>
-           <span className="font-mono text-xs text-gray-400 tracking-wider">
+           <span className="font-mono text-xs text-muted-foreground tracking-wider">
             {line.item.code}
            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 mt-1">
-           <div className="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 flex flex-col">
-            <span className="text-[10px] text-gray-400 font-semibold uppercase">{tCommon('table_headers.qty')}</span>
-            <span className="text-sm font-bold text-[#0B1220] dark:text-white mt-0.5">{line.qty}</span>
+           <div className="bg-surface-container rounded-lg p-2 flex flex-col">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tCommon('table_headers.qty')}</span>
+            <span className="text-sm font-bold text-foreground mt-0.5">{line.qty}</span>
            </div>
-           <div className="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 flex flex-col">
-            <span className="text-[10px] text-gray-400 font-semibold uppercase">{tCommon('table_headers.uom')}</span>
-            <span className="text-sm font-bold text-[#0B1220] dark:text-white mt-0.5">{line.item.primaryUom?.code || '---'}</span>
+           <div className="bg-surface-container rounded-lg p-2 flex flex-col">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tCommon('table_headers.uom')}</span>
+            <span className="text-sm font-bold text-foreground mt-0.5">{line.item.primaryUom?.code || '---'}</span>
            </div>
           </div>
 
           {showFulfilled && (
-           <div className="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 flex flex-col">
-            <span className="text-[10px] text-gray-400 font-semibold uppercase">{t('fulfilled') || 'Fulfilled'}</span>
+           <div className="bg-surface-container rounded-lg p-2 flex flex-col">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase">{t('fulfilled') || 'Fulfilled'}</span>
             <span className={cn(
              "text-sm font-bold mt-0.5",
-             (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-[#0B1220] dark:text-white"
+             (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-foreground"
             )}>{line.fulfilledQty || 0}</span>
            </div>
           )}
 
           {/* Notes Section - Mobile Card */}
-          <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-             <span className="text-[10px] font-bold text-gray-400 uppercase block mb-1">NOTES</span>
-             <span className="text-xs text-[#0B1220] dark:text-gray-300">{line.notes || '—'}</span>
+          <div className="mt-2 pt-2 border-t border-border/20">
+             <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-1">NOTES</span>
+             <span className="text-xs text-foreground/80">{line.notes || '—'}</span>
           </div>
          </div>
         ))}
@@ -481,10 +481,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
        {/* Right Column: Timeline and Meta */}
        <div className="lg:col-span-4 space-y-8">
-        <div className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 p-8 rounded-lg relative overflow-hidden group">
+        <div className="bg-surface-lowest dark:bg-surface-container shadow-sm border-0 p-8 rounded-2xl relative overflow-hidden group">
          <div className="relative space-y-8">
           <div className="flex items-center gap-4">
-           <div className="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-900/40 flex items-center justify-center">
+           <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
             <History className="w-5 h-5 text-foreground" />
            </div>
            <h4 className="text-label-xs font-semibold uppercase">{tCommon('history')}</h4>
@@ -563,7 +563,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
          dir="ltr"
          disabled={isWriteBlocked}
          aria-label={t('fulfilling') + " " + item.itemName}
-         className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-highest/50 dark:border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all dark:text-white focus:ring-1 focus:ring-operational-cyan/30 w-full"
+         className="bg-surface-container border-0 text-foreground h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30 w-full"
          value={fulfillmentData.find(f => f.itemId === item.itemId)?.fulfilledQty || 0}
          onChange={(e) => {
           const val = Number(e.target.value);

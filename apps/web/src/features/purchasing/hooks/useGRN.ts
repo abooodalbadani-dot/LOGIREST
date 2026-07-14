@@ -13,6 +13,8 @@ export const LineItemSchema = z.object({
   name: z.string(),
   nameAr: z.string().optional(),
   nameEn: z.string().optional(),
+  image: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
   primaryUom: z.object({
    id: z.string(),
    code: z.string()

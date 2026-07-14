@@ -54,14 +54,23 @@ export function ItemListClient({ locale }: { locale: string }) {
    accessorKey: 'name', 
    header: t('name'), 
    cell: ({ row }) => (
-    <span className="font-bold text-label-sm text-[#0B1220] dark:text-gray-100">{row.original.name}</span>
+    <div className="flex items-center gap-2">
+     {row.original.image ? (
+      <img src={row.original.image} alt={row.original.name} className="w-8 h-8 object-cover rounded-md border border-border shrink-0" />
+     ) : (
+      <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-border text-[9px] text-muted-foreground font-mono shrink-0">
+       N/A
+      </div>
+     )}
+     <span className="font-bold text-label-sm text-foreground">{row.original.name}</span>
+    </div>
    )
   },
   { 
    accessorKey: 'base_unit', 
    header: ti('fields.base_unit'), 
    cell: ({ row }) => (
-    <span className="text-label-xs font-bold uppercase text-gray-600 dark:text-gray-400 px-2 py-0.5 bg-surface-container rounded-lg">
+    <span className="text-label-xs font-bold uppercase text-muted-foreground px-2 py-0.5 bg-surface-container rounded-lg">
      {row.original.primaryUom.code}
     </span>
    )
@@ -95,7 +104,7 @@ export function ItemListClient({ locale }: { locale: string }) {
       <Button 
        variant="ghost" 
        size="sm" 
-       className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+       className="px-6 py-2.5 bg-foreground text-background font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
        onClick={(e) => {
         e.stopPropagation();
         router.push(`/master-data/items/${row.original.id}`);
@@ -121,11 +130,9 @@ export function ItemListClient({ locale }: { locale: string }) {
    ),
   },
  ], [t, ti, locale, router]);
-
  if (isLoading && !data) {
   return <PageSkeleton variant="list" />;
  }
-
  if (isError) {
   return (
    <div className="min-w-0 gap-6 flex-1 flex-col flex w-full">
@@ -136,15 +143,13 @@ export function ItemListClient({ locale }: { locale: string }) {
    </div>
   );
  }
-
  const breadcrumbs = [
   { label: t('home'), href: `/dashboard` },
   { label: t('master_data'), href: `/master-data` },
   { label: ti('title'), href: `/master-data/items` }
  ];
-
  return (
-  <div className="w-full flex flex-col gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-1000 min-w-0">
+  <div className="w-full flex flex-col gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-200 min-w-0">
    <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 min-w-0">
     <div className="flex flex-col gap-1 min-w-0">
      <Breadcrumb items={breadcrumbs} />
@@ -157,7 +162,7 @@ export function ItemListClient({ locale }: { locale: string }) {
     <div className="shrink-0 mt-4 sm:mt-0">
      <PermissionGate action="create" resource="master_data">
       <Link href={`/master-data/items/new`} className="shrink-0 w-full sm:w-auto">
-       <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+       <Button className="px-6 py-2.5 bg-foreground text-background font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
         <Plus className="w-3.5 h-3.5 me-2" />
         {t('create_new')}
        </Button>
@@ -165,7 +170,6 @@ export function ItemListClient({ locale }: { locale: string }) {
      </PermissionGate>
     </div>
    </div>
-
    <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
     <MetricCard
      label={ti('metrics.total_items')}
@@ -173,14 +177,12 @@ export function ItemListClient({ locale }: { locale: string }) {
      icon={Package}
      color="cyan"
     />
-
     <MetricCard
      label={t('active')}
      value={stats.active}
      icon={CheckCircle2}
      color="emerald"
     />
-
     <MetricCard
      label={ti('metrics.tracking_lots')}
      value={stats.trackingLots}
@@ -188,7 +190,6 @@ export function ItemListClient({ locale }: { locale: string }) {
      color="amber"
     />
    </div>
-
    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
     <div className="hidden md:block w-full">
      <DataTable 
@@ -220,71 +221,69 @@ export function ItemListClient({ locale }: { locale: string }) {
        }
      />
     </div>
-
     {!isLoading && data?.data && data.data.length > 0 && (
      <div className="flex flex-col gap-3 md:hidden mt-4">
       {data.data.map((item) => (
-       <div 
-        key={item.id} 
-        className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
-        onClick={() => router.push(`/master-data/items/${item.id}`)}
-       >
-        
-        {/* TOP TIER: Identity & Status */}
-        <div className="flex justify-between items-start">
-          <div className="flex flex-col gap-1 w-full">
-            {/* Name & Status Inline */}
-            <div className="flex justify-between items-start gap-2">
-              <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{item.name}</span>
-              <StatusBadge status={item.isActive ? 'ACTIVE' : 'INACTIVE'} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
-            </div>
-            {/* Codes Inline */}
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{item.code}</span>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">{item.barcode || '—'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* BOTTOM TIER: Metadata & Actions Merged horizontally */}
-        <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
-          
-          {/* Micro-Pills for Attributes */}
-          <div className="flex gap-1.5 flex-wrap">
-            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#0B1220] px-2 py-1 rounded border border-gray-200 dark:border-gray-800 uppercase">{item.primaryUom.code}</span>
-            {item.trackLots ? (
-              <span className="text-[10px] font-medium text-[#b48e67] bg-[#b48e67]/10 px-2 py-1 rounded border border-[#b48e67]/20 whitespace-nowrap">{t('yes')}</span>
+        <div 
+         key={item.id} 
+         className="bg-surface-lowest dark:bg-surface-container rounded-xl p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-surface-low dark:hover:bg-surface-container-high transition-colors"
+         onClick={() => router.push(`/master-data/items/${item.id}`)}
+        >
+         <div className="flex gap-3 items-start">
+            {item.image ? (
+             <img src={item.image} alt={item.name} className="w-10 h-10 object-cover rounded-md border-0 shrink-0" />
             ) : (
-              <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#0B1220] px-2 py-1 rounded border border-gray-200 dark:border-gray-800 whitespace-nowrap">{t('no')}</span>
+             <div className="w-10 h-10 bg-surface-container flex items-center justify-center rounded-md border-0 text-[10px] text-muted-foreground font-mono shrink-0">
+               N/A
+             </div>
             )}
-          </div>
+            <div className="flex flex-col gap-1 w-full min-w-0">
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-sm font-bold text-foreground line-clamp-1">{item.name}</span>
+                <StatusBadge status={item.isActive ? 'ACTIVE' : 'INACTIVE'} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+               <span className="text-[11px] font-mono font-bold text-operational-cyan uppercase">{item.code}</span>
+               <span className="text-[10px] text-muted-foreground font-mono">{item.barcode || '—'}</span>
+              </div>
+            </div>
+         </div>
 
-          {/* Compact Touch-Friendly Buttons (h-8 is enough for lists) */}
-          <div className="flex gap-2 shrink-0">
-           <PermissionGate action="view" resource="master_data">
-            <button 
-             className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-             onClick={(e) => { e.stopPropagation(); router.push(`/master-data/items/${item.id}`); }}
-            >
-             {t('view')}
-            </button>
-           </PermissionGate>
-           <PermissionGate action="edit" resource="master_data">
-            <button 
-             className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors"
-             onClick={(e) => { e.stopPropagation(); router.push(`/master-data/items/${item.id}/edit`); }}
-            >
-             {t('edit')}
-            </button>
-           </PermissionGate>
-          </div>
+         {/* Attributes & Actions Row */}
+         <div className="flex justify-between items-center pt-2 mt-1 border-t border-border/20">
+           <div className="flex gap-1.5 flex-wrap">
+             <span className="text-[10px] font-medium text-muted-foreground bg-surface-container px-2 py-0.5 rounded uppercase">{item.primaryUom.code}</span>
+             {item.trackLots ? (
+               <span className="text-[10px] font-bold text-operational-cyan bg-operational-cyan/10 px-2 py-0.5 rounded whitespace-nowrap">{t('yes')}</span>
+             ) : (
+               <span className="text-[10px] font-medium text-muted-foreground/60 bg-surface-container px-2 py-0.5 rounded whitespace-nowrap">{t('no')}</span>
+             )}
+           </div>
 
+           <div className="flex gap-2 shrink-0">
+            <PermissionGate action="view" resource="master_data">
+             <button 
+              className="h-8 px-3 flex items-center justify-center bg-surface-container text-foreground rounded-md text-xs font-bold hover:bg-surface-container-high transition-colors"
+              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/items/${item.id}`); }}
+             >
+              {t('view')}
+             </button>
+            </PermissionGate>
+            <PermissionGate action="edit" resource="master_data">
+             <button 
+              className="h-8 px-3 flex items-center justify-center border border-operational-cyan text-operational-cyan rounded-md text-xs font-bold hover:bg-operational-cyan/10 transition-colors"
+              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/items/${item.id}/edit`); }}
+             >
+              {t('edit')}
+             </button>
+            </PermissionGate>
+           </div>
+         </div>
         </div>
-       </div>
-      ))}
-     </div>
-    )}
+       ))}
+      </div>
+     )}
+    </div>
    </div>
-  </div>
- );
+  );
 }

@@ -12,6 +12,7 @@ export const StockBalanceItemSchema = z.object({
   reorderPoint: z.number(),
   uomCode: z.string().optional(),
   wac: z.number().optional(),
+  image: z.string().optional().nullable(),
 });
 
 export type StockBalanceItem = z.infer<typeof StockBalanceItemSchema>;
@@ -28,6 +29,7 @@ export const InventoryLotSchema = z.object({
  isNearExpiry: z.boolean(),
  status: z.string().optional(),
  uomCode: z.string().optional().nullable(),
+ image: z.string().optional().nullable(),
 });
 
 export type InventoryLot = z.infer<typeof InventoryLotSchema>;

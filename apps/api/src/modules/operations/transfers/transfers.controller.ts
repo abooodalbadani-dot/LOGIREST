@@ -55,6 +55,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
               code: item.sku as string,
               nameAr: item.name as string,
               nameEn: item.name as string,
+              image: (item.image as string) || null,
               primaryUom: unitOfMeasure
                 ? {
                     id: unitOfMeasure.id as string,
@@ -74,6 +75,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
               code: '',
               nameAr: '',
               nameEn: '',
+              image: null,
               primaryUom: { id: '', code: '', nameAr: '', nameEn: '' },
               barcodes: [],
             },

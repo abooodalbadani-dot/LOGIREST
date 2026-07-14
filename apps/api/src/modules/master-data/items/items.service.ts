@@ -25,6 +25,7 @@ interface ItemCreateDto {
   reorder_point?: number;
   is_active?: boolean;
   barcode?: string;
+  image?: string;
 }
 
 interface ItemUpdateDto extends ItemCreateDto {
@@ -78,6 +79,7 @@ export class ItemsService {
       last_purchase_price: 0,
       is_active: item.isActive,
       version: item.version,
+      image: item.image || '',
     };
   }
 
@@ -180,6 +182,7 @@ export class ItemsService {
     const reorder_point = body.reorder_point ?? body.reorderPoint;
     const is_active = body.is_active ?? body.isActive;
     const barcode = body.barcode;
+    const image = body.image;
 
     if (!category_id || !primary_uom_id) {
       throw new BadRequestException(
@@ -234,6 +237,7 @@ export class ItemsService {
           hasExpiry: track_lots || false, // default expiry tracking if batched
           isActive: is_active !== undefined ? is_active : true,
           reorderPoint: reorder_point !== undefined ? reorder_point : null,
+          image: image || null,
           version: 1,
         },
       });
@@ -297,6 +301,7 @@ export class ItemsService {
     const reorder_point = body.reorder_point ?? body.reorderPoint;
     const is_active = body.is_active ?? body.isActive;
     const barcode = body.barcode;
+    const image = body.image;
     const name = body.name || name_en || name_ar || existing.name;
 
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -311,6 +316,7 @@ export class ItemsService {
           isActive: is_active !== undefined ? is_active : existing.isActive,
           reorderPoint:
             reorder_point !== undefined ? reorder_point : existing.reorderPoint,
+          image: image !== undefined ? image || null : existing.image,
           version: existing.version + 1,
         },
       });

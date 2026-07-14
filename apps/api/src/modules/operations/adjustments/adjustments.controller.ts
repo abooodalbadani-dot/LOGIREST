@@ -44,6 +44,7 @@ interface ItemDetail {
   name: string;
   uomId?: string | null;
   unitOfMeasure?: UomDetail | null;
+  image?: string | null;
 }
 
 interface AdjustmentLineWithRelations {
@@ -90,6 +91,7 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
             code: item.sku,
             nameAr: item.name,
             nameEn: item.name,
+            image: item.image || null,
             primaryUom: item.unitOfMeasure
               ? {
                   id: item.unitOfMeasure.id,
@@ -102,6 +104,7 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
             code: '',
             nameAr: '',
             nameEn: '',
+            image: null,
             primaryUom: { id: '', code: '' },
           },
       direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',

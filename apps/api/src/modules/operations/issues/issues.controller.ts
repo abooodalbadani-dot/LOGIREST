@@ -69,6 +69,7 @@ function mapIssueDetail(issue: Record<string, unknown>) {
               code: item.sku as string,
               nameAr: item.name as string,
               nameEn: item.name as string,
+              image: (item.image as string) || null,
               primaryUom: item.unitOfMeasure
                 ? {
                     id: (item.unitOfMeasure as Record<string, unknown>)
@@ -87,6 +88,7 @@ function mapIssueDetail(issue: Record<string, unknown>) {
               code: '',
               nameAr: '',
               nameEn: '',
+              image: null,
               primaryUom: { id: '', code: '', nameAr: '', nameEn: '' },
             },
         lotId: firstAllocation ? firstAllocation.lotId : null,

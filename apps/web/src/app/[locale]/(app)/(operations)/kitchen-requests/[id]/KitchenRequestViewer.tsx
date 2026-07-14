@@ -53,7 +53,8 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
     code: item.itemId,
     nameEn: item.itemName,
     nameAr: item.itemName,
-    primaryUom: { code: item.uom }
+    primaryUom: { code: item.uom },
+    image: item.itemImage || item.image || null
    },
    qty: item.quantity,
    fulfilledQty: item.fulfilledQuantity,

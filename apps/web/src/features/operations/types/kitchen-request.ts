@@ -12,6 +12,8 @@ export interface KitchenRequestItem {
  quantity: number;
  notes?: string;
  fulfilledQuantity?: number;
+ image?: string | null;
+ itemImage?: string | null;
 }
 
 export interface KitchenRequest {
@@ -70,6 +72,8 @@ export const KitchenRequestDetailSchema = z.object({
   quantity: z.number(),
   notes: z.string().optional(),
   fulfilledQuantity: z.number().optional(),
+  image: z.string().optional().nullable(),
+  itemImage: z.string().optional().nullable(),
  })),
  notes: z.string().optional(),
  requestedBy: z.string(),

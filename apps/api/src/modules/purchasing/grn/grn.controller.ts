@@ -35,6 +35,16 @@ import { UpdateGrnDto } from './dto/update-grn.dto';
 import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import type { Request, Response } from 'express';
 
+interface UpdateGrnLineBody {
+  itemId: string;
+  lotId?: string | null;
+  lotNumber?: string | null;
+  expiryDate?: string | null;
+  receivedQuantity: number;
+  unitPrice?: number;
+  unitCostForeign?: number;
+}
+
 function mapGRNDetail(grn: Record<string, unknown>) {
   const grnLines = (grn.lines as Record<string, unknown>[]) || [];
   const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
@@ -340,7 +350,7 @@ export class GrnController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body() body: any,
+    @Body() body: UpdateGrnLineBody,
   ) {
     const grnRecord = await this.prisma.goodsReceivedNote.findUnique({
       where: { id },

@@ -413,6 +413,7 @@ model Item {
   version      Int      @default(1)
   createdAt    DateTime @default(now())
   reorderPoint Decimal? @db.Decimal(18, 4)
+  image        String?
 
   category            Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   unitOfMeasure       UnitOfMeasure        @relation(fields: [uomId], references: [id], onDelete: Restrict)

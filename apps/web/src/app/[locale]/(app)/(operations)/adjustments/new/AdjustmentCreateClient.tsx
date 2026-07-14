@@ -467,7 +467,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   };
 
   const showNotesError = notes.length > 0 && notes.length < 10;
-  
+
   const hasInvalidCosts = lines.some(
     l => l.direction === 'INCREASE' && (l.unitCost === null || l.unitCost === undefined || l.unitCost < 0)
   );
@@ -510,37 +510,37 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       cell: (line: NewAdjustmentLine) => (
         <div className="flex justify-start md:justify-center w-full">
           <div className="flex justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 rounded h-8 w-full md:max-w-[140px] p-0.5 md:mx-auto">
-          <button
-            type="button"
-            onClick={() => {
-              setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE' } : l));
-            }}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-              line.direction === 'INCREASE'
-                ? "bg-[#b48e67]/15 text-[#b48e67] shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
-            )}
-          >
-            <ArrowUp className="w-2.5 h-2.5" />
-            {t('direction_increase') || 'Inc'}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE' } : l));
-            }}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-              line.direction === 'DECREASE'
-                ? "bg-status-error/15 text-status-error shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
-            )}
-          >
-            <ArrowDown className="w-2.5 h-2.5" />
-            {t('direction_decrease') || 'Dec'}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => {
+                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE' } : l));
+              }}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+                line.direction === 'INCREASE'
+                  ? "bg-[#b48e67]/15 text-[#b48e67] shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
+              )}
+            >
+              <ArrowUp className="w-2.5 h-2.5" />
+              {t('direction_increase') || 'Inc'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE' } : l));
+              }}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+                line.direction === 'DECREASE'
+                  ? "bg-status-error/15 text-status-error shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
+              )}
+            >
+              <ArrowDown className="w-2.5 h-2.5" />
+              {t('direction_decrease') || 'Dec'}
+            </button>
+          </div>
         </div>
       )
     },
@@ -807,10 +807,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         {/* 2. The Action Buttons (Balanced 2-Column Grid) */}
         <div className="grid grid-cols-2 gap-3 w-full">
           {/* Cancel Button - Ghost/Outline */}
-          <button 
-            type="button" 
-            onClick={() => router.push('/adjustments', { skipGuard: true })} 
-            disabled={createAdjustment.isPending} 
+          <button
+            type="button"
+            onClick={() => router.push('/adjustments', { skipGuard: true })}
+            disabled={createAdjustment.isPending}
             className="px-6 py-2 bg-transparent border border-gray-300 text-gray-600 font-bold rounded-md hover:bg-gray-100 hover:text-[#0B1220] transition-colors uppercase text-sm tracking-wider"
           >
             CANCEL

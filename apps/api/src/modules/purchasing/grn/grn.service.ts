@@ -423,11 +423,15 @@ export class GrnService {
       });
 
       if (!existingGrn) {
-        throw new NotFoundException(`Goods Received Note with ID ${grnId} not found`);
+        throw new NotFoundException(
+          `Goods Received Note with ID ${grnId} not found`,
+        );
       }
 
       if (existingGrn.status !== 'DRAFT') {
-        throw new BadRequestException('Only DRAFT Goods Received Notes can be updated.');
+        throw new BadRequestException(
+          'Only DRAFT Goods Received Notes can be updated.',
+        );
       }
 
       const lotId = await this.resolveOrCreateLot(
@@ -438,7 +442,9 @@ export class GrnService {
         line.expiryDate,
       );
 
-      const fxRate = existingGrn.fxRate ? new Prisma.Decimal(existingGrn.fxRate) : new Prisma.Decimal(1);
+      const fxRate = existingGrn.fxRate
+        ? new Prisma.Decimal(existingGrn.fxRate)
+        : new Prisma.Decimal(1);
       const foreignPrice = new Prisma.Decimal(line.unitPrice);
       const basePrice = foreignPrice.mul(fxRate).toDecimalPlaces(4);
 

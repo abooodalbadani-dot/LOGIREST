@@ -1,18 +1,27 @@
 # =============================================================================
-# LogiRest — Production Docker Compose
+# OTANTIK KITCHEN / LogiRest — Production Docker Compose
 # =============================================================================
 # Usage:
-#   1. Copy docker-compose.env.example to .env and fill in all values.
-#   2. Run: docker compose -f docker-compose.prod.yml up -d --build
-#   3. Seed the database (first boot only):
+#   1. cp .env.example.prod .env.prod
+#   2. Fill in all <GENERATE_SECURE_PASSWORD> values in .env.prod
+#   3. DOCKER_BUILDKIT=1 docker compose -f docker-compose.prod.yml \
+#        --env-file .env.prod up -d --build
+#   4. First-boot database seed:
 #      docker compose -f docker-compose.prod.yml exec api npm run prisma:seed
 #
-# Key differences from docker-compose.yml (dev):
-#   - Uses the `production` stage from each Dockerfile (compiled output, not source)
-#   - NODE_ENV=production on all services
-#   - No source-code volume mounts (no hot reload)
-#   - DB and Redis ports NOT exposed to host (internal network only)
-#   - Only Caddy is exposed on 80/443
+# BuildKit cache mounts:
+#   Both `api` and `web` Dockerfiles use:
+#     RUN --mount=type=cache,target=/root/.npm ...
+#   This requires DOCKER_BUILDKIT=1 (default in Docker 23+, Buildx).
+#   Set DOCKER_BUILDKIT=1 in your CI/CD environment or shell before building.
+#
+# Network topology:
+#   - db      : internal only (expose 5432)  — never mapped to host
+#   - redis   : internal only (expose 6379)  — never mapped to host
+#   - api     : internal only (expose 4000)  — proxied by Caddy
+#   - web     : internal only (expose 3000)  — proxied by Caddy
+#   - minio   : 9001 bound to 127.0.0.1 only (admin console; firewall-restrict)
+#   - caddy   : 80/443 public
 # =============================================================================
 
 services:
@@ -60,11 +69,16 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       target: production
+      # BuildKit cache mount is defined in the Dockerfile itself:
+      #   RUN --mount=type=cache,target=/root/.npm npm ci ...
+      # Requires: DOCKER_BUILDKIT=1 (set in shell or CI env before build)
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
     container_name: logirest-api
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-logirest}:${DB_PASSWORD}@db:5432/${DB_NAME:-logirest}?lock_timeout=5000&connect_timeout=10
-      DIRECT_URL: postgresql://${DB_USER:-logirest}:${DB_PASSWORD}@db:5432/${DB_NAME:-logirest}?lock_timeout=5000&connect_timeout=10
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?lock_timeout=5000&connect_timeout=10
+      DIRECT_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?lock_timeout=5000&connect_timeout=10
       REDIS_URL: redis://redis:6379
       FRONTEND_URL: ${FRONTEND_URL}
       PORT: 4000
@@ -73,17 +87,23 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      BASE_CURRENCY_CODE: ${BASE_CURRENCY_CODE:-USD}
-      BASE_CURRENCY_NAME: ${BASE_CURRENCY_NAME:-US Dollar}
-      TRANSFER_OVERDUE_DAYS: ${TRANSFER_OVERDUE_DAYS:-7}
+      BASE_CURRENCY_CODE: ${BASE_CURRENCY_CODE}
+      BASE_CURRENCY_NAME: ${BASE_CURRENCY_NAME}
+      TRANSFER_OVERDUE_DAYS: ${TRANSFER_OVERDUE_DAYS}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
-      ENABLE_AUTO_FREEZE: ${ENABLE_AUTO_FREEZE:-false}
-      ENABLE_SLACK_ALERTS: ${ENABLE_SLACK_ALERTS:-false}
+      ENABLE_AUTO_FREEZE: ${ENABLE_AUTO_FREEZE}
+      ENABLE_SLACK_ALERTS: ${ENABLE_SLACK_ALERTS}
+      SLACK_VALIDATION_WEBHOOK_URL: ${SLACK_VALIDATION_WEBHOOK_URL}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL}
       BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID}
       BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY}
-      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-http://minio:9000}
-      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
-      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-logirest-backups}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
     depends_on:
       db:
@@ -98,6 +118,7 @@ services:
         reservations:
           cpus: '0.5'
           memory: 768M
+    # NOT exposed to host — Caddy proxies via Docker network
     expose:
       - "4000"
     volumes:
@@ -116,19 +137,32 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       target: production
-      # NEXT_PUBLIC_API_URL must be set at build time — Next.js bakes it into
-      # client-side bundles. Set this to the public URL of the API.
+      # NEXT_PUBLIC_* vars MUST be passed as ARGs at build time — Next.js
+      # bakes them into the client-side bundle during next build (standalone).
+      # They cannot be injected at runtime via environment: for client bundles.
+      # BuildKit cache mount is defined in the Dockerfile itself:
+      #   RUN --mount=type=cache,target=/root/.npm npm ci ...
+      # Requires: DOCKER_BUILDKIT=1 (set in shell or CI env before build)
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        BUILDKIT_INLINE_CACHE: "1"
     container_name: logirest-web
-    command: ["node", "/app/apps/web/server.js"]
+    # next.config.ts output:'standalone' produces apps/web/server.js
+    # The WORKDIR in the production stage is /app, so the path is relative.
+    command: ["node", "apps/web/server.js"]
     restart: unless-stopped
     environment:
       PORT: 3000
       NODE_ENV: production
       HOSTNAME: "0.0.0.0"
+      # Runtime env vars available to SSR (server.js) and Server Components.
+      # NEXT_PUBLIC_* are already baked into the bundle from build args above;
+      # setting them here as well satisfies any process.env reads in SSR code.
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_USE_MOCKS: "false"
+      NEXT_PUBLIC_TRANSFER_OVERDUE_DAYS: ${NEXT_PUBLIC_TRANSFER_OVERDUE_DAYS}
+      # Server-side only — used by SSR routes to reach API via Docker network
+      API_URL: ${API_URL}
     depends_on:
       api:
         condition: service_healthy
@@ -140,6 +174,7 @@ services:
         reservations:
           cpus: '0.25'
           memory: 512M
+    # NOT exposed to host — Caddy proxies via Docker network
     expose:
       - "3000"
     healthcheck:
@@ -173,14 +208,16 @@ services:
     image: minio/minio:RELEASE.2024-01-28T22-35-53Z
     container_name: logirest-minio
     restart: unless-stopped
+    # NOT exposed to host — only reachable from Docker network on port 9000
     expose:
       - "9000"
     ports:
-      # Admin console — restrict access via firewall on production server
+      # Admin console bound to loopback only — restrict further via firewall
       - "127.0.0.1:9001:9001"
     environment:
-      MINIO_ROOT_USER: ${BACKUP_S3_ACCESS_KEY:-logirest_minio}
-      MINIO_ROOT_PASSWORD: ${BACKUP_S3_SECRET_KEY:-logirest_minio_secret}
+      # Root credentials — no hardcoded fallbacks in production
+      MINIO_ROOT_USER: ${BACKUP_S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${BACKUP_S3_SECRET_KEY}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -200,16 +237,17 @@ services:
       minio:
         condition: service_healthy
     environment:
-      PGDATABASE: ${DB_NAME:-logirest}
-      PGUSER: ${DB_USER:-logirest}
+      # No fallback defaults — fail fast if secrets are missing
+      PGDATABASE: ${DB_NAME}
+      PGUSER: ${DB_USER}
       PGPASSWORD: ${DB_PASSWORD}
       PGHOST: db
       PGPORT: 5432
-      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID:-logirest_minio}
-      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY:-logirest_minio_secret}
-      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-logirest-backups}
-      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-http://minio:9000}
-      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
+      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION}
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
     volumes:
       - ./scripts:/scripts:ro

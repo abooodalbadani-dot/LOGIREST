@@ -13,7 +13,7 @@ import { LotStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getBalance(warehouseId: string, query: InventoryBalanceQuery) {
     const whereClause: Prisma.WarehouseItemWhereInput = {
@@ -75,8 +75,9 @@ export class InventoryService {
       ),
       reorderPoint:
         wItem.item.reorderPoint !== null ? Number(wItem.item.reorderPoint) : 0,
-      uomCode: wItem.item.unitOfMeasure?.code || 'KG',
+      uomCode: wItem.item.unitOfMeasure?.code || 'PCS',
       wac: Number(wItem.wac || 0),
+      image: wItem.item.image,
     }));
 
     return {
@@ -157,6 +158,7 @@ export class InventoryService {
         is_expired: isExpired,
         is_near_expiry: isNearExpiry,
         uom_code: wLot.item.unitOfMeasure?.code || '',
+        image: wLot.item.image,
       };
     });
 

@@ -67,7 +67,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       defaultValues: {
         code: '', barcode: '', name: '', categoryId: '', primaryUomId: '',
         trackLots: false, minStockLevel: 0, reorderPoint: 0, uomConversions: [], isActive: true,
-        version: undefined,
+        version: undefined, image: '',
       },
     });
 
@@ -87,6 +87,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         })),
         isActive: data.isActive,
         version: data.version,
+        image: data.image || '',
       });
     }
   }, [data, reset]);
@@ -147,6 +148,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         factor: conv.factor,
       })),
       isActive: values.isActive ?? true,
+      image: values.image || null,
     };
 
     if (id) {
@@ -189,6 +191,21 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const onInvalid = (errors: FieldErrors<ItemFormValues>) => {
     console.log('3. [ItemForm] Validation FAILED (Silent Zod Blocker):', errors);
     onFormError(errors);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error(locale === 'ar' ? 'حجم الصورة يجب أن لا يتجاوز 2 ميجابايت' : 'Image size must be under 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue('image', reader.result as string, { shouldDirty: true, shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const onSubmit = handleSubmit(onValid, onInvalid);
@@ -334,6 +351,62 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                 <Label htmlFor="item-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.name') || tm('name') || 'Name'}</Label>
                 <Input id="item-name" {...register('name')} disabled={isReadOnly} className="font-semibold w-full h-10" />
                 {errors.name?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.name.message as never)}</p>}
+              </div>
+
+              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start col-span-1 md:col-span-2 mt-2">
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+                  {locale === 'ar' ? 'صورة المنتج' : 'Product Image'}
+                </Label>
+                <div className="flex items-center gap-6 p-4 border border-dashed border-border rounded-xl bg-surface-container-low/40">
+                  <div className="w-20 h-20 rounded-lg border border-border bg-surface-container flex items-center justify-center overflow-hidden shrink-0 relative group">
+                    <Controller
+                      name="image"
+                      control={control}
+                      render={({ field }) => (
+                        <>
+                          {field.value ? (
+                            <>
+                              <img src={field.value} alt="Preview" className="w-full h-full object-cover" />
+                              {!isReadOnly && (
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange('')}
+                                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                                >
+                                  {locale === 'ar' ? 'إزالة' : 'Remove'}
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground font-semibold">
+                              {locale === 'ar' ? 'لا توجد صورة' : 'No Image'}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    />
+                  </div>
+                  {!isReadOnly && (
+                    <div className="flex flex-col gap-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="product-image-upload"
+                      />
+                      <Label
+                        htmlFor="product-image-upload"
+                        className="h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-lg flex items-center justify-center cursor-pointer transition-colors shadow-sm w-fit"
+                      >
+                        {locale === 'ar' ? 'اختر صورة' : 'Choose Image'}
+                      </Label>
+                      <span className="text-[10px] text-muted-foreground">
+                        {locale === 'ar' ? 'الصيغ المدعومة (PNG, JPG, WEBP) بحد أقصى 2 ميجابايت' : 'Supported format (PNG, JPG, WEBP) max 2MB'}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

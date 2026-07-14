@@ -59,6 +59,7 @@ function mapPODetail(po: Record<string, unknown>) {
             code: item.sku as string,
             nameAr: item.name as string,
             nameEn: item.name as string,
+            image: (item.image as string) || null,
             primaryUom: unitOfMeasure
               ? {
                   id: unitOfMeasure.id as string,

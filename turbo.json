@@ -3,7 +3,27 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "i18n-audit"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_USE_MOCKS",
+        "NEXT_PUBLIC_TRANSFER_OVERDUE_DAYS",
+        "NEXT_TELEMETRY_DISABLED",
+        "DATABASE_URL",
+        "DIRECT_URL",
+        "REDIS_URL",
+        "JWT_ACCESS_SECRET",
+        "JWT_REFRESH_SECRET",
+        "ENCRYPTION_KEY",
+        "BASE_CURRENCY_CODE",
+        "BASE_CURRENCY_NAME",
+        "TRANSFER_OVERDUE_DAYS",
+        "FRONTEND_URL",
+        "ENABLE_AUTO_FREEZE",
+        "ENABLE_SLACK_ALERTS",
+        "API_URL"
+      ]
     },
     "i18n-audit": {
       "inputs": ["messages/**", "src/**"]

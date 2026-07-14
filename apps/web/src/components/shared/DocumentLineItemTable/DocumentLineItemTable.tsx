@@ -10,7 +10,7 @@ import { RelationalName } from '@/components/shared/RelationalName';
 
 export interface LineItem {
   id: string;
-  item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom?: { code: string; name?: string } | null; category?: { id: string; name: string } | null };
+  item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; image?: string | null; primaryUom?: { code: string; name?: string } | null; category?: { id: string; name: string } | null };
   lot?: { lotNumber: string; expiryDate: string | null } | null;
   qty: number;
   uomId: string;
@@ -369,8 +369,15 @@ export function DocumentLineItemTable<T extends LineItem>({
                       <>
                         {/* Item Info Cell */}
                         <td className={cn("block border-none bg-transparent w-full p-0", itemColSpan)}>
-                          <div className="flex justify-between items-start w-full gap-2">
-                            <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-3 w-full">
+                            {line.item.image ? (
+                              <img src={line.item.image} alt="Product" className="w-12 h-12 object-cover rounded-lg border border-gray-750 shrink-0" />
+                            ) : (
+                              <div className="w-12 h-12 bg-surface-container flex items-center justify-center rounded-lg border border-gray-750 text-xs text-muted-foreground font-mono shrink-0">
+                                N/A
+                              </div>
+                            )}
+                            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                               <span className="font-bold text-base md:text-lg text-white">
                                 {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
                               </span>
@@ -483,8 +490,15 @@ export function DocumentLineItemTable<T extends LineItem>({
                         {!noCollapse && (
                           <td className="block w-full p-0 border-none bg-transparent md:hidden">
                             {/* Top Tier (Master) */}
-                            <div className="flex justify-between items-center py-2 bg-[#0B1220] px-3 w-full rounded-t-xl">
-                              <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center py-2 bg-[#0B1220] px-3 w-full rounded-t-xl gap-2.5">
+                              {line.item.image ? (
+                                <img src={line.item.image} alt="Product" className="w-8 h-8 object-cover rounded-md border border-gray-800 shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-gray-800 text-[9px] text-muted-foreground font-mono shrink-0">
+                                  N/A
+                                </div>
+                              )}
+                              <div className="flex flex-col gap-0.5 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm font-bold text-white">
                                     {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
@@ -601,21 +615,30 @@ export function DocumentLineItemTable<T extends LineItem>({
 
                         {/* Desktop Layout cells (hidden on mobile) */}
                         <td className={cn(noCollapse ? "table-cell align-middle sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[130px] md:min-w-[180px]" : "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]", noCollapse ? (dense ? "px-3 py-1 text-xs" : "px-4 py-2") : (dense ? "md:px-4 md:py-1.5" : "md:px-8 md:py-5"))}>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-black text-[#0B1220] dark:text-white truncate block">
-                              {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 tracking-wider uppercase" dir="ltr">
-                                {line.item.code || 'N/A'}
+                          <div className="flex items-center gap-2.5">
+                            {line.item.image ? (
+                              <img src={line.item.image} alt="Product" className="w-8 h-8 object-cover rounded-md border border-border shrink-0" />
+                            ) : (
+                              <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-border text-[9px] text-muted-foreground font-mono shrink-0">
+                                N/A
+                              </div>
+                            )}
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="text-sm font-black text-[#0B1220] dark:text-white truncate block">
+                                {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
                               </span>
-                              {hideUomColumn && (
-                                <span className="text-[10px] bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
-                                  {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 tracking-wider uppercase" dir="ltr">
+                                  {line.item.code || 'N/A'}
                                 </span>
-                              )}
+                                {hideUomColumn && (
+                                  <span className="text-[10px] bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
+                                    {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                  </span>
+                                )}
+                              </div>
+                              {renderItemDescription?.(line as T)}
                             </div>
-                            {renderItemDescription?.(line as T)}
                           </div>
                         </td>
                         {!hideLotColumns && (
@@ -701,8 +724,15 @@ export function DocumentLineItemTable<T extends LineItem>({
                   <td className="block w-full p-0 border-none bg-transparent md:hidden">
                     {/* Top Tier (Master) */}
                     {mobileLayoutPattern !== 'elegant' && (
-                      <div className="flex justify-between items-center py-2 bg-[#0B1220] px-3 w-full rounded-t-xl">
-                        <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center py-2 bg-[#0B1220] px-3 w-full rounded-t-xl gap-2.5">
+                        {line.item.image ? (
+                          <img src={line.item.image} alt="Product" className="w-8 h-8 object-cover rounded-md border border-gray-800 shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-gray-800 text-[9px] text-muted-foreground font-mono shrink-0">
+                            N/A
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-0.5 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-white">
                               {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
@@ -746,13 +776,22 @@ export function DocumentLineItemTable<T extends LineItem>({
                         {/* Values */}
                         <div className="grid grid-cols-4 gap-2 px-3 py-2 w-full items-center">
                           {/* Name */}
-                          <div className="flex flex-col items-start text-start col-span-1 overflow-hidden">
-                            <span className="text-[11px] font-bold text-foreground dark:text-white leading-tight line-clamp-2">
-                              {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                            </span>
-                            <span className="text-[9px] text-muted-foreground dark:text-gray-500 font-mono uppercase mt-1">
-                              {line.item.code}
-                            </span>
+                          <div className="flex items-center gap-2 text-start col-span-1 overflow-hidden">
+                            {line.item.image ? (
+                              <img src={line.item.image} alt="Product" className="w-6 h-6 object-cover rounded-md border border-border shrink-0" />
+                            ) : (
+                              <div className="w-6 h-6 bg-surface-container flex items-center justify-center rounded-md border border-border text-[8px] text-muted-foreground font-mono shrink-0">
+                                N/A
+                              </div>
+                            )}
+                            <div className="flex flex-col items-start min-w-0 overflow-hidden">
+                              <span className="text-[11px] font-bold text-foreground dark:text-white leading-tight line-clamp-2">
+                                {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                              </span>
+                              <span className="text-[9px] text-muted-foreground dark:text-gray-500 font-mono uppercase mt-1">
+                                {line.item.code}
+                              </span>
+                            </div>
                           </div>
                           {/* Lot */}
                           {!hideLotColumns && (
@@ -907,21 +946,30 @@ export function DocumentLineItemTable<T extends LineItem>({
 
                 {/* Desktop Layout cells (hidden on mobile) */}
                 <td className={cn(noCollapse ? "table-cell align-middle sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[130px] md:min-w-[180px]" : "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]", noCollapse ? (dense ? "px-3 py-1 text-xs" : "px-4 py-2") : (dense ? "md:px-4 md:py-1.5" : "md:px-8 md:py-5"))}>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-black text-[#0B1220] dark:text-white truncate block">
-                      {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 tracking-wider uppercase" dir="ltr">
-                        {line.item.code || 'N/A'}
+                  <div className="flex items-center gap-2.5">
+                    {line.item.image ? (
+                      <img src={line.item.image} alt="Product" className="w-8 h-8 object-cover rounded-md border border-border shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-border text-[9px] text-muted-foreground font-mono shrink-0">
+                        N/A
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="text-sm font-black text-[#0B1220] dark:text-white truncate block">
+                        {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
                       </span>
-                      {hideUomColumn && (
-                        <span className="text-[9.5px] bg-[#1F2937] text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
-                          {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 tracking-wider uppercase" dir="ltr">
+                          {line.item.code || 'N/A'}
                         </span>
-                      )}
+                        {hideUomColumn && (
+                          <span className="text-[9.5px] bg-[#1F2937] text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
+                            {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                          </span>
+                        )}
+                      </div>
+                      {renderItemDescription?.(line as T)}
                     </div>
-                    {renderItemDescription?.(line as T)}
                   </div>
                 </td>
                 {!hideLotColumns && (

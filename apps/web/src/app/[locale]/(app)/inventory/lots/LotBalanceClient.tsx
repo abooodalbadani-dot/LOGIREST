@@ -17,7 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Archive,
-  Info
+  Info,
+  Package
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -263,13 +264,26 @@ export default function LotBalanceClient() {
 
                         {/* Middle Row: Inventory Item SKU */}
                         <td className="block md:table-cell px-0 md:px-6 py-0 md:py-4 text-sm text-foreground whitespace-nowrap">
-                          <div className="space-y-0.5">
-                            <span className="text-[10px] font-mono text-muted-foreground">
-                              {lot.itemCode}
-                            </span>
-                            <p className="text-xs font-bold text-foreground">
-                              {lot.itemName}
-                            </p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 overflow-hidden shrink-0">
+                              {lot.image ? (
+                                <img
+                                  src={lot.image}
+                                  alt={lot.itemName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Package className="w-4 h-4 text-muted-foreground/60" />
+                              )}
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="text-[10px] font-mono text-muted-foreground">
+                                {lot.itemCode}
+                              </span>
+                              <p className="text-xs font-bold text-foreground">
+                                {lot.itemName}
+                              </p>
+                            </div>
                           </div>
                         </td>
 

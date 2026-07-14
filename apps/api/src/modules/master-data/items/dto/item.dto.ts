@@ -35,13 +35,13 @@ export class CreateItemDto {
   @IsOptional()
   reorderPoint?: number;
 
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
-
   @IsString()
   @IsOptional()
   barcode?: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
 }
 
 export class UpdateItemDto {
@@ -80,6 +80,10 @@ export class UpdateItemDto {
   @IsString()
   @IsOptional()
   barcode?: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
 
   @IsNumber()
   @IsOptional()

@@ -65,6 +65,7 @@ const lineItemSchema = z.object({
     name: z.string(),
     name_ar: z.string().optional(),
     name_en: z.string().optional(),
+    image: z.string().optional().nullable(),
     primary_uom: z.object({
       code: z.string(),
       name: z.string().optional()
@@ -94,10 +95,11 @@ interface QuantityInputProps {
   value: number | string;
   onChange: (val: number | "") => void;
   disabled?: boolean;
+  isInvalid?: boolean;
   className?: string;
 }
 
-function QuantityInput({ value, onChange, disabled, className }: QuantityInputProps) {
+const QuantityInput = React.memo(function QuantityInput({ value, onChange, disabled, isInvalid, className }: QuantityInputProps) {
   const [localValue, setLocalValue] = React.useState(value !== undefined && value !== null ? String(value) : "");
 
   React.useEffect(() => {
@@ -137,6 +139,7 @@ function QuantityInput({ value, onChange, disabled, className }: QuantityInputPr
     <Input
       type="text"
       inputMode="decimal"
+      aria-invalid={isInvalid}
       value={localValue}
       disabled={disabled}
       onChange={handleChange}
@@ -145,7 +148,7 @@ function QuantityInput({ value, onChange, disabled, className }: QuantityInputPr
       dir="ltr"
     />
   );
-}
+});
 
 export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequestFormProps) {
   const t = useTranslations('procurement.pr');
@@ -256,6 +259,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             name: item.name,
             name_ar: item.name,
             name_en: item.name,
+            image: item.image || null,
             primary_uom: {
               code: item.primaryUom?.code || 'EA',
               name: item.primaryUom?.name || item.primaryUom?.code || 'EA'
@@ -611,6 +615,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                         qty: live.req_qty || f.req_qty,
                         item: {
                           ...item,
+                          image: item.image || null,
                           primaryUom: primaryUom ? {
                             code: primaryUom.code,
                             name: primaryUom.name || primaryUom.code

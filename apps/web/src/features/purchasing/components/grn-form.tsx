@@ -374,6 +374,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                const itemName = line.item?.name || line.itemName || '';
                const uomId = line.item?.primaryUom?.id || line.uomId || '';
                const uomCode = line.item?.primaryUom?.code || line.uomId || '';
+               const itemImage = line.item?.image || line.item?.imageUrl || itemsData?.data?.find(i => i.id === itemId)?.image || itemsData?.data?.find(i => i.id === itemId)?.imageUrl || null;
                return {
                   id: line.id,
                   item: {
@@ -382,6 +383,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                      name: itemName,
                      nameAr: line.item?.nameAr || itemName,
                      nameEn: line.item?.nameEn || itemName,
+                     image: itemImage,
                      primaryUom: {
                         id: uomId,
                         code: uomCode
@@ -401,7 +403,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          });
          setIdempotencyKey(crypto.randomUUID());
       }
-   }, [isNew, poData, reset]);
+   }, [isNew, poData, reset, itemsData]);
 
    useEffect(() => {
       if (isNew && !initialData && !watchedPoId) {
@@ -418,9 +420,6 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          .filter(line => line.lot?.expiryDate && isExpiryInPast(line.lot.expiryDate))
          .map(line => line.id);
       setExpiredLineIds(expired);
-      if (expired.length === 0) {
-         setOverrideReason('');
-      }
    }, [watchedLines]);
 
 
@@ -453,6 +452,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   name: item.name,
                   nameAr: item.name,
                   nameEn: item.name,
+                  image: item.image || item.imageUrl || null,
                   primaryUom: {
                      id: item.primaryUom?.id || 'EA',
                      code: item.primaryUom?.code || 'EA'
@@ -894,6 +894,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     name: f.item.name || f.item.nameEn || f.item.nameAr || '',
                                     nameAr: f.item.nameAr,
                                     nameEn: f.item.nameEn,
+                                    image: f.item.image || f.item.imageUrl || itemsData?.data?.find(i => i.id === f.item.id)?.image || itemsData?.data?.find(i => i.id === f.item.id)?.imageUrl || null,
                                     primaryUom: {
                                        id: f.item.primaryUom?.id || f.uomId || '',
                                        code: f.item.primaryUom?.code || f.uomId || ''

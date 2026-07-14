@@ -234,7 +234,7 @@ export const ScanInput = forwardRef(
                                 />
                             </div>
                         ) : (
-                            <input
+                            <Input
                                 ref={inputRef}
                                 type="text"
                                 dir="ltr"
