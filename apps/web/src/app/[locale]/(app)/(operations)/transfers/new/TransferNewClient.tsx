@@ -196,7 +196,8 @@ export function TransferNewClient() {
     return ids.length > 0 ? ids : null;
   }, [user?.scopes]);
 
-  const hasNoScope = assignedWarehouseIds === null;
+  const isScopeless = user?.role ? ['ADMIN', 'GM', 'INV_MGR', 'AUDITOR', 'VIEWER'].includes(user.role) : false;
+  const hasNoScope = !isScopeless && assignedWarehouseIds === null;
 
   // Memoize warehouses for SmartCombobox, filtered by user's assigned warehouses
   const warehouseItems = useMemo(() => {

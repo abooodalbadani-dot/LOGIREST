@@ -149,7 +149,7 @@ services:
     container_name: logirest-web
     # next.config.ts output:'standalone' produces apps/web/server.js
     # The WORKDIR in the production stage is /app, so the path is relative.
-    command: ["node", "apps/web/server.js"]
+    command: [ "node", "apps/web/server.js" ]
     restart: unless-stopped
     environment:
       PORT: 3000
@@ -179,6 +179,7 @@ services:
       - "3000"
     volumes:
       - uploads_data:/app/apps/web/public/uploads
+      - ./backups:/backups:ro
     healthcheck:
       test: [ "CMD-SHELL", "curl -fs http://127.0.0.1:3000/ || exit 1" ]
       interval: 15s

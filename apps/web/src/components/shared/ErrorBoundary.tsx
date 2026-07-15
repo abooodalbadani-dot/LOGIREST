@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { AlertTriangle, RefreshCcw, ArrowLeft, Home } from 'lucide-react';
 
 interface Props {
   children?: ReactNode;
@@ -31,6 +31,14 @@ export class ErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
+  private handleGoBack = () => {
+    window.history.back();
+  };
+
+  private handleGoHome = () => {
+    window.location.href = '/';
+  };
+
   public render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
@@ -49,13 +57,27 @@ export class ErrorBoundary extends Component<Props, State> {
               An unexpected error occurred in the operational runtime. Diagnostic data has been logged.
             </p>
 
-            <div className="flex gap-4 max-w-sm w-full justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center max-w-lg">
               <button
                 onClick={this.handleReset}
-                className="flex items-center justify-center gap-2 h-11 px-8 w-2xl bg-brand-gold hover:bg-brand-gold/90 text-black text-label-xs font-bold uppercase rounded-xl transition-all duration-200 active:scale-[0.98] border-none shadow-lg shadow-brand-gold/10 cursor-pointer"
+                className="flex items-center justify-center gap-2 h-11 px-5 bg-brand-gold hover:bg-brand-gold/90 text-black text-label-xs font-bold uppercase rounded-xl transition-all duration-200 active:scale-[0.98] border-none shadow-lg shadow-brand-gold/10 cursor-pointer"
               >
                 <RefreshCcw className="w-4 h-4 animate-spin-hover" />
                 <span>Reinitialize Module</span>
+              </button>
+              <button
+                onClick={this.handleGoBack}
+                className="flex items-center justify-center gap-2 h-11 px-5 bg-transparent border border-muted-foreground/20 hover:border-muted-foreground/50 text-muted-foreground hover:text-foreground text-label-xs font-bold uppercase rounded-xl transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Go Back</span>
+              </button>
+              <button
+                onClick={this.handleGoHome}
+                className="flex items-center justify-center gap-2 h-11 px-5 bg-transparent border border-muted-foreground/20 hover:border-muted-foreground/50 text-muted-foreground hover:text-foreground text-label-xs font-bold uppercase rounded-xl transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer"
+              >
+                <Home className="w-4 h-4" />
+                <span>Dashboard</span>
               </button>
             </div>
 
