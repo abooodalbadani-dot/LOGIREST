@@ -1,4 +1,24 @@
 'use client';
+
+// Polyfill crypto.randomUUID for non-secure contexts (HTTP)
+if (typeof window !== 'undefined' && typeof window.crypto !== 'undefined') {
+  if (typeof window.crypto.randomUUID !== 'function') {
+    Object.defineProperty(window.crypto, 'randomUUID', {
+      value: function () {
+        return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) => {
+          const num = Number(c);
+          return (
+            num ^
+            (window.crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (num / 4)))
+          ).toString(16);
+        });
+      },
+      writable: true,
+      configurable: true,
+    });
+  }
+}
+
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@/i18n/navigation';

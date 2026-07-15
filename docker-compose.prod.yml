@@ -177,6 +177,8 @@ services:
     # NOT exposed to host — Caddy proxies via Docker network
     expose:
       - "3000"
+    volumes:
+      - uploads_data:/app/apps/web/public/uploads
     healthcheck:
       test: [ "CMD-SHELL", "curl -fs http://127.0.0.1:3000/ || exit 1" ]
       interval: 15s

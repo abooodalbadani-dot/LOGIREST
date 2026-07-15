@@ -39,6 +39,10 @@ export class UpdateProfileDto {
   email?: string;
 
   @IsOptional()
+  @IsString()
+  avatarUrl?: string | null;
+
+  @IsOptional()
   @IsIn(['en', 'ar'])
   language?: 'en' | 'ar';
 

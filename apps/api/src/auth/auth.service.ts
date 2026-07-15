@@ -378,6 +378,7 @@ export class AuthService {
         locale: targetLocale,
         themePreferences: body.themePreferences || undefined,
         notificationPreferences: mergedPrefs || undefined,
+        avatarUrl: body.avatarUrl !== undefined ? body.avatarUrl : undefined,
       },
       include: {
         warehouseScopes: {
