@@ -1781,6 +1781,8 @@ export class ReportsService {
       convertedPrsCount,
       fulfilledRequests,
       ledgerAggregation,
+      pendingIssues,
+      pendingTransfers,
     ] = await Promise.all([
       this.prisma.warehouseItem.findMany({
         where: { warehouseId },
@@ -2001,6 +2003,32 @@ export class ReportsService {
           quantity: true,
         },
       }),
+      this.prisma.inventoryIssue.findMany({
+        where: {
+          warehouseId,
+          status: { in: ['DRAFT', 'SUBMITTED'] },
+        },
+        include: {
+          department: { select: { name: true } },
+          lines: { select: { id: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      this.prisma.transfer.findMany({
+        where: {
+          OR: [
+            { fromWarehouseId: warehouseId, status: 'DRAFT' },
+            { toWarehouseId: warehouseId, status: 'IN_TRANSIT' },
+          ],
+        },
+        include: {
+          toWarehouse: { select: { name: true } },
+          lines: { select: { id: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
     ]);
 
     let total_value = 0;
@@ -2078,31 +2106,29 @@ export class ReportsService {
     });
 
     const fulfillmentQueue = [
-      ...issuesList
-        .filter((i) => i.status === 'POSTED')
-        .map((i) => ({
-          id: i.id,
-          documentNumber: i.issueNumber,
-          type: 'ISSUE' as const,
-          status: i.status,
-          priority: 'HIGH',
-          itemsCount: i.lines.length,
-          destination: i.department?.name || i.departmentId,
-          createdAt: i.createdAt.toISOString(),
-        })),
-      ...transfersList
-        .filter((t) => t.status === 'POSTED')
-        .map((t) => ({
-          id: t.id,
-          documentNumber: t.transferNumber,
-          type: 'TRANSFER' as const,
-          status: t.status,
-          priority: 'NORMAL',
-          itemsCount: t.lines.length,
-          destination: t.toWarehouse?.name || t.toWarehouseId,
-          createdAt: t.createdAt.toISOString(),
-        })),
-    ].slice(0, 5);
+      ...pendingIssues.map((i) => ({
+        id: i.id,
+        documentNumber: i.issueNumber,
+        type: 'ISSUE' as const,
+        status: i.status,
+        priority: 'HIGH',
+        itemsCount: i.lines.length,
+        destination: i.department?.name || i.departmentId,
+        createdAt: i.createdAt.toISOString(),
+      })),
+      ...pendingTransfers.map((t) => ({
+        id: t.id,
+        documentNumber: t.transferNumber,
+        type: 'TRANSFER' as const,
+        status: t.status,
+        priority: t.status === 'IN_TRANSIT' ? 'HIGH' : 'NORMAL',
+        itemsCount: t.lines.length,
+        destination: t.toWarehouse?.name || t.toWarehouseId,
+        createdAt: t.createdAt.toISOString(),
+      })),
+    ]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
 
     const pendingApprovals = pendingPRsList.map((pr) => {
       const totalVal = pr.lines.reduce((sum, line) => {

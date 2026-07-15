@@ -86,6 +86,12 @@ export class OutboxWorker extends WorkerHost {
       }
 
       try {
+        // Reset the stale threshold window by updating createdAt to now
+        await this.prisma.outboxEvent.update({
+          where: { id: eventId },
+          data: { createdAt: new Date() },
+        });
+
         // 1. Resolve target recipients and templates based on the event type
         const recipients = await this.resolveRecipients(
           event.eventType,
@@ -232,20 +238,25 @@ export class OutboxWorker extends WorkerHost {
         targetRoles = [Role.APPROVER];
         break;
       case 'PR_APPROVED':
-      case 'PR_REJECTED':
-        // Notify the creator of the PR (or PO officers)
+      case 'PR_REJECTED': {
+        const emails: string[] = [];
         if (data.createdById) {
           const creator = await this.prisma.user.findUnique({
             where: { id: data.createdById, isActive: true },
           });
-          if (creator) return [creator.email];
+          if (creator) {
+            emails.push(creator.email);
+          }
         }
         if (eventType === 'PR_APPROVED') {
-          targetRoles = [Role.PROC_OFFICER];
-        } else {
-          return [];
+          const officers = await this.prisma.user.findMany({
+            where: { role: Role.PROC_OFFICER, isActive: true },
+            select: { email: true },
+          });
+          emails.push(...officers.map((u) => u.email));
         }
-        break;
+        return Array.from(new Set(emails));
+      }
       case 'GRN_POSTED':
         targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
         break;

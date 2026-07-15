@@ -160,7 +160,7 @@
   --operational-red: #ba1a1a;
   --surface-ledger: #FCFBF8;
 
-  --status-success: #10b981;
+  --status-success: #b48e67;
   --status-warning: #f59e0b;
   --status-error: #ba1a1a;
   --status-info: #535f76;
@@ -233,7 +233,7 @@
   --primary-fixed-dim: #dfc298;
   --operational-cyan-rgb: 113, 91, 56;
   --operational-red-rgb: 186, 26, 26;
-  --status-success-rgb: 16, 185, 129;
+  --status-success-rgb: 180, 142, 103;
   --status-warning-rgb: 245, 158, 11;
   --status-error-rgb: 186, 26, 26;
   --on-surface-rgb: 30, 27, 24;

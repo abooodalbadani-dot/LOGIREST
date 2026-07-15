@@ -19,7 +19,7 @@ describe('WorkflowService', () => {
   const mockPrisma = {
     $transaction: jest.fn().mockImplementation((cb) => cb(mockPrisma)),
     warehouse: {
-      findUnique: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue({ branchId: 'branch-1' }),
     },
     warehouseLock: {
       findFirst: jest.fn(),
@@ -40,6 +40,16 @@ describe('WorkflowService', () => {
     },
     supplier: {
       findUnique: jest.fn(),
+    },
+    userWarehouseScope: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'scope-1' }),
+    },
+    userBranchScope: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'scope-2' }),
+    },
+    userDepartmentScope: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'scope-3' }),
+      findMany: jest.fn().mockResolvedValue([{ department: { branchId: 'branch-1' } }]),
     },
   };
 

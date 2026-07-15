@@ -9,14 +9,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ConcurrencyService } from '../../services/concurrency.service';
-import { DocumentType as PrismaDocType, Prisma } from '@prisma/client';
+import { DocumentType as PrismaDocType, Prisma, Role } from '@prisma/client';
 import { OutboxService } from '../outbox/outbox.service';
 import { MetricsService } from '../metrics/metrics.service';
 import {
   DocumentType,
   DocumentStatus,
   DocumentAction,
-  Role,
   getNextStatusV2,
   canPerformActionV2,
 } from '@logirest/shared-types';
@@ -303,6 +302,97 @@ export class WorkflowService {
         if (!hasRolePermission) {
           const errorMsg = `User with role ${userRole} is not authorized to perform action ${action} on ${docType} in status ${doc.status}`;
           throw new ForbiddenException(errorMsg);
+        }
+
+        // 2b. Scope Isolation check
+        if (userRole !== Role.ADMIN && userRole !== Role.GM) {
+          const warehouseIds: string[] = [];
+          if (docType === 'transfer') {
+            if (action === 'RECEIVE') {
+              if (doc.toWarehouseId) warehouseIds.push(doc.toWarehouseId);
+            } else {
+              if (doc.fromWarehouseId) warehouseIds.push(doc.fromWarehouseId);
+            }
+          } else {
+            if (doc.warehouseId) warehouseIds.push(doc.warehouseId);
+            if (doc.fromWarehouseId) warehouseIds.push(doc.fromWarehouseId);
+            if (doc.toWarehouseId) warehouseIds.push(doc.toWarehouseId);
+          }
+
+          for (const whId of warehouseIds) {
+            if (userRole === Role.WH_KEEPER) {
+              const hasScope = await transaction.userWarehouseScope.findUnique({
+                where: {
+                  userId_warehouseId: {
+                    userId,
+                    warehouseId: whId,
+                  },
+                },
+              });
+              if (!hasScope) {
+                throw new ForbiddenException(
+                  `Access to warehouse ${whId} is not authorized for WH_KEEPER.`,
+                );
+              }
+            } else if (
+              userRole === Role.BRANCH_MGR ||
+              userRole === Role.PROC_MGR ||
+              userRole === Role.INV_MGR ||
+              userRole === Role.STORE_MGR ||
+              userRole === Role.PROC_OFFICER
+            ) {
+              const wh = await transaction.warehouse.findUnique({
+                where: { id: whId },
+                select: { branchId: true },
+              });
+              if (!wh) {
+                throw new ForbiddenException('Warehouse not found.');
+              }
+              const hasBranchScope = await transaction.userBranchScope.findUnique({
+                where: {
+                  userId_branchId: {
+                    userId,
+                    branchId: wh.branchId,
+                  },
+                },
+              });
+              if (!hasBranchScope) {
+                const hasScope = await transaction.userWarehouseScope.findUnique({
+                  where: {
+                    userId_warehouseId: {
+                      userId,
+                      warehouseId: whId,
+                    },
+                  },
+                });
+                if (!hasScope) {
+                  throw new ForbiddenException(
+                    `Access to warehouse ${whId} is not authorized.`,
+                  );
+                }
+              }
+            } else if (userRole === Role.KITCHEN_CHIEF) {
+              const wh = await transaction.warehouse.findUnique({
+                where: { id: whId },
+                select: { branchId: true },
+              });
+              if (!wh) {
+                throw new ForbiddenException('Warehouse not found.');
+              }
+              const deptScopes = await transaction.userDepartmentScope.findMany({
+                where: { userId },
+                include: { department: true },
+              });
+              const hasScopeInBranch = deptScopes.some(
+                (ds) => ds.department.branchId === wh.branchId,
+              );
+              if (!hasScopeInBranch) {
+                throw new ForbiddenException(
+                  `Access to warehouse branch is not authorized for Kitchen Chief.`,
+                );
+              }
+            }
+          }
         }
 
         // Check warehouse operational locks

@@ -8,18 +8,11 @@ export class BackupCron {
 
   constructor(private readonly backupService: BackupService) {}
 
-  @Cron('0 2 * * *')
+  // @Cron('0 2 * * *')
   async handleDailyBackup() {
-    this.logger.log('Cron triggered: Starting daily database backup...');
-    try {
-      const result = await this.backupService.runBackup();
-      this.logger.log(
-        `Cron: Daily backup completed successfully. S3 Key: ${result.key}, Size: ${result.size} bytes.`,
-      );
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      const stack = e instanceof Error ? e.stack : undefined;
-      this.logger.error(`Cron: Daily database backup failed: ${msg}`, stack);
-    }
+    this.logger.log(
+      'Daily database backup is disabled on the API node (runs inside the dedicated db-backup container).',
+    );
+    return;
   }
 }

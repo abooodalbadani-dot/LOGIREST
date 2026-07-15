@@ -39,6 +39,7 @@ export class WarehousesDirectController {
     @Query('branchId') branchId?: string,
     @Query('limit') limit?: string,
     @Query('includeInactive') includeInactive?: string,
+    @Query('ignoreScope') ignoreScope?: string,
   ) {
     const take = limit ? parseInt(limit, 10) : undefined;
     const filter: Record<string, unknown> = {};
@@ -48,7 +49,7 @@ export class WarehousesDirectController {
     if (branchId) {
       filter.branchId = branchId;
     }
-    if (role !== 'ADMIN') {
+    if (role !== 'ADMIN' && ignoreScope !== 'true') {
       filter.userScopes = {
         some: {
           userId,

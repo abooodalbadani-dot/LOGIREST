@@ -11,7 +11,7 @@ import { z } from 'zod';
 
 const QUERY_KEY = ['warehouses'];
 
-export function useWarehouses(filters?: { branch_id?: string; search?: string; includeInactive?: boolean }) {
+export function useWarehouses(filters?: { branch_id?: string; search?: string; includeInactive?: boolean; ignoreScope?: boolean }) {
  return useQuery({
   queryKey: [...QUERY_KEY, filters],
   queryFn: ({ signal }) => {
@@ -19,6 +19,7 @@ export function useWarehouses(filters?: { branch_id?: string; search?: string; i
    if (filters?.branch_id) params.append('branchId', filters.branch_id);
    if (filters?.search) params.append('search', filters.search);
    if (filters?.includeInactive) params.append('includeInactive', 'true');
+   if (filters?.ignoreScope) params.append('ignoreScope', 'true');
    
    const path = `/warehouses${params.toString() ? `?${params.toString()}` : ''}`;
    return apiClient.get<PaginatedResponse<Warehouse>>(path, paginatedSchema(WarehouseSchema), { signal });

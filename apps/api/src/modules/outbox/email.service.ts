@@ -118,6 +118,8 @@ export class EmailService {
               smtpUser && password
                 ? { user: smtpUser, pass: password }
                 : undefined,
+            connectionTimeout: 5000,
+            socketTimeout: 10000,
           });
         }
       }
@@ -140,6 +142,8 @@ export class EmailService {
         port,
         secure: port === 465,
         auth: user && pass ? { user, pass } : undefined,
+        connectionTimeout: 5000,
+        socketTimeout: 10000,
       });
     }
 
@@ -250,16 +254,34 @@ export class EmailService {
     }
 
     const from = `"${fromName}" <${fromEmail}>`;
-    const recipients = Array.isArray(to) ? to.join(', ') : to;
+    const recipientList: string[] = [];
+    if (Array.isArray(to)) {
+      recipientList.push(...to);
+    } else if (typeof to === 'string') {
+      recipientList.push(
+        ...to
+          .split(',')
+          .map((email) => email.trim())
+          .filter((email) => email !== ''),
+      );
+    }
+
+    const primaryRecipient = recipientList[0] || '';
+    const bccRecipients = recipientList.slice(1);
 
     try {
       await transporter.sendMail({
         from,
-        to: recipients,
+        to: primaryRecipient,
+        bcc: bccRecipients.length > 0 ? bccRecipients : undefined,
         subject: finalSubject,
         html: this.wrapInBrandTemplate(finalSubject, finalHtml),
       });
-      this.logger.log(`Successfully dispatched email to: ${recipients}`);
+      this.logger.log(
+        `Successfully dispatched email to: ${primaryRecipient}${
+          bccRecipients.length > 0 ? ` (BCC: ${bccRecipients.join(', ')})` : ''
+        }`,
+      );
       return { ok: true };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

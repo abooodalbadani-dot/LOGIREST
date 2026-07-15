@@ -155,6 +155,9 @@ export function TransferNewClient() {
   const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const warehouses = warehousesData?.data || [];
 
+  const { data: destWarehousesData } = useWarehouses({ ignoreScope: true });
+  const destWarehouses = destWarehousesData?.data || [];
+
   const { data: inventoryData, isLoading: isLoadingItems, error: errorItems } = useWarehouseInventory(fromWarehouseId, { enabled: !!fromWarehouseId });
   const inventoryItems = inventoryData?.data || [];
 
@@ -199,13 +202,20 @@ export function TransferNewClient() {
   const isScopeless = user?.role ? ['ADMIN', 'GM', 'INV_MGR', 'AUDITOR', 'VIEWER'].includes(user.role) : false;
   const hasNoScope = !isScopeless && assignedWarehouseIds === null;
 
-  // Memoize warehouses for SmartCombobox, filtered by user's assigned warehouses
-  const warehouseItems = useMemo(() => {
+  // Memoize source warehouses for SmartCombobox, filtered by user's assigned warehouses
+  const sourceWarehouseItems = useMemo(() => {
     const filtered = !assignedWarehouseIds
       ? (warehouses || [])
       : (warehouses || []).filter(w => assignedWarehouseIds.includes(w.id));
     return filtered.map(w => mapWarehouseToCombobox(w));
   }, [warehouses, assignedWarehouseIds]);
+
+  // Memoize destination warehouses (all active warehouses, excluding source)
+  const destinationWarehouseItems = useMemo(() => {
+    return (destWarehouses || [])
+      .filter(w => w.id !== fromWarehouseId)
+      .map(w => mapWarehouseToCombobox(w));
+  }, [destWarehouses, fromWarehouseId]);
 
   // Unsaved changes guard
   const isDirty = fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
@@ -458,7 +468,7 @@ export function TransferNewClient() {
                   {t('from_warehouse')}
                 </label>
                 <SmartCombobox
-                  items={warehouseItems}
+                  items={sourceWarehouseItems}
                   value={fromWarehouseId}
                   onSelect={(item) => {
                     const value = item ? String(item.id) : '';
@@ -480,7 +490,7 @@ export function TransferNewClient() {
                   {t('to_warehouse')}
                 </label>
                 <SmartCombobox
-                  items={warehouseItems}
+                  items={destinationWarehouseItems}
                   value={toWarehouseId}
                   onSelect={(item) => {
                     const value = item ? String(item.id) : '';

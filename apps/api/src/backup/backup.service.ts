@@ -10,6 +10,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as crypto from 'crypto';
 import * as zlib from 'zlib';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 const execPromise = promisify(exec);
 
@@ -224,6 +226,32 @@ export class BackupService {
     return { key: s3Key, size: finalSize };
   }
 
+  private parseBackupTimestamp(timestampStr: string): Date | null {
+    const trimmed = timestampStr.trim();
+    // Try ISO format first (e.g. from BackupService runBackup)
+    let parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime())) {
+      return parsed;
+    }
+    // Try %Y%m%d_%H%M%S format (from db-backup.sh)
+    const match = trimmed.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+    if (match) {
+      const [_, year, month, day, hour, minute, second] = match;
+      parsed = new Date(
+        parseInt(year, 10),
+        parseInt(month, 10) - 1,
+        parseInt(day, 10),
+        parseInt(hour, 10),
+        parseInt(minute, 10),
+        parseInt(second, 10)
+      );
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
   /**
    * Get backup health status and statistics.
    */
@@ -233,20 +261,38 @@ export class BackupService {
     ageHours: number | null;
   }> {
     try {
-      const setting = await this.prisma.systemSetting.findUnique({
-        where: { key: 'last_backup_at' },
-      });
+      let lastBackupDate: Date | null = null;
 
-      if (!setting || !setting.value) {
-        return {
-          status: 'degraded',
-          lastBackupAt: null,
-          ageHours: null,
-        };
+      try {
+        const filePath = '/backups/last_success';
+        const content = await fs.readFile(filePath, 'utf8');
+        lastBackupDate = this.parseBackupTimestamp(content);
+        if (!lastBackupDate) {
+          const stat = await fs.stat(filePath);
+          lastBackupDate = stat.mtime;
+        }
+      } catch (fileErr) {
+        this.logger.debug(
+          `No filesystem backup heartbeat found: ${
+            fileErr instanceof Error ? fileErr.message : String(fileErr)
+          }`,
+        );
       }
 
-      const lastBackupDate = new Date(setting.value);
-      if (isNaN(lastBackupDate.getTime())) {
+      if (!lastBackupDate) {
+        const setting = await this.prisma.systemSetting.findUnique({
+          where: { key: 'last_backup_at' },
+        });
+
+        if (setting && setting.value) {
+          const dbDate = new Date(setting.value);
+          if (!isNaN(dbDate.getTime())) {
+            lastBackupDate = dbDate;
+          }
+        }
+      }
+
+      if (!lastBackupDate) {
         return {
           status: 'degraded',
           lastBackupAt: null,

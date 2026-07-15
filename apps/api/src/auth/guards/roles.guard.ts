@@ -44,12 +44,18 @@ export class RolesGuard implements CanActivate {
         path?: string;
         url?: string;
       }>();
+      const isProduction = process.env.NODE_ENV === 'production';
       this.logger.error(
         `[SECURITY] Endpoint lacks @Roles() or @AllRoles() decorator — ` +
-          `defaulting to ALLOW for MVP phase. Method: ${request.method} | Path: ${request.path ?? request.url}. ` +
+          `defaulting to ${isProduction ? 'DENY' : 'ALLOW'}. Method: ${request.method} | Path: ${request.path ?? request.url}. ` +
           `Add @Roles() or @AllRoles() explicitly.`,
       );
-      // TEMPORARY MVP BYPASS: Allow access so frontend development isn't blocked by unannotated controllers.
+      if (isProduction) {
+        throw new ForbiddenException(
+          'Security configuration error: Access denied. Missing role decorator.',
+        );
+      }
+      // TEMPORARY MVP BYPASS (Dev only): Allow access so frontend development isn't blocked by unannotated controllers.
       return true;
     }
 
