@@ -36,26 +36,18 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // DEFAULT-DENY: No @Roles() and no @AllRoles() → reject and log as a
-    // configuration error so developers are alerted immediately.
+    // If no roles or AllRoles decorator is specified, log a warning but allow access
+    // for any authenticated user (since they have already passed JwtAuthGuard).
     if (!requiredRoles || requiredRoles.length === 0) {
       const request = context.switchToHttp().getRequest<{
         method: string;
         path?: string;
         url?: string;
       }>();
-      const isProduction = process.env.NODE_ENV === 'production';
-      this.logger.error(
+      this.logger.warn(
         `[SECURITY] Endpoint lacks @Roles() or @AllRoles() decorator — ` +
-          `defaulting to ${isProduction ? 'DENY' : 'ALLOW'}. Method: ${request.method} | Path: ${request.path ?? request.url}. ` +
-          `Add @Roles() or @AllRoles() explicitly.`,
+          `defaulting to ALLOW for authenticated user. Method: ${request.method} | Path: ${request.path ?? request.url}.`,
       );
-      if (isProduction) {
-        throw new ForbiddenException(
-          'Security configuration error: Access denied. Missing role decorator.',
-        );
-      }
-      // TEMPORARY MVP BYPASS (Dev only): Allow access so frontend development isn't blocked by unannotated controllers.
       return true;
     }
 
