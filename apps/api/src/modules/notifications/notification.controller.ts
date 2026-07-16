@@ -15,6 +15,7 @@ import {
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
@@ -40,6 +41,7 @@ export class NotificationController {
   ) {}
 
   @Get()
+  @AllRoles()
   async getNotifications(
     @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') warehouseId?: string,
@@ -48,6 +50,7 @@ export class NotificationController {
   }
 
   @Patch(':id/read')
+  @AllRoles()
   async markAsRead(
     @Param('id') id: string,
     @CurrentUser('role') role: Role,
@@ -81,6 +84,7 @@ export class NotificationController {
   }
 
   @Post('read-all')
+  @AllRoles()
   async markAllAsRead(
     @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') warehouseId?: string,

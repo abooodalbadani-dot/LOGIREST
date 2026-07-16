@@ -21,6 +21,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
@@ -33,6 +34,7 @@ export class WarehousesDirectController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
+  @AllRoles()
   async findAll(
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
@@ -76,6 +78,7 @@ export class WarehousesDirectController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

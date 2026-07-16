@@ -21,6 +21,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import type {
   InventoryBalanceQuery,
   InventoryLotsQuery,
@@ -34,6 +35,7 @@ export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Get()
+  @AllRoles()
   async getWarehouseInventory(
     @Query('warehouseId') warehouseId: string,
     @Query('search') search?: string,
@@ -52,6 +54,7 @@ export class InventoryController {
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Get('balance')
+  @AllRoles()
   async getBalance(
     @ActiveScope('warehouseId') warehouseId: string,
     @Query() query: InventoryBalanceQuery,
@@ -60,6 +63,7 @@ export class InventoryController {
   }
 
   @Get('lots')
+  @AllRoles()
   async getLots(
     @ActiveScope('warehouseId') warehouseId: string,
     @Query() query: InventoryLotsQuery,
@@ -68,6 +72,7 @@ export class InventoryController {
   }
 
   @Get('movements')
+  @AllRoles()
   async getMovements(
     @ActiveScope('warehouseId') warehouseId: string,
     @Query() query: InventoryMovementsQuery,
@@ -76,6 +81,7 @@ export class InventoryController {
   }
 
   @Get('warehouses/:warehouseId/lock')
+  @AllRoles()
   async getWarehouseLock(@Param('warehouseId') warehouseId: string) {
     return this.inventoryService.getWarehouseLock(warehouseId);
   }
