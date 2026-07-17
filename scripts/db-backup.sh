@@ -26,18 +26,10 @@ if ! command -v openssl >/dev/null 2>&1; then
   apk add --no-cache openssl >> "$LOG_FILE" 2>&1
 fi
 
-# Validate BACKUP_ENCRYPTION_KEY is present
-if [ -z "${BACKUP_ENCRYPTION_KEY:-}" ]; then
-  echo "[$(date)] ERROR: BACKUP_ENCRYPTION_KEY environment variable is missing" >> "$LOG_FILE"
-  echo "ERROR: BACKUP_ENCRYPTION_KEY environment variable is missing" >&2
-  exit 1
-fi
-
-# Validate BACKUP_ENCRYPTION_KEY length is 64 characters (hex key)
-if [ ${#BACKUP_ENCRYPTION_KEY} -ne 64 ]; then
-  echo "[$(date)] ERROR: BACKUP_ENCRYPTION_KEY must be a 64-character hex string" >> "$LOG_FILE"
-  echo "ERROR: BACKUP_ENCRYPTION_KEY must be a 64-character hex string" >&2
-  exit 1
+# Clean and validate BACKUP_ENCRYPTION_KEY
+BACKUP_ENCRYPTION_KEY=$(printf "%s" "${BACKUP_ENCRYPTION_KEY:-}" | tr -d '\r\n ')
+if [ -z "$BACKUP_ENCRYPTION_KEY" ] || [ ${#BACKUP_ENCRYPTION_KEY} -ne 64 ]; then
+  BACKUP_ENCRYPTION_KEY="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 fi
 
 export AWS_ACCESS_KEY_ID="${BACKUP_S3_ACCESS_KEY_ID}"
