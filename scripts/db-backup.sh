@@ -5,6 +5,16 @@ set -eu
 # Location: scripts/db-backup.sh
 
 BACKUP_DIR="/backups"
+if [ -z "${PGPASSWORD:-}" ]; then
+  export PGPASSWORD="SecureDbPass2026!"
+fi
+if [ -z "${PGUSER:-}" ]; then
+  export PGUSER="logirest"
+fi
+if [ -z "${PGDATABASE:-}" ]; then
+  export PGDATABASE="logirest"
+fi
+
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_FILE="${BACKUP_DIR}/logirest_backup_${TIMESTAMP}.sql.gz.enc"
 UPLOADS_BACKUP_FILE="${BACKUP_DIR}/uploads_backup_${TIMESTAMP}.tar.gz"
