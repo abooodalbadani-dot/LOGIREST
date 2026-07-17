@@ -219,8 +219,8 @@ services:
       - "127.0.0.1:9001:9001"
     environment:
       # Root credentials — no hardcoded fallbacks in production
-      MINIO_ROOT_USER: ${BACKUP_S3_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${BACKUP_S3_SECRET_KEY}
+      MINIO_ROOT_USER: ${BACKUP_S3_ACCESS_KEY_ID:-${BACKUP_S3_ACCESS_KEY}}
+      MINIO_ROOT_PASSWORD: ${BACKUP_S3_SECRET_ACCESS_KEY:-${BACKUP_S3_SECRET_KEY}}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
