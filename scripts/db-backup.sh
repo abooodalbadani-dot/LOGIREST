@@ -32,14 +32,16 @@ if [ -z "$BACKUP_ENCRYPTION_KEY" ] || [ ${#BACKUP_ENCRYPTION_KEY} -ne 64 ]; then
   BACKUP_ENCRYPTION_KEY="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 fi
 
+BACKUP_S3_ACCESS_KEY_ID="${BACKUP_S3_ACCESS_KEY_ID:-minioadmin}"
+BACKUP_S3_SECRET_ACCESS_KEY="${BACKUP_S3_SECRET_ACCESS_KEY:-minioadmin}"
+BACKUP_S3_BUCKET="${BACKUP_S3_BUCKET:-logirest-backups}"
+BACKUP_S3_ENDPOINT="${BACKUP_S3_ENDPOINT:-http://minio:9000}"
+
 export AWS_ACCESS_KEY_ID="${BACKUP_S3_ACCESS_KEY_ID}"
 export AWS_SECRET_ACCESS_KEY="${BACKUP_S3_SECRET_ACCESS_KEY}"
 export AWS_DEFAULT_REGION="${BACKUP_S3_REGION:-us-east-1}"
 
-AWS_ARGS=""
-if [ -n "${BACKUP_S3_ENDPOINT:-}" ]; then
-  AWS_ARGS="--endpoint-url ${BACKUP_S3_ENDPOINT}"
-fi
+AWS_ARGS="--endpoint-url ${BACKUP_S3_ENDPOINT}"
 
 # 1. Database Backup & Encryption
 echo "[$(date)] Executing pg_dump and encrypting output..." >> "$LOG_FILE"
