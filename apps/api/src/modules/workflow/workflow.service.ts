@@ -348,23 +348,25 @@ export class WorkflowService {
               if (!wh) {
                 throw new ForbiddenException('Warehouse not found.');
               }
-              const hasBranchScope = await transaction.userBranchScope.findUnique({
-                where: {
-                  userId_branchId: {
-                    userId,
-                    branchId: wh.branchId,
-                  },
-                },
-              });
-              if (!hasBranchScope) {
-                const hasScope = await transaction.userWarehouseScope.findUnique({
+              const hasBranchScope =
+                await transaction.userBranchScope.findUnique({
                   where: {
-                    userId_warehouseId: {
+                    userId_branchId: {
                       userId,
-                      warehouseId: whId,
+                      branchId: wh.branchId,
                     },
                   },
                 });
+              if (!hasBranchScope) {
+                const hasScope =
+                  await transaction.userWarehouseScope.findUnique({
+                    where: {
+                      userId_warehouseId: {
+                        userId,
+                        warehouseId: whId,
+                      },
+                    },
+                  });
                 if (!hasScope) {
                   throw new ForbiddenException(
                     `Access to warehouse ${whId} is not authorized.`,
@@ -379,10 +381,12 @@ export class WorkflowService {
               if (!wh) {
                 throw new ForbiddenException('Warehouse not found.');
               }
-              const deptScopes = await transaction.userDepartmentScope.findMany({
-                where: { userId },
-                include: { department: true },
-              });
+              const deptScopes = await transaction.userDepartmentScope.findMany(
+                {
+                  where: { userId },
+                  include: { department: true },
+                },
+              );
               const hasScopeInBranch = deptScopes.some(
                 (ds) => ds.department.branchId === wh.branchId,
               );

@@ -171,7 +171,7 @@ export const ScanInput = forwardRef(
         const config = sizeConfigs[size];
 
         return (
-            <div className={cn(variant === 'standard' ? "flex flex-col w-full gap-2 mb-6" : "relative group w-full flex flex-col gap-3", className)}>
+            <div className={cn(variant === 'standard' ? "flex flex-col w-full" : "relative group w-full flex flex-col gap-3")}>
                 {label && (
                     variant === 'standard' ? (
                         <div className="flex items-center justify-start gap-2 w-full flex-row-reverse mb-1">
@@ -186,10 +186,10 @@ export const ScanInput = forwardRef(
                     )
                 )}
 
-                <div className={cn(variant === 'standard' ? "flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 w-full" : "w-full")}>
+                <div className="w-full">
                     <div className={cn(
                         "relative flex items-center transition-all duration-200 overflow-hidden flex-1 min-w-[200px] w-full",
-                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : "flex items-center w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden flex-1 min-w-[200px]",
+                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : className ? className : "flex items-center w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden flex-1 min-w-[200px]",
                         variant === 'retro' && config.container,
                         variant === 'retro' ? (
                             scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
@@ -197,13 +197,15 @@ export const ScanInput = forwardRef(
                                     readOnly ? "border-surface-container-highest bg-card border border-border shadow-sm/60 opacity-80 cursor-default" :
                                         "border-surface-container-highest bg-card hover:border-operational-cyan/50 focus-within:border-operational-cyan focus-within:ring-[12px] focus-within:ring-operational-cyan/10"
                         ) : (
+                            scanStatus === 'success' ? "border-emerald-500 bg-emerald-500/10" :
+                            scanStatus === 'error' ? "border-status-error bg-status-error/10" :
                             readOnly ? "opacity-70 cursor-default" : ""
                         )
                     )}>
                         {/* Background glow when focused */}
                         {variant === 'retro' && <div className="absolute inset-0 bg-gradient-to-r from-operational-cyan/5 via-transparent to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />}
 
-                        <div className={cn(variant === 'retro' ? "shrink-0 flex items-center text-muted-foreground/40 transition-colors group-focus-within:text-operational-cyan z-10 ps-6" : "absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-20")}>
+                        <div className={cn(variant === 'retro' ? "shrink-0 flex items-center text-muted-foreground/40 transition-colors group-focus-within:text-operational-cyan z-10 ps-6" : "absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-20")}>
                             {isScanning ? (
                                 <Loader2 className={cn("animate-spin text-operational-cyan", variant === 'retro' ? config.icon : "w-5 h-5")} />
                             ) : scanStatus === 'success' ? (

@@ -371,7 +371,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             type="button"
             disabled={isSubmitting}
             onClick={form.handleSubmit(handleSubmitClick, onFormError)}
-            className="h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
+            className="w-[300px] md:w-auto flex items-center justify-center h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
           >
             {isSubmitting ? tc('saving') : (
               <>

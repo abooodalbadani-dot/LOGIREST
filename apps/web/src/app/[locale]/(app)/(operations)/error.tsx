@@ -31,7 +31,7 @@ export default function OperationsError({
         <h2 className="text-xl font-bold text-white uppercase tracking-tight">
           {t('operations_title')}
         </h2>
-        <p className="w-full text-gray-400 text-sm mt-4 leading-relaxed max-w-md">
+        <p className="w-full text-gray-400 text-sm mt-4 leading-relaxed max-w-3xl">
           {t('operations_desc')}
         </p>
 

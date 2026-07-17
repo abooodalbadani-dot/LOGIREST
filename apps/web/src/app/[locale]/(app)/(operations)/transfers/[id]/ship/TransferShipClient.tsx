@@ -275,50 +275,113 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
          </div>
         </div>
         
-        <DocumentLineItemTable
-         lines={transfer.lines}
-         locale={locale}
-         isReadOnly={true}
-         onRemoveLine={() => {}}
-         hideLotColumns={true}
-         dense={true}
-         headers={{
-          code: tCommon('table_headers.code'),
-          name: tCommon('table_headers.name'),
-          qty: t('transfer_qty'),
-          uom: tCommon('table_headers.uom'),
-         }}
-         renderQty={(line) => (
-          <div className="flex justify-center">
-           <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
-            {line.qty}
-           </div>
-          </div>
-         )}
-         extraColumns={[
-          {
-           header: tCommon('status'),
-           cell: (line: TransferLine) => {
-            const scanned = scannedLines[line.id] ?? 0;
-            const isFullyScanned = scanned >= line.qty;
-            return (
-             <div className="flex justify-center">
+         {/* Desktop View */}
+         <div className="hidden md:block">
+          <DocumentLineItemTable
+           lines={transfer.lines}
+           locale={locale}
+           isReadOnly={true}
+           onRemoveLine={() => {}}
+           hideLotColumns={true}
+           dense={true}
+           headers={{
+            code: tCommon('table_headers.code'),
+            name: tCommon('table_headers.name'),
+            qty: t('transfer_qty'),
+            uom: tCommon('table_headers.uom'),
+           }}
+           renderQty={(line) => (
+            <div className="flex justify-center">
+             <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+              {line.qty}
+             </div>
+            </div>
+           )}
+           extraColumns={[
+            {
+             header: tCommon('status'),
+             cell: (line: TransferLine) => {
+              const scanned = scannedLines[line.id] ?? 0;
+              const isFullyScanned = scanned >= line.qty;
+              return (
+               <div className="flex justify-center">
+                <div className={cn(
+                 "px-3 py-1 rounded-lg text-label-xs font-semibold uppercase flex items-center gap-2",
+                 isFullyScanned 
+                 ? "bg-muted/50 text-foreground border border-emerald-500/20" 
+                 : scanned > 0 
+                 ? "bg-muted/50 text-foreground border border-cyan-500/20"
+                 : "border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]"
+                )}>
+                 {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
+                </div>
+               </div>
+              );
+             }
+            }
+           ]}
+          />
+         </div>
+
+         {/* Mobile View (Matches Transfer Details style) */}
+         <div className="flex flex-col gap-3 md:hidden p-4">
+          {transfer.lines.map((line) => {
+           const scanned = scannedLines[line.id] ?? 0;
+           const isFullyScanned = scanned >= line.qty;
+           const itemImage = (line.item as unknown as { image?: string | null }).image;
+           return (
+            <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3.5 shadow-sm flex flex-col gap-3">
+             {/* Item Identity */}
+             <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
+              <div className="flex flex-col text-start">
+               <span className="text-sm font-black text-[#0B1220] dark:text-white">
+                {locale === 'ar' ? (line.item?.nameAr || line.item?.name) : (line.item?.nameEn || line.item?.name)}
+               </span>
+               <span className="text-[10px] text-gray-400 font-mono tracking-widest mt-0.5" dir="ltr">{line.item?.code}</span>
+              </div>
+              {itemImage ? (
+               <img src={itemImage} alt="Product" className="w-8 h-8 object-cover rounded-md border border-gray-800 shrink-0" />
+              ) : (
+               <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-gray-800 text-[9px] text-muted-foreground font-mono shrink-0">
+                N/A
+               </div>
+              )}
+             </div>
+
+             {/* Qty & Status Grid */}
+             <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+               <span className="text-[9px] font-bold text-gray-500 uppercase">{t('transfer_qty')}</span>
+               <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
+                {line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
+               </span>
+              </div>
               <div className={cn(
-               "px-3 py-1 rounded-lg text-label-xs font-semibold uppercase flex items-center gap-2",
+               "flex flex-col p-2.5 rounded-lg border text-center transition-colors",
                isFullyScanned 
-               ? "bg-muted/50 text-foreground border border-emerald-500/20" 
+               ? "bg-emerald-50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-800/30" 
                : scanned > 0 
-               ? "bg-muted/50 text-foreground border border-cyan-500/20"
-               : "border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]"
+               ? "bg-cyan-50 dark:bg-cyan-950/10 border-cyan-100 dark:border-cyan-800/30" 
+               : "bg-gray-50 dark:bg-[#0B1220] border-gray-100 dark:border-gray-800"
               )}>
-               {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
+               <span className={cn(
+                "text-[9px] font-bold uppercase",
+                isFullyScanned ? "text-emerald-700 dark:text-emerald-400" : scanned > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-gray-500"
+               )}>
+                {tCommon('status')}
+               </span>
+               <span className={cn(
+                "text-xs font-bold mt-1",
+                isFullyScanned ? "text-emerald-700 dark:text-emerald-400" : scanned > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-[#0B1220] dark:text-gray-200"
+               )} dir="ltr">
+                {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
+               </span>
               </div>
              </div>
-            );
-           }
-          }
-         ]}
-        />
+            </div>
+           );
+          })}
+         </div> 
        </div>
       </div>
      </div>

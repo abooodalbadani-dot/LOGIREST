@@ -21,8 +21,8 @@ FROM node:24-slim AS builder
 # Strip Yarn to enforce npm-only in this monorepo
 RUN rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
-# openssl is required by Prisma to generate the native query engine binary
-RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+# openssl is required by Prisma to generate the native query engine binary | chromium for dev PDF generation
+RUN apt-get update && apt-get install -y --no-install-recommends openssl chromium \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

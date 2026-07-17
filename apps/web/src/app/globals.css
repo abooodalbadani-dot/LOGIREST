@@ -243,10 +243,10 @@
 }
 
 .dark {
-  /* Dark Mode: Luxury Enterprise */
+  /* Dark Mode: Luxury Enterprise - Midnight Gold Theme */
   --operational-cyan: #b48e67;
   --operational-red: #ffb4ab;
-  --surface-ledger: #121212;
+  --surface-ledger: #0a0e1a;
 
   --status-success: #b48e67;
   --status-warning: #eb8f3b;
@@ -254,18 +254,18 @@
   --status-info: #a6b2cd;
 
   /* Client proposed semantic variables */
-  --background: #111827;
+  --background: #0a0e1a;
   /* sidebar-dark */
-  --card-bg: #18181B;
+  --card-bg: #111827;
   /* card-dark */
   --text-main: #F9FAFB;
   /* text-main reverse */
-  --muted-bg: #374151;
+  --muted-bg: #1f2b44;
   /* muted-bg */
-  --border-color: #3F3F46;
+  --border-color: #202d42;
   /* border-color */
 
-  --surface: #18181B;
+  --surface: #111827;
   --foreground: #F9FAFB;
 
   --primary: #b48e67;
@@ -280,8 +280,8 @@
   --tertiary-container: #535f76;
   --tertiary-fixed-dim: #bbc7e2;
 
-  --muted: #374151;
-  --muted-foreground: #a3a3a3;
+  --muted: #1f2b44;
+  --muted-foreground: #94a3b8;
 
   --accent: #b48e67;
   --accent-foreground: #fcfbf8;
@@ -290,24 +290,24 @@
   --destructive-foreground: #690005;
   --error-container: #93000a;
 
-  --card: #18181B;
+  --card: #111827;
   --card-foreground: #F9FAFB;
 
-  --popover: #18181B;
+  --popover: #111827;
   --popover-foreground: #F9FAFB;
 
-  --surface-container-lowest: #111827;
-  --surface-container-low: #18181B;
-  --surface-container: #1e1e1e;
-  --surface-container-high: #262626;
-  --surface-container-highest: #333333;
-  --surface-variant: #1e1e1e;
+  --surface-container-lowest: #0a0e1a;
+  --surface-container-low: #111827;
+  --surface-container: #172033;
+  --surface-container-high: #1f2b44;
+  --surface-container-highest: #283655;
+  --surface-variant: #172033;
   --on-surface-variant: #fcfbf8;
 
-  --border: #524433;
-  --border-surface: #524433;
-  --border-muted: #3D3326;
-  --input: #524433;
+  --border: rgba(180, 142, 103, 0.18);
+  --border-surface: rgba(180, 142, 103, 0.18);
+  --border-muted: rgba(180, 142, 103, 0.08);
+  --input: rgba(180, 142, 103, 0.18);
   --ring: #b48e67;
 
   --outline-low: rgba(180, 142, 103, 0.05);
@@ -321,7 +321,7 @@
   --status-warning-rgb: 235, 143, 59;
   --status-error-rgb: 255, 180, 171;
   --on-surface-rgb: 247, 239, 234;
-  --foreground-ar-muted: #a3a3a3;
+  --foreground-ar-muted: #94a3b8;
 }
 
 @layer base {

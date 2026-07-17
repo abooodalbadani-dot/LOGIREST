@@ -2127,7 +2127,10 @@ export class ReportsService {
         createdAt: t.createdAt.toISOString(),
       })),
     ]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
       .slice(0, 5);
 
     const pendingApprovals = pendingPRsList.map((pr) => {

@@ -243,7 +243,7 @@ export class BackupService {
         parseInt(day, 10),
         parseInt(hour, 10),
         parseInt(minute, 10),
-        parseInt(second, 10)
+        parseInt(second, 10),
       );
       if (!isNaN(parsed.getTime())) {
         return parsed;

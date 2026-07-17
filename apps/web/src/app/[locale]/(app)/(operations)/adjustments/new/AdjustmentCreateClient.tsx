@@ -160,6 +160,7 @@ interface ItemOption {
   name: string;
   nameEn?: string;
   nameAr?: string;
+  image?: string | null;
   primaryUom: { id: string; code: string };
 }
 
@@ -348,6 +349,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       code: i.code,
       barcode: i.barcode,
       name: i.name,
+      image: i.image,
       primaryUom: {
         id: i.primaryUom.id,
         code: i.primaryUom.code,
@@ -383,6 +385,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             id: item.id,
             code: item.code,
             name: item.name,
+            image: item.image,
             primaryUom: {
               code: item.primaryUom.code
             }
@@ -418,6 +421,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           id: item.id,
           code: item.code,
           name: item.name,
+          image: item.image,
           primaryUom: {
             code: item.primaryUom.code
           }
@@ -484,45 +488,25 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
   const extraColumns = useMemo(() => [
     {
-      header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
-      cell: (line: NewAdjustmentLine) => {
-        const isIncrease = line.direction === 'INCREASE';
-        return (
-          <div className="flex justify-start md:justify-center w-full">
-            <UnitCostInput
-              value={line.unitCost}
-              disabled={!isIncrease}
-              placeholder={isIncrease ? '0' : '-'}
-              onChange={(val) => {
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
-              }}
-              className={cn(
-                "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all disabled:opacity-30",
-                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500 focus:ring-red-500/30"
-              )}
-            />
-          </div>
-        );
-      }
-    },
-    {
       header: t('direction') || 'Direction',
+      headerClassName: "min-w-[150px]",
+      cellClassName: "min-w-[150px]",
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-start md:justify-center w-full">
-          <div className="flex justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 rounded h-8 w-full md:max-w-[140px] p-0.5 md:mx-auto">
+        <div className="flex justify-center w-full min-w-[140px]">
+          <div className="flex justify-center bg-slate-100 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-xl h-11 w-full max-w-[140px] p-1 md:mx-auto shadow-sm">
             <button
               type="button"
               onClick={() => {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE' } : l));
               }}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+                "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
                 line.direction === 'INCREASE'
-                  ? "bg-[#b48e67]/15 text-[#b48e67] shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
+                  ? "bg-brand-gold/15 text-brand-gold shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
               )}
             >
-              <ArrowUp className="w-2.5 h-2.5" />
+              <ArrowUp className="w-3 h-3" />
               {t('direction_increase') || 'Inc'}
             </button>
             <button
@@ -531,13 +515,13 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE' } : l));
               }}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded text-[9px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+                "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
                 line.direction === 'DECREASE'
                   ? "bg-status-error/15 text-status-error shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-750 dark:hover:text-gray-300"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
               )}
             >
-              <ArrowDown className="w-2.5 h-2.5" />
+              <ArrowDown className="w-3 h-3" />
               {t('direction_decrease') || 'Dec'}
             </button>
           </div>
@@ -545,10 +529,36 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       )
     },
     {
+      header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
+      headerClassName: "min-w-[130px]",
+      cellClassName: "min-w-[130px]",
+      cell: (line: NewAdjustmentLine) => {
+        const isIncrease = line.direction === 'INCREASE';
+        return (
+          <div className="flex justify-center w-full min-w-[120px]">
+            <UnitCostInput
+              value={line.unitCost}
+              disabled={!isIncrease}
+              placeholder={isIncrease ? '0' : '-'}
+              onChange={(val) => {
+                setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
+              }}
+              className={cn(
+                "w-full text-center font-black text-lg h-11 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm disabled:opacity-30",
+                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500 focus:ring-red-500/30"
+              )}
+            />
+          </div>
+        );
+      }
+    },
+    {
       header: tCommon('lot_number') || 'Lot Number',
+      headerClassName: "min-w-[210px]",
+      cellClassName: "min-w-[210px]",
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-start md:justify-center w-full">
-          <div className="flex h-8 w-full md:max-w-[200px] md:mx-auto">
+        <div className="flex justify-center w-full min-w-[200px]">
+          <div className="flex h-11 w-full max-w-[200px] md:mx-auto shadow-sm">
             <Input
               type="text"
               placeholder={t('lot_placeholder') || 'Enter lot...'}
@@ -558,15 +568,15 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
               }}
               className={cn(
-                "flex-1 min-w-0 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white px-2 text-xs focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all disabled:opacity-50",
-                line.direction === 'INCREASE' ? "border-r-0 rounded-l" : "rounded"
+                "flex-1 min-w-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-3 text-sm focus:border-brand-gold focus:ring-1 focus:ring-brand-gold outline-none transition-all disabled:opacity-50 h-11",
+                line.direction === 'INCREASE' ? "border-r-0 rounded-l-xl rounded-r-none" : "rounded-xl"
               )}
             />
             {line.direction === 'INCREASE' && (
               <button
                 type="button"
                 onClick={() => setCreatingLotForLineId(line.id)}
-                className="px-3 h-full bg-transparent border border-gray-300 dark:border-[#b48e67] border-l-0 text-gray-600 dark:text-[#b48e67] rounded-r text-[10px] font-bold whitespace-nowrap hover:bg-gray-100 dark:hover:bg-[#b48e67]/10 transition-colors"
+                className="px-4 h-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 border-l-0 text-slate-700 dark:text-brand-gold rounded-r-xl text-xs font-bold whitespace-nowrap hover:bg-slate-200 dark:hover:bg-brand-gold/10 transition-colors"
               >
                 + {t('new') || 'NEW'}
               </button>
@@ -578,7 +588,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   ], [locale, t, tCommon]);
 
   return (
-    <div className="min-w-0 max-w-[1600px] flex-1 fade-in space-y-8 gap-6 duration-1000 slide-in-from-bottom-4 mx-auto animate-in flex-col flex pb-32 w-full">
+    <div className="flex flex-col min-h-[calc(100vh-5rem)] w-full max-w-[1600px] mx-auto fade-in duration-1000 animate-in pb-32">
       {createAdjustment.error && (
         <div
           role="alert"
@@ -614,14 +624,16 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
       <LockBanner lockState={lockState} />
 
-      <div className={cn("grid grid-cols-1 lg:grid-cols-4 gap-8", createAdjustment.isPending && "opacity-60 pointer-events-none transition-opacity")}>
-        {/* Left Sidebar Panel - Metadata settings (25%) */}
-        <div className="lg:col-span-1 space-y-8">
-          <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100 group">
+      <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-6 w-full flex-1", createAdjustment.isPending && "opacity-60 pointer-events-none transition-opacity")}>
+        {/* Left Sidebar Panel - Metadata settings */}
+        <div className="lg:col-span-3 flex flex-col gap-4">
+          <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-visible shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-slate-200/60 dark:border-white/5 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:border-white/10 group">
 
-            <div className="flex items-center gap-3 mb-6">
-              <Warehouse className="w-4 h-4 text-foreground" />
-              <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/5 flex items-center justify-center border border-brand-gold/20">
+                <Warehouse className="w-5 h-5 text-brand-gold" />
+              </div>
+              <h3 className="text-body-lg font-bold uppercase tracking-widest text-slate-800 dark:text-white/90">
                 {t('details_section')}
               </h3>
             </div>
@@ -637,7 +649,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   value={warehouseId}
                   onSelect={(item) => setWarehouseId(item.id)}
                   placeholder={tCommon('select_warehouse') || "Select Warehouse"}
-                  triggerClassName="w-full bg-gray-50 dark:bg-surface-container-highest/40 border border-gray-200 dark:border-transparent text-[#0B1220] dark:text-white h-11 px-6 text-label-sm font-bold rounded-2xl transition-all shadow-none"
+                  triggerClassName="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-12 px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -651,7 +663,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   value={reasonCategory}
                   onSelect={(item) => setReasonCategory(item.id)}
                   placeholder={t('reason') || "Select Reason"}
-                  triggerClassName="w-full bg-gray-50 dark:bg-surface-container-highest/40 border border-gray-200 dark:border-transparent text-[#0B1220] dark:text-white h-11 px-6 text-label-sm font-bold rounded-2xl transition-all shadow-none"
+                  triggerClassName="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-12 px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -665,7 +677,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t('notes_placeholder')}
-                  className="w-full bg-gray-50 dark:bg-surface-container-highest/40 border border-gray-200 dark:border-transparent text-[#0B1220] dark:text-white rounded-2xl p-4 font-medium text-body-md transition-all outline-none resize-none min-h-[140px] placeholder:text-gray-400 dark:placeholder:text-muted-foreground/20"
+                  className="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm rounded-2xl p-5 font-medium text-body-md transition-all outline-none resize-none min-h-[140px] focus:ring-2 focus:ring-brand-gold/30 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
                 {showNotesError && (
                   <p className="text-[10px] font-bold text-status-error uppercase px-1 mt-1">
@@ -677,14 +689,16 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           </div>
         </div>
 
-        {/* Right Operations Deck Panel - Scanning and lines table (75%) */}
-        <div className="lg:col-span-3 space-y-6">
-          <div className="bg-card p-8 rounded-[2.5rem] relative overflow-visible shadow-sm border border-gray-100 group">
+        {/* Right Operations Deck Panel - Scanning and lines table */}
+        <div className="lg:col-span-9 flex flex-col gap-4">
+          <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-visible shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-slate-200/60 dark:border-white/5 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:border-white/10 group">
 
             <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <PackagePlus className="w-5 h-5 text-foreground" />
-                <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/5 flex items-center justify-center border border-brand-gold/20">
+                  <PackagePlus className="w-5 h-5 text-brand-gold" />
+                </div>
+                <h3 className="text-body-lg font-bold uppercase tracking-widest text-slate-800 dark:text-white/90">
                   {t('lines_section')}
                 </h3>
               </div>
@@ -693,16 +707,16 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   type="button"
                   onClick={handleSuggestFIFO}
                   disabled={isSuggestingFIFO || lines.length === 0}
-                  className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 hover:bg-muted/50 rounded-full border border-cyan-500/20 transition-all group disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-gold/10 to-brand-gold/5 hover:from-brand-gold/20 hover:to-brand-gold/10 border border-brand-gold/30 rounded-full transition-all duration-300 group disabled:opacity-50 disabled:grayscale shadow-sm hover:shadow-brand-gold/20"
                 >
-                  <Zap className="w-3.5 h-3.5 text-foreground group-hover:scale-110 transition-transform" />
-                  <span className="text-label-xxs font-bold uppercase text-foreground">
+                  <Zap className="w-4 h-4 text-brand-gold group-hover:scale-110 transition-transform" />
+                  <span className="text-label-xs font-bold uppercase text-brand-gold tracking-wider">
                     {isSuggestingFIFO ? t('fetching_lots') : t('suggest_fifo')}
                   </span>
                 </button>
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 rounded-full border border-emerald-500/20">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-label-xxs font-semibold uppercase text-foreground">
+                <div className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full border border-emerald-500/20 backdrop-blur-sm">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                  <span className="text-label-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
                     {lines.length} {tCommon('items') || 'Items'}
                   </span>
                 </div>
@@ -710,21 +724,19 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             </div>
 
             {/* Input Bars (Scanning + Combobox) */}
-            <div className="mb-8 w-full grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              <div className="space-y-2">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block">
+            <div className="mb-8 flex flex-col md:flex-row items-end gap-4 w-full">
+              <div className="flex-1 space-y-2 w-full text-center md:text-start">
+                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-center md:text-start">
                   {locale === 'ar' ? 'مسح الباركود' : 'Barcode Scanner'}
                 </label>
                 <ScanInput
                   onScan={handleAddItem}
                   placeholder={t('scan_item_placeholder') || 'Scan item barcode...'}
-                  className="w-full"
-                  scannerMode={true}
-                  size="lg"
+                  className="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-within:ring-2 focus-within:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block">
+              <div className="flex-1 space-y-2 w-full text-center md:text-start">
+                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-center md:text-start">
                   {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
                 </label>
                 <SmartCombobox
@@ -732,7 +744,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   onSelect={(item: ItemOption) => handleAddItem(item.code)}
                   placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
                   disabled={isLoadingItems}
-                  triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-md text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
+                  triggerClassName="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white text-center md:text-start justify-center md:justify-start"
                   onAddCustomItem={(query) => {
                     setCustomItemNameQuery(query);
                     setIsCustomItemDialogOpen(true);
@@ -742,7 +754,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             </div>
 
             {/* High-density interactive virtualized table */}
-            <div className="bg-card border border-border shadow-sm/30 rounded-[2rem] border border-white/5 overflow-hidden">
+            <div className="bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.15)] rounded-[2rem] border border-slate-200/60 dark:border-white/5 overflow-hidden mt-4">
               <DocumentLineItemTable<NewAdjustmentLine>
                 lines={lines}
                 locale={locale}
@@ -770,7 +782,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                         const val = parseFloat(e.target.value);
                         setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: isNaN(val) ? 0 : val } : l));
                       }}
-                      className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+                      className="w-full text-center font-black text-lg h-11 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm"
                     />
                   </div>
                 )}
@@ -784,7 +796,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                           setLines(prev => prev.map(l => l.id === line.id ? { ...l, uomId: uom.id } : l));
                         }}
                         placeholder="PCS" // i18n-ignore
-                        triggerClassName="h-8 px-2 text-sm border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0B1220] text-[#0B1220] dark:text-white text-center rounded w-full md:w-24 font-semibold"
+                        triggerClassName="h-11 px-3 text-sm border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-900 dark:text-white text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
                       />
                     </div>
                   );
@@ -795,34 +807,35 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         </div>
       </div>
 
-      <div className="sticky bottom-0 w-full bg-background/95 backdrop-blur-md border-t border-border/50 p-4 md:p-6 z-50 flex flex-col gap-3">
-        {/* 1. The Dynamic Warning Message (Full Width) */}
+      <div className="sticky bottom-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-t border-slate-200/60 dark:border-slate-800/60 p-4 md:px-8 md:py-5 mt-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full shadow-[0_-10px_40px_rgb(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgb(0,0,0,0.3)]">
+        {/* 1. The Dynamic Warning Message */}
         {!isValid && (
-          <div className="flex items-center justify-center gap-2 text-sm font-medium text-brand-gold bg-brand-gold/10 px-4 py-2.5 rounded-xl animate-pulse w-full">
-            <Info className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3 text-sm font-bold text-amber-700 dark:text-brand-gold bg-amber-500/10 dark:bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-amber-500/20 dark:border-brand-gold/20">
+            <Info className="w-5 h-5 shrink-0" />
             <span>{locale === 'ar' ? 'يرجى كتابة الملاحظات لتفعيل زر الحفظ' : 'Please write notes to enable saving'}</span>
           </div>
         )}
+        {isValid && <div />} {/* spacer */}
 
-        {/* 2. The Action Buttons (Balanced 2-Column Grid) */}
-        <div className="grid grid-cols-2 gap-3 w-full">
-          {/* Cancel Button - Ghost/Outline */}
+        {/* 2. The Action Buttons */}
+        <div className="flex items-center gap-3">
+          {/* Cancel Button */}
           <button
             type="button"
             onClick={() => router.push('/adjustments', { skipGuard: true })}
             disabled={createAdjustment.isPending}
-            className="px-6 py-2 bg-transparent border border-gray-300 text-gray-600 font-bold rounded-md hover:bg-gray-100 hover:text-[#0B1220] transition-colors uppercase text-sm tracking-wider"
+            className="px-6 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
           >
-            CANCEL
+            {locale === "ar" ? "إلغاء" : "Cancel"}
           </button>
 
-          {/* Save Button - Solid Primary */}
+          {/* Save Button */}
           <Button
             type="button"
             onClick={handleSave}
             disabled={!isDirty || !isValid || createAdjustment.isPending || isLocked}
             isLoading={createAdjustment.isPending}
-            className="w-full px-4 py-3 rounded-xl bg-brand-gold hover:bg-brand-gold/90 text-brand-black font-bold disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale transition-all flex items-center justify-center h-auto"
+            className="px-8 py-6 rounded-2xl bg-gradient-to-r from-brand-gold to-amber-400 hover:from-brand-gold/90 hover:to-amber-400/90 text-brand-black text-sm font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 shadow-lg shadow-brand-gold/20 hover:shadow-brand-gold/40 hover:-translate-y-0.5"
           >
             {t('save_draft') || 'Save Adjustment'}
           </Button>

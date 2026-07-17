@@ -357,7 +357,9 @@ export class GrnController {
       select: { warehouseId: true, status: true },
     });
     if (!grnRecord) {
-      throw new NotFoundException(`Goods Received Note with ID ${id} not found`);
+      throw new NotFoundException(
+        `Goods Received Note with ID ${id} not found`,
+      );
     }
     await this.scopeValidationService.validateWarehouse(
       userId,
@@ -371,7 +373,12 @@ export class GrnController {
       );
     }
 
-    const unitPrice = body.unitCostForeign !== undefined ? body.unitCostForeign : (body.unitPrice !== undefined ? body.unitPrice : 0);
+    const unitPrice =
+      body.unitCostForeign !== undefined
+        ? body.unitCostForeign
+        : body.unitPrice !== undefined
+          ? body.unitPrice
+          : 0;
 
     await this.grnService.updateLine(id, {
       itemId: body.itemId,

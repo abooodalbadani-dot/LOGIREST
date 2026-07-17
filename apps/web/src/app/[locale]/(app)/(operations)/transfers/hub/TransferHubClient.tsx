@@ -164,21 +164,102 @@ export function TransferHubClient() {
     />
    </div>
 
-   <div className="bg-card border border-border shadow-sm rounded-sm border border-white/5 shadow-2xl overflow-hidden">
-    <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 min-w-0">
-     <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest">{t('registry.title')}</h3>
-     <div className="flex gap-4 w-full sm:w-auto">
-       <div className="h-2 flex-1 sm:w-32 bg-card/5 rounded-full overflow-hidden self-center">
-        <div className="h-full bg-primary w-2/3" />
-       </div>
+    <div className="bg-card border border-border shadow-sm rounded-sm border border-white/5 shadow-2xl overflow-hidden hidden md:block">
+     <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 min-w-0">
+      <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest">{t('registry.title')}</h3>
+      <div className="flex gap-4 w-full sm:w-auto">
+        <div className="h-2 flex-1 sm:w-32 bg-card/5 rounded-full overflow-hidden self-center">
+         <div className="h-full bg-primary w-2/3" />
+        </div>
+      </div>
      </div>
+     <PrecisionTable 
+      data={transfers} 
+      columns={columns}
+      collectionName="internal_transfers"
+     />
     </div>
-    <PrecisionTable 
-     data={transfers} 
-     columns={columns}
-     collectionName="internal_transfers"
-    />
-   </div>
+
+    {/* Mobile View */}
+    <div className="flex flex-col gap-3 md:hidden pb-10">
+     <div className="flex justify-between items-center mb-2 px-1">
+      <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest">{t('registry.title')}</h3>
+     </div>
+     {isLoading ? (
+       <div className="flex items-center justify-center p-8">
+         <span className="text-muted-foreground text-sm font-semibold animate-pulse">{tc('loading')}...</span>
+       </div>
+     ) : (transfers.length === 0) ? (
+       <div className="p-8 text-center text-muted-foreground text-sm">{tc('no_records') || 'No records found'}</div>
+     ) : (
+       transfers.map((item) => {
+         const s = item.transferStatus;
+         const colors = {
+          PENDING: 'bg-amber-500/15 text-amber-500 border-amber-500/20',
+          IN_TRANSIT: 'bg-cyan-500/15 text-cyan-500 border-cyan-500/20',
+          RECEIVED: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/20',
+          POSTED: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/20',
+          COMPLETED: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/20',
+          DRAFT: 'bg-amber-500/15 text-amber-500 border-amber-500/20'
+         };
+         const colorClass = colors[s as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
+         
+         return (
+           <div key={item.id} className="bg-white dark:bg-[#111827] border border-gray-200 dark:border-white/5 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+             {/* Top Row: Status badge and Date */}
+             <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800/80 pb-2">
+               <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${colorClass}`}>
+                 {tc(`statuses.${s?.toLowerCase()}` as 'statuses.pending') || s}
+               </span>
+               <span className="text-[10px] text-gray-500 font-mono" dir="ltr">
+                 {item.createdAt?.split('T')[0]}
+               </span>
+             </div>
+             {/* Middle Row: Doc Number and View / Action Button */}
+             <div className="flex justify-between items-center">
+               <span className="text-sm font-black text-[#0B1220] dark:text-white font-mono" dir="ltr">
+                 {item.documentNumber}
+               </span>
+               <div className="flex gap-2 items-center">
+                 <button 
+                   onClick={() => router.push(`/transfers/${item.id}`)} 
+                   className="text-[#b48e67] hover:text-[#8a6b4c] text-xs font-bold flex items-center gap-1 transition-colors"
+                 >
+                   {tc('view') || 'View'} <ArrowRight className="w-3 h-3 ltr:rotate-0 rtl:rotate-180" />
+                 </button>
+                 {(item.transferStatus === 'DRAFT' || item.transferStatus === 'IN_TRANSIT') && (
+                   <button 
+                     onClick={() => {
+                       const target = item.transferStatus === 'DRAFT' ? 'ship' : 'receive';
+                       router.push(`/transfers/${item.id}/${target}`);
+                     }}
+                     className="text-[#b48e67] hover:text-[#8a6b4c] text-xs font-bold flex items-center gap-1 transition-colors border-s border-gray-100 dark:border-gray-850 ps-2"
+                   >
+                     {item.transferStatus === 'DRAFT' ? tc('ship') || 'Ship' : tc('receive') || 'Receive'}
+                   </button>
+                 )}
+               </div>
+             </div>
+             {/* Bottom Details Section (Nested card) */}
+             <div className="bg-gray-50 dark:bg-[#0A0E1A] p-2.5 rounded-lg border border-gray-100 dark:border-gray-800/50 flex flex-col gap-1.5 mt-1">
+               <div className="flex justify-between items-center text-xs">
+                 <span className="text-[10px] text-gray-400 font-medium">{t('source_warehouse')}</span>
+                 <span className="font-semibold text-gray-700 dark:text-gray-300">
+                   {item.fromWarehouseName || '—'}
+                 </span>
+               </div>
+               <div className="flex justify-between items-center text-xs border-t border-gray-100 dark:border-gray-800/50 pt-1.5">
+                 <span className="text-[10px] text-gray-400 font-medium">{t('target_warehouse')}</span>
+                 <span className="font-semibold text-gray-700 dark:text-gray-300">
+                   {item.toWarehouseName || '—'}
+                 </span>
+               </div>
+             </div>
+           </div>
+         );
+       })
+     )}
+    </div>
   </div>
  );
 }

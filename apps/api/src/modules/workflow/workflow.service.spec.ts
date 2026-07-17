@@ -49,7 +49,9 @@ describe('WorkflowService', () => {
     },
     userDepartmentScope: {
       findUnique: jest.fn().mockResolvedValue({ id: 'scope-3' }),
-      findMany: jest.fn().mockResolvedValue([{ department: { branchId: 'branch-1' } }]),
+      findMany: jest
+        .fn()
+        .mockResolvedValue([{ department: { branchId: 'branch-1' } }]),
     },
   };
 

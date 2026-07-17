@@ -64,7 +64,7 @@ function TransferLineNotesCell({ locale, lineId, notes, onChange }: TransferLine
   }, [notes]);
 
   return (
-    <div className="flex justify-center min-w-[200px] w-full">
+    <div className="w-full">
       <Input
         value={localNotes}
         onChange={(e) => setLocalNotes(e.target.value)}
@@ -120,7 +120,7 @@ function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLine
   };
 
   return (
-    <div className="flex items-center justify-end w-full">
+    <div className="w-full">
       <Input
         dir="ltr"
         type="text"
@@ -609,6 +609,7 @@ export function TransferNewClient() {
                 hideUomColumn={true}
                 noCollapse={false}
                 dense={true}
+                mobileLayoutPattern="transfer-form"
                 headers={{
                   code: tCommon('table_headers.code'),
                   name: tCommon('table_headers.name'),

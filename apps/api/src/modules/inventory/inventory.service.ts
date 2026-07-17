@@ -13,7 +13,7 @@ import { LotStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async getBalance(warehouseId: string, query: InventoryBalanceQuery) {
     const whereClause: Prisma.WarehouseItemWhereInput = {

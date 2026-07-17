@@ -141,6 +141,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
       isReadOnly={true}
       onRemoveLine={() => {}}
       hideLotColumns={true}
+      noCollapse={false}
       headers={{
        code: tCommon('table_headers.code'),
        name: tCommon('table_headers.name'),

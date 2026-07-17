@@ -36,7 +36,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
  const tCommon = useTranslations('common');
  const router = useRouter();
  const { user } = useAuth();
- const { gradientClass } = useLocale();
+ const { gradientClass, locale } = useLocale();
 
  // Dual warehouse lock
  const { data: fromLockState } = useWarehouseLock(transfer?.fromWarehouseId ?? '');
@@ -164,50 +164,99 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
        )}
       </div>
 
-      <div className="w-full max-w-full min-w-0 overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
+      <div className="w-full max-w-full min-w-0">
         <DocumentReadOnlyOverlay isPosted={transferStatus === 'POSTED' || transferStatus === 'CANCELLED'}>
-         <DocumentLineItemTable<TransferLine>
-          lines={(transfer?.lines ?? []) as unknown as TransferLine[]}
-          isReadOnly={true}
-          onRemoveLine={() => {}}
-          hideLotColumns={true}
-          dense={true}
-          headers={{
-           code: tCommon('table_headers.code'),
-           name: tCommon('table_headers.name'),
-           qty: t('transfer_qty'),
-           uom: tCommon('table_headers.uom'),
-          }}
-          renderQty={(line) => (
-           <div className="flex justify-center">
-            <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
-             {line.qty}
+         {/* Desktop View */}
+         <div className="hidden md:block overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
+          <DocumentLineItemTable<TransferLine>
+           lines={(transfer?.lines ?? []) as unknown as TransferLine[]}
+           isReadOnly={true}
+           onRemoveLine={() => {}}
+           hideLotColumns={true}
+           dense={true}
+           headers={{
+            code: tCommon('table_headers.code'),
+            name: tCommon('table_headers.name'),
+            qty: t('transfer_qty'),
+            uom: tCommon('table_headers.uom'),
+           }}
+           renderQty={(line) => (
+            <div className="flex justify-center">
+             <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+              {line.qty}
+             </div>
             </div>
-           </div>
-          )}
-          extraColumns={[
-           {
-            header: t('shipped_qty'),
-            cell: (line: TransferLine) => (
-             <div className="flex justify-center">
-              <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] px-3 py-1 rounded-lg">
+           )}
+           extraColumns={[
+            {
+             header: t('shipped_qty'),
+             cell: (line: TransferLine) => (
+              <div className="flex justify-center">
+               <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] px-3 py-1 rounded-lg">
+                {line.shippedQty ?? line.qty}
+               </span>
+              </div>
+             ),
+            },
+            {
+             header: t('received_qty'),
+             cell: (line: TransferLine) => (
+              <div className="flex justify-center">
+               <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]'}`}>
+                {line.receivedQty ?? '—'}
+               </span>
+              </div>
+             ),
+            },
+           ]}
+          />
+         </div>
+
+         {/* Mobile View (Matches Transfer Details style) */}
+         <div className="flex flex-col gap-3 md:hidden mt-4">
+          {(transfer?.lines ?? []).map((line) => (
+           <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
+            {/* Item Identity */}
+            <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
+             <div className="flex flex-col text-start">
+              <span className="text-sm font-black text-[#0B1220] dark:text-white">
+               {locale === 'ar' ? (line.item?.nameAr || line.item?.name) : (line.item?.nameEn || line.item?.name)}
+              </span>
+              <span className="text-[10px] text-gray-400 font-mono tracking-widest mt-0.5" dir="ltr">{line.item?.code}</span>
+             </div>
+             {line.item?.image ? (
+              <img src={line.item.image} alt="Product" className="w-8 h-8 object-cover rounded-md border border-gray-800 shrink-0" />
+             ) : (
+              <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-gray-800 text-[9px] text-muted-foreground font-mono shrink-0">
+               N/A
+              </div>
+             )}
+            </div>
+            
+            {/* Qty Grid */}
+            <div className="grid grid-cols-3 gap-2">
+             <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('transfer_qty')}</span>
+              <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
+               {line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
+              </span>
+             </div>
+             <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+              <span className="text-[9px] font-bold text-gray-500 uppercase">{t('shipped_qty')}</span>
+              <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
                {line.shippedQty ?? line.qty}
               </span>
              </div>
-            ),
-           },
-           {
-            header: t('received_qty'),
-            cell: (line: TransferLine) => (
-             <div className="flex justify-center">
-              <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]'}`}>
+             <div className="flex flex-col bg-cyan-50 dark:bg-cyan-900/10 p-2 rounded-lg border border-cyan-100 dark:border-cyan-800/30 text-center">
+              <span className="text-[9px] font-bold text-cyan-700 dark:text-cyan-400 uppercase">{t('received_qty')}</span>
+              <span className="text-xs font-bold text-cyan-700 dark:text-cyan-400 mt-1" dir="ltr">
                {line.receivedQty ?? '—'}
               </span>
              </div>
-            ),
-           },
-          ]}
-         />
+            </div>
+           </div>
+          ))}
+         </div>
         </DocumentReadOnlyOverlay>
       </div>
      </div>
