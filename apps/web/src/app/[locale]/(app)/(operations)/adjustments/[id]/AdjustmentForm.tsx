@@ -37,14 +37,9 @@ import {
   X as XIcon,
   XCircle as XCircleIcon,
   CheckCircle as CheckCircleIcon,
-} from "lucide-react";
-import {
-  AlertCircle as AlertCircleIcon,
-  History as HistoryIcon,
-  Package as PackageIcon,
-  Send as SendIcon,
-  CheckCircle as CheckCircleCircle,
-  Clock as ClockIcon,
+  Warehouse,
+  PackagePlus,
+  CheckCircle2,
   Save,
   FileText,
   ArrowLeft,
@@ -284,6 +279,21 @@ export function AdjustmentForm({
       ),
     [lines],
   );
+
+  const isValid = useMemo(
+    () =>
+      !!(
+        warehouseId &&
+        notes.length >= 10 &&
+        notes.length <= 1000 &&
+        lines.length > 0 &&
+        lines.every((l) => l.qtyAdjusted > 0) &&
+        !hasInvalidCosts
+      ),
+    [warehouseId, notes, lines, hasInvalidCosts],
+  );
+
+  const isSaving = updateAdjustment.isPending || createAdjustment.isPending;
 
   const warehouseItems = useMemo(
     () => warehouses.map((w) => ({ id: w.id, name: w.name || "" })),
@@ -1283,7 +1293,7 @@ export function AdjustmentForm({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => router.push("/adjustments", { skipGuard: true })}
+                onClick={() => router.push("/adjustments")}
                 disabled={isSaving}
                 className="px-6 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
               >

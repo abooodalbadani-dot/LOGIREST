@@ -382,119 +382,115 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
                 {data.data.map((po) => {
                   const isOverdue = po.expectedDate && new Date(po.expectedDate) < new Date() && po.status !== 'FULFILLED';
                   const isDraft = po.status === 'DRAFT';
-
                   return (
                     <div
                       key={po.id}
-                      className="bg-white dark:bg-[#1A2234] border border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700 transition-all cursor-pointer flex flex-col justify-between"
+                      className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm hover:border-gray-300 dark:hover:border-gray-700 transition-all cursor-pointer"
                       onClick={() => router.push(`/purchase-orders/${po.id}`)}
                     >
-                      {/* Header */}
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-body-md truncate max-w-[50%]">
-                          {po.supplierName || '—'}
-                        </h3>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="font-mono text-brand-gold font-bold drop-shadow-[0_0_8px_rgba(196,162,118,0.2)] text-label-xs bg-brand-gold/10 px-2 py-0.5 rounded-md">
-                            {po.documentNumber}
+                      {/* TOP TIER: Identity */}
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col gap-1 w-full">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">
+                              {po.documentNumber}
+                            </span>
+                            <StatusBadge status={po.status as BadgeStatus} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+                          </div>
+                          <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">
+                            {po.supplierName || '—'}
                           </span>
-                          <StatusBadge status={po.status as BadgeStatus} />
                         </div>
                       </div>
 
-                      {/* Body */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-3">
+                      {/* MIDDLE TIER: Meta (Expected Date & Total Amount) */}
+                      <div className="grid grid-cols-2 gap-2 items-center mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
                         <div className="flex flex-col text-start">
-                          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold tracking-wider mb-0.5">
-                            {tc('created_at')}
-                          </span>
-                          <span dir="ltr" className="font-sans [font-variant-numeric:lining-nums_tabular-nums] font-bold text-slate-900 dark:text-slate-100 text-body-sm">
-                            <ClientOnlyTime
-                              date={po.createdAt}
-                              mode="date"
-                              locale={locale}
-                              fallback="--/--/----"
-                              className="font-sans"
-                            />
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col text-start">
-                          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold tracking-wider mb-0.5">
+                          <span className="text-[10px] text-muted-foreground font-semibold uppercase">
                             {t('expected_date')}
                           </span>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span dir="ltr" className="font-sans [font-variant-numeric:lining-nums_tabular-nums]">
+                            <span dir="ltr" className="font-mono text-xs font-bold text-foreground">
                               <ClientOnlyTime
                                 date={po.expectedDate}
                                 mode="date"
                                 locale={locale}
                                 fallback="--/--/----"
                                 className={cn(
-                                  "font-sans font-semibold text-body-sm",
-                                  isOverdue ? "text-status-error font-bold animate-pulse" : "text-slate-900 dark:text-slate-100"
+                                  "font-mono font-bold",
+                                  isOverdue ? "text-status-error font-bold animate-pulse" : "text-foreground"
                                 )}
                               />
                             </span>
                             {isOverdue && (
-                              <span className="text-[10px] font-bold uppercase text-status-error bg-status-error/10 px-1.5 py-0.5 rounded-sm animate-pulse inline-flex items-center gap-0.5">
-                                <AlertTriangle className="w-3 h-3" />
+                              <span className="text-[9px] font-bold uppercase text-status-error bg-status-error/10 px-1 py-0.5 rounded animate-pulse inline-flex items-center gap-0.5">
+                                <AlertTriangle className="w-2.5 h-2.5" />
                                 Overdue
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex flex-col text-start col-span-2 sm:col-span-1">
-                          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold tracking-wider mb-0.5">
+                        <div className="flex flex-col text-end items-end">
+                          <span className="text-[10px] text-muted-foreground font-semibold uppercase">
                             {t('total_amount')}
                           </span>
-                          <span dir="ltr" className="font-sans [font-variant-numeric:lining-nums_tabular-nums] font-bold text-slate-900 dark:text-slate-100 text-body-sm">
+                          <span className="font-mono text-xs font-bold text-foreground">
                             {formatCurrency(po.supplierTotalAmount, po.currencyCode, locale)}
                           </span>
                         </div>
                       </div>
 
-                      {/* Footer */}
-                      <div className="pt-3 mt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2 items-center" onClick={(e) => e.stopPropagation()}>
-                        {isDraft && (
-                          <PermissionGate action="delete" resource="po">
+                      {/* BOTTOM TIER: Actions & Creation Date */}
+                      <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+                          <ClientOnlyTime
+                            date={po.createdAt}
+                            mode="date"
+                            locale={locale}
+                            fallback="--/--/----"
+                            className="font-mono font-medium"
+                          />
+                        </div>
+
+                        <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {isDraft && (
+                            <PermissionGate action="delete" resource="po">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={deletePO.isPending}
+                                className="h-8 px-2.5 rounded-md text-xs font-bold text-status-error bg-status-error/10 hover:bg-status-error/20"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const confirmed = window.confirm('Are you sure you want to delete this draft purchase order?');
+                                  if (!confirmed) return;
+                                  try {
+                                    await deletePO.mutateAsync({ id: po.id });
+                                  } catch (err) {
+                                    console.error(err);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </PermissionGate>
+                          )}
+
+                          <PermissionGate action="view" resource="po">
                             <Button
                               variant="ghost"
                               size="sm"
-                              disabled={deletePO.isPending}
-                              className="h-9 px-3 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/5 transition-all text-xs font-semibold flex items-center gap-1.5"
-                              onClick={async (e) => {
+                              className="h-8 px-3 rounded-md text-xs font-bold text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20"
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                const confirmed = window.confirm('Are you sure you want to delete this draft purchase order?');
-                                if (!confirmed) return;
-                                try {
-                                  await deletePO.mutateAsync({ id: po.id });
-                                } catch (err) {
-                                  console.error(err);
-                                }
+                                router.push(`/purchase-orders/${po.id}`);
                               }}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              {tc('actions.delete') || 'Delete'}
+                              {tc('view')}
                             </Button>
                           </PermissionGate>
-                        )}
-
-                        <PermissionGate action="view" resource="po">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-4 rounded-lg bg-brand-gold hover:bg-brand-gold-hover text-white hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5 shadow-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/purchase-orders/${po.id}`);
-                            }}
-                          >
-                            {tc('actions.view_all') || 'View Details'}
-                            <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
-                          </Button>
-                        </PermissionGate>
+                        </div>
                       </div>
                     </div>
                   );

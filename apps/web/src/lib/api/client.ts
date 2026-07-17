@@ -168,7 +168,7 @@ function dispatchExpiredEvent(): void {
   window.dispatchEvent(new CustomEvent('auth:expired'));
 }
 
-async function attemptRefresh(): Promise<boolean> {
+export async function attemptRefresh(): Promise<boolean> {
   if (refreshPromise) return refreshPromise;
   refreshPromise = (async () => {
     try {

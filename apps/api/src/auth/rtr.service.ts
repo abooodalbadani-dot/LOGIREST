@@ -101,6 +101,97 @@ export class RtrService {
     }
 
     if (existingToken.isRevoked) {
+      const gracePeriodMs = 15000;
+      const timeSinceCreation =
+        Date.now() - new Date(existingToken.createdAt).getTime();
+
+      if (timeSinceCreation < gracePeriodMs) {
+        this.logger.debug(
+          `Concurrent refresh token request within grace period (${timeSinceCreation}ms). Finding active token for session: ${existingToken.sessionId}`,
+        );
+
+        const activeToken = await this.prisma.refreshToken.findFirst({
+          where: {
+            sessionId: existingToken.sessionId,
+            isRevoked: false,
+            expiresAt: { gt: new Date() },
+          },
+          include: {
+            user: {
+              include: {
+                warehouseScopes: { include: { warehouse: true } },
+                departmentScopes: { include: { department: true } },
+                branchScopes: { include: { branch: true } },
+              },
+            },
+          },
+        });
+
+        if (activeToken && activeToken.user && activeToken.user.isActive) {
+          const mappedUser = {
+            id: activeToken.user.id,
+            name: activeToken.user.name,
+            email: activeToken.user.email,
+            role: activeToken.user.role,
+            scopes: [
+              ...(activeToken.user.warehouseScopes || []).map((s) => ({
+                branchId: s.warehouse?.branchId ?? null,
+                warehouseId: s.warehouseId,
+                departmentId: null,
+                warehouse: s.warehouse
+                  ? { id: s.warehouse.id, name: s.warehouse.name }
+                  : null,
+                department: null,
+              })),
+              ...(activeToken.user.departmentScopes || []).map((s) => ({
+                branchId: s.department?.branchId ?? null,
+                warehouseId: null,
+                departmentId: s.departmentId,
+                warehouse: null,
+                department: s.department
+                  ? { id: s.department.id, name: s.department.name }
+                  : null,
+              })),
+              ...(activeToken.user.branchScopes || []).map((s) => ({
+                branchId: s.branchId,
+                warehouseId: null,
+                departmentId: null,
+                warehouse: null,
+                department: null,
+                branch: s.branch
+                  ? { id: s.branch.id, name: s.branch.name }
+                  : null,
+              })),
+            ],
+            status: activeToken.user.isActive
+              ? ('ACTIVE' as const)
+              : ('INACTIVE' as const),
+            language: 'en' as const,
+          };
+
+          const accessToken = this.jwtService.sign(
+            {
+              sub: activeToken.user.id,
+              email: activeToken.user.email,
+              role: activeToken.user.role,
+              user: mappedUser,
+            },
+            { expiresIn: '15m' },
+          );
+
+          const isProduction = process.env.NODE_ENV === 'production';
+          res.cookie('logirest_token', accessToken, {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: isProduction,
+            maxAge: 15 * 60 * 1000,
+          });
+
+          return { accessToken };
+        }
+      }
+
       this.logger.warn(
         `Replay attack detected! Session: ${existingToken.sessionId}`,
       );

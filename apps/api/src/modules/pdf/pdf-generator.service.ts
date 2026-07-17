@@ -193,7 +193,7 @@ export class PdfGeneratorService {
 <head>
   <meta charset="utf-8">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
     
     :root {
       --primary-navy: #0B1220;
@@ -208,7 +208,7 @@ export class PdfGeneratorService {
     }
     
     body {
-      font-family: 'IBM Plex Sans', 'IBM Plex Sans Arabic', sans-serif;
+      font-family: 'Cairo', 'Tajawal', sans-serif;
       margin: 0;
       padding: 0;
       color: var(--primary-navy);

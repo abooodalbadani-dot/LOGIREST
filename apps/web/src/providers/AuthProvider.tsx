@@ -24,7 +24,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { apiClient, normalizeKeysToCamelCase } from '@/lib/api/client';
+import { apiClient, attemptRefresh, normalizeKeysToCamelCase } from '@/lib/api/client';
 import { getTokenCookie, setTokenCookie, deleteTokenCookie, getLoggedInCookie } from '@/lib/api/cookies';
 import { AuthUserSchema } from '@/types/auth';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -360,14 +360,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const refreshAt = Math.max(timeUntilExpiry - 300000, 60000);
       const timerId = setTimeout(async () => {
         try {
-          const data = await apiClient.post(
-            '/auth/refresh',
-            z.object({ success: z.boolean(), accessToken: z.string() }),
-            {},
-          );
-          if (data.success) {
-            setTokenCookie(data.accessToken);
-            setToken(data.accessToken);
+          const success = await attemptRefresh();
+          if (success) {
+            const newToken = getTokenCookie();
+            if (newToken) {
+              setToken(newToken);
+            }
           }
         } catch {
           // Refresh failed silently; 401 interceptor will handle

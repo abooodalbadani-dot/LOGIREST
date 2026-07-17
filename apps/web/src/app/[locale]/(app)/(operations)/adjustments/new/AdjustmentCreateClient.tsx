@@ -465,7 +465,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       }
     }, {
       onSuccess: (data) => {
-        router.push(`/adjustments/${data.id}`, { skipGuard: true });
+        router.push(`/adjustments/${data.id}`);
       }
     });
   };
@@ -822,7 +822,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           {/* Cancel Button */}
           <button
             type="button"
-            onClick={() => router.push('/adjustments', { skipGuard: true })}
+            onClick={() => router.push('/adjustments')}
             disabled={createAdjustment.isPending}
             className="px-6 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
           >
