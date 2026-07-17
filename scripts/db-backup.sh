@@ -106,6 +106,7 @@ fi
 
 # Write successful backup heartbeat timestamp file
 echo "$TIMESTAMP" > "${BACKUP_DIR}/last_success"
+PGPASSWORD="${PGPASSWORD:-${DB_PASSWORD:-SecureDbPass2026!}}" psql -h "${PGHOST:-db}" -U "${PGUSER:-${DB_USER:-logirest}}" -d "${PGDATABASE:-${DB_NAME:-logirest}}" -c "INSERT INTO \"SystemSetting\" (id, key, value, version, \"updatedAt\") VALUES ('last_backup_at', 'last_backup_at', NOW()::text, 1, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, version = \"SystemSetting\".version + 1, \"updatedAt\" = NOW();" >> "$LOG_FILE" 2>&1 || true
 
 # 4. Prune local backups older than 7 days
 echo "[$(date)] Pruning local database backups older than 7 days..." >> "$LOG_FILE"

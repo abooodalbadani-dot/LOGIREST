@@ -5,6 +5,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
+import * as fs from 'fs/promises';
 import { PrismaService } from '../../database/prisma.service';
 import {
   Prisma,
@@ -1740,8 +1741,38 @@ export class ReportsService {
         velocityChart,
       },
       systemAuditLogs,
-      lastBackupTimestamp: lastBackupSetting?.value || undefined,
+      lastBackupTimestamp:
+        lastBackupSetting?.value || (await this.getFilesystemLastBackup()),
     };
+  }
+
+  private async getFilesystemLastBackup(): Promise<string | undefined> {
+    try {
+      const content = await fs.readFile('/backups/last_success', 'utf8');
+      const trimmed = content.trim();
+      const date = new Date(trimmed);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+      const match = trimmed.match(
+        /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,
+      );
+      if (match) {
+        const [, y, m, d, hh, mm, ss] = match;
+        return new Date(
+          Date.UTC(
+            Number(y),
+            Number(m) - 1,
+            Number(d),
+            Number(hh),
+            Number(mm),
+            Number(ss),
+          ),
+        ).toISOString();
+      }
+    } catch {
+      return undefined;
+    }
   }
 
   // ─── Private Helpers ─────────────────────────────────────────
