@@ -188,15 +188,15 @@ export default async function LocaleLayout({
                 className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${beVietnamPro.variable} font-sans antialiased text-text-main dark:text-white bg-bg-light dark:bg-brand-black transition-colors duration-300 min-h-screen custom-scrollbar`}
                 suppressHydrationWarning
             >
-                <NextTopLoader 
-                    color="#b48e67" 
-                    initialPosition={0.08} 
-                    crawlSpeed={200} 
-                    height={3} 
-                    crawl={true} 
-                    showSpinner={false} 
-                    easing="ease" 
-                    speed={200} 
+                <NextTopLoader
+                    color="#b48e67"
+                    initialPosition={0.08}
+                    crawlSpeed={200}
+                    height={5}
+                    crawl={true}
+                    showSpinner={false}
+                    easing="ease"
+                    speed={200}
                     shadow="0 0 10px #b48e67,0 0 5px #b48e67"
                 />
                 <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>

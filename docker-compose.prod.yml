@@ -1,54 +1,71 @@
 # =============================================================================
-# OTANTIK KITCHEN / LogiRest — Production Docker Compose
+# OTANTIK KITCHEN / LogiRest â€” Definitive Production Docker Compose
 # =============================================================================
-# Usage:
-#   1. cp .env.example.prod .env.prod
-#   2. Fill in all <GENERATE_SECURE_PASSWORD> values in .env.prod
-#   3. DOCKER_BUILDKIT=1 docker compose -f docker-compose.prod.yml \
-#        --env-file .env.prod up -d --build
+#
+# USAGE:
+#   1. cp .env.production.example .env.prod
+#   2. Fill in every secret in .env.prod
+#   3. Build and start all services:
+#        DOCKER_BUILDKIT=1 docker compose \
+#          -f docker-compose.prod.yml \
+#          --env-file .env.prod \
+#          up -d --build
 #   4. First-boot database seed:
-#      docker compose -f docker-compose.prod.yml exec api npm run prisma:seed
+#        docker compose -f docker-compose.prod.yml \
+#          --env-file .env.prod \
+#          exec logirest-api npm run prisma:seed
 #
-# BuildKit cache mounts:
-#   Both `api` and `web` Dockerfiles use:
-#     RUN --mount=type=cache,target=/root/.npm ...
-#   This requires DOCKER_BUILDKIT=1 (default in Docker 23+, Buildx).
-#   Set DOCKER_BUILDKIT=1 in your CI/CD environment or shell before building.
-#
-# Network topology:
-#   - db      : internal only (expose 5432)  — never mapped to host
-#   - redis   : internal only (expose 6379)  — never mapped to host
-#   - api     : internal only (expose 4000)  — proxied by Caddy
-#   - web     : internal only (expose 3000)  — proxied by Caddy
-#   - minio   : 9001 bound to 127.0.0.1 only (admin console; firewall-restrict)
-#   - caddy   : 80/443 public
+# NETWORK TOPOLOGY  (all services on logirest_network bridge):
+#   logirest-db        internal only  (5432)   â€” never mapped to host
+#   logirest-redis     internal only  (6379)   â€” never mapped to host
+#   logirest-minio     9000 internal  / 9001 â†’ 127.0.0.1 only (admin console)
+#   logirest-api       internal only  (4000)   â€” proxied by Caddy
+#   logirest-web       internal only  (3000)   â€” proxied by Caddy
+#   logirest-prometheus internal only (9090)   â€” scraped by Grafana
+#   logirest-grafana   internal only  (3001)   â€” proxied by Caddy (optional)
+#   logirest-db-backup internal only           â€” cron backup sidecar
+#   logirest-caddy     80 / 443 â†’ host         â€” public TLS termination
 # =============================================================================
 
 services:
-  db:
+
+  # ---------------------------------------------------------------------------
+  # DATABASE â€” PostgreSQL 16
+  # ---------------------------------------------------------------------------
+  logirest-db:
     image: postgres:16-alpine
     container_name: logirest-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-logirest}
-      POSTGRES_USER: ${DB_USER:-logirest}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB:-logirest}
+      POSTGRES_USER:     ${POSTGRES_USER:-logirest_prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-logirest}" ]
+      # pg_isready exits 0 when the server is accepting connections
+      test:     ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-logirest_prod} -d ${POSTGRES_DB:-logirest}"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-    # NOT exposed to host — only accessible inside the Docker network
+      timeout:  5s
+      retries:  5
+      start_period: 20s
     expose:
       - "5432"
+    networks:
+      - logirest_network
 
-  redis:
+  # ---------------------------------------------------------------------------
+  # CACHE / QUEUE â€” Redis 7
+  # ---------------------------------------------------------------------------
+  logirest-redis:
     image: redis:7-alpine
     container_name: logirest-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    # Enable AOF persistence + password auth (REDIS_PASSWORD from .env.prod)
+    command: >
+      redis-server
+        --appendonly yes
+        --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     deploy:
@@ -56,212 +73,353 @@ services:
         limits:
           memory: 128M
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      # AUTH required when password is set â€” pass it via redis-cli -a
+      test:     ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep -q PONG"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-    # NOT exposed to host — only accessible inside the Docker network
+      timeout:  5s
+      retries:  5
+      start_period: 10s
     expose:
       - "6379"
+    networks:
+      - logirest_network
 
-  api:
+  # ---------------------------------------------------------------------------
+  # OBJECT STORAGE â€” MinIO (S3-compatible)
+  # ---------------------------------------------------------------------------
+  logirest-minio:
+    image: minio/minio:RELEASE.2024-01-28T22-35-53Z
+    container_name: logirest-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      # Root credentials â€” no hardcoded fallbacks in production
+      MINIO_ROOT_USER:     ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    # API port internal only; console bound to loopback (firewall-restrict further)
+    expose:
+      - "9000"
+    ports:
+      - "127.0.0.1:9001:9001"
+    healthcheck:
+      # MinIO health endpoint â€” available without authentication
+      test:     ["CMD-SHELL", "curl -fs http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout:  5s
+      retries:  5
+      start_period: 20s
+    networks:
+      - logirest_network
+
+  # ---------------------------------------------------------------------------
+  # BACKEND â€” NestJS 11 API
+  # ---------------------------------------------------------------------------
+  logirest-api:
     build:
-      context: .
+      context:    .
       dockerfile: apps/api/Dockerfile
-      target: production
-      # BuildKit cache mount is defined in the Dockerfile itself:
-      #   RUN --mount=type=cache,target=/root/.npm npm ci ...
-      # Requires: DOCKER_BUILDKIT=1 (set in shell or CI env before build)
+      target:     production
       args:
+        # Enables inline layer metadata for remote cache (BuildKit feature)
         BUILDKIT_INLINE_CACHE: "1"
     container_name: logirest-api
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?lock_timeout=5000&connect_timeout=10
-      DIRECT_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?lock_timeout=5000&connect_timeout=10
-      REDIS_URL: redis://redis:6379
-      FRONTEND_URL: ${FRONTEND_URL}
-      PORT: 4000
-      NODE_ENV: production
+      NODE_ENV:    production
+      PORT:        4000
       NODE_OPTIONS: --max-old-space-size=1024
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+
+      # Database â€” service name 'logirest-db' resolves inside logirest_network
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@logirest-db:5432/${POSTGRES_DB}?sslmode=disable&lock_timeout=5000&connect_timeout=10"
+      DIRECT_URL:   "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@logirest-db:5432/${POSTGRES_DB}?sslmode=disable&lock_timeout=5000&connect_timeout=10"
+
+      # Redis â€” include password in URL when REDIS_PASSWORD is set
+      REDIS_URL:      "redis://:${REDIS_PASSWORD}@logirest-redis:6379"
+      REDIS_HOST:     logirest-redis
+      REDIS_PORT:     "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # CORS origin (public URL of the Next.js frontend)
+      FRONTEND_URL: ${FRONTEND_URL}
+
+      # Auth & Encryption
+      JWT_ACCESS_SECRET:  ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      BASE_CURRENCY_CODE: ${BASE_CURRENCY_CODE}
-      BASE_CURRENCY_NAME: ${BASE_CURRENCY_NAME}
-      TRANSFER_OVERDUE_DAYS: ${TRANSFER_OVERDUE_DAYS}
+      ENCRYPTION_KEY:     ${ENCRYPTION_KEY}
+
+      # Business configuration
+      BASE_CURRENCY_CODE:   ${BASE_CURRENCY_CODE:-USD}
+      BASE_CURRENCY_NAME:   ${BASE_CURRENCY_NAME:-US Dollar}
+      TRANSFER_OVERDUE_DAYS: ${TRANSFER_OVERDUE_DAYS:-7}
+      IDEMPOTENCY_TTL_HOURS: ${IDEMPOTENCY_TTL_HOURS:-24}
+
+      # SMTP / Email
       SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
+      SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
-      ENABLE_AUTO_FREEZE: ${ENABLE_AUTO_FREEZE}
-      ENABLE_SLACK_ALERTS: ${ENABLE_SLACK_ALERTS}
+
+      # Feature flags
+      ENABLE_AUTO_FREEZE:  ${ENABLE_AUTO_FREEZE:-false}
+      ENABLE_SLACK_ALERTS: ${ENABLE_SLACK_ALERTS:-false}
+
+      # Webhooks & alert emails
       SLACK_VALIDATION_WEBHOOK_URL: ${SLACK_VALIDATION_WEBHOOK_URL}
-      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL}
-      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID}
+      ALERT_WEBHOOK_URL:            ${ALERT_WEBHOOK_URL}
+      VALIDATION_ALERT_EMAILS:      ${VALIDATION_ALERT_EMAILS}
+
+      # MinIO / S3 backup credentials (service-account, not root)
+      BACKUP_S3_ACCESS_KEY_ID:     ${BACKUP_S3_ACCESS_KEY_ID}
       BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY}
-      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
-      BACKUP_S3_REGION: ${BACKUP_S3_REGION}
-      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
-      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      BACKUP_S3_ENDPOINT:          ${BACKUP_S3_ENDPOINT:-http://logirest-minio:9000}
+      BACKUP_S3_REGION:            ${BACKUP_S3_REGION:-us-east-1}
+      BACKUP_S3_BUCKET:            ${BACKUP_S3_BUCKET:-logirest-backups}
+      BACKUP_ENCRYPTION_KEY:       ${BACKUP_ENCRYPTION_KEY}
     depends_on:
-      db:
+      logirest-db:
         condition: service_healthy
-      redis:
+      logirest-redis:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: 1536M
-        reservations:
-          cpus: '0.5'
-          memory: 768M
-    # NOT exposed to host — Caddy proxies via Docker network
     expose:
       - "4000"
     volumes:
-      # Persist user uploads between deployments
+      # Persist user-uploaded files across deployments
       - uploads_data:/app/apps/web/public/uploads
       - ./backups:/backups:ro
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fs http://localhost:4000/v1/health || exit 1" ]
+      test:     ["CMD-SHELL", "curl -fs http://localhost:4000/api/v1/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout:  5s
+      retries:  5
       start_period: 60s
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      target: production
-      # NEXT_PUBLIC_* vars MUST be passed as ARGs at build time — Next.js
-      # bakes them into the client-side bundle during next build (standalone).
-      # They cannot be injected at runtime via environment: for client bundles.
-      # BuildKit cache mount is defined in the Dockerfile itself:
-      #   RUN --mount=type=cache,target=/root/.npm npm ci ...
-      # Requires: DOCKER_BUILDKIT=1 (set in shell or CI env before build)
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        BUILDKIT_INLINE_CACHE: "1"
-    container_name: logirest-web
-    # next.config.ts output:'standalone' produces apps/web/server.js
-    # The WORKDIR in the production stage is /app, so the path is relative.
-    command: [ "node", "apps/web/server.js" ]
-    restart: unless-stopped
-    environment:
-      PORT: 3000
-      NODE_ENV: production
-      HOSTNAME: "0.0.0.0"
-      # Runtime env vars available to SSR (server.js) and Server Components.
-      # NEXT_PUBLIC_* are already baked into the bundle from build args above;
-      # setting them here as well satisfies any process.env reads in SSR code.
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_USE_MOCKS: "false"
-      NEXT_PUBLIC_TRANSFER_OVERDUE_DAYS: ${NEXT_PUBLIC_TRANSFER_OVERDUE_DAYS}
-      # Server-side only — used by SSR routes to reach API via Docker network
-      API_URL: ${API_URL}
-    depends_on:
-      api:
-        condition: service_healthy
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1024M
+          cpus:   "1.5"
+          memory: 1536M
         reservations:
-          cpus: '0.25'
-          memory: 512M
-    # NOT exposed to host — Caddy proxies via Docker network
+          cpus:   "0.5"
+          memory: 768M
+    networks:
+      - logirest_network
+
+  # ---------------------------------------------------------------------------
+  # FRONTEND â€” Next.js 16 (standalone)
+  # ---------------------------------------------------------------------------
+  logirest-web:
+    build:
+      context:    .
+      dockerfile: apps/web/Dockerfile
+      target:     production
+      args:
+        # NEXT_PUBLIC_* are baked into the client bundle at BUILD TIME.
+        # They cannot be injected at runtime for browser-side code.
+        NEXT_PUBLIC_API_URL:   ${NEXT_PUBLIC_API_URL}
+        BUILDKIT_INLINE_CACHE: "1"
+    container_name: logirest-web
+    restart: unless-stopped
+    environment:
+      PORT:        3000
+      NODE_ENV:    production
+      HOSTNAME:    "0.0.0.0"
+
+      # NEXT_PUBLIC_* are already baked from build args; setting them here
+      # additionally ensures process.env reads work in SSR/Server Components.
+      NEXT_PUBLIC_API_URL:              ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_USE_MOCKS:            "false"
+      NEXT_PUBLIC_TRANSFER_OVERDUE_DAYS: ${NEXT_PUBLIC_TRANSFER_OVERDUE_DAYS:-7}
+
+      # Server-side only â€” reaches API through the Docker network (no TLS)
+      API_URL: ${API_URL:-http://logirest-api:4000/api/v1}
+    depends_on:
+      logirest-api:
+        condition: service_healthy
     expose:
       - "3000"
     volumes:
-      - uploads_data:/app/apps/web/public/uploads
+      - uploads_data:/app/apps/web/public/uploads:ro
       - ./backups:/backups:ro
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fs http://127.0.0.1:3000/ || exit 1" ]
+      test:     ["CMD-SHELL", "curl -fs http://127.0.0.1:3000/ || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout:  5s
+      retries:  5
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus:   "1.0"
+          memory: 1024M
+        reservations:
+          cpus:   "0.25"
+          memory: 512M
+    networks:
+      - logirest_network
 
-  caddy:
-    image: caddy:2-alpine
-    container_name: logirest-caddy
+  # ---------------------------------------------------------------------------
+  # METRICS COLLECTION â€” Prometheus
+  # ---------------------------------------------------------------------------
+  logirest-prometheus:
+    image: prom/prometheus:latest
+    container_name: logirest-prometheus
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      DOMAIN: ${DOMAIN}
-      API_DOMAIN: ${API_DOMAIN}
+    # Config mounts from the repo root â€” prometheus.yml scrapes logirest-api
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      api:
-        condition: service_healthy
-      web:
-        condition: service_healthy
-
-  minio:
-    image: minio/minio:RELEASE.2024-01-28T22-35-53Z
-    container_name: logirest-minio
-    restart: unless-stopped
-    # NOT exposed to host — only reachable from Docker network on port 9000
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
     expose:
-      - "9000"
-    ports:
-      # Admin console bound to loopback only — restrict further via firewall
-      - "127.0.0.1:9001:9001"
-    environment:
-      # Root credentials — no hardcoded fallbacks in production
-      MINIO_ROOT_USER: ${BACKUP_S3_ACCESS_KEY_ID:-${BACKUP_S3_ACCESS_KEY:-minioadmin}}
-      MINIO_ROOT_PASSWORD: ${BACKUP_S3_SECRET_ACCESS_KEY:-${BACKUP_S3_SECRET_KEY:-minioadmin}}
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: [ "CMD", "mc", "ready", "local" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "9090"
+    networks:
+      - logirest_network
 
-  db-backup:
+  # ---------------------------------------------------------------------------
+  # MONITORING DASHBOARD â€” Grafana
+  # ---------------------------------------------------------------------------
+  logirest-grafana:
+    image: grafana/grafana:latest
+    container_name: logirest-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER:     ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP:     "false"
+      GF_SERVER_ROOT_URL:         ${GF_SERVER_ROOT_URL:-https://monitoring.yourdomain.com}
+      GF_AUTH_ANONYMOUS_ENABLED:  "false"
+      # Bind Grafana to port 3001 — avoids collision with logirest-web on 3000
+      # and matches the Caddyfile upstream: http://logirest-grafana:3001
+      GF_SERVER_HTTP_PORT:        "3001"
+      # Pre-configure Prometheus as the default data source
+      GF_DATASOURCES_DEFAULT_URL: "http://logirest-prometheus:9090"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - logirest-prometheus
+    expose:
+      - "3001"
+    networks:
+      - logirest_network
+
+  # ---------------------------------------------------------------------------
+  # DATABASE BACKUPS â€” pg_dump sidecar with cron-style sleep loop
+  # ---------------------------------------------------------------------------
+  logirest-db-backup:
     image: postgres:16-alpine
     container_name: logirest-db-backup
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
     environment:
-      # Default fallbacks to prevent empty env variable resets on restart
-      PGDATABASE: ${DB_NAME:-logirest}
-      PGUSER: ${DB_USER:-logirest}
-      PGPASSWORD: ${DB_PASSWORD:-SecureDbPass2026!}
-      PGHOST: db
-      PGPORT: 5432
-      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID:-minioadmin}
-      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY:-minioadmin}
-      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-logirest-backups}
-      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-http://minio:9000}
-      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
-      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
-    volumes:
-      - ./scripts:/scripts:ro
-      - ./backups:/backups
-      - uploads_data:/uploads:ro
-    entrypoint: [ "sh", "-c", "while true; do sh /scripts/db-backup.sh; sleep 86400; done" ]
+      # PostgreSQL connection parameters (pg_dump reads these automatically)
+      PGHOST:     logirest-db
+      PGPORT:     "5432"
+      PGDATABASE: ${POSTGRES_DB:-logirest}
+      PGUSER:     ${POSTGRES_USER:-logirest_prod}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
 
+      # MinIO / S3 upload credentials
+      BACKUP_S3_ACCESS_KEY_ID:     ${BACKUP_S3_ACCESS_KEY_ID}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY}
+      BACKUP_S3_BUCKET:            ${BACKUP_S3_BUCKET:-logirest-backups}
+      BACKUP_S3_ENDPOINT:          ${BACKUP_S3_ENDPOINT:-http://logirest-minio:9000}
+      BACKUP_S3_REGION:            ${BACKUP_S3_REGION:-us-east-1}
+
+      # AES-256 key for encrypting dumps before upload
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+
+      # Backup schedule (cron format) and retention â€” read by db-backup.sh
+      BACKUP_CRON_SCHEDULE:  ${BACKUP_CRON_SCHEDULE:-0 2 * * *}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+    depends_on:
+      logirest-db:
+        condition: service_healthy
+      logirest-minio:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro         # db-backup.sh is in scripts/
+      - db_backups:/backups           # persistent dump staging area
+      - uploads_data:/uploads:ro      # include uploads in backup if needed
+    # Sleep-loop entrypoint: run db-backup.sh once per BACKUP_CRON_SCHEDULE period.
+    # BACKUP_CRON_SCHEDULE is in cron format (e.g. "0 2 * * *" = daily at 02:00).
+    # The sleep duration is 86400s (24h); adjust to match your schedule frequency.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "Backup sidecar started. Schedule: ${BACKUP_CRON_SCHEDULE:-0 2 * * *}"
+        while true; do
+          echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] Running db-backup.sh..."
+          sh /scripts/db-backup.sh
+          echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] Backup complete. Sleeping 86400s..."
+          sleep 86400
+        done
+    networks:
+      - logirest_network
+
+  # ---------------------------------------------------------------------------
+  # REVERSE PROXY / TLS TERMINATION â€” Caddy 2
+  # ---------------------------------------------------------------------------
+  logirest-caddy:
+    image: caddy:2-alpine
+    container_name: logirest-caddy
+    restart: unless-stopped
+    # Caddy reads DOMAIN, API_DOMAIN, and FRONTEND_URL from the environment
+    # and uses them in the Caddyfile via {$VAR} interpolation.
+    environment:
+      DOMAIN:       ${DOMAIN}
+      API_DOMAIN:   ${API_DOMAIN}
+      FRONTEND_URL: ${FRONTEND_URL}
+      ACME_EMAIL:   ${ACME_EMAIL}
+    ports:
+      - "80:80"     # HTTP â†’ HTTPS redirect + ACME HTTP-01 challenge
+      - "443:443"   # HTTPS (TLS termination)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro   # Stage 5 â€” configured separately
+      - caddy_data:/data                        # TLS certificates (ACME)
+      - caddy_config:/config                   # Caddy runtime config cache
+    depends_on:
+      logirest-api:
+        condition: service_healthy
+      logirest-web:
+        condition: service_healthy
+    networks:
+      - logirest_network
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
 volumes:
   db_data:
+    driver: local
   redis_data:
-  caddy_data:
-  caddy_config:
+    driver: local
   minio_data:
+    driver: local
   uploads_data:
+    driver: local
+  db_backups:
+    driver: local
+  prom_data:
+    driver: local
+  grafana_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  logirest_network:
+    driver: bridge
+    # All inter-service communication happens over this isolated bridge.
+    # No service is reachable from the host except through explicit port mappings.
+    name: logirest_network
+

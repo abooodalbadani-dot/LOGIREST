@@ -1,47 +1,221 @@
-(cors) {
-    @options method OPTIONS
+# =============================================================================
+# OTANTIK KITCHEN / LogiRest — Production Caddyfile
+# =============================================================================
+#
+# Environment variables consumed (set in docker-compose.prod.yml → environment):
+#   {$DOMAIN}            — Next.js frontend domain  (e.g. app.yourdomain.com)
+#   {$API_DOMAIN}        — NestJS API subdomain      (e.g. api.yourdomain.com)
+#   {$MONITORING_DOMAIN} — Grafana dashboard domain  (e.g. monitoring.yourdomain.com)
+#   {$FRONTEND_URL}      — Full HTTPS URL of frontend (for CORS Allow-Origin)
+#   {$ACME_EMAIL}        — Email for Let's Encrypt registration
+#
+# TLS: Caddy provisions and auto-renews certificates from Let's Encrypt via
+# ACME HTTP-01 challenge (port 80 must be publicly reachable on first boot).
+#
+# Upstream service hostnames resolve via the logirest_network Docker bridge:
+#   logirest-api:4000   — NestJS API
+#   logirest-web:3000   — Next.js frontend
+#   logirest-grafana:3001 — Grafana monitoring (optional)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# GLOBAL OPTIONS
+# Applies to the entire Caddy process. Must be the first block if present.
+# -----------------------------------------------------------------------------
+{
+    # Caddy admin API — bind to loopback only; never expose to the public
+    admin localhost:2019
+
+    # Default ACME CA email — used for all TLS certificate registrations.
+    # Set ACME_EMAIL in .env.prod to your real operations email address.
+    email {$ACME_EMAIL}
+
+    # Use the production Let's Encrypt ACME directory (default; explicit here
+    # for clarity — change to the staging URL during initial testing):
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+# -----------------------------------------------------------------------------
+# SNIPPET: common upstream headers
+# Forwards client identity to backend services so they can log real IPs,
+# generate correct redirect URLs, and apply IP-based rate limiting.
+# -----------------------------------------------------------------------------
+(proxy_headers) {
+    header_up Host              {http.request.host}
+    header_up X-Real-IP         {http.request.remote.host}
+    header_up X-Forwarded-For   {http.request.remote.host}
+    header_up X-Forwarded-Proto {http.request.scheme}
+    header_up X-Request-ID      {http.request.uuid}
+}
+
+# -----------------------------------------------------------------------------
+# SNIPPET: security response headers
+# Applied to all outbound responses for defense-in-depth.
+# Adjust Content-Security-Policy to match your actual asset sources.
+# -----------------------------------------------------------------------------
+(security_headers) {
+    header {
+        # Prevent MIME-type sniffing
+        X-Content-Type-Options "nosniff"
+        # Deny framing from other origins (clickjacking protection)
+        X-Frame-Options "DENY"
+        # Enable XSS filter in older browsers
+        X-XSS-Protection "1; mode=block"
+        # Enforce HTTPS for 1 year, including subdomains
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Restrict referrer information to same origin
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Remove the Caddy server signature
+        -Server
+    }
+}
+
+# -----------------------------------------------------------------------------
+# SNIPPET: CORS preflight handler
+# NestJS handles CORS on real requests; Caddy handles the OPTIONS preflight
+# so the browser gets a fast response without touching Node.js.
+# FRONTEND_URL is the CORS origin — defaults to localhost for local dev.
+# -----------------------------------------------------------------------------
+(cors_preflight) {
+    @options {
+        method OPTIONS
+    }
     handle @options {
-        header Access-Control-Allow-Origin "{$FRONTEND_URL:http://localhost:3000}"
-        header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "Content-Type, Accept, Authorization, x-idempotency-key, x-department-id, x-branch-id, x-warehouse-id, x-xsrf-token, Origin, X-Requested-With"
+        header Access-Control-Allow-Origin      "{$FRONTEND_URL:http://localhost:3000}"
+        header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        header Access-Control-Allow-Headers     "Content-Type, Accept, Authorization, x-idempotency-key, x-department-id, x-branch-id, x-warehouse-id, x-xsrf-token, Origin, X-Requested-With"
         header Access-Control-Allow-Credentials "true"
-        header Access-Control-Max-Age "3600"
+        header Access-Control-Max-Age           "3600"
         respond "" 204
     }
 }
 
-{$DOMAIN:localhost} {
-    handle /api/* {
-        import cors
-        reverse_proxy api:4000 {
-            header_up Host {http.request.host}
-            header_up X-Real-IP {http.request.remote}
-            header_up X-Forwarded-For {http.request.remote}
-            header_up X-Forwarded-Proto {http.request.scheme}
-        }
-    }
-    handle /uploads/* {
-        reverse_proxy api:4000 {
-            header_up Host {http.request.host}
-            header_up X-Real-IP {http.request.remote}
-            header_up X-Forwarded-For {http.request.remote}
-            header_up X-Forwarded-Proto {http.request.scheme}
-        }
-    }
-    handle {
-        reverse_proxy web:3000
-    }
-}
-
+# =============================================================================
+# BLOCK 1 — API DOMAIN
+# Handles all traffic destined for the NestJS API subdomain.
+# Reverse-proxies everything to logirest-api:4000.
+# TLS is provisioned automatically via Let's Encrypt.
+# =============================================================================
 {$API_DOMAIN:api.localhost} {
-    handle {
-        import cors
-        reverse_proxy api:4000 {
-            header_up Host {http.request.host}
-            header_up X-Real-IP {http.request.remote}
-            header_up X-Forwarded-For {http.request.remote}
-            header_up X-Forwarded-Proto {http.request.scheme}
+
+    import security_headers
+    import cors_preflight
+
+    reverse_proxy http://logirest-api:4000 {
+        import proxy_headers
+
+        # Health-check: Caddy will mark the upstream as unhealthy if the API
+        # stops responding, allowing graceful degradation or failover.
+        health_uri     /api/v1/health
+        health_interval 15s
+        health_timeout  5s
+
+        # Pass the original Host header (required by some NestJS guards)
+        header_up Host {upstream_hostport}
+    }
+
+    # Structured access log — rotate daily, retain 7 days
+    log {
+        output file /var/log/caddy/api-access.log {
+            roll_size     50MiB
+            roll_keep     7
+            roll_keep_for 168h
         }
+        format json
     }
 }
 
+# =============================================================================
+# BLOCK 2 — FRONTEND DOMAIN
+# Handles all traffic destined for the Next.js web application.
+# Enables zstd + gzip compression for all text responses.
+# Routes /api/* and /uploads/* directly to the API without touching Next.js.
+# TLS is provisioned automatically via Let's Encrypt.
+# =============================================================================
+{$DOMAIN:localhost} {
+
+    import security_headers
+
+    # ---------------------------------------------------------------------------
+    # Compression — zstd first (modern clients), gzip fallback (legacy clients).
+    # Caddy automatically negotiates via Accept-Encoding.
+    # ---------------------------------------------------------------------------
+    encode {
+        zstd
+        gzip 6
+        minimum_length 1024
+    }
+
+    # ---------------------------------------------------------------------------
+    # /api/* — forward API traffic directly to the NestJS service.
+    # This allows the frontend domain to serve both the UI and the API,
+    # useful when a single-domain architecture is preferred.
+    # ---------------------------------------------------------------------------
+    handle /api/* {
+        import cors_preflight
+        reverse_proxy http://logirest-api:4000 {
+            import proxy_headers
+        }
+    }
+
+    # ---------------------------------------------------------------------------
+    # /uploads/* — serve user-uploaded files from the API's static handler.
+    # ---------------------------------------------------------------------------
+    handle /uploads/* {
+        reverse_proxy http://logirest-api:4000 {
+            import proxy_headers
+        }
+    }
+
+    # ---------------------------------------------------------------------------
+    # Everything else → Next.js standalone server.
+    # ---------------------------------------------------------------------------
+    handle {
+        reverse_proxy http://logirest-web:3000 {
+            import proxy_headers
+
+            # Next.js standalone healthcheck
+            health_uri     /
+            health_interval 15s
+            health_timeout  5s
+        }
+    }
+
+    # Structured access log
+    log {
+        output file /var/log/caddy/web-access.log {
+            roll_size     50MiB
+            roll_keep     7
+            roll_keep_for 168h
+        }
+        format json
+    }
+}
+
+# =============================================================================
+# BLOCK 3 — MONITORING DOMAIN (Optional)
+# Exposes Grafana behind TLS. Only active when MONITORING_DOMAIN is set.
+# If MONITORING_DOMAIN is empty or unset, this block is safely skipped
+# because Caddy treats an empty hostname as invalid and ignores it.
+#
+# To enable: set MONITORING_DOMAIN=monitoring.yourdomain.com in .env.prod
+# To disable: leave MONITORING_DOMAIN unset or comment out this block.
+# =============================================================================
+{$MONITORING_DOMAIN:} {
+
+    import security_headers
+
+    # Grafana runs on port 3001 inside the logirest_network bridge.
+    reverse_proxy http://logirest-grafana:3001 {
+        import proxy_headers
+    }
+
+    log {
+        output file /var/log/caddy/monitoring-access.log {
+            roll_size     20MiB
+            roll_keep     7
+            roll_keep_for 168h
+        }
+        format json
+    }
+}

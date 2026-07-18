@@ -1,109 +1,133 @@
 # =============================================================================
-# LogiRest API — NestJS 11 Production Dockerfile
+# OTANTIK KITCHEN / LogiRest — NestJS 11 Production Dockerfile
 # =============================================================================
-# Requires BuildKit: DOCKER_BUILDKIT=1 (default in Docker 23+)
+# Requires BuildKit:  DOCKER_BUILDKIT=1  (default in Docker 23+, Buildx)
 #
-# Memory-efficient 2-stage design:
-#   builder  — installs all deps, generates Prisma client, compiles TS
-#   production — copies dist + pruned node_modules (devDeps stripped via npm prune)
+# Build (via compose):
+#   DOCKER_BUILDKIT=1 docker compose -f docker-compose.prod.yml build api
 #
-# Build one service at a time on low-RAM VPS:
-#   docker compose -f docker-compose.prod.yml build api
-#   docker compose -f docker-compose.prod.yml build web
-#   docker compose -f docker-compose.prod.yml up -d
+# 3-stage design:
+#   base       — pinned node:20-alpine, npm@11.6.2, yarn purged, system libs
+#   builder    — installs all deps (incl. devDeps), generates Prisma, compiles TS
+#   production — copies pruned node_modules + compiled dist only
+#
+# Entry point (from nest-cli.json entryFile: "apps/api/src/main"):
+#   tsc rootDir is monorepo root → output: dist/apps/api/src/main.js
 # =============================================================================
 
-# ─────────────────────────────────────────────────
-# Stage 1: Builder
-# ─────────────────────────────────────────────────
-FROM node:24-slim AS builder
+# ─────────────────────────────────────────────────────────────────────────────
+# BASE — shared toolchain pin
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:20-alpine AS base
 
-# Strip Yarn to enforce npm-only in this monorepo
+# Strictly enforce npm version across every stage
+RUN npm install -g npm@11.6.2 --no-fund --no-audit
+
+# Purge yarn entirely — this monorepo uses npm workspaces + package-lock.json
 RUN rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
-# openssl is required by Prisma to generate the native query engine binary | chromium for dev PDF generation
-RUN apt-get update && apt-get install -y --no-install-recommends openssl chromium \
-    && rm -rf /var/lib/apt/lists/*
+# System libraries required at build time and runtime:
+#   openssl  — Prisma native query-engine binary
+#   chromium — Playwright PDF generation (prod dependency)
+RUN apk add --no-cache openssl chromium
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEPS — install ALL dependencies (devDeps required for nest build + Prisma CLI)
+# ─────────────────────────────────────────────────────────────────────────────
+FROM base AS deps
 
 WORKDIR /app
 
-# Set Prisma binary mirror (npmmirror is a reliable global CDN for Prisma engines)
-ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
+# Copy monorepo manifests first to maximise layer-cache reuse.
+# Only these files affect the npm install layer; source changes don't bust it.
+COPY package*.json turbo.json tsconfig.base.json     ./
+COPY packages/shared-types/package*.json              ./packages/shared-types/
+COPY apps/api/package*.json                           ./apps/api/
 
-# ── Dependency manifests first — maximise layer cache reuse ──
-COPY package*.json turbo.json tsconfig.base.json ./
-COPY packages/shared-types/package*.json ./packages/shared-types/
-COPY apps/api/package*.json              ./apps/api/
-
-# Single npm ci: installs all deps (devDeps required for nest build)
-# BuildKit cache mount avoids re-downloading on every build
+# BuildKit cache mount: npm's global cache persists across builds on the same
+# host → `npm ci` only re-downloads changed or missing packages.
 RUN --mount=type=cache,target=/root/.npm \
     npm config set fetch-retries 5 \
     && npm config set fetch-retry-mintimeout 20000 \
     && npm config set fetch-retry-maxtimeout 120000 \
-    && npm ci --workspace=apps/api --include-workspace-root \
-        --no-audit --no-fund
+    && npm ci \
+        --workspace=apps/api \
+        --include-workspace-root \
+        --no-audit \
+        --no-fund
 
-# ── Copy source after install to keep install layer cached ──
+# ─────────────────────────────────────────────────────────────────────────────
+# BUILDER — Prisma generate → NestJS compile
+# ─────────────────────────────────────────────────────────────────────────────
+FROM deps AS builder
+
+# Prisma binary mirror — reliable CDN for native query-engine downloads
+ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
+# Cap memory to avoid OOM-kill on low-RAM VPS during TS compilation
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+
+# Copy source AFTER install so that source changes don't bust the deps layer
 COPY packages/ packages/
-COPY apps/api/ apps/api/
+COPY apps/api/  apps/api/
 
-# Generate Prisma Client (must run before nest build — outputs into node_modules)
-RUN ./node_modules/.bin/prisma generate --schema=apps/api/prisma/schema.prisma
+# Step 1: Generate Prisma Client (MUST run before nest build).
+# Schema is at apps/api/prisma/schema.prisma (local to the API workspace).
+# Outputs the generated client into node_modules/@prisma/client.
+RUN ./node_modules/.bin/prisma generate \
+        --schema=apps/api/prisma/schema.prisma
 
-# Compile TypeScript → apps/api/dist/
-# tsconfig outDir: ./dist + path aliases force rootDir to monorepo root,
-# so entry compiles to: apps/api/dist/apps/api/src/main.js
+# Step 2: Compile TypeScript → dist/
+# nest-cli.json: entryFile = "apps/api/src/main"
+# tsc rootDir is monorepo root, so output lands at:
+#   apps/api/dist/apps/api/src/main.js
 RUN npm run build --workspace=apps/api
 
-# ─────────────────────────────────────────────────
-# Stage 1.5: Pruner
-# ─────────────────────────────────────────────────
-FROM builder AS pruner
-RUN npm prune --omit=dev --workspace=apps/api
+# Step 3: Prune devDependencies in-place (reuses the same layer)
+RUN npm prune --omit=dev --workspace=apps/api --no-audit
 
-# ─────────────────────────────────────────────────
-# Stage 2: Production Runner (minimal footprint)
-# ─────────────────────────────────────────────────
-FROM node:24-slim AS production
+# ─────────────────────────────────────────────────────────────────────────────
+# PRODUCTION — minimal runtime image
+# Contains: pruned node_modules + Prisma client + compiled dist + schema
+# Does NOT contain: source TypeScript, devDeps, test files, build cache
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:20-alpine AS production
 
-# curl → healthcheck | openssl → Prisma runtime | chromium → PDF generation
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl openssl chromium \
-    && rm -rf /var/lib/apt/lists/*
+# curl for healthcheck | openssl for Prisma runtime | chromium for PDF generation
+RUN apk add --no-cache curl openssl chromium
 
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
+# Path to the Chromium binary installed by apk (used by Playwright)
 ENV CHROMIUM_PATH=/usr/bin/chromium
 ENV NODE_OPTIONS="--max-old-space-size=1024"
-ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 
-# Pruned node_modules (devDeps stripped by npm prune in pruner)
-COPY --from=pruner /app/node_modules          ./node_modules
+# Pruned node_modules (devDeps stripped by `npm prune --omit=dev` in builder)
+COPY --from=builder /app/node_modules          ./node_modules
+
+# Shared package source (required for @logirest/shared-types path resolution)
 COPY --from=builder /app/packages              ./packages
 
 # Compiled NestJS output
-# COPY source: builder:/app/apps/api/dist  (contains apps/api/src/main.js)
-# Container path after copy: /app/dist/apps/api/src/main.js
+# builder: apps/api/dist/apps/api/src/main.js  →  container: dist/apps/api/src/main.js
 COPY --from=builder /app/apps/api/dist         ./dist
 
-# Prisma schema + migrations for runtime migrate deploy
+# Prisma schema + migrations — required by `prisma migrate deploy` at startup
 COPY --from=builder /app/apps/api/prisma       ./prisma
 
-# package.json for Prisma CLI schema resolution
+# package.json — Prisma CLI uses it to resolve the schema path at runtime
 COPY --from=builder /app/apps/api/package.json ./package.json
 
 EXPOSE 4000
 
 # Boot sequence:
-#   1. prisma migrate deploy — applies pending migrations (idempotent)
-#   2. node dist/apps/api/src/main — starts the compiled NestJS server
+#   1. prisma migrate deploy  — applies pending migrations idempotently (safe to
+#      run on every restart; skips already-applied migrations)
+#   2. node dist/apps/api/src/main  — starts the compiled NestJS server
 #
-# Entry path explanation:
-#   tsconfig paths alias (@logirest/shared-types → ../../packages/...)
-#   forces tsc rootDir to monorepo root, producing:
-#   apps/api/dist/apps/api/src/main.js  (confirmed by nest-cli.json entryFile)
+# DIRECT_URL fallback: if the operator sets only DATABASE_URL (not DIRECT_URL),
+# Prisma migrate requires DIRECT_URL; we default it to DATABASE_URL here.
 CMD ["sh", "-c", \
   "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; fi \
    && ./node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma \
