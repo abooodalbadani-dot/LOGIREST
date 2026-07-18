@@ -160,8 +160,37 @@ export class TransfersService {
       this.prisma.transfer.count({ where }),
     ]);
 
+    const transferIds = items.map((t) => t.id);
+    const approvalEvents =
+      transferIds.length > 0
+        ? await this.prisma.approvalEvent.findMany({
+            where: {
+              documentId: { in: transferIds },
+              documentType: DocumentType.TRANSFER,
+            },
+            include: { user: { select: { id: true, name: true, role: true } } },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [];
+
+    const eventsByDocId = new Map<string, typeof approvalEvents>();
+    for (const ev of approvalEvents) {
+      if (!eventsByDocId.has(ev.documentId)) {
+        eventsByDocId.set(ev.documentId, []);
+      }
+      const existing = eventsByDocId.get(ev.documentId);
+      if (existing) {
+        existing.push(ev);
+      }
+    }
+
+    const itemsWithEvents = items.map((t) => ({
+      ...t,
+      approvalEvents: eventsByDocId.get(t.id) || [],
+    }));
+
     return {
-      data: items,
+      data: itemsWithEvents,
       meta: {
         total,
         page,
@@ -228,7 +257,13 @@ export class TransfersService {
       throw new NotFoundException(`Stock Transfer with ID ${id} not found`);
     }
 
-    return transfer;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: { documentId: transfer.id, documentType: DocumentType.TRANSFER },
+      include: { user: { select: { id: true, name: true, role: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return { ...transfer, approvalEvents };
   }
 
   async cancel(

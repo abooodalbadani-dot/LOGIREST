@@ -94,6 +94,19 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
     },
   );
 
+  const events =
+    (transfer.approvalEvents as Array<Record<string, unknown>>) || [];
+
+  const shipEvent = events.find(
+    (e) => e.actionPerformed === 'SHIP' || e.toStatus === 'IN_TRANSIT',
+  );
+  const receiveEvent = events.find(
+    (e) => e.actionPerformed === 'RECEIVE' || e.toStatus === 'RECEIVED',
+  );
+  const postEvent = events.find(
+    (e) => e.actionPerformed === 'POST' || e.toStatus === 'POSTED',
+  );
+
   const isShipped = ['IN_TRANSIT', 'RECEIVED', 'POSTED'].includes(
     transfer.status as string,
   );
@@ -105,6 +118,51 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
         : new Date(transfer.createdAt as string)
       ).toISOString()
     : new Date().toISOString();
+
+  const shippedAt = shipEvent?.createdAt
+    ? (shipEvent.createdAt instanceof Date
+        ? shipEvent.createdAt
+        : new Date(shipEvent.createdAt as string)
+      ).toISOString()
+    : isShipped
+      ? createdAtIso
+      : null;
+
+  const receivedAt = receiveEvent?.createdAt
+    ? (receiveEvent.createdAt instanceof Date
+        ? receiveEvent.createdAt
+        : new Date(receiveEvent.createdAt as string)
+      ).toISOString()
+    : isReceived
+      ? createdAtIso
+      : null;
+
+  const postedAt = postEvent?.createdAt
+    ? (postEvent.createdAt instanceof Date
+        ? postEvent.createdAt
+        : new Date(postEvent.createdAt as string)
+      ).toISOString()
+    : transfer.status === 'POSTED'
+      ? createdAtIso
+      : null;
+
+  const lastEvent = events.length > 0 ? events[events.length - 1] : null;
+  const updatedAtIso = lastEvent?.createdAt
+    ? (lastEvent.createdAt instanceof Date
+        ? lastEvent.createdAt
+        : new Date(lastEvent.createdAt as string)
+      ).toISOString()
+    : createdAtIso;
+
+  const firstUser = events.find(
+    (e) => e.user && (e.user as Record<string, unknown>).name,
+  );
+  const createdBy = firstUser
+    ? ((firstUser.user as Record<string, unknown>).name as string)
+    : 'System';
+  const postedBy = postEvent?.user
+    ? ((postEvent.user as Record<string, unknown>).name as string)
+    : null;
 
   return {
     id: transfer.id as string,
@@ -119,14 +177,14 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
     warehouseId: transfer.fromWarehouseId as string,
     branchId: (fromWarehouse?.branchId as string) || '',
     notes: (transfer.notes as string) || '',
-    shippedAt: isShipped ? createdAtIso : null,
-    receivedAt: isReceived ? createdAtIso : null,
+    shippedAt,
+    receivedAt,
     varianceReason: null,
-    createdBy: 'System',
+    createdBy,
     createdAt: createdAtIso,
-    updatedAt: createdAtIso,
-    postedAt: transfer.status === 'POSTED' ? createdAtIso : null,
-    postedBy: null,
+    updatedAt: updatedAtIso,
+    postedAt,
+    postedBy,
     version: transfer.version as number,
     lines,
   };
@@ -285,14 +343,15 @@ export class TransfersController {
       req.ip ||
       undefined;
 
-    const transfer = await this.transferPostService.ship(
+    await this.transferPostService.ship(
       id,
       userId,
       role,
       body.version,
       ipAddress,
     );
-    return mapTransferDetail(transfer);
+    const updatedTransfer = await this.transfersService.findOne(id);
+    return mapTransferDetail(updatedTransfer);
   }
 
   @Throttle({ short: { limit: 100, ttl: 60000 } })
@@ -340,7 +399,7 @@ export class TransfersController {
       req.ip ||
       undefined;
 
-    const transfer = await this.transferPostService.receive(
+    await this.transferPostService.receive(
       id,
       userId,
       role,
@@ -348,7 +407,8 @@ export class TransfersController {
       ipAddress,
       body.linesReceived,
     );
-    return mapTransferDetail(transfer);
+    const updatedTransfer = await this.transfersService.findOne(id);
+    return mapTransferDetail(updatedTransfer);
   }
 
   @Post(':id/cancel')
