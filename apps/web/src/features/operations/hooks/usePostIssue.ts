@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
+import { invalidateIssueQueries, invalidateKitchenRequestQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 
 export function usePostIssue(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
@@ -15,8 +16,9 @@ export function usePostIssue(options?: { onConflict?: () => void }) {
    return apiClient.post(`/operations/issues/${id}/post`, successSchema, payload, { signal, headers, isRetry: true });
   },
   onSuccess: (_, { id }) => {
-   queryClient.invalidateQueries({ queryKey: ['issues'] });
-   queryClient.invalidateQueries({ queryKey: ['issues', id] });
+   invalidateIssueQueries(queryClient, id);
+   invalidateKitchenRequestQueries(queryClient);
+   invalidateInventoryQueries(queryClient);
    toast.success('Document posted successfully');
   },
   onError: (error) => {

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { useRouter } from '@/i18n/navigation';
+import { invalidatePRQueries, invalidatePOQueries } from '@/lib/react-query/invalidation';
 
 interface ConvertToPOPayload {
   supplierId: string;
@@ -24,8 +25,8 @@ export function useConvertToPO(prId: string) {
     mutationFn: (payload: ConvertToPOPayload) =>
       apiClient.post(`/procurement/purchase-requests/${prId}/convert-to-po`, ConvertToPoResponseSchema, payload),
     onSuccess: (responseData) => {
-      queryClient.invalidateQueries({ queryKey: ['pr', prId] });
-      queryClient.invalidateQueries({ queryKey: ['prs'] });
+      invalidatePRQueries(queryClient, prId);
+      invalidatePOQueries(queryClient);
       // Navigate to the newly created PO
       if (responseData?.data?.id) {
         router.push(`/purchase-orders/${responseData.data.id}`);

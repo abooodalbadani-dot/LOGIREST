@@ -71,7 +71,14 @@ export class ItemsService {
           }
         : null,
       uom_conversions: [],
-      track_lots: item.isBatched,
+      track_lots: item.isBatched || item.hasExpiry,
+      is_batched: item.isBatched,
+      has_expiry: item.hasExpiry,
+      is_batch_tracked: item.isBatched || item.hasExpiry,
+      isBatched: item.isBatched,
+      hasExpiry: item.hasExpiry,
+      isBatchTracked: item.isBatched || item.hasExpiry,
+      trackLots: item.isBatched || item.hasExpiry,
       min_stock_level: 0,
       reorder_point: item.reorderPoint
         ? parseFloat(item.reorderPoint.toString())

@@ -21,6 +21,9 @@ describe('PurchaseRequestsService', () => {
       create: jest.fn(),
       findFirst: jest.fn(),
     },
+    approvalEvent: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     $transaction: jest
       .fn()
       .mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
@@ -128,7 +131,7 @@ describe('PurchaseRequestsService', () => {
       mockPrisma.purchaseRequest.findUnique.mockResolvedValue(mockPr);
 
       const result = await service.findOne('pr-1');
-      expect(result).toEqual(mockPr);
+      expect(result).toEqual({ ...mockPr, approvalEvents: [] });
       expect(mockPrisma.purchaseRequest.findUnique).toHaveBeenCalledWith({
         where: { id: 'pr-1' },
         include: {

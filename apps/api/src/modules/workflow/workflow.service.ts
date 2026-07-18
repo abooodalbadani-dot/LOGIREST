@@ -614,6 +614,15 @@ export class WorkflowService {
               },
             );
           }
+        } else if (
+          docType === 'po' &&
+          (targetStatus === 'SUBMITTED' || targetStatus === 'PENDING_APPROVAL')
+        ) {
+          await this.outboxService.writeEvent(transaction, 'PO_SUBMITTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.poNumber,
+            supplierId: updatedDoc.supplierId,
+          });
         } else if (docType === 'po' && targetStatus === 'APPROVED') {
           const supplier =
             transaction.supplier &&

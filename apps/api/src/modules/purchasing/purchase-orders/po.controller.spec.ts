@@ -7,7 +7,7 @@ import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import type { Request } from 'express';
+import { Request } from 'express';
 
 describe('PurchaseOrderController', () => {
   const mockScopeValidationService = {
@@ -58,6 +58,38 @@ describe('PurchaseOrderController', () => {
     mockScopeValidationService.validateWarehouse.mockReset();
     mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
     jest.clearAllMocks();
+  });
+
+  describe('create', () => {
+    it('should pass isSubmitted flag to poService.create', async () => {
+      mockPoService.create.mockResolvedValue({
+        id: 'po-1',
+        poNumber: 'PO-001',
+        status: 'PENDING_APPROVAL',
+        lines: [],
+      });
+
+      const body = {
+        supplierId: 'supplier-1',
+        currencyId: 'currency-1',
+        isSubmitted: true,
+        lines: [{ itemId: 'item-1', quantity: 5, unitPrice: 10 }],
+      };
+
+      const result = await controller.create(body, 'user-1', Role.ADMIN);
+
+      expect(mockPoService.create).toHaveBeenCalledWith(
+        {
+          supplierId: 'supplier-1',
+          currencyId: 'currency-1',
+          prId: undefined,
+          isSubmitted: true,
+          lines: [{ itemId: 'item-1', quantity: 5, unitPrice: 10 }],
+        },
+        'user-1',
+      );
+      expect(result.data).toBeDefined();
+    });
   });
 
   describe('update', () => {

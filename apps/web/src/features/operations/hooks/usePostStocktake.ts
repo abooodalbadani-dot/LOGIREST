@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { StocktakeSessionSchema } from '../types/stocktake';
+import { invalidateStocktakeQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 
 export function usePostStocktake(options?: { onConflict?: () => void }) {
  const qc = useQueryClient();
@@ -14,9 +15,8 @@ export function usePostStocktake(options?: { onConflict?: () => void }) {
     confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' 
    }, { signal, isRetry: true }),
   onSuccess: (_, { sessionId, warehouseId }) => {
-   qc.invalidateQueries({ queryKey: ['stocktakes'] });
-   qc.invalidateQueries({ queryKey: ['stocktakes', sessionId] });
-   qc.invalidateQueries({ queryKey: ['stocktakes', 'summary'] });
+   invalidateStocktakeQueries(qc, sessionId);
+   invalidateInventoryQueries(qc);
    qc.invalidateQueries({ queryKey: ['warehouse-lock', warehouseId] });
   },
   onError: (error) => {

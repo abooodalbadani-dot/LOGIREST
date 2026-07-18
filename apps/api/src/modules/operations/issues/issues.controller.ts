@@ -235,6 +235,12 @@ export class IssuesController {
         itemId: string;
         requestedQty?: number;
         quantity?: number;
+        lotAllocations?: Array<{
+          lotId?: string;
+          lotNumber?: string;
+          allocatedQty?: number;
+          quantityAllocated?: number;
+        }>;
       }>;
       notes?: string;
       kitchenRequestId?: string;
@@ -270,9 +276,31 @@ export class IssuesController {
           `Quantity is required for item ${line.itemId}`,
         );
       }
+
+      const rawAllocations = line.lotAllocations || [];
+      const lotAllocations: Array<{
+        lotId?: string;
+        lotNumber?: string;
+        quantityAllocated: number;
+      }> = [];
+
+      for (const alloc of rawAllocations) {
+        const quantityAllocated = Number(
+          alloc.quantityAllocated ?? alloc.allocatedQty ?? 0,
+        );
+        if (quantityAllocated > 0) {
+          lotAllocations.push({
+            lotId: alloc.lotId,
+            lotNumber: alloc.lotNumber,
+            quantityAllocated,
+          });
+        }
+      }
+
       return {
         itemId: line.itemId,
         quantity: Number(qty),
+        lotAllocations,
       };
     });
 

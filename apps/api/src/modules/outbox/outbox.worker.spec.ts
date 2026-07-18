@@ -144,7 +144,7 @@ describe('OutboxWorker', () => {
 
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
       where: {
-        role: { in: [Role.APPROVER] },
+        role: { in: [Role.APPROVER, Role.PROC_MGR] },
         isActive: true,
       },
       select: {

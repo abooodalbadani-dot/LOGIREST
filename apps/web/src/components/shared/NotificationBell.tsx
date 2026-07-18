@@ -104,7 +104,7 @@ export function NotificationBell() {
       <Bell className="w-5 h-5 group-hover:scale-105 transition-transform shrink-0" />
       {unreadNotifications.length > 0 && (
        <span
-        className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-status-warning px-1 text-[10px] font-bold text-white border border-surface-container-lowest"
+        className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white border border-surface-container-lowest animate-in fade-in zoom-in duration-200"
         dir="ltr"
        >
         {unreadNotifications.length}

@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
+import { invalidateTransferQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 
 export function useShipTransfer(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
@@ -12,9 +13,8 @@ export function useShipTransfer(options?: { onConflict?: () => void }) {
   mutationFn: ({ id, version, signal, headers, lines }: { id: string; version: number; signal?: AbortSignal; headers?: Record<string, string>; lines?: Array<{ line_id: string; scanned_qty: number }> }) =>
    apiClient.post(`/operations/transfers/${id}/ship`, successSchema, { version, lines }, { signal, headers, isRetry: true }),
   onSuccess: (_, { id }) => {
-   queryClient.invalidateQueries({ queryKey: ['transfers'] });
-   queryClient.invalidateQueries({ queryKey: ['transfers', id] });
-   queryClient.invalidateQueries({ queryKey: ['transfers', 'summary'] });
+   invalidateTransferQueries(queryClient, id);
+   invalidateInventoryQueries(queryClient);
    toast.success('Transfer shipped successfully');
   },
   onError: (error) => {

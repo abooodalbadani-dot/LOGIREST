@@ -30,13 +30,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
+import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { useAuth } from '@/providers/AuthProvider';
 import type { LotAllocation, StockIssue, IssueLineItem } from '@/types/documents';
 import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
 import { ISSUE_STATUS } from '@logirest/shared-types';
 import { useAbortController } from '@/hooks/useAbortController';
+import { isItemBatchTracked } from '@/types/master-data';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { SmartCombobox, ComboboxItem } from '@/components/shared/SmartCombobox';
@@ -55,19 +56,28 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const locale = useLocale();
   const { user, activeScope } = useAuth();
   const abortController = useAbortController();
-  const toLineItem = (l: IssueLineItem): LineItem => ({
-    id: l.id,
-    item: {
-      id: l.item.id,
-      code: l.item.code,
-      name: l.item.name,
-      primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
-    },
-    lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
-    qty: l.qty,
-    uomId: l.uomId,
-    lotAllocations: l.lotAllocations,
-  });
+  const toLineItem = (l: IssueLineItem): LineItem => {
+    const firstAlloc = l.lotAllocations?.[0];
+    const lot = l.lot
+      ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate }
+      : firstAlloc
+      ? { lotNumber: firstAlloc.lotNumber, expiryDate: firstAlloc.expiryDate || null }
+      : null;
+
+    return {
+      id: l.id,
+      item: {
+        id: l.item.id,
+        code: l.item.code,
+        name: l.item.name,
+        primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
+      },
+      lot,
+      qty: l.qty,
+      uomId: l.uomId,
+      lotAllocations: l.lotAllocations,
+    };
+  };
 
   const [warehouseId] = useState(() => issue?.warehouseId || activeScope.warehouseId || '');
   const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []).map(toLineItem));
@@ -161,6 +171,11 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const isDocLocked = isDocumentLocked("ISSUE", status);
   const isWarehouseLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
   const effectiveIsLocked = isDocLocked || isSubmitted;
+
+  const userRole = user?.role;
+  const canPost = userRole ? canPerformActionV2('ISSUE', status, 'POST', userRole) : false;
+  const canSubmit = userRole ? canPerformActionV2('ISSUE', status, 'SUBMIT', userRole) : false;
+  const primaryAction = canPost ? 'POST' : canSubmit ? 'SUBMIT' : null;
 
   const handleScan = async (barcode: string) => {
 
@@ -524,6 +539,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       {
                         header: t('allocate'),
                         cell: (line: LineItem) => {
+                          const isTracked = isItemBatchTracked(line.item);
+                          if (!isTracked) {
+                            return (
+                              <div className="flex justify-center w-full">
+                                <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">—</span>
+                              </div>
+                            );
+                          }
                           const lineAllocations = line.lotAllocations || [];
                           const totalAllocated = lineAllocations.reduce((sum: number, a: LotAllocation) => sum + a.allocatedQty, 0);
                           const isFullyAllocated = totalAllocated >= line.qty;
@@ -672,12 +695,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         </DocumentLockWrapper>
 
         <FormFooter
-          isLocked={effectiveIsLocked}
+          isLocked={effectiveIsLocked && primaryAction === null}
           onCancel={() => guardedRouter.push('/issues')}
-          onSubmit={() => setIsPostDialogOpen(true)}
-          isPending={isPostPending}
-          submitLabel={t('post_issue')}
-          canSubmit={lines.length > 0 && !!destinationId}
+          onSubmit={primaryAction === 'POST' ? () => setIsPostDialogOpen(true) : handleSubmitIssue}
+          isPending={primaryAction === 'POST' ? isPostPending : submitIssue.isPending}
+          submitLabel={primaryAction === 'POST' ? t('post_issue') : t('submit_for_approval')}
+          canSubmit={primaryAction !== null && lines.length > 0 && !!destinationId}
           actions={
             <>
               {effectiveIsLocked && (
@@ -687,21 +710,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   status={status}
                   version={issue?.version || 1}
                 />
-              )}
-              {!effectiveIsLocked && !isNew && status === ISSUE_STATUS.DRAFT && (
-                <Button
-                  type="button"
-                  onClick={handleSubmitIssue}
-                  disabled={submitIssue.isPending}
-                  className="w-full md:w-auto flex items-center justify-center h-8 md:h-10 px-4 md:px-6 rounded-full transition-all bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] md:text-label-sm font-black uppercase tracking-widest shadow-sm shadow-cyan-900/30 active:scale-95 gap-2 shrink-0 border-none"
-                >
-                  {submitIssue.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4 md:w-5 md:h-5" />
-                  )}
-                  <span>{submitIssue.isPending ? t('submitting') || 'Submitting...' : t('submit') || 'Submit'}</span>
-                </Button>
               )}
               {!effectiveIsLocked && !isNew && status === ISSUE_STATUS.DRAFT && (
                 <Button

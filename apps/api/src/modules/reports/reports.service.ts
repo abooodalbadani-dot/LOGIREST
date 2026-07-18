@@ -1893,7 +1893,10 @@ export class ReportsService {
         },
       }),
       this.prisma.inventoryIssue.findMany({
-        where: { warehouseId },
+        where: {
+          warehouseId,
+          status: { in: ['DRAFT', 'SUBMITTED'] },
+        },
         include: {
           department: { select: { name: true } },
           lines: { select: { id: true } },
@@ -1904,8 +1907,8 @@ export class ReportsService {
       this.prisma.transfer.findMany({
         where: {
           OR: [
-            { fromWarehouseId: warehouseId },
-            { toWarehouseId: warehouseId },
+            { fromWarehouseId: warehouseId, status: { in: ['DRAFT', 'SUBMITTED'] } },
+            { toWarehouseId: warehouseId, status: 'IN_TRANSIT' },
           ],
         },
         include: {
@@ -1973,8 +1976,8 @@ export class ReportsService {
       this.prisma.inventoryIssue.findMany({
         where: {
           warehouseId,
-          status: 'POSTED',
           createdAt: { gte: startOfToday },
+          status: 'POSTED',
         },
         include: {
           lines: { select: { quantity: true } },
@@ -2049,7 +2052,7 @@ export class ReportsService {
       this.prisma.transfer.findMany({
         where: {
           OR: [
-            { fromWarehouseId: warehouseId, status: 'DRAFT' },
+            { fromWarehouseId: warehouseId, status: { in: ['DRAFT', 'SUBMITTED'] } },
             { toWarehouseId: warehouseId, status: 'IN_TRANSIT' },
           ],
         },

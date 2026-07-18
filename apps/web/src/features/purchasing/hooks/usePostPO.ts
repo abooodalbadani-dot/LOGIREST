@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
+import { invalidatePOQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 
 export function usePostPO(options?: { onConflict?: () => void, messages?: { successMessage?: string } }) {
  const queryClient = useQueryClient();
@@ -12,8 +13,8 @@ export function usePostPO(options?: { onConflict?: () => void, messages?: { succ
   mutationFn: ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) => 
    apiClient.post(`/procurement/purchase-orders/${id}/post`, successSchema, { version }, { signal }),
   onSuccess: (_, { id }) => {
-   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-   queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
+   invalidatePOQueries(queryClient, id);
+   invalidateInventoryQueries(queryClient);
    toast.success(options?.messages?.successMessage || 'Purchase order posted successfully');
   },
   onError: (error) => {

@@ -236,7 +236,7 @@ export class PurchaseOrderController {
       );
     }
     const po = await this.poService.create(
-      { supplierId, currencyId, prId, lines },
+      { supplierId, currencyId, prId, lines, isSubmitted: body.isSubmitted },
       userId,
     );
     return { data: mapPODetail(po) };

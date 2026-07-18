@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '../../database/prisma.service';
 import { EmailService } from './email.service';
-import { Role } from '@prisma/client';
+import { Role, DocumentType } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 import * as crypto from 'crypto';
 
@@ -151,6 +151,27 @@ export class OutboxWorker extends WorkerHost {
 
             throw new Error(result.error ?? 'SEND_FAILED');
           }
+          // 3b. Dispatch in-app NotificationLog entries for target roles
+          const targetRoles = this.resolveTargetRoles(event.eventType);
+          const data = (event.payload || {}) as OutboxPayload;
+          const docType = this.mapEventToDocType(event.eventType);
+
+          for (const role of targetRoles) {
+            try {
+              await this.prisma.notificationLog.create({
+                data: {
+                  targetRole: role,
+                  warehouseId: data.warehouseId || null,
+                  message: subject || `Notification: ${event.eventType}`,
+                  documentType: docType,
+                  documentId: data.id || data.issueId || null,
+                  isRead: false,
+                },
+              });
+            } catch (notifErr) {
+              this.logger.warn(`Failed to create NotificationLog for role ${role}: ${notifErr}`);
+            }
+          }
         }
 
         // 4. Mark success
@@ -235,7 +256,10 @@ export class OutboxWorker extends WorkerHost {
         targetRoles = [Role.ADMIN, Role.INV_MGR];
         break;
       case 'PR_SUBMITTED':
-        targetRoles = [Role.APPROVER];
+        targetRoles = [Role.APPROVER, Role.PROC_MGR];
+        break;
+      case 'PO_SUBMITTED':
+        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
         break;
       case 'PR_APPROVED':
       case 'PR_REJECTED': {
@@ -705,5 +729,42 @@ export class OutboxWorker extends WorkerHost {
     }
 
     return payload;
+  }
+
+  private resolveTargetRoles(eventType: string): Role[] {
+    switch (eventType) {
+      case 'SECURITY_ALERT_REPLAY_ATTACK':
+        return [Role.ADMIN];
+      case 'ISSUE_POSTED':
+        return [Role.ADMIN, Role.INV_MGR];
+      case 'PR_SUBMITTED':
+        return [Role.APPROVER, Role.PROC_MGR];
+      case 'PO_SUBMITTED':
+        return [Role.PROC_MGR, Role.APPROVER, Role.GM];
+      case 'GRN_POSTED':
+        return [Role.PROC_MGR, Role.APPROVER, Role.GM];
+      case 'LOW_STOCK_ALERT':
+        return [Role.INV_MGR, Role.PROC_MGR];
+      case 'ADJUSTMENT_POSTED':
+        return [Role.ADMIN, Role.GM, Role.INV_MGR];
+      case 'STOCKTAKE_POSTED':
+        return [Role.ADMIN, Role.GM];
+      case 'PO_APPROVED':
+        return [Role.PROC_MGR, Role.APPROVER, Role.GM];
+      default:
+        return [];
+    }
+  }
+
+  private mapEventToDocType(eventType: string): DocumentType | null {
+    if (eventType.startsWith('PR_')) return DocumentType.PURCHASE_REQUEST;
+    if (eventType.startsWith('PO_')) return DocumentType.PURCHASE_ORDER;
+    if (eventType.startsWith('GRN_')) return DocumentType.GOODS_RECEIVED_NOTE;
+    if (eventType.startsWith('ISSUE_')) return DocumentType.INVENTORY_ISSUE;
+    if (eventType.startsWith('TRANSFER_')) return DocumentType.TRANSFER;
+    if (eventType.startsWith('ADJUSTMENT_')) return DocumentType.ADJUSTMENT;
+    if (eventType.startsWith('KITCHEN_REQUEST_')) return DocumentType.KITCHEN_REQUEST;
+    if (eventType.startsWith('STOCKTAKE_')) return DocumentType.STOCKTAKE;
+    return null;
   }
 }

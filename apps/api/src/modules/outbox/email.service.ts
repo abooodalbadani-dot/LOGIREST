@@ -285,7 +285,8 @@ export class EmailService {
       return { ok: true };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      this.logger.error(`SMTP transmission failed: ${msg}`);
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`[EmailService] SMTP transmission failed to ${primaryRecipient}: ${msg}`, stack);
       return { ok: false, reason: 'SEND_FAILED', error: msg };
     }
   }

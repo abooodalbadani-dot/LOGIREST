@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
-import { Role } from '@logirest/shared-types';
+import { OutboxService } from '../../outbox/outbox.service';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType, Prisma, POStatus } from '@prisma/client';
+import { DocumentType, Prisma, POStatus, Role } from '@prisma/client';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -16,6 +16,7 @@ export class PurchaseOrderService {
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
     private readonly documentNumberService: DocumentNumberService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async create(
@@ -23,9 +24,11 @@ export class PurchaseOrderService {
       supplierId: string;
       currencyId: string;
       prId?: string;
+      isSubmitted?: boolean;
       lines: Array<{ itemId: string; quantity: number; unitPrice: number }>;
     },
     userId: string,
+    userRole: Role = Role.PROC_OFFICER,
   ) {
     return this.prisma.$transaction(async (tx) => {
       let branchId: string | undefined;
@@ -79,13 +82,17 @@ export class PurchaseOrderService {
         branchId,
       );
 
-      return tx.purchaseOrder.create({
+      const status: POStatus = body.isSubmitted
+        ? POStatus.PENDING_APPROVAL
+        : POStatus.DRAFT;
+
+      const po = await tx.purchaseOrder.create({
         data: {
           poNumber,
           prId: body.prId || null,
           supplierId: body.supplierId,
           currencyId: body.currencyId,
-          status: 'DRAFT',
+          status,
           lines: {
             create: body.lines.map((line) => ({
               itemId: line.itemId,
@@ -115,6 +122,29 @@ export class PurchaseOrderService {
           },
         },
       });
+
+      if (body.isSubmitted) {
+        await tx.approvalEvent.create({
+          data: {
+            documentId: po.id,
+            documentType: DocumentType.PURCHASE_ORDER,
+            fromStatus: POStatus.DRAFT,
+            toStatus: POStatus.PENDING_APPROVAL,
+            actionPerformed: 'SUBMIT',
+            userId,
+            userRole,
+            stepNumber: 1,
+          },
+        });
+
+        await this.outboxService.writeEvent(tx, 'PO_SUBMITTED', {
+          id: po.id,
+          documentNumber: po.poNumber,
+          supplierId: po.supplierId,
+        });
+      }
+
+      return po;
     });
   }
 

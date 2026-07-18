@@ -5,10 +5,14 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { StockIssueDetailSchema } from './useIssue';
+import { invalidateIssueQueries, invalidateKitchenRequestQueries } from '@/lib/react-query/invalidation';
 
 export const CreateIssueLineAllocationSchema = z.object({
+ lotId: z.string().optional(),
  lotNumber: z.string(),
- allocatedQty: z.number(),
+ expiryDate: z.string().optional().nullable(),
+ allocatedQty: z.number().optional(),
+ quantityAllocated: z.number().optional(),
 });
 
 export const CreateIssueLineSchema = z.object({
@@ -40,8 +44,9 @@ export function useCreateIssue(options?: { onConflict?: () => void }) {
     CreateIssuePayloadSchema.parse(data),
     { signal }
    ),
-  onSuccess: () => {
-   queryClient.invalidateQueries({ queryKey: ['issues'] });
+  onSuccess: (data: { id: string }) => {
+   invalidateIssueQueries(queryClient, data?.id);
+   invalidateKitchenRequestQueries(queryClient);
   },
   onError: (error: unknown) => {
    const message = error instanceof Error ? error.message : 'Operation failed';

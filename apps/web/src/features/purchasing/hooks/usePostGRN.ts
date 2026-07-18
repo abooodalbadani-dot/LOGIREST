@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
+import { invalidateGRNQueries, invalidatePOQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 
 export function usePostGRN(options?: { 
   onConflict?: () => void; 
@@ -18,9 +19,9 @@ export function usePostGRN(options?: {
   mutationFn: ({ signal, id, version, ...data }: { id: string; version: number; signal?: AbortSignal }) => 
    apiClient.post(`/procurement/grns/${id}/post`, successSchema, { version, ...data }, { signal }),
   onSuccess: (_, { id }) => {
-   queryClient.invalidateQueries({ queryKey: ['grns'] });
-   queryClient.invalidateQueries({ queryKey: ['grn', id] });
-   queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
+   invalidateGRNQueries(queryClient, id);
+   invalidatePOQueries(queryClient);
+   invalidateInventoryQueries(queryClient);
    if (!options?.skipAutoToast) {
     toast.success(options?.messages?.successMessage || 'Goods received note posted successfully');
    }

@@ -15,7 +15,7 @@ export function useNotifications() {
     return [];
    }
   },
-  refetchInterval: 30000, // Poll every 30 seconds
+  refetchInterval: 10000, // Poll every 10 seconds for reactive bell updates
  });
 }
 

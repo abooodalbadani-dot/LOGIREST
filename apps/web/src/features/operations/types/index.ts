@@ -1,6 +1,7 @@
 import { IssueStatus } from '@logirest/shared-types';
 
 export interface IssueLot {
+ lotId?: string;
  lotNumber: string;
  expiryDate: string;
  allocatedQty: number;

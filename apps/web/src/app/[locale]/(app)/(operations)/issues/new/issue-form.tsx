@@ -36,7 +36,7 @@ import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useDepartments } from "@/features/departments/hooks/useDepartments";
 import { useItems } from "@/features/items/hooks/useItems";
 import { useLotsByItem } from "@/features/operations/hooks/useLotsByItem";
-import { type Item } from "@/features/items/types";
+import { type Item, isItemBatchTracked } from "@/types/master-data";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { toast } from "sonner";
@@ -240,6 +240,18 @@ export function IssueForm() {
     {
       header: t('fulfillment_status'),
       cell: (line: CustomLineItem) => {
+        const isTracked = isItemBatchTracked(line.selectedItem);
+        if (!isTracked) {
+          return (
+            <div className="flex justify-center w-full">
+              <div className="h-8 px-3 rounded flex items-center justify-between gap-2 transition-all duration-300 font-mono text-[11px] font-bold w-full md:w-auto bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                <span>N/A (NON-TRACKED)</span>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </div>
+            </div>
+          );
+        }
+
         const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
         return (
           <div className="flex justify-center w-full">
@@ -259,6 +271,15 @@ export function IssueForm() {
     {
       header: tc('table_headers.actions') || 'Allocate',
       cell: (line: CustomLineItem) => {
+        const isTracked = isItemBatchTracked(line.selectedItem);
+        if (!isTracked) {
+          return (
+            <div className="flex justify-center w-full">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/40 italic py-1.5">—</span>
+            </div>
+          );
+        }
+
         const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
         const hasSelection = !!line.item.id;
         return (
@@ -329,9 +350,13 @@ export function IssueForm() {
     });
   };
 
-  const allLinesAllocated = fields.length > 0 && fields.every(
-    (f) => (f.qty ?? 0) >= (f.requestedQty ?? 0)
-  );
+  const isLineFulfilled = React.useCallback((f: { itemId: string; qty?: number; requestedQty?: number }) => {
+    const selectedItem = items?.find(i => i.id === f.itemId);
+    if (!isItemBatchTracked(selectedItem)) return true;
+    return (f.qty ?? 0) >= (f.requestedQty ?? 0);
+  }, [items]);
+
+  const allLinesAllocated = fields.length > 0 && fields.every(isLineFulfilled);
 
   const handleScan = (barcode: string) => {
     const matchedItem = items?.find(i => i.barcode === barcode || i.code === barcode);
@@ -362,14 +387,16 @@ export function IssueForm() {
         requestedQty: line.requestedQty,
         notes: line.notes,
         lotAllocations: line.lotAllocations.map(lot => ({
+          lotId: lot.lotId,
           lotNumber: lot.lotNumber,
+          expiryDate: lot.expiryDate,
           allocatedQty: lot.allocatedQty,
         })),
       })),
       kitchenRequestId: selectedKitchenRequestId || undefined,
     };
     createIssue.mutate(payload, {
-      onSuccess: (issue) => {
+      onSuccess: (issue: { id: string }) => {
         playSound('success');
         router.push(`/issues/${issue.id}`, { skipGuard: true });
       },
@@ -606,7 +633,7 @@ export function IssueForm() {
             <div>
               <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
               <div className="text-title-lg font-bold text-foreground">
-                {currentFields.filter(f => (f.qty ?? 0) >= (f.requestedQty ?? 0)).length} / {currentFields.length} {t('protocol_validations')}
+                {currentFields.filter(isLineFulfilled).length} / {currentFields.length} {t('protocol_validations')}
               </div>
             </div>
           </div>

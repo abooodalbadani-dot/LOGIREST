@@ -16,7 +16,49 @@ export interface Department {
 export interface UoM { id: string; code: string; name: string; version?: number; }
 export interface UoMConversion { fromUomId: string; toUomId: string; factor: number; }
 export interface Category { id: string; code: string; name: string; isReferenced?: boolean; version?: number; }
-export interface Item { id: string; code: string; barcode: string; name: string; categoryId: string; primaryUom: UoM; uomConversions: UoMConversion[]; trackLots: boolean; minStockLevel: number; reorderPoint: number; lastPurchasePrice?: number; isActive: boolean; version?: number; hasTransactions?: boolean; category?: Category | null; image?: string | null; imageUrl?: string | null; }
+export interface Item {
+  id: string;
+  code: string;
+  barcode: string;
+  name: string;
+  categoryId: string;
+  primaryUom: UoM;
+  uomConversions: UoMConversion[];
+  trackLots?: boolean;
+  track_lots?: boolean;
+  isBatched?: boolean;
+  is_batched?: boolean;
+  hasExpiry?: boolean;
+  has_expiry?: boolean;
+  isBatchTracked?: boolean;
+  is_batch_tracked?: boolean;
+  minStockLevel?: number;
+  reorderPoint?: number;
+  lastPurchasePrice?: number;
+  isActive: boolean;
+  version?: number;
+  hasTransactions?: boolean;
+  category?: Category | null;
+  image?: string | null;
+  imageUrl?: string | null;
+}
+
+export function isItemBatchTracked(item?: unknown): boolean {
+  if (!item || typeof item !== 'object') return false;
+  const raw = item as Record<string, unknown>;
+  if (typeof raw.isBatchTracked === 'boolean') return raw.isBatchTracked;
+  if (typeof raw.is_batch_tracked === 'boolean') return raw.is_batch_tracked;
+  if (typeof raw.isBatched === 'boolean' || typeof raw.hasExpiry === 'boolean') {
+    return Boolean(raw.isBatched || raw.hasExpiry);
+  }
+  if (typeof raw.is_batched === 'boolean' || typeof raw.has_expiry === 'boolean') {
+    return Boolean(raw.is_batched || raw.has_expiry);
+  }
+  if (typeof raw.trackLots === 'boolean') return raw.trackLots;
+  if (typeof raw.track_lots === 'boolean') return raw.track_lots;
+  return false;
+}
+
 export interface Lot { id: string; itemId: string; warehouseId: string; lotNumber: string; expiryDate: string | null; qtyAvailable: number; isExpired: boolean; isNearExpiry: boolean; }
 export interface Supplier { id: string; code: string; name: string; contactEmail?: string | null; contactPhone?: string | null; contactName?: string | null; currencyId: string; paymentTerms: string; isActive: boolean; version?: number; }
 export interface Currency { id: string; code: string; name: string; symbol?: string | null; isBase: boolean; isActive: boolean; createdAt: string; version?: number; }
@@ -65,8 +107,16 @@ export const ItemSchema = z.object({
   categoryId: z.string(),
   category: CategorySchema.optional().nullable(),
   primaryUom: UoMSchema,
-  uomConversions: z.array(UoMConversionSchema),
-  trackLots: z.boolean(), minStockLevel: z.number(), reorderPoint: z.number(),
+  uomConversions: z.array(UoMConversionSchema).optional().default([]),
+  trackLots: z.boolean().optional().default(false),
+  track_lots: z.boolean().optional(),
+  isBatched: z.boolean().optional(),
+  is_batched: z.boolean().optional(),
+  hasExpiry: z.boolean().optional(),
+  has_expiry: z.boolean().optional(),
+  isBatchTracked: z.boolean().optional(),
+  is_batch_tracked: z.boolean().optional(),
+  minStockLevel: z.number().optional().default(0), reorderPoint: z.number().optional().default(0),
   lastPurchasePrice: z.number().optional(),
   isActive: z.boolean(),
   version: z.number().optional(),

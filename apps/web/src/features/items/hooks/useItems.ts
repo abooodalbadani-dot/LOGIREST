@@ -52,6 +52,8 @@ export function useCreateItem() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+            queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
             toast.success(t('created_success'));
         },
         onError: (error) => {
@@ -77,6 +79,8 @@ export function useUpdateItem(options?: { onConflict?: () => void }) {
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+            queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
             queryClient.setQueryData([...QUERY_KEY, data.id], data);
             toast.success(t('updated_success'));
         },
@@ -105,6 +109,8 @@ export function useDeleteItem() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+            queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
             toast.success(t('deleted_success'));
         },
         onError: (error: unknown) => {

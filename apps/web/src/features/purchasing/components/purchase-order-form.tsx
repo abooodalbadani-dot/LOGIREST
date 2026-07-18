@@ -228,7 +228,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   );
 
 
-  async function onSubmit(values: PurchaseOrderFormValues) {
+  async function handleSavePO(values: PurchaseOrderFormValues, isSubmitted = false) {
     try {
       if (mode === "edit" && initialData) {
         await updateMutation.mutateAsync({
@@ -244,9 +244,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           toast.error(t('errors.no_currencies_available'));
           return;
         }
-        const result = await createMutation.mutateAsync({ payload: values });
+        const result = await createMutation.mutateAsync({ payload: { ...values, isSubmitted } });
         playSound('success');
-        toast.success(t("submit_success"));
+        toast.success(isSubmitted ? (t("submit_success") || "Purchase order submitted for approval") : (t("draft_success") || "Draft saved successfully"));
         router.push('/purchase-orders', { skipGuard: true });
       }
     } catch (error) {
@@ -477,7 +477,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-0 w-full min-h-screen flex flex-col pb-32">
+      <form onSubmit={mode === "edit" ? form.handleSubmit((v) => handleSavePO(v, false), onFormError) : form.handleSubmit((v) => handleSavePO(v, true), onFormError)} className="space-y-0 w-full min-h-screen flex flex-col pb-32">
         <DocumentLockBanner isLocked={isLocked} status={status} />
 
         <div className="px-0 sm:px-6 md:px-8 pt-0 sm:pt-6 md:pt-8 max-w-6xl mx-auto w-full">
@@ -801,10 +801,25 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           isLocked={isLocked}
           onCancel={() => router.push('/purchase-orders', { skipGuard: !form.formState.isDirty })}
           cancelLabel={isSaved ? tc('back') || 'BACK' : tc('cancel') || 'CANCEL'}
-          onSubmit={form.handleSubmit(onSubmit, onFormError)}
+          onSubmit={mode === "edit"
+            ? form.handleSubmit((values) => handleSavePO(values, false), onFormError)
+            : form.handleSubmit((values) => handleSavePO(values, true), onFormError)
+          }
           isPending={isSubmitting}
-          submitLabel={mode === "edit" ? tc('save') : t('actions.submit')}
-          actions={actions}
+          submitLabel={mode === "edit" ? tc('save') : (t('actions.submit_po') || t('actions.submit') || 'Submit Purchase Order')}
+          actions={
+            mode === "create" && !isLocked ? (
+              <Button
+                type="button"
+                onClick={form.handleSubmit((values) => handleSavePO(values, false), onFormError)}
+                disabled={!form.formState.isDirty || !form.formState.isValid || isSubmitting}
+                variant="outline"
+                className="w-full md:w-auto h-12 md:h-10 border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 px-6 font-semibold"
+              >
+                {t('actions.save_draft') || 'Save as Draft'}
+              </Button>
+            ) : actions
+          }
         />
       </form>
     </Form>

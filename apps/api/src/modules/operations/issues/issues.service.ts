@@ -19,7 +19,15 @@ export class IssuesService {
   async create(
     body: {
       departmentId: string;
-      lines: Array<{ itemId: string; quantity: number }>;
+      lines: Array<{
+        itemId: string;
+        quantity: number;
+        lotAllocations?: Array<{
+          lotId?: string;
+          lotNumber?: string;
+          quantityAllocated: number;
+        }>;
+      }>;
       kitchenRequestId?: string;
       notes?: string;
     },
@@ -67,6 +75,49 @@ export class IssuesService {
           warehouse.branchId,
         );
 
+        const linesToCreate = await Promise.all(
+          body.lines.map(async (line) => {
+            const allocationsToCreate: Array<{
+              lotId: string;
+              quantityAllocated: number;
+            }> = [];
+
+            if (line.lotAllocations && line.lotAllocations.length > 0) {
+              for (const alloc of line.lotAllocations) {
+                let lotId = alloc.lotId;
+                if (!lotId && alloc.lotNumber) {
+                  const lot = await tx.lot.findFirst({
+                    where: {
+                      itemId: line.itemId,
+                      lotNumber: alloc.lotNumber,
+                    },
+                    select: { id: true },
+                  });
+                  if (lot) {
+                    lotId = lot.id;
+                  }
+                }
+                if (lotId) {
+                  allocationsToCreate.push({
+                    lotId,
+                    quantityAllocated: alloc.quantityAllocated,
+                  });
+                }
+              }
+            }
+
+            return {
+              itemId: line.itemId,
+              quantity: line.quantity,
+              ...(allocationsToCreate.length > 0 && {
+                lotAllocations: {
+                  create: allocationsToCreate,
+                },
+              }),
+            };
+          }),
+        );
+
         return tx.inventoryIssue.create({
           data: {
             issueNumber,
@@ -75,10 +126,7 @@ export class IssuesService {
             status: 'DRAFT',
             notes: body.notes,
             lines: {
-              create: body.lines.map((line) => ({
-                itemId: line.itemId,
-                quantity: line.quantity,
-              })),
+              create: linesToCreate,
             },
             kitchenRequest: body.kitchenRequestId
               ? { connect: { id: body.kitchenRequestId } }

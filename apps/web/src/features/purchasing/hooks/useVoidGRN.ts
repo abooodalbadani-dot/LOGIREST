@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { invalidateGRNQueries, invalidatePOQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 
 interface VoidGRNPayload {
   version: number;
@@ -30,8 +31,9 @@ export function useVoidGRN(grnId: string) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grn', grnId] });
-      queryClient.invalidateQueries({ queryKey: ['grns'] });
+      invalidateGRNQueries(queryClient, grnId);
+      invalidatePOQueries(queryClient);
+      invalidateInventoryQueries(queryClient);
     },
   });
 }

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PurchaseOrderService } from './po.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
+import { OutboxService } from '../../outbox/outbox.service';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { NotFoundException } from '@nestjs/common';
 import { Role } from '@logirest/shared-types';
@@ -24,6 +25,10 @@ describe('PurchaseOrderService', () => {
     branch: {
       findFirst: jest.fn(),
     },
+    approvalEvent: {
+      create: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     $transaction: jest
       .fn()
       .mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
@@ -33,6 +38,10 @@ describe('PurchaseOrderService', () => {
 
   const mockWorkflowService = {
     executeTransition: jest.fn(),
+  };
+
+  const mockOutboxService = {
+    writeEvent: jest.fn(),
   };
 
   const mockDocumentNumberService = {
@@ -47,6 +56,7 @@ describe('PurchaseOrderService', () => {
         PurchaseOrderService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        { provide: OutboxService, useValue: mockOutboxService },
         {
           provide: DocumentNumberService,
           useValue: mockDocumentNumberService,
@@ -62,11 +72,12 @@ describe('PurchaseOrderService', () => {
   });
 
   describe('create', () => {
-    it('should create a Purchase Order with lines', async () => {
+    it('should create a Purchase Order with lines in DRAFT status when isSubmitted is false', async () => {
       const body = {
         supplierId: 'supplier-1',
         currencyId: 'currency-1',
         prId: 'pr-1',
+        isSubmitted: false,
         lines: [{ itemId: 'item-1', quantity: 10, unitPrice: 5.5 }],
       };
 
@@ -78,16 +89,72 @@ describe('PurchaseOrderService', () => {
 
       mockPrisma.purchaseOrder.create.mockResolvedValue({
         id: 'po-1',
+        poNumber: 'PO-SEQ-00001',
+        status: 'DRAFT',
         ...body,
       });
 
       const result = await service.create(body, 'user-1');
       expect(result).toHaveProperty('id');
-      expect(mockPrisma.purchaseRequest.update).toHaveBeenCalledWith({
-        where: { id: 'pr-1' },
-        data: { status: 'FULFILLED' },
+      expect(mockPrisma.purchaseOrder.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'DRAFT',
+          }),
+        }),
+      );
+      expect(mockOutboxService.writeEvent).not.toHaveBeenCalled();
+    });
+
+    it('should create a Purchase Order in PENDING_APPROVAL status and dispatch PO_SUBMITTED outbox event when isSubmitted is true', async () => {
+      const body = {
+        supplierId: 'supplier-1',
+        currencyId: 'currency-1',
+        prId: 'pr-1',
+        isSubmitted: true,
+        lines: [{ itemId: 'item-1', quantity: 10, unitPrice: 5.5 }],
+      };
+
+      mockPrisma.purchaseRequest.findUnique.mockResolvedValue({
+        branchId: 'branch-1',
+        status: 'APPROVED',
       });
-      expect(mockPrisma.purchaseOrder.create).toHaveBeenCalled();
+      mockPrisma.purchaseOrder.findFirst.mockResolvedValue(null);
+
+      mockPrisma.purchaseOrder.create.mockResolvedValue({
+        id: 'po-1',
+        poNumber: 'PO-SEQ-00001',
+        ...body,
+        status: 'PENDING_APPROVAL',
+      });
+
+      const result = await service.create(body, 'user-1');
+      expect(result).toHaveProperty('id');
+      expect(mockPrisma.purchaseOrder.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'PENDING_APPROVAL',
+          }),
+        }),
+      );
+      expect(mockPrisma.approvalEvent.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            documentId: 'po-1',
+            toStatus: 'PENDING_APPROVAL',
+            actionPerformed: 'SUBMIT',
+          }),
+        }),
+      );
+      expect(mockOutboxService.writeEvent).toHaveBeenCalledWith(
+        mockPrisma,
+        'PO_SUBMITTED',
+        expect.objectContaining({
+          id: 'po-1',
+          documentNumber: 'PO-SEQ-00001',
+          supplierId: 'supplier-1',
+        }),
+      );
     });
   });
 
@@ -105,7 +172,7 @@ describe('PurchaseOrderService', () => {
       mockPrisma.purchaseOrder.findUnique.mockResolvedValue(po);
 
       const result = await service.findOne('po-1');
-      expect(result).toEqual(po);
+      expect(result).toEqual({ ...po, approvalEvents: [] });
     });
   });
 
@@ -129,7 +196,7 @@ describe('PurchaseOrderService', () => {
       });
 
       const result = await service.submit('po-1', userId, role, body);
-      expect(result).toEqual({ id: 'po-1', status: 'SUBMITTED' });
+      expect(result).toEqual({ id: 'po-1', status: 'SUBMITTED', approvalEvents: [] });
       expect(mockWorkflowService.executeTransition).toHaveBeenCalledWith(
         'po-1',
         'purchaseOrder',
@@ -153,7 +220,7 @@ describe('PurchaseOrderService', () => {
       });
 
       const result = await service.approve('po-1', userId, role, body);
-      expect(result).toEqual({ id: 'po-1', status: 'APPROVED' });
+      expect(result).toEqual({ id: 'po-1', status: 'APPROVED', approvalEvents: [] });
     });
 
     it('should call executeTransition for reject', async () => {
@@ -167,7 +234,7 @@ describe('PurchaseOrderService', () => {
       });
 
       const result = await service.reject('po-1', userId, role, body);
-      expect(result).toEqual({ id: 'po-1', status: 'REJECTED' });
+      expect(result).toEqual({ id: 'po-1', status: 'REJECTED', approvalEvents: [] });
     });
 
     it('should call executeTransition for cancel', async () => {
@@ -181,7 +248,7 @@ describe('PurchaseOrderService', () => {
       });
 
       const result = await service.cancel('po-1', userId, role, body);
-      expect(result).toEqual({ id: 'po-1', status: 'CANCELLED' });
+      expect(result).toEqual({ id: 'po-1', status: 'CANCELLED', approvalEvents: [] });
     });
   });
 });

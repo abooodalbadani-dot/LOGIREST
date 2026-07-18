@@ -745,12 +745,22 @@ export function DocumentLineItemTable<T extends LineItem>({
                         {!hideLotColumns && (
                           <>
                             <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
-                              {line.lot ? <span dir="ltr">{line.lot.lotNumber}</span> : <span className="opacity-20">—</span>}
+                              {line.lot ? (
+                                <span dir="ltr">{line.lot.lotNumber}</span>
+                              ) : line.lotAllocations?.[0]?.lotNumber ? (
+                                <span dir="ltr">{line.lotAllocations[0].lotNumber}</span>
+                              ) : (
+                                <span className="opacity-20">—</span>
+                              )}
                             </td>
                             <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
-                              {line.lot?.expiryDate
-                                ? <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
-                                : <span className="opacity-20">—</span>}
+                              {line.lot?.expiryDate ? (
+                                <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
+                              ) : line.lotAllocations?.[0]?.expiryDate ? (
+                                <span dir="ltr">{formatDate(line.lotAllocations[0].expiryDate, locale as 'ar' | 'en')}</span>
+                              ) : (
+                                <span className="opacity-20">—</span>
+                              )}
                             </td>
                           </>
                         )}

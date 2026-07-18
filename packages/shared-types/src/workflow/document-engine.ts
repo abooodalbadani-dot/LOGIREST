@@ -57,11 +57,11 @@ const workflowMap: Record<BaseDocumentType, {
     locked: [PR_STATUS.SUBMITTED, PR_STATUS.APPROVED, PR_STATUS.CANCELLED, PR_STATUS.FULFILLED]
   },
   'po': {
-    pending: [PO_STATUS.DRAFT, PO_STATUS.SUBMITTED, PO_STATUS.REJECTED],
+    pending: [PO_STATUS.DRAFT, PO_STATUS.SUBMITTED, PO_STATUS.PENDING_APPROVAL, PO_STATUS.REJECTED],
     completed: [PO_STATUS.APPROVED, PO_STATUS.FULFILLED, PO_STATUS.PARTIAL, PO_STATUS.CANCELLED],
     approved: [PO_STATUS.APPROVED],
     posted: [],
-    locked: [PO_STATUS.SUBMITTED, PO_STATUS.APPROVED, PO_STATUS.FULFILLED, PO_STATUS.PARTIAL, PO_STATUS.CANCELLED]
+    locked: [PO_STATUS.SUBMITTED, PO_STATUS.PENDING_APPROVAL, PO_STATUS.APPROVED, PO_STATUS.FULFILLED, PO_STATUS.PARTIAL, PO_STATUS.CANCELLED]
   },
     'grn': {
     pending: [GRN_STATUS.DRAFT],
@@ -137,11 +137,15 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
   },
   'po': {
     [PO_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: PO_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },
+      'SUBMIT': { targetStatus: PO_STATUS.PENDING_APPROVAL, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },
       'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },
       'CANCEL': { targetStatus: PO_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },
     },
     [PO_STATUS.SUBMITTED]: {
+      'APPROVE': { targetStatus: PO_STATUS.APPROVED, allowedRoles: ['ADMIN', 'GM', 'APPROVER', 'BRANCH_MGR', 'PROC_MGR'] },
+      'REJECT': { targetStatus: PO_STATUS.REJECTED, allowedRoles: ['ADMIN', 'GM', 'APPROVER', 'BRANCH_MGR', 'PROC_MGR'] },
+    },
+    [PO_STATUS.PENDING_APPROVAL]: {
       'APPROVE': { targetStatus: PO_STATUS.APPROVED, allowedRoles: ['ADMIN', 'GM', 'APPROVER', 'BRANCH_MGR', 'PROC_MGR'] },
       'REJECT': { targetStatus: PO_STATUS.REJECTED, allowedRoles: ['ADMIN', 'GM', 'APPROVER', 'BRANCH_MGR', 'PROC_MGR'] },
     },
@@ -296,6 +300,11 @@ export function canPerformActionV2(
   const rule = statusTransitions[action];
   if (!rule) {
     return false; // Action not allowed in this status → locked
+  }
+
+  // System Administrator explicit workflow bypass
+  if (role === 'ADMIN') {
+    return true;
   }
 
   // 2. Then check if the user's role has the capability

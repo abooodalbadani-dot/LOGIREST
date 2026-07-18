@@ -234,6 +234,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
     });
 
     it('should call ship', async () => {
+      mockTransfersService.findOne.mockResolvedValue({
+        id: 'tr-1',
+        status: 'IN_TRANSIT',
+        fromWarehouseId: 'wh-1',
+        toWarehouseId: 'wh-2',
+      });
       mockTransferPostService.ship.mockResolvedValue({
         id: 'tr-1',
         status: 'IN_TRANSIT',
@@ -251,6 +257,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
     });
 
     it('should call receive', async () => {
+      mockTransfersService.findOne.mockResolvedValue({
+        id: 'tr-1',
+        status: 'RECEIVED',
+        fromWarehouseId: 'wh-1',
+        toWarehouseId: 'wh-2',
+      });
       mockTransferPostService.receive.mockResolvedValue({
         id: 'tr-1',
         status: 'RECEIVED',

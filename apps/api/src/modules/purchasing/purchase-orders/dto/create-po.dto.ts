@@ -2,6 +2,7 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
+  IsBoolean,
   IsNumber,
   Min,
   ValidateNested,
@@ -36,6 +37,10 @@ export class CreatePoDto {
   @IsString()
   @IsOptional()
   prId?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isSubmitted?: boolean;
 
   @IsArray()
   @ValidateNested({ each: true })

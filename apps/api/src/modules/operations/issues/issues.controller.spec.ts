@@ -92,4 +92,82 @@ describe('IssuesController', () => {
       ).rejects.toThrow(ForbiddenException);
     });
   });
+
+  describe('create', () => {
+    it('should forward lotAllocations to issuesService.create', async () => {
+      mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
+      mockIssuesService.create.mockResolvedValue({
+        id: 'issue-1',
+        issueNumber: 'ISS-001',
+        warehouseId: 'wh-1',
+        departmentId: 'dept-1',
+        status: 'DRAFT',
+        lines: [
+          {
+            id: 'line-1',
+            issueId: 'issue-1',
+            itemId: 'item-1',
+            quantity: 10,
+            lotAllocations: [
+              {
+                lotId: 'lot-1',
+                lot: { lotNumber: 'LOT-100', expiryDate: new Date() },
+                quantityAllocated: 10,
+              },
+            ],
+          },
+        ],
+        createdAt: new Date(),
+      });
+
+      const body = {
+        warehouseId: 'wh-1',
+        destinationDeptId: 'dept-1',
+        lines: [
+          {
+            itemId: 'item-1',
+            requestedQty: 10,
+            lotAllocations: [
+              {
+                lotId: 'lot-1',
+                lotNumber: 'LOT-100',
+                allocatedQty: 10,
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await controller.create(
+        body,
+        'user-1',
+        Role.WH_KEEPER,
+        'wh-1',
+      );
+
+      expect(result).toBeDefined();
+      expect(mockIssuesService.create).toHaveBeenCalledWith(
+        {
+          departmentId: 'dept-1',
+          lines: [
+            {
+              itemId: 'item-1',
+              quantity: 10,
+              lotAllocations: [
+                {
+                  lotId: 'lot-1',
+                  lotNumber: 'LOT-100',
+                  quantityAllocated: 10,
+                },
+              ],
+            },
+          ],
+          kitchenRequestId: undefined,
+          notes: undefined,
+        },
+        'user-1',
+        'wh-1',
+      );
+    });
+  });
 });

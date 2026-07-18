@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
+import { invalidateIssueQueries, invalidateKitchenRequestQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 
 export function useVoidIssue(issueId: string, options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
@@ -12,8 +13,9 @@ export function useVoidIssue(issueId: string, options?: { onConflict?: () => voi
     mutationFn: ({ version, signal, headers }: { version: number; signal?: AbortSignal; headers?: Record<string, string> }) =>
       apiClient.post(`/operations/issues/${issueId}/void`, successSchema, { version }, { signal, headers, isRetry: true }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['issues'] });
-      queryClient.invalidateQueries({ queryKey: ['issues', issueId] });
+      invalidateIssueQueries(queryClient, issueId);
+      invalidateKitchenRequestQueries(queryClient);
+      invalidateInventoryQueries(queryClient);
       toast.success('Issue voided successfully');
     },
     onError: (error) => {

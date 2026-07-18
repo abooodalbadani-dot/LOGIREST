@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
+import { invalidateTransferQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
 import { z } from 'zod';
 
 const ReceiveLineSchema = z.object({
@@ -26,9 +27,8 @@ export function useReceiveTransfer(options?: { onConflict?: () => void }) {
   mutationFn: ({ id, body, signal, headers }: { id: string; body: ReceivePayload; signal?: AbortSignal; headers?: Record<string, string> }) =>
    apiClient.post(`/operations/transfers/${id}/receive`, successSchema, ReceivePayloadSchema.parse(body), { signal, headers, isRetry: true }),
   onSuccess: (_, { id }) => {
-   queryClient.invalidateQueries({ queryKey: ['transfers'] });
-   queryClient.invalidateQueries({ queryKey: ['transfers', id] });
-   queryClient.invalidateQueries({ queryKey: ['transfers', 'summary'] });
+   invalidateTransferQueries(queryClient, id);
+   invalidateInventoryQueries(queryClient);
   },
   onError: (error) => {
    console.error('Failed to receive transfer:', error);

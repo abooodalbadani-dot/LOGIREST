@@ -22,6 +22,7 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   POSTED: { variant: 'success', labelKey: 'statuses.posted' },
   CANCELLED: { variant: 'error', labelKey: 'statuses.cancelled' },
   SUBMITTED: { variant: 'info', labelKey: 'statuses.submitted' },
+  PENDING_APPROVAL: { variant: 'warning', labelKey: 'statuses.pending_approval' },
   APPROVED: { variant: 'info', labelKey: 'statuses.approved' },
   REJECTED: { variant: 'error', labelKey: 'statuses.rejected' },
   PENDING: { variant: 'warning', labelKey: 'statuses.pending' },

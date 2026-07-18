@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
+import { invalidateAdjustmentQueries, invalidateInventoryQueries } from '@/lib/react-query/invalidation';
  
 import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { AdjustmentDetail } from './useAdjustment';
@@ -30,9 +31,8 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
      ]
     };
    });
-   queryClient.invalidateQueries({ queryKey: ['adjustments'] });
-   queryClient.invalidateQueries({ queryKey: ['adjustments', id] });
-   queryClient.invalidateQueries({ queryKey: ['adjustments', 'summary'] });
+   invalidateAdjustmentQueries(queryClient, id);
+   invalidateInventoryQueries(queryClient);
   }
  });
 }
