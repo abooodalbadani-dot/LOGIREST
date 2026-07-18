@@ -85,12 +85,30 @@ function mapPODetail(po: Record<string, unknown>) {
     0,
   );
 
+  const events =
+    (po.approvalEvents as Array<Record<string, unknown>>) || [];
+  const lastEvent = events.length > 0 ? events[events.length - 1] : null;
+
   const createdAtIso = po.createdAt
     ? (po.createdAt instanceof Date
         ? po.createdAt
         : new Date(po.createdAt as string)
       ).toISOString()
     : new Date().toISOString();
+
+  const updatedAtIso = lastEvent?.createdAt
+    ? (lastEvent.createdAt instanceof Date
+        ? lastEvent.createdAt
+        : new Date(lastEvent.createdAt as string)
+      ).toISOString()
+    : createdAtIso;
+
+  const firstUser = events.find(
+    (e) => e.user && (e.user as Record<string, unknown>).name,
+  );
+  const createdBy = firstUser
+    ? ((firstUser.user as Record<string, unknown>).name as string)
+    : 'System';
 
   return {
     id: po.id as string,
@@ -114,8 +132,8 @@ function mapPODetail(po: Record<string, unknown>) {
     notes: '',
     auditLog: [],
     createdAt: createdAtIso,
-    createdBy: 'System',
-    updatedAt: createdAtIso,
+    createdBy,
+    updatedAt: updatedAtIso,
   };
 }
 

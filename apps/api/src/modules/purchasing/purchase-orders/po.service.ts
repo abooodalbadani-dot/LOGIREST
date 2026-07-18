@@ -182,8 +182,37 @@ export class PurchaseOrderService {
       this.prisma.purchaseOrder.count({ where }),
     ]);
 
+    const poIds = items.map((p) => p.id);
+    const approvalEvents =
+      poIds.length > 0
+        ? await this.prisma.approvalEvent.findMany({
+            where: {
+              documentId: { in: poIds },
+              documentType: DocumentType.PURCHASE_ORDER,
+            },
+            include: { user: { select: { id: true, name: true, role: true } } },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [];
+
+    const eventsByDocId = new Map<string, typeof approvalEvents>();
+    for (const ev of approvalEvents) {
+      if (!eventsByDocId.has(ev.documentId)) {
+        eventsByDocId.set(ev.documentId, []);
+      }
+      const existing = eventsByDocId.get(ev.documentId);
+      if (existing) {
+        existing.push(ev);
+      }
+    }
+
+    const itemsWithEvents = items.map((p) => ({
+      ...p,
+      approvalEvents: eventsByDocId.get(p.id) || [],
+    }));
+
     return {
-      data: items,
+      data: itemsWithEvents,
       meta: {
         total,
         page,
@@ -222,7 +251,16 @@ export class PurchaseOrderService {
       throw new NotFoundException(`Purchase Order with ID ${id} not found`);
     }
 
-    return po;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: {
+        documentId: po.id,
+        documentType: DocumentType.PURCHASE_ORDER,
+      },
+      include: { user: { select: { id: true, name: true, role: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return { ...po, approvalEvents };
   }
 
   async update(

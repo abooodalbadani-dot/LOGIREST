@@ -195,8 +195,37 @@ export class IssuesService {
       this.prisma.inventoryIssue.count({ where }),
     ]);
 
+    const issueIds = items.map((i) => i.id);
+    const approvalEvents =
+      issueIds.length > 0
+        ? await this.prisma.approvalEvent.findMany({
+            where: {
+              documentId: { in: issueIds },
+              documentType: DocumentType.INVENTORY_ISSUE,
+            },
+            include: { user: { select: { name: true, role: true } } },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [];
+
+    const eventsByDocId = new Map<string, typeof approvalEvents>();
+    for (const ev of approvalEvents) {
+      if (!eventsByDocId.has(ev.documentId)) {
+        eventsByDocId.set(ev.documentId, []);
+      }
+      const existing = eventsByDocId.get(ev.documentId);
+      if (existing) {
+        existing.push(ev);
+      }
+    }
+
+    const itemsWithEvents = items.map((i) => ({
+      ...i,
+      approvalEvents: eventsByDocId.get(i.id) || [],
+    }));
+
     return {
-      data: items,
+      data: itemsWithEvents,
       meta: {
         total,
         page,

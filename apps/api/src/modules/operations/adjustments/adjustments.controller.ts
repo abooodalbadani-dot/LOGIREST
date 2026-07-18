@@ -62,6 +62,7 @@ interface ApprovalEventDetail {
   actionPerformed: string;
   userRole: string;
   user?: { name: string } | null;
+  createdAt?: Date | string | number | null;
 }
 
 interface AdjustmentWithRelations {
@@ -155,7 +156,16 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
         ).toISOString()
       : null,
     createdAt: createdAtIso,
-    updatedAt: createdAtIso,
+    updatedAt: (() => {
+      const events = adj.approvalEvents || [];
+      const lastEvent = events.length > 0 ? events[0] : null;
+      return lastEvent?.createdAt
+        ? (lastEvent.createdAt instanceof Date
+            ? lastEvent.createdAt
+            : new Date(lastEvent.createdAt)
+          ).toISOString()
+        : createdAtIso;
+    })(),
     version: adj.version || 1,
     lines,
     timeline: [],

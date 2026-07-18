@@ -150,7 +150,16 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     createdBy:
       ((grn.createdBy as Record<string, unknown> | null)?.name as string) ||
       'System',
-    updatedAt: createdAtIso,
+    updatedAt: (() => {
+      const events = (grn.approvalEvents as Array<Record<string, unknown>>) || [];
+      const lastEvent = events.length > 0 ? events[events.length - 1] : null;
+      return lastEvent?.createdAt
+        ? (lastEvent.createdAt instanceof Date
+            ? lastEvent.createdAt
+            : new Date(lastEvent.createdAt as string)
+          ).toISOString()
+        : createdAtIso;
+    })(),
     postedAt: grn.postedAt
       ? (grn.postedAt instanceof Date
           ? grn.postedAt

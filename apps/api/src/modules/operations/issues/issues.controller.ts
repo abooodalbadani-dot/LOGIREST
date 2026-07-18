@@ -144,7 +144,16 @@ function mapIssueDetail(issue: Record<string, unknown>) {
       ((issue.createdBy as Record<string, unknown>)?.name as string) ||
       'System',
     createdAt: createdAtIso,
-    updatedAt: createdAtIso,
+    updatedAt: (() => {
+      const events = (issue.approvalEvents as Array<Record<string, unknown>>) || [];
+      const lastEvent = events.length > 0 ? events[0] : null; // approvalEvents sorted desc in findOne
+      return lastEvent?.createdAt
+        ? (lastEvent.createdAt instanceof Date
+            ? lastEvent.createdAt
+            : new Date(lastEvent.createdAt as string)
+          ).toISOString()
+        : createdAtIso;
+    })(),
     postedAt: issue.postedAt
       ? (issue.postedAt instanceof Date
           ? issue.postedAt

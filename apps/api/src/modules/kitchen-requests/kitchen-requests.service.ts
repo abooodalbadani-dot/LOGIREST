@@ -8,7 +8,7 @@ import { WorkflowService } from '../workflow/workflow.service';
 import { UpdateKitchenRequestDto } from '@logirest/shared-types';
 import { DocumentNumberService } from '../sequencing/document-number.service';
 import { IssuePostService } from '../operations/issue-post.service';
-import { Prisma, Role } from '@prisma/client';
+import { DocumentType, Prisma, Role } from '@prisma/client';
 
 @Injectable()
 export class KitchenRequestsService {
@@ -193,8 +193,37 @@ export class KitchenRequestsService {
       this.prisma.kitchenRequest.count({ where }),
     ]);
 
+    const krIds = items.map((k) => k.id);
+    const approvalEvents =
+      krIds.length > 0
+        ? await this.prisma.approvalEvent.findMany({
+            where: {
+              documentId: { in: krIds },
+              documentType: DocumentType.KITCHEN_REQUEST,
+            },
+            include: { user: { select: { id: true, name: true, role: true } } },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [];
+
+    const eventsByDocId = new Map<string, typeof approvalEvents>();
+    for (const ev of approvalEvents) {
+      if (!eventsByDocId.has(ev.documentId)) {
+        eventsByDocId.set(ev.documentId, []);
+      }
+      const existing = eventsByDocId.get(ev.documentId);
+      if (existing) {
+        existing.push(ev);
+      }
+    }
+
+    const itemsWithEvents = items.map((k) => ({
+      ...k,
+      approvalEvents: eventsByDocId.get(k.id) || [],
+    }));
+
     return {
-      data: items,
+      data: itemsWithEvents,
       meta: {
         total,
         page,
@@ -227,7 +256,16 @@ export class KitchenRequestsService {
       throw new NotFoundException(`Kitchen Request with ID ${id} not found`);
     }
 
-    return request;
+    const approvalEvents = await this.prisma.approvalEvent.findMany({
+      where: {
+        documentId: request.id,
+        documentType: DocumentType.KITCHEN_REQUEST,
+      },
+      include: { user: { select: { id: true, name: true, role: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return { ...request, approvalEvents };
   }
 
   async submit(

@@ -168,8 +168,37 @@ export class AdjustmentsService {
       this.prisma.adjustment.count({ where }),
     ]);
 
+    const adjIds = items.map((a) => a.id);
+    const approvalEvents =
+      adjIds.length > 0
+        ? await this.prisma.approvalEvent.findMany({
+            where: {
+              documentId: { in: adjIds },
+              documentType: DocumentType.ADJUSTMENT,
+            },
+            include: { user: { select: { name: true, role: true } } },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [];
+
+    const eventsByDocId = new Map<string, typeof approvalEvents>();
+    for (const ev of approvalEvents) {
+      if (!eventsByDocId.has(ev.documentId)) {
+        eventsByDocId.set(ev.documentId, []);
+      }
+      const existing = eventsByDocId.get(ev.documentId);
+      if (existing) {
+        existing.push(ev);
+      }
+    }
+
+    const itemsWithEvents = items.map((a) => ({
+      ...a,
+      approvalEvents: eventsByDocId.get(a.id) || [],
+    }));
+
     return {
-      data: items,
+      data: itemsWithEvents,
       meta: {
         total,
         page,

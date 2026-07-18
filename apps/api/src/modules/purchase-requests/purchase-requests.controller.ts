@@ -63,12 +63,23 @@ function mapPRDetail(pr: Record<string, unknown>) {
     };
   });
 
+  const events =
+    (pr.approvalEvents as Array<Record<string, unknown>>) || [];
+  const lastEvent = events.length > 0 ? events[events.length - 1] : null;
+
   const createdAtIso = pr.createdAt
     ? (pr.createdAt instanceof Date
         ? pr.createdAt
         : new Date(pr.createdAt as string)
       ).toISOString()
     : new Date().toISOString();
+
+  const updatedAtIso = lastEvent?.createdAt
+    ? (lastEvent.createdAt instanceof Date
+        ? lastEvent.createdAt
+        : new Date(lastEvent.createdAt as string)
+      ).toISOString()
+    : createdAtIso;
 
   return {
     id: pr.id as string,
@@ -84,7 +95,7 @@ function mapPRDetail(pr: Record<string, unknown>) {
     notes: '',
     createdAt: createdAtIso,
     createdBy: (createdBy?.name as string) || 'System',
-    updatedAt: createdAtIso,
+    updatedAt: updatedAtIso,
     lines,
   };
 }

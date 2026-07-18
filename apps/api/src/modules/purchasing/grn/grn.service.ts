@@ -245,8 +245,37 @@ export class GrnService {
       this.prisma.goodsReceivedNote.count({ where }),
     ]);
 
+    const grnIds = items.map((g) => g.id);
+    const approvalEvents =
+      grnIds.length > 0
+        ? await this.prisma.approvalEvent.findMany({
+            where: {
+              documentId: { in: grnIds },
+              documentType: DocumentType.GOODS_RECEIVED_NOTE,
+            },
+            include: { user: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [];
+
+    const eventsByDocId = new Map<string, typeof approvalEvents>();
+    for (const ev of approvalEvents) {
+      if (!eventsByDocId.has(ev.documentId)) {
+        eventsByDocId.set(ev.documentId, []);
+      }
+      const existing = eventsByDocId.get(ev.documentId);
+      if (existing) {
+        existing.push(ev);
+      }
+    }
+
+    const itemsWithEvents = items.map((g) => ({
+      ...g,
+      approvalEvents: eventsByDocId.get(g.id) || [],
+    }));
+
     return {
-      data: items,
+      data: itemsWithEvents,
       meta: {
         total,
         page,

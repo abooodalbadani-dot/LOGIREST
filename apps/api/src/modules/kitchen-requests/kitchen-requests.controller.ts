@@ -55,12 +55,23 @@ function mapKitchenRequestDetail(
     };
   });
 
+  const events =
+    (kr.approvalEvents as Array<Record<string, unknown>>) || [];
+  const lastEvent = events.length > 0 ? events[events.length - 1] : null;
+
   const createdAtIso = kr.createdAt
     ? (kr.createdAt instanceof Date
         ? kr.createdAt
         : new Date(kr.createdAt as string)
       ).toISOString()
     : new Date().toISOString();
+
+  const updatedAtIso = lastEvent?.createdAt
+    ? (lastEvent.createdAt instanceof Date
+        ? lastEvent.createdAt
+        : new Date(lastEvent.createdAt as string)
+      ).toISOString()
+    : createdAtIso;
 
   const requestedByName =
     (requestedBy?.name as string) || currentUserId || 'System';
@@ -77,7 +88,7 @@ function mapKitchenRequestDetail(
     requestedBy: requestedByName,
     requestedAt: createdAtIso,
     createdAt: createdAtIso,
-    updatedAt: createdAtIso,
+    updatedAt: updatedAtIso,
     version: kr.version as number,
     issueId: (kr.issueId as string) || null,
     items,
