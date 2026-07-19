@@ -806,7 +806,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
             : form.handleSubmit((values) => handleSavePO(values, true), onFormError)
           }
           isPending={isSubmitting}
-          submitLabel={mode === "edit" ? tc('save') : (t('actions.submit_po') || t('actions.submit') || 'Submit Purchase Order')}
+          submitLabel={mode === "edit" ? tc('save') : (t('actions.submit') || 'Submit Purchase Order')}
           actions={
             mode === "create" && !isLocked ? (
               <Button
@@ -816,7 +816,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 variant="outline"
                 className="w-full md:w-auto h-12 md:h-10 border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 px-6 font-semibold"
               >
-                {t('actions.save_draft') || 'Save as Draft'}
+                {t('save_draft') || 'Save as Draft'}
               </Button>
             ) : actions
           }
