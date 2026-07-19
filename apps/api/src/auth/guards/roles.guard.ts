@@ -36,19 +36,23 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // If no roles or AllRoles decorator is specified, log a warning but allow access
-    // for any authenticated user (since they have already passed JwtAuthGuard).
+    // SECURITY: Default Deny — endpoints must be explicitly annotated with
+    // @Roles(...) or @AllRoles(). Any endpoint missing both decorators is
+    // treated as misconfigured and immediately denied.
     if (!requiredRoles || requiredRoles.length === 0) {
       const request = context.switchToHttp().getRequest<{
         method: string;
         path?: string;
         url?: string;
       }>();
-      this.logger.warn(
-        `[SECURITY] Endpoint lacks @Roles() or @AllRoles() decorator — ` +
-          `defaulting to ALLOW for authenticated user. Method: ${request.method} | Path: ${request.path ?? request.url}.`,
+      this.logger.error(
+        `[SECURITY] Endpoint is missing @Roles() or @AllRoles() decorator — ` +
+          `denying access. Method: ${request.method} | Path: ${request.path ?? request.url}. ` +
+          `Add @Roles(...roles) to restrict or @AllRoles() to allow all authenticated users.`,
       );
-      return true;
+      throw new ForbiddenException(
+        'This endpoint is not configured with an access control decorator. Access denied.',
+      );
     }
 
     const request = context.switchToHttp().getRequest<{

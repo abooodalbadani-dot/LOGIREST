@@ -293,6 +293,11 @@ export class WorkflowService {
         }
 
         // 2. Role Validation Check
+        // SELF-APPROVAL POLICY: PROC_MGR, INV_MGR, and BRANCH_MGR are fully authorized
+        // to approve or post their own drafted documents. This is an intentional design
+        // decision for fast-paced kitchen supply operations. No Maker-Checker block
+        // is applied here by design. If dual-control is required, add a
+        // `document.createdById !== userId` check immediately below this block.
         const hasRolePermission = canPerformActionV2(
           docType,
           doc.status as DocumentStatus,

@@ -170,7 +170,9 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
       'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
     },
     [GRN_STATUS.POSTED]: {
-      'VOID': { targetStatus: GRN_STATUS.VOIDED, allowedRoles: ['ADMIN'] },
+      // VOID authority extended to INV_MGR and BRANCH_MGR for WMS agility.
+      // Allows correction of warehouse receiving errors without requiring ADMIN intervention.
+      'VOID': { targetStatus: GRN_STATUS.VOIDED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
     }
   },
   'transfer': {
@@ -197,7 +199,9 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
       'CANCEL': { targetStatus: ISSUE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF', 'BRANCH_MGR'] },
     },
     [ISSUE_STATUS.POSTED]: {
-      'VOID': { targetStatus: ISSUE_STATUS.VOIDED, allowedRoles: ['ADMIN'] },
+      // VOID authority extended to INV_MGR and BRANCH_MGR for WMS agility.
+      // Allows correction of stock depletion errors without requiring ADMIN intervention.
+      'VOID': { targetStatus: ISSUE_STATUS.VOIDED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
     }
   },
   'adjustment': {
@@ -214,7 +218,9 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
       'POST': { targetStatus: ADJUSTMENT_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
     },
     [ADJUSTMENT_STATUS.POSTED]: {
-      'VOID': { targetStatus: ADJUSTMENT_STATUS.VOIDED, allowedRoles: ['ADMIN'] },
+      // VOID authority extended to INV_MGR and BRANCH_MGR for WMS agility.
+      // Allows correction of inventory adjustment errors without requiring ADMIN intervention.
+      'VOID': { targetStatus: ADJUSTMENT_STATUS.VOIDED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
     },
     [ADJUSTMENT_STATUS.REJECTED]: {
       'EDIT': { targetStatus: ADJUSTMENT_STATUS.DRAFT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
@@ -247,7 +253,9 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
     },
     [STOCKTAKE_STATUS.POSTED]: {
       'CLOSE': { targetStatus: STOCKTAKE_STATUS.CLOSED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
-      'VOID': { targetStatus: STOCKTAKE_STATUS.VOIDED, allowedRoles: ['ADMIN'] },
+      // VOID authority extended to INV_MGR and BRANCH_MGR for WMS agility.
+      // Allows reversal of a posted stocktake that introduced incorrect variance data.
+      'VOID': { targetStatus: STOCKTAKE_STATUS.VOIDED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
     }
   },
   'kitchen_request': {
@@ -270,6 +278,18 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
  * Default Deny, Document-Type Aware.
  * Uses ROLE_CAPABILITIES as the single source of truth for role-based checks.
  * Falls back to transitionMapV2 for workflow status checks.
+ *
+ * SELF-APPROVAL POLICY:
+ * The following manager roles are explicitly authorized to both create and
+ * approve/post their own documents. This is an intentional business decision
+ * for fast-paced kitchen supply operations and is NOT a security oversight:
+ *   - PROC_MGR  : can create and approve PR/PO within their procurement scope.
+ *   - INV_MGR   : can create and approve/post Adjustments, Issues, and Stocktakes.
+ *   - BRANCH_MGR: can create and approve all documents within their branch scope.
+ *
+ * If dual-control (Maker-Checker) is required for specific document types,
+ * inject a check on `document.createdById !== currentUserId` in the calling
+ * service or guard — see WorkflowStateGuard for the recommended injection point.
  */
 export function canPerformActionV2(
   documentType: DocumentType,
@@ -302,7 +322,9 @@ export function canPerformActionV2(
     return false; // Action not allowed in this status → locked
   }
 
-  // System Administrator explicit workflow bypass
+  // System Administrator explicit workflow bypass.
+  // Note: ADMIN bypass fires AFTER Gate 1 (transition check), so ADMIN is still
+  // bound by the state machine — they cannot perform actions with no defined transition.
   if (role === 'ADMIN') {
     return true;
   }

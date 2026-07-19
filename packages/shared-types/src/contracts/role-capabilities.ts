@@ -35,7 +35,8 @@ export type CapabilityAction =
   | 'review'
   | 'close'
   | 'fulfill'
-  | 'recount';
+  | 'recount'
+  | 'void';
 
 export const ROLE_CAPABILITIES = {
   adjustment: {
@@ -44,6 +45,7 @@ export const ROLE_CAPABILITIES = {
     approve: ['ADMIN', 'GM', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'] as const,
     reject: ['ADMIN', 'GM', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'] as const,
     post: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
+    void: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
     cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
     edit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
@@ -61,6 +63,7 @@ export const ROLE_CAPABILITIES = {
     create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF', 'BRANCH_MGR'] as const,
     submit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF', 'BRANCH_MGR'] as const,
     post: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
+    void: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
     cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF', 'BRANCH_MGR'] as const,
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'] as const,
@@ -73,6 +76,7 @@ export const ROLE_CAPABILITIES = {
     approve: ['ADMIN', 'GM', 'APPROVER', 'INV_MGR', 'BRANCH_MGR'] as const,
     reject: ['ADMIN', 'GM', 'APPROVER', 'INV_MGR', 'BRANCH_MGR'] as const,
     post: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
+    void: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
     close: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
     cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
@@ -106,6 +110,7 @@ export const ROLE_CAPABILITIES = {
     create: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'] as const,
     submit: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'] as const,
     post: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
+    void: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] as const,
     cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR', 'PROC_MGR'] as const,
