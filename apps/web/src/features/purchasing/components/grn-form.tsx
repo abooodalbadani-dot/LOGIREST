@@ -799,7 +799,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                           className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive text-xs"
                                           onClick={() => {
                                              setValue('poId', '');
-                                             router.replace('/goods-received/new');
+                                             router.replace('/goods-received/new', { skipGuard: true });
                                           }}
                                        >
                                           ✕
@@ -811,7 +811,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     items={poItems}
                                     value=""
                                     onSelect={(item) => {
-                                       router.replace(`/goods-received/new?po_id=${item.id}`);
+                                       router.replace(`/goods-received/new?po_id=${item.id}`, { skipGuard: true });
                                     }}
                                     placeholder={t('select_po') || "Select Purchase Order"}
                                     triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
