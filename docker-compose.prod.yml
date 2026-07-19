@@ -101,12 +101,6 @@ services:
     # API port internal only; console bound to loopback (firewall-restrict further)
     expose:
       - "9000"
-    healthcheck:
-      test:     ["CMD", "mc", "ready", "local"]
-      interval: 15s
-      timeout:  5s
-      retries:  5
-      start_period: 20s
     networks:
       - logirest_network
 
@@ -336,7 +330,7 @@ services:
       logirest-db:
         condition: service_healthy
       logirest-minio:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - ./scripts:/scripts:ro         # db-backup.sh is in scripts/
       - db_backups:/backups           # persistent dump staging area
