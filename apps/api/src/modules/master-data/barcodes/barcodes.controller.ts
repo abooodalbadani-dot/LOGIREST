@@ -15,6 +15,7 @@ import {
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { BarcodesService } from './barcodes.service';
@@ -29,16 +30,19 @@ export class BarcodesController {
   constructor(private readonly barcodesService: BarcodesService) {}
 
   @Get()
+  @AllRoles()
   async findAll() {
     return this.barcodesService.findAll();
   }
 
   @Get('check-duplicate')
+  @AllRoles()
   async checkDuplicate(@Query('barcode') barcode: string) {
     return this.barcodesService.checkDuplicate(barcode);
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(@Param('id') id: string) {
     return this.barcodesService.findOne(id);
   }

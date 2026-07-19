@@ -28,6 +28,7 @@ import { AdjustmentDirection, AdjustmentReason, Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
@@ -221,6 +222,7 @@ export class AdjustmentsController {
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
     @ActiveScope('warehouseId') warehouseId?: string,
@@ -260,11 +262,13 @@ export class AdjustmentsController {
   }
 
   @Get('summary')
+  @AllRoles()
   async getSummary(@ActiveScope('warehouseId') warehouseId?: string) {
     return this.adjustmentsService.getSummary(warehouseId);
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -280,6 +284,7 @@ export class AdjustmentsController {
   }
 
   @Get(':id/pdf')
+  @AllRoles()
   async getPdf(
     @Param('id') id: string,
     @Query('locale') locale: 'ar' | 'en' = 'en',

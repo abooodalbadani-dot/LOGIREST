@@ -28,6 +28,7 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreateGrnDto } from './dto/create-grn.dto';
@@ -282,6 +283,7 @@ export class GrnController {
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
     @ActiveScope()
@@ -307,6 +309,7 @@ export class GrnController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -322,6 +325,7 @@ export class GrnController {
   }
 
   @Get(':id/pdf')
+  @AllRoles()
   async getPdf(
     @Param('id') id: string,
     @Query('locale') locale: 'ar' | 'en' = 'en',
@@ -543,7 +547,7 @@ export class GrnController {
   }
 
   @Post(':id/void')
-  @Roles(Role.ADMIN, Role.INV_MGR)
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'grn',

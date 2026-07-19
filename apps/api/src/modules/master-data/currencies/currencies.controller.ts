@@ -10,23 +10,27 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CurrenciesService } from './currencies.service';
 import { CreateCurrencyDto, UpdateCurrencyDto } from './dto/currency.dto';
 
 @Controller(['currencies', 'master-data/currencies'])
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class CurrenciesController {
   constructor(private readonly currenciesService: CurrenciesService) {}
 
   @Get()
+  @AllRoles()
   async findAll() {
     return this.currenciesService.findAll();
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(@Param('id') id: string) {
     return this.currenciesService.findOne(id);
   }

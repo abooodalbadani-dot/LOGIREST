@@ -29,6 +29,7 @@ import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import type { Request, Response } from 'express';
 
 function mapTransferDetail(transfer: Record<string, unknown>) {
@@ -233,6 +234,7 @@ export class TransfersController {
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
     @ActiveScope()
@@ -258,11 +260,13 @@ export class TransfersController {
   }
 
   @Get('summary')
+  @AllRoles()
   async getSummary(@ActiveScope('warehouseId') warehouseId?: string) {
     return this.transfersService.getSummary(warehouseId);
   }
 
   @Get(':id/pdf')
+  @AllRoles()
   async getPdf(
     @Param('id') id: string,
     @Query('locale') locale: 'ar' | 'en' = 'en',
@@ -292,6 +296,7 @@ export class TransfersController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

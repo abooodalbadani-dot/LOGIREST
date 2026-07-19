@@ -9,16 +9,19 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import { WarehouseScopeInterceptor } from '../../interceptors/warehouse-scope.interceptor';
 import type { Request } from 'express';
 
 @Controller('search')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(WarehouseScopeInterceptor)
 export class SearchController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
+  @AllRoles()
   async search(@Query('q') q: string, @Req() req: Request) {
     if (!q || q.trim() === '') {
       return [];

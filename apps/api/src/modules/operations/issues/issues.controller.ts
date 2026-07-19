@@ -28,6 +28,7 @@ import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import type { Request } from 'express';
 
 function mapIssueDetail(issue: Record<string, unknown>) {
@@ -318,6 +319,7 @@ export class IssuesController {
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
     @ActiveScope()
@@ -345,6 +347,7 @@ export class IssuesController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

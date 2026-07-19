@@ -26,6 +26,7 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import type { Request } from 'express';
@@ -149,6 +150,7 @@ export class KitchenRequestsController {
   }
 
   @Get()
+  @AllRoles()
   async findAll(
     @Query()
     query: { status?: string; search?: string; page?: string; limit?: string },
@@ -178,6 +180,7 @@ export class KitchenRequestsController {
   }
 
   @Get(':id')
+  @AllRoles()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

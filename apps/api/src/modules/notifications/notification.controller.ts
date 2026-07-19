@@ -118,22 +118,26 @@ export class NotificationController {
   }
 
   @Get('parameter-registry')
+  @Roles(Role.ADMIN)
   async getParameterRegistry() {
     return this.templateService.getParameterRegistry();
   }
 
   @Get('trigger-events')
+  @Roles(Role.ADMIN)
   async getTriggerEvents() {
     return this.templateService.getTriggerEvents();
   }
 
   @Get('templates')
+  @Roles(Role.ADMIN)
   async getTemplates(@Query('page') page?: string) {
     const pageNum = page ? parseInt(page, 10) : 1;
     return this.templateService.findAll(pageNum);
   }
 
   @Get('templates/:id')
+  @Roles(Role.ADMIN)
   async getTemplate(@Param('id') id: string) {
     return this.templateService.findOne(id);
   }

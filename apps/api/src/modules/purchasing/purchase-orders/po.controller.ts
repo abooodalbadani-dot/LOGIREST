@@ -553,6 +553,7 @@ export class PurchaseOrderController {
   }
 
   @Post(':id/email')
+  @AllRoles()
   @HttpCode(HttpStatus.OK)
   async email(
     @Param('id') id: string,

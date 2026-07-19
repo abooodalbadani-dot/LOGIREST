@@ -111,13 +111,14 @@ export class InventoryController {
 }
 
 @Controller('items')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class ItemsController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Get('scan')
+  @AllRoles()
   async scanBarcode(
     @ActiveScope('warehouseId') warehouseId: string,
     @Query('barcode') barcode: string,
