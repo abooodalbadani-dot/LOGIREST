@@ -137,7 +137,11 @@ export class StocktakeController {
   private async validateSessionScope(
     sessionId: string,
     activeWarehouseId: string,
+    role?: Role,
   ): Promise<void> {
+    if (role === Role.ADMIN || role === Role.GM) {
+      return;
+    }
     await this.prisma.$transaction(async (tx) => {
       const session = await tx.stocktakeSession.findUnique({
         where: { id: sessionId },
@@ -268,9 +272,10 @@ export class StocktakeController {
       varianceReason?: string;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
-    await this.validateSessionScope(stocktakeId, activeWarehouseId);
+    await this.validateSessionScope(stocktakeId, activeWarehouseId, role);
     const counted_qty = body.countedQty;
     if (counted_qty === undefined) {
       throw new BadRequestException('countedQty is required');
@@ -304,9 +309,10 @@ export class StocktakeController {
       varianceReason?: string;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
-    await this.validateSessionScope(sessionId, activeWarehouseId);
+    await this.validateSessionScope(sessionId, activeWarehouseId, role);
     const counted_qty = body.countedQty;
     if (counted_qty === undefined) {
       throw new BadRequestException('countedQty is required');
@@ -375,9 +381,10 @@ export class StocktakeController {
       counts: Array<{ itemId: string; lotId?: string; qtyCounted: number }>;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
-    await this.validateSessionScope(id, activeWarehouseId);
+    await this.validateSessionScope(id, activeWarehouseId, role);
     await this.stocktakeService.count(id, body?.counts ?? [], userId);
     return mapStocktakeDetail(await this.stocktakeService.findOne(id));
   }
@@ -492,7 +499,7 @@ export class StocktakeController {
     @ActiveScope('warehouseId') activeWarehouseId: string,
     @Req() req: Request,
   ) {
-    await this.validateSessionScope(id, activeWarehouseId);
+    await this.validateSessionScope(id, activeWarehouseId, role);
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -528,7 +535,7 @@ export class StocktakeController {
     @ActiveScope('warehouseId') activeWarehouseId: string,
     @Req() req: Request,
   ) {
-    await this.validateSessionScope(id, activeWarehouseId);
+    await this.validateSessionScope(id, activeWarehouseId, role);
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]

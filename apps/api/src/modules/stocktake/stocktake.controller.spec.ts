@@ -136,6 +136,7 @@ describe('StocktakeController', () => {
       'session-1',
       { counts },
       'user-1',
+      Role.WH_KEEPER,
       'wh-1',
     );
     expect(result.id).toEqual('session-1');
