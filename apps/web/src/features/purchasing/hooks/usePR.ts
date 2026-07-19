@@ -20,6 +20,7 @@ const PRLineSchema = z.object({
   }),
   minStockLevel: z.number().optional(),
   reorderPoint: z.number().optional(),
+  image: z.string().nullable().optional(),
  }),
  reqQty: z.number(),
  uomId: z.string(),

@@ -186,14 +186,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
         onSubmit={onSubmit}
         onCancel={() => guardedRouter.push('/master-data/categories')}
         hideSave={isReadOnly || data?.isReferenced === true}
-        resource="master_data"
+        resource="master_data_categories"
         saveAction={id ? 'edit' : 'create'}
         isDirty={isDirty}
         isValid={isValid}
         headerActions={
           id && (
             <div className="flex gap-4">
-              <PermissionGate action="delete" resource="master_data">
+              <PermissionGate action="delete" resource="master_data_categories">
                 <Button
                   variant="ghost"
                   onClick={() => setDeleteConfirmOpen(true)}
@@ -206,7 +206,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
               </PermissionGate>
 
               {isReadOnly && (
-                <PermissionGate action="edit" resource="master_data">
+                <PermissionGate action="edit" resource="master_data_categories">
                   <Button
                     onClick={() => guardedRouter.push(`/master-data/categories/${id}/edit`)}
                     className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-operational-cyan/20"

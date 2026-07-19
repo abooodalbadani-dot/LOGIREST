@@ -119,7 +119,7 @@ export class WarehousesDirectController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN)
   async create(@Body() body: CreateWarehouseDto) {
     let code = body.code;
     if (!code || code.trim() === '') {
@@ -161,7 +161,7 @@ export class WarehousesDirectController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN)
   async update(@Param('id') id: string, @Body() body: UpdateWarehouseDto) {
     const existing = await this.prisma.warehouse.findUnique({ where: { id } });
     if (!existing) {
@@ -188,7 +188,7 @@ export class WarehousesDirectController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN)
   async remove(@Param('id') id: string) {
     return this.prisma.warehouse.delete({
       where: { id },
@@ -197,7 +197,7 @@ export class WarehousesDirectController {
 
   @Post(':id/archive')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN)
   async archive(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

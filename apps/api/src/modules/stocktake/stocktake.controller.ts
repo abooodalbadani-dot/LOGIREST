@@ -75,6 +75,7 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
       lotNumber: (lot?.lotNumber as string) || undefined,
       expiryDate: safeIsoString(lot?.expiryDate),
       unitCost: snapshot ? Number(snapshot.wacSnapshot) : 0,
+      image: (item?.image as string) || null,
     };
   });
 

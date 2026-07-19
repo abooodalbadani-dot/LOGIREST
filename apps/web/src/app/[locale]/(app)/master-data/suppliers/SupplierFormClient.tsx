@@ -199,14 +199,14 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
         onSubmit={onSubmit}
         onCancel={() => guardedRouter.push('/master-data/suppliers', { skipGuard: true })}
         hideSave={isReadOnly}
-        resource="master_data"
+        resource="master_data_suppliers"
         saveAction={id ? 'edit' : 'create'}
         isDirty={isDirty}
         isValid={isValid}
         headerActions={
           id && (
             <div className="flex gap-4">
-              <PermissionGate action="delete" resource="master_data">
+              <PermissionGate action="delete" resource="master_data_suppliers">
                 <Button
                   variant="ghost"
                   onClick={() => setDeleteConfirmOpen(true)}
@@ -218,7 +218,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
               </PermissionGate>
 
               {isReadOnly && (
-                <PermissionGate action="edit" resource="master_data">
+                <PermissionGate action="edit" resource="master_data_suppliers">
                   <Button
                     onClick={() => guardedRouter.push(`/master-data/suppliers/${id}/edit`)}
                     className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-operational-cyan/20"

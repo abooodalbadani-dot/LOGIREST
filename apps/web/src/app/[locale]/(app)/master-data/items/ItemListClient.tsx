@@ -100,7 +100,7 @@ export function ItemListClient({ locale }: { locale: string }) {
    header: '',
    cell: ({ row }) => (
     <div className="flex justify-end gap-3">
-     <PermissionGate action="view" resource="master_data">
+     <PermissionGate action="view" resource="master_data_items">
       <Button 
        variant="ghost" 
        size="sm" 
@@ -113,7 +113,7 @@ export function ItemListClient({ locale }: { locale: string }) {
        {t('view')}
       </Button>
      </PermissionGate>
-     <PermissionGate action="edit" resource="master_data">
+     <PermissionGate action="edit" resource="master_data_items">
       <Button 
        variant="ghost" 
        size="sm" 
@@ -160,7 +160,7 @@ export function ItemListClient({ locale }: { locale: string }) {
      />
     </div>
     <div className="shrink-0 mt-4 sm:mt-0">
-     <PermissionGate action="create" resource="master_data">
+     <PermissionGate action="create" resource="master_data_items">
       <Link href={`/master-data/items/new`} className="shrink-0 w-full sm:w-auto">
        <Button className="px-6 py-2.5 bg-foreground text-background font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
         <Plus className="w-3.5 h-3.5 me-2" />
@@ -261,7 +261,7 @@ export function ItemListClient({ locale }: { locale: string }) {
            </div>
 
            <div className="flex gap-2 shrink-0">
-            <PermissionGate action="view" resource="master_data">
+            <PermissionGate action="view" resource="master_data_items">
              <button 
               className="h-8 px-3 flex items-center justify-center bg-surface-container text-foreground rounded-md text-xs font-bold hover:bg-surface-container-high transition-colors"
               onClick={(e) => { e.stopPropagation(); router.push(`/master-data/items/${item.id}`); }}
@@ -269,7 +269,7 @@ export function ItemListClient({ locale }: { locale: string }) {
               {t('view')}
              </button>
             </PermissionGate>
-            <PermissionGate action="edit" resource="master_data">
+            <PermissionGate action="edit" resource="master_data_items">
              <button 
               className="h-8 px-3 flex items-center justify-center border border-operational-cyan text-operational-cyan rounded-md text-xs font-bold hover:bg-operational-cyan/10 transition-colors"
               onClick={(e) => { e.stopPropagation(); router.push(`/master-data/items/${item.id}/edit`); }}

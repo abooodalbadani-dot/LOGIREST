@@ -77,6 +77,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
         code: item.barcode || '',
         nameEn: item.itemName,
         nameAr: item.itemName,
+        image: item.image || null,
         primaryUom: { code: item.uom }
       },
       qty: localCounts[item.id] ?? 0,
@@ -371,8 +372,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                         className={cn(
                           "text-right font-mono tabular-nums w-full h-10 transition-all rounded-lg max-w-[120px] mx-auto focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] outline-none",
                           isTouched
-                            ? "bg-gray-50/50 border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white"
-                            : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white",
+                            ? "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+                            : "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100",
                           focusedRowIndex === index && "border-[#0B1220] dark:border-[#b48e67] ring-1 ring-[#0B1220] dark:ring-[#b48e67]"
                         )}
                       />
@@ -440,10 +441,10 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                         inputMode="decimal"
                         lang="en-u-nu-latn"
                         className={cn(
-                          "w-24 h-10 text-center font-black text-lg text-[#0B1220] dark:text-white focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none [font-variant-numeric:lining-nums_tabular-nums]",
+                          "w-24 h-10 text-center font-black text-lg text-gray-900 dark:text-gray-100 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none [font-variant-numeric:lining-nums_tabular-nums]",
                           isTouched
-                            ? "bg-gray-50/50 dark:bg-[#0B1220] border-gray-200 dark:border-gray-700"
-                            : "bg-white dark:bg-[#0B1220] border-gray-200 dark:border-gray-700"
+                            ? "bg-white dark:bg-slate-800/50 border-gray-300 dark:border-gray-600"
+                            : "bg-white dark:bg-slate-800/50 border-gray-300 dark:border-gray-600"
                         )}
                         dir="ltr"
                         value={countValue !== null && countValue !== undefined ? String(countValue) : "0"}

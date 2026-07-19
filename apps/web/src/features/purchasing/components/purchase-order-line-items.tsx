@@ -239,7 +239,7 @@ function LineItemCard({
                                                                       type="text"
                                                                       inputMode="decimal"
                                                                       disabled={isLocked}
-                                                                      className="h-8 w-full text-center font-sans text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
+                                                                      className="h-8 w-full text-center font-sans text-sm font-bold text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
                                                                       value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
                                                                       onChange={(e) => {
                                                                              let val = e.target.value.replace(/[^0-9.]/g, '');
@@ -270,7 +270,7 @@ function LineItemCard({
                                                  return (
                                                         <FormItem className="space-y-0 w-full">
                                                                <FormControl>
-                                                                      <div className="h-8 w-full flex items-center justify-center bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded font-mono uppercase text-[11px] font-bold">
+                                                                      <div className="h-8 w-full flex items-center justify-center bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded font-mono uppercase text-[11px] font-bold">
                                                                              {uomCode}
                                                                       </div>
                                                                </FormControl>
@@ -296,7 +296,7 @@ function LineItemCard({
                                                                       type="text"
                                                                       inputMode="decimal"
                                                                       disabled={isLocked}
-                                                                      className="h-8 w-full text-center font-sans text-sm font-bold text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
+                                                                      className="h-8 w-full text-center font-sans text-sm font-bold text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all"
                                                                       value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
                                                                       onChange={(e) => {
                                                                              let val = e.target.value.replace(/[^0-9.]/g, '');
@@ -328,7 +328,7 @@ function LineItemCard({
                                                                <Input
                                                                       placeholder={t('notes_placeholder')}
                                                                       disabled={isLocked}
-                                                                      className="h-8 w-full px-3 text-xs font-medium text-[#0B1220] dark:text-white bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-700 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none"
+                                                                      className="h-8 w-full px-3 text-xs font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 rounded focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none"
                                                                       value={inputField.value || ''}
                                                                       onChange={(e) => inputField.onChange(e.target.value)}
                                                                />
@@ -411,8 +411,8 @@ function LineItemRow({
                                                                       }
                                                                }}
                                                                placeholder={tc('select_item')}
-                                                               className="h-11 w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase transition-all shadow-sm focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
-                                                               triggerClassName="h-11 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md text-sm font-bold uppercase shadow-sm focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
+                                                               className="h-11 w-full bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md text-sm font-bold uppercase transition-all shadow-sm focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
+                                                               triggerClassName="h-11 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md text-sm font-bold uppercase shadow-sm focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                disabled={isLocked}
                                                         />
                                                  </FormControl>
@@ -434,7 +434,7 @@ function LineItemRow({
                                                                type="text"
                                                                inputMode="decimal"
                                                                disabled={isLocked}
-                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
+                                                               className="bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                dir="ltr"
                                                                value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
                                                                onChange={(e) => {
@@ -463,7 +463,7 @@ function LineItemRow({
                                           return (
                                                  <FormItem className="space-y-0 w-full">
                                                         <FormControl>
-                                                               <div className="h-11 w-full flex items-center justify-center px-2 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md font-mono uppercase text-[11px] font-bold">
+                                                               <div className="h-11 w-full flex items-center justify-center px-2 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md font-mono uppercase text-[11px] font-bold">
                                                                       {uomCode}
                                                                </div>
                                                         </FormControl>
@@ -486,7 +486,7 @@ function LineItemRow({
                                                                type="text"
                                                                inputMode="decimal"
                                                                disabled={isLocked}
-                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
+                                                               className="bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-mono h-11 rounded-md text-sm font-bold text-center transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                dir="ltr"
                                                                value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
                                                                onChange={(e) => {
@@ -515,7 +515,7 @@ function LineItemRow({
                                                         <Input
                                                                placeholder={t('notes_placeholder')}
                                                                disabled={isLocked}
-                                                               className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-medium transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
+                                                               className="bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 h-11 rounded-md text-sm font-medium transition-all focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67]"
                                                                {...inputField}
                                                         />
                                                  </FormControl>

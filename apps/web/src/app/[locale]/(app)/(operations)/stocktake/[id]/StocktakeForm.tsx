@@ -82,6 +82,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
         code: item.barcode || '',
         nameEn: item.itemName,
         nameAr: item.itemName,
+        image: item.image || null,
         primaryUom: { code: item.uom }
       },
       qty: item.countedQty ?? 0,

@@ -264,14 +264,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         isSaving={isSaving} saveDisabled={conflict.saveDisabled}
         onSubmit={onSubmit}
         hideSave={isReadOnly}
-        resource="master_data"
+        resource="master_data_items"
         saveAction={id ? 'edit' : 'create'}
         isDirty={isDirty}
         isValid={isValid}
         headerActions={
           id && (
             <div className="flex gap-4">
-              <PermissionGate action="delete" resource="master_data">
+              <PermissionGate action="delete" resource="master_data_items">
                 <Button
                   variant="ghost"
                   onClick={() => setDeleteConfirmOpen(true)}
@@ -283,7 +283,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
               </PermissionGate>
 
               {isReadOnly && (
-                <PermissionGate action="edit" resource="master_data">
+                <PermissionGate action="edit" resource="master_data_items">
                   <Button
                     onClick={() => guardedRouter.push(`/master-data/items/${id}/edit`)}
                     className="h-12 px-6 bg-brand-gold text-white hover:bg-brand-gold/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-brand-gold/20"
@@ -327,7 +327,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     dir="ltr"
                     {...register('barcode')}
                     disabled={isReadOnly}
-                    className="w-full text-start pl-[85px] h-10"
+                    className="w-full text-start pr-[95px] pl-3 h-10 font-mono"
                     placeholder={ti('fields.barcode')}
                   />
                   {!isReadOnly && (
@@ -338,7 +338,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                         const generated = 'BAR' + Math.floor(10000000 + Math.random() * 90000000);
                         setValue('barcode', generated, { shouldDirty: true, shouldValidate: true });
                       }}
-                      className="absolute left-1.5 top-1/2 -translate-y-1/2 z-10 h-7 px-3 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10 h-7 px-3 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold"
                     >
                       {locale === 'ar' ? 'توليد' : 'Generate'}
                     </Button>

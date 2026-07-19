@@ -111,7 +111,7 @@ function GRNReceivedQtyCell({
      ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
      : isOver
        ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
-       : "bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-background/50 dark:border-brand-gold/40 dark:text-white focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
+        : "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
    )}
    {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
   />
@@ -619,7 +619,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                {!isNew && (
                   <Button
                      type="button"
-                     onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
+                     onClick={(e) => {
+                        e.preventDefault();
+                        router.push(`/goods-received/${id}/scan-mode`, { skipGuard: true });
+                     }}
                      variant="outline"
                      className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
                   >

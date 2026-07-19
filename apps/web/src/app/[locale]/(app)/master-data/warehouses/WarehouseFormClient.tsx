@@ -222,6 +222,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
         hideSave={isReadOnly}
         isDirty={isDirty}
         isValid={isValid}
+        resource="master_data_warehouses"
         headerActions={
           id && !isReadOnly && (
             <PermissionGate action="delete" resource="master_data_warehouses">

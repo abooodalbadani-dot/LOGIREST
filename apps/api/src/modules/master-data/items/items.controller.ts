@@ -56,7 +56,7 @@ export class ItemsController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.STORE_MGR)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async create(
     @Body() body: CreateItemDto,
     @CurrentUser('id') userId: string,
@@ -73,7 +73,7 @@ export class ItemsController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.STORE_MGR)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async update(
     @Param('id') id: string,
     @Body() body: UpdateItemDto,
@@ -92,7 +92,7 @@ export class ItemsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

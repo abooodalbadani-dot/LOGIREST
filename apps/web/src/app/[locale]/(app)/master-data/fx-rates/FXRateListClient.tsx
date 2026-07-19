@@ -209,7 +209,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
         {t('create_new')}
        </Button>
       ) : (
-       <PermissionGate action="create" resource="master_data">
+       <PermissionGate action="create" resource="master_data_fx_rates">
         <Link href={`/master-data/fx-rates/new`} className="shrink-0 w-full sm:w-auto">
          <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
           <Plus className="w-3.5 h-3.5 me-2" />

@@ -133,13 +133,14 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  ];
 
  return (
- <MasterDataFormLayout
- title={`${t('fx_rates_for')} ${baseCurrency?.code || currencyId}`}
- backHref="/master-data/currencies"
- isSaving={create.isPending}
- onSubmit={onSubmit}
- onCancel={() => router.push('/master-data/currencies')}
- >
+  <MasterDataFormLayout
+  title={`${t('fx_rates_for')} ${baseCurrency?.code || currencyId}`}
+  backHref="/master-data/currencies"
+  isSaving={create.isPending}
+  onSubmit={onSubmit}
+  onCancel={() => router.push('/master-data/currencies')}
+  resource="master_data_fx_rates"
+  >
  <div className="col-span-1 md:col-span-12 grid grid-cols-1 lg:grid-cols-3 gap-10 w-full">
  {/* Existing Rates Table */}
  <div className="lg:col-span-2 space-y-6">

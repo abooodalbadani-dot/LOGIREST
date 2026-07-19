@@ -16,7 +16,13 @@ export type BaseDocumentType =
   | 'po'
   | 'grn';
 
-export type DocumentType = BaseDocumentType | Uppercase<BaseDocumentType>;
+export type AuthorizationType =
+  | BaseDocumentType
+  | 'master_item'
+  | 'master_supplier'
+  | 'master_org';
+
+export type DocumentType = AuthorizationType | Uppercase<AuthorizationType>;
 
 export type CapabilityAction =
   | 'create'
@@ -116,7 +122,25 @@ export const ROLE_CAPABILITIES = {
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR', 'PROC_MGR'] as const,
   },
-} as const satisfies Record<BaseDocumentType, Partial<Record<CapabilityAction, readonly UserRole[]>>>;
+  master_item: {
+    create: ['ADMIN', 'INV_MGR'] as const,
+    edit: ['ADMIN', 'INV_MGR'] as const,
+    cancel: ['ADMIN', 'INV_MGR'] as const,
+    view: ['ADMIN', 'GM', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'PROC_OFFICER', 'WH_KEEPER', 'KITCHEN_CHIEF', 'AUDITOR', 'VIEWER', 'APPROVER'] as const,
+  },
+  master_supplier: {
+    create: ['ADMIN', 'PROC_MGR'] as const,
+    edit: ['ADMIN', 'PROC_MGR'] as const,
+    cancel: ['ADMIN', 'PROC_MGR'] as const,
+    view: ['ADMIN', 'GM', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'PROC_OFFICER', 'WH_KEEPER', 'AUDITOR', 'VIEWER', 'APPROVER'] as const,
+  },
+  master_org: {
+    create: ['ADMIN'] as const,
+    edit: ['ADMIN'] as const,
+    cancel: ['ADMIN'] as const,
+    view: ['ADMIN', 'GM', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR', 'PROC_OFFICER', 'WH_KEEPER', 'KITCHEN_CHIEF', 'AUDITOR', 'VIEWER', 'APPROVER'] as const,
+  },
+} as const satisfies Record<AuthorizationType, Partial<Record<CapabilityAction, readonly UserRole[]>>>;
 
 export type RoleCapabilities = typeof ROLE_CAPABILITIES;
 
@@ -129,7 +153,7 @@ export function canRolePerformAction(
   role: UserRole | undefined
 ): boolean {
   if (!role) return false;
-  const normalizedType = documentType.toLowerCase() as BaseDocumentType;
+  const normalizedType = documentType.toLowerCase() as AuthorizationType;
   const actions = ROLE_CAPABILITIES[normalizedType];
   if (!actions) return false;
   const allowedRoles = actions[action as keyof typeof actions];

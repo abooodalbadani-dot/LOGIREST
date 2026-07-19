@@ -147,6 +147,7 @@ export function CurrencyFormClient({
         hideSave={isReadOnly}
         isDirty={isDirty}
         isValid={isValid}
+        resource="master_data_currencies"
         headerActions={
           id ? (
             <Button

@@ -16,6 +16,7 @@ export const StocktakeItemSchema = z.object({
  lotNumber: z.string().optional(),
  expiryDate: z.string().optional(),
  unitCost: z.number(),
+ image: z.string().nullable().optional(),
 });
 
 export const StocktakeSessionSchema = z.object({

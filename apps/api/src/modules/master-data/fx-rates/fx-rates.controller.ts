@@ -19,6 +19,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { Role, Prisma } from '@prisma/client';
@@ -32,7 +33,7 @@ export class FXRatesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
+  @Roles(Role.ADMIN, Role.PROC_MGR)
   async create(
     @Body() dto: CreateFXRateDto,
     @CurrentUser('id') userId: string,
@@ -191,17 +192,7 @@ export class FXRatesController {
   }
 
   @Get()
-  @Roles(
-    Role.ADMIN,
-    Role.GM,
-    Role.INV_MGR,
-    Role.STORE_MGR,
-    Role.BRANCH_MGR,
-    Role.PROC_MGR,
-    Role.PROC_OFFICER,
-    Role.AUDITOR,
-    Role.APPROVER,
-  )
+  @AllRoles()
   async findAll(
     @Query() query?: { from?: string; to?: string; isActive?: string },
   ) {
@@ -235,17 +226,7 @@ export class FXRatesController {
   }
 
   @Get(':id')
-  @Roles(
-    Role.ADMIN,
-    Role.GM,
-    Role.INV_MGR,
-    Role.STORE_MGR,
-    Role.BRANCH_MGR,
-    Role.PROC_MGR,
-    Role.PROC_OFFICER,
-    Role.AUDITOR,
-    Role.APPROVER,
-  )
+  @AllRoles()
   async findOne(@Param('id') id: string) {
     const rate = await this.prisma.fXRate.findUnique({
       where: { id },
@@ -261,7 +242,7 @@ export class FXRatesController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
+  @Roles(Role.ADMIN, Role.PROC_MGR)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateFXRateDto,

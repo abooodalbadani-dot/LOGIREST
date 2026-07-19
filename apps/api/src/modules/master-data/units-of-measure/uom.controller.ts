@@ -41,7 +41,7 @@ export class UomController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async create(
     @Body() body: CreateUomDto,
     @CurrentUser('id') userId: string,
@@ -58,7 +58,7 @@ export class UomController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async update(
     @Param('id') id: string,
     @Body() body: UpdateUomDto,
@@ -77,7 +77,7 @@ export class UomController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

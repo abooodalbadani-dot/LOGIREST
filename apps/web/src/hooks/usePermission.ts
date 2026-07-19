@@ -20,6 +20,18 @@ const RESOURCE_TO_DOCUMENT_TYPE: Partial<Record<ResourceType, DocumentType>> = {
   'procurement_po': 'po',
   grn: 'grn',
   'procurement_grn': 'grn',
+  'master_data_items': 'master_item',
+  'master_data_categories': 'master_item',
+  'master_data_units_of_measure': 'master_item',
+  'master_data_barcodes': 'master_item',
+  'master_data_suppliers': 'master_supplier',
+  'master_data_fx_rates': 'master_supplier',
+  'master_data_warehouses': 'master_org',
+  'master_data_branches': 'master_org',
+  'master_data_departments': 'master_org',
+  'master_data_currencies': 'master_org',
+  'admin_users': 'master_org',
+  'user': 'master_org',
 };
 
 const ACTION_TO_DOCUMENT_ACTION: Partial<Record<ActionType, CapabilityAction>> = {

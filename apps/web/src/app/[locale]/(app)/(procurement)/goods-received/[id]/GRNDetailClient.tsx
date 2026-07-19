@@ -58,21 +58,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
 
     const actions = (
         <div className="flex flex-col md:flex-row items-stretch md:items-center w-full md:w-auto gap-2">
-            {/* Scan Mode — always visible */}
-            {isLocked ? (
-                <span className="text-[10px] md:text-xs font-bold text-[#b48e67] tracking-widest uppercase truncate w-full text-center md:text-right">
-                    {t('inspect_scan_registers') || 'INSPECT SCAN REGISTER'}
-                </span>
-            ) : (
-                <Button
-                    onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
-                    variant="outline"
-                    className="w-full md:w-auto h-10 px-6 text-label-xs font-semibold uppercase rounded-lg transition-all flex items-center justify-center border-primary/20 text-primary hover:bg-primary/5"
-                >
-                    <Scan className="w-4 h-4 me-2" />
-                    {t('scan_mode')}
-                </Button>
-            )}
+
 
             {/* DRAFT: Submit for Receipt */}
             {status === GRN_STATUS.DRAFT && !isNew && (

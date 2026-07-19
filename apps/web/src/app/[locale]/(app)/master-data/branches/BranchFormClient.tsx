@@ -162,6 +162,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
         title={editTitle}
         backHref="/master-data/branches"
         onCancel={() => guardedRouter.push('/master-data/branches')}
+        resource="master_data_branches"
       >
         <div className="h-[400px] flex items-center justify-center">
           <ErrorState
@@ -180,6 +181,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
         title={editTitle}
         backHref="/master-data/branches"
         onCancel={() => guardedRouter.push('/master-data/branches')}
+        resource="master_data_branches"
       >
         <div className="h-[400px] flex items-center justify-center">
           <ErrorState

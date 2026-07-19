@@ -14,7 +14,7 @@ export default async function CurrencyDetailPage(props: { params: Promise<{ loca
  const t = await getTranslations('master_data.currencies');
  
  return (
-  <ProtectedRoute action="view" resource="master_data">
+  <ProtectedRoute action="view" resource="master_data_currencies">
    <CurrencyFormClient
     id={params.id}
     createTitle={t('create_title')}

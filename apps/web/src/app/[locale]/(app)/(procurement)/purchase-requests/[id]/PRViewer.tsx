@@ -126,6 +126,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
           code: l.item.code,
           nameEn: l.item.nameEn,
           nameAr: l.item.nameAr,
+          image: l.item.image || null,
           primaryUom: {
            code: l.item.primaryUom.code
           }

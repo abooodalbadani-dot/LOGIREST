@@ -1135,7 +1135,7 @@ export function AdjustmentForm({
                                 const val = parseFloat(e.target.value);
                                 updateLine(line.id, { qtyAdjusted: val || 0 });
                               }}
-                              className="w-full text-center font-black text-lg h-11 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm"
+                              className="w-full text-center font-black text-lg h-11 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm"
                             />
                           </div>
                         )

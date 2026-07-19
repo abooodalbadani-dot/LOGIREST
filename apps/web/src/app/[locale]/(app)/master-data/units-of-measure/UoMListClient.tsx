@@ -49,7 +49,7 @@ export function UoMListClient({ locale }: { locale: string }) {
    header: '',
    cell: ({ row }) => (
     <div className="flex justify-end gap-3">
-     <PermissionGate action="view" resource="master_data">
+     <PermissionGate action="view" resource="master_data_units_of_measure">
       <Button 
        variant="ghost" 
        size="sm" 
@@ -62,7 +62,7 @@ export function UoMListClient({ locale }: { locale: string }) {
        {t('view')}
       </Button>
      </PermissionGate>
-     <PermissionGate action="edit" resource="master_data">
+     <PermissionGate action="edit" resource="master_data_units_of_measure">
       <Button 
        variant="ghost" 
        size="sm" 
@@ -109,7 +109,7 @@ export function UoMListClient({ locale }: { locale: string }) {
      title={tu('title')} 
      subtitle={tu('description')}
      children={
-      <PermissionGate action="create" resource="master_data">
+      <PermissionGate action="create" resource="master_data_units_of_measure">
        <Link href={`/master-data/units-of-measure/new`} className="shrink-0 w-full sm:w-auto">
         <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
          <Plus className="w-3.5 h-3.5 me-2" />

@@ -62,6 +62,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
     code: line.item?.code || line.itemSku || line.itemId || '',
     nameAr: line.item?.nameAr || line.itemName || '',
     nameEn: line.item?.nameEn || line.itemName || '',
+    image: line.item?.image || null,
     primaryUom: { code: line.item?.primaryUom?.code || line.uomId || 'EA' }
    },
    qty: line.quantity ?? 0,

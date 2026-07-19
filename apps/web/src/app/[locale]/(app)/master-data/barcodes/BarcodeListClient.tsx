@@ -69,7 +69,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
    header: '',
    cell: ({ row }) => (
     <div className="flex justify-end gap-2">
-     <PermissionGate action="view" resource="master_data">
+     <PermissionGate action="view" resource="master_data_barcodes">
       <Button 
        variant="ghost" 
        size="sm" 
@@ -82,7 +82,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
        {tc('view')}
       </Button>
      </PermissionGate>
-     <PermissionGate action="edit" resource="master_data">
+     <PermissionGate action="edit" resource="master_data_barcodes">
       <Button
        variant="ghost"
        size="sm"
@@ -114,7 +114,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
      title={t('title')} 
      subtitle={t('description')}
      children={
-      <PermissionGate action="create" resource="master_data">
+      <PermissionGate action="create" resource="master_data_barcodes">
        <div className="flex gap-4">
         <Link href={`/master-data/barcodes/mapping`} className="shrink-0 w-full sm:w-auto">
          <Button variant="outline" className="h-11 px-6 border-white/5 bg-card border border-border shadow-sm hover:bg-surface-container-medium text-label-xs font-semibold uppercase rounded-sm">
@@ -217,7 +217,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
           {/* Compact Touch-Friendly Buttons */}
           <div className="flex gap-2 shrink-0">
-           <PermissionGate action="view" resource="master_data">
+           <PermissionGate action="view" resource="master_data_barcodes">
             <button 
              className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors uppercase"
              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/barcodes/${barcode.id}`); }}
@@ -225,7 +225,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
              {tc('view')}
             </button>
            </PermissionGate>
-           <PermissionGate action="edit" resource="master_data">
+           <PermissionGate action="edit" resource="master_data_barcodes">
             <button 
              className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors uppercase"
              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/barcodes/${barcode.id}/edit`); }}

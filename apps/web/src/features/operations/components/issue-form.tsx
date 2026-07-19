@@ -70,6 +70,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         id: l.item.id,
         code: l.item.code,
         name: l.item.name,
+        image: l.item.image || null,
         primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
       },
       lot,
@@ -498,7 +499,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       {!isNew && !effectiveIsLocked && (
                         <Button
                           type="button"
-                          onClick={() => guardedRouter.push(`/issues/${id}/scan-mode`)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            guardedRouter.push(`/issues/${id}/scan-mode`, { skipGuard: true });
+                          }}
                           variant="outline"
                           className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
                         >
@@ -526,7 +530,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                             <Input
                               type="number"
                               disabled={effectiveIsLocked}
-                              className="w-16 md:w-20 h-7 rounded-sm border border-gray-600 bg-transparent text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-white focus:ring-1 focus:ring-primary focus:border-primary shadow-none"
+                              className="w-16 md:w-20 h-7 rounded-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800/50 text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary focus:border-primary shadow-none"
                               value={line.qty as number}
                               onChange={e => {
                                 const val = Number(e.target.value);
@@ -725,17 +729,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
                   )}
                   <span>{t('cancel') || 'Delete'}</span>
-                </Button>
-              )}
-              {!effectiveIsLocked && !isNew && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => guardedRouter.push(`/issues/${id}/scan-mode`)}
-                  className="h-8 md:h-10 px-3 md:px-5 rounded-full text-[10px] md:text-label-sm font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-card/5 transition-all group flex items-center gap-2 shrink-0 border-none"
-                >
-                  <Scan className="w-4 h-4 md:w-5 md:h-5 opacity-50 transition-transform group-hover:scale-110" />
-                  <span className="hidden md:inline">{t('scan_mode.breadcrumb_scan')}</span>
                 </Button>
               )}
             </>

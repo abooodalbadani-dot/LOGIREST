@@ -48,7 +48,7 @@ export class BarcodesController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async create(
     @Body() body: CreateBarcodeDto,
     @CurrentUser('id') userId: string,
@@ -65,7 +65,7 @@ export class BarcodesController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async update(
     @Param('id') id: string,
     @Body() body: UpdateBarcodeDto,
@@ -84,7 +84,7 @@ export class BarcodesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

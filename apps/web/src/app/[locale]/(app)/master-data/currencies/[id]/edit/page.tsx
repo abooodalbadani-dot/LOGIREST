@@ -14,7 +14,7 @@ export default async function EditCurrencyPage(props: { params: Promise<{ locale
  const t = await getTranslations('master_data.currencies');
 
  return (
-  <ProtectedRoute action="edit" resource="master_data">
+  <ProtectedRoute action="edit" resource="master_data_currencies">
    <CurrencyFormClient
     id={params.id}
     createTitle={t('create_title')}

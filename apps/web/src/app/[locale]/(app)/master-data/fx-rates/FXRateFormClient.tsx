@@ -257,6 +257,7 @@ export function FXRateFormClient({
         hideSave={isReadOnly}
         isDirty={isDirty}
         isValid={isValid}
+        resource="master_data_fx_rates"
       >
         <div className="col-span-12 w-full max-w-3xl mx-auto flex flex-col gap-8 p-6 bg-card border border-border rounded-xl mt-6">
           {/* Main Financial Card */}

@@ -36,19 +36,19 @@ export class CurrenciesController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN)
   async create(@Body() body: CreateCurrencyDto) {
     return this.currenciesService.create(body);
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN)
   async update(@Param('id') id: string, @Body() body: UpdateCurrencyDto) {
     return this.currenciesService.update(id, body);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN)
   async remove(@Param('id') id: string) {
     return this.currenciesService.remove(id);
   }

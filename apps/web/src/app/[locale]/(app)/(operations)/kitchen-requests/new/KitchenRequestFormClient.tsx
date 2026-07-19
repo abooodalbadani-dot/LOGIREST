@@ -133,7 +133,7 @@ function KitchenRequestNotesCell({ value, onChange, placeholder, disabled }: Kit
         onBlur={() => onChange(localVal)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
+        className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
       />
     </div>
   );
@@ -528,7 +528,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                               form.setValue(`items.${line.index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                             }}
                             disabled={form.formState.isSubmitting}
-                            className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+                            className="w-full text-center font-black text-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
                           />
                         </div>
                         {form.formState.errors.items?.[line.index]?.quantity && (
@@ -585,7 +585,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                                   form.setValue(`items.${index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                                 }}
                                 disabled={form.formState.isSubmitting}
-                                className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+                                className="w-full text-center font-black text-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
                               />
                               <span className="text-xs font-bold text-gray-500 px-2">{selectedItem.primaryUom?.code || '---'}</span>
                             </div>
@@ -599,7 +599,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                             type="text"
                             placeholder="ملاحظات السطر..."
                             {...form.register(`items.${index}.notes`)}
-                            className="w-full text-xs p-2 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 rounded-md focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-foreground placeholder:text-muted-foreground/50"
+                            className="w-full text-xs p-2 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 rounded-md focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-gray-900 dark:text-gray-100 placeholder:text-muted-foreground/50"
                           />
                         </div>
                       </div>

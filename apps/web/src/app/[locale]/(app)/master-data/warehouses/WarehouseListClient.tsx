@@ -67,7 +67,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
    header: '',
    cell: ({ row }) => (
     <div className="flex justify-end gap-3">
-     <PermissionGate action="view" resource="master_data">
+     <PermissionGate action="view" resource="master_data_warehouses">
       <Button 
        variant="ghost" 
        size="sm" 
@@ -80,7 +80,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
        {tc('view')}
       </Button>
      </PermissionGate>
-     <PermissionGate action="edit" resource="master_data">
+     <PermissionGate action="edit" resource="master_data_warehouses">
       <Button 
        variant="ghost" 
        size="sm" 
@@ -119,7 +119,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
      />
     </div>
     <div className="shrink-0 mt-4 sm:mt-0">
-     <PermissionGate action="create" resource="master_data">
+     <PermissionGate action="create" resource="master_data_warehouses">
       <Link href={`/master-data/warehouses/new`} className="shrink-0 w-full sm:w-auto">
        <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
         <Plus className="w-3.5 h-3.5 me-2" />
@@ -215,7 +215,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
         <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
           {/* Compact Touch-Friendly Buttons (h-8 is enough for lists) */}
           <div className="flex gap-2 shrink-0">
-           <PermissionGate action="view" resource="master_data">
+           <PermissionGate action="view" resource="master_data_warehouses">
             <button 
              className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/warehouses/${warehouse.id}`); }}
@@ -223,7 +223,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
              {tc('view')}
             </button>
            </PermissionGate>
-           <PermissionGate action="edit" resource="master_data">
+           <PermissionGate action="edit" resource="master_data_warehouses">
             <button 
              className="h-8 px-4 flex items-center justify-center bg-white dark:bg-transparent border border-[#b48e67] text-[#b48e67] rounded-md text-xs font-bold hover:bg-[#b48e67]/10 transition-colors"
              onClick={(e) => { e.stopPropagation(); router.push(`/master-data/warehouses/${warehouse.id}/edit`); }}
