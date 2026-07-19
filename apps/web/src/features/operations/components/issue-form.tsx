@@ -522,6 +522,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     onRemoveLine={removeLine}
                     dense={true}
                     hideUomColumn={true}
+                    noCollapse={false}
+                    mobileLayoutPattern="issue-form"
                     extraColumns={[
                       {
                         header: t('qty'),

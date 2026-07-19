@@ -838,8 +838,8 @@ export function DocumentLineItemTable<T extends LineItem>({
                     ) : (
                       <>
                         {/* Top Tier (Master) */}
-                        {mobileLayoutPattern !== 'elegant' && (
-                          <div className="flex items-center py-2 bg-[#0B1220] px-3 w-full rounded-t-xl gap-2.5">
+                        <div className="flex items-center py-2.5 bg-[#0B1220] px-3 w-full rounded-t-xl gap-2.5 justify-between">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
                             {line.item.image ? (
                               <img src={line.item.image} alt="Product" className="w-8 h-8 object-cover rounded-md border border-gray-800 shrink-0" />
                             ) : (
@@ -847,7 +847,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 N/A
                               </div>
                             )}
-                            <div className="flex flex-col gap-1 min-w-0 flex-1 text-start">
+                            <div className="flex flex-col gap-0.5 min-w-0 flex-1 text-start">
                               <span className="text-sm font-bold text-white truncate block">
                                 {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
                               </span>
@@ -855,7 +855,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase" dir="ltr">
                                   {line.item.code}
                                 </span>
-                                {hideUomColumn && (
+                                {(hideUomColumn && mobileLayoutPattern !== 'elegant') && (
                                   <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded uppercase font-semibold">
                                     {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
                                   </span>
@@ -863,6 +863,21 @@ export function DocumentLineItemTable<T extends LineItem>({
                               </div>
                               {renderItemDescription?.(line as T)}
                             </div>
+                          </div>
+
+                          {/* QTY Badge in Top Header */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {renderQty ? (
+                              renderQty(line)
+                            ) : (
+                              <div className="flex items-center gap-1 px-2.5 py-1 bg-white border border-[#b48e67]/35 rounded-lg text-[#b48e67] dark:bg-[#b48e67]/25 dark:border-[#b48e67]/50 dark:text-[#f5dac0] shrink-0 shadow-xs">
+                                <span className="text-[11px] font-black text-[#b48e67] dark:text-[#b48e67] me-0.5 uppercase">{h.qty}:</span>
+                                <span className="text-sm font-black text-[#43474f] dark:text-white font-mono" dir="ltr">{line.qty}</span>
+                                <span className="text-[10px] font-extrabold uppercase ms-1 text-[#b48e67] dark:text-[#b48e67]">
+                                  {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                </span>
+                              </div>
+                            )}
                             {!isReadOnly && onRemoveLine && (
                               <button
                                 type="button"
@@ -876,63 +891,40 @@ export function DocumentLineItemTable<T extends LineItem>({
                               </button>
                             )}
                           </div>
-                        )}
+                        </div>
 
-                        {/* Detail Tier (High-Density CSS Grid) */}
+                        {/* Detail Tier (Body: Lot & Allocations) */}
                         {mobileLayoutPattern === 'elegant' ? (
-                          <div className="flex flex-col w-full border-b border-border dark:border-[#b48e67]/10 last:border-0 pb-2">
-                            {/* Headers */}
-                            <div className="grid grid-cols-4 gap-2 px-3 py-2 border-b border-border dark:border-[#b48e67]/10 w-full items-center">
-                              <span className="text-[10px] font-bold text-muted-foreground dark:text-gray-400 text-start col-span-1 truncate">{h.name}</span>
-                              {!hideLotColumns && <span className="text-[10px] font-bold text-muted-foreground dark:text-gray-400 text-center truncate">{h.lot}</span>}
-                              {!hideLotColumns && <span className="text-[10px] font-bold text-muted-foreground dark:text-gray-400 text-center truncate">{h.expiry}</span>}
-                              <span className="text-[10px] font-bold text-muted-foreground dark:text-gray-400 text-center col-span-1 truncate">{h.qty}</span>
-                            </div>
-                            {/* Values */}
-                            <div className="grid grid-cols-4 gap-2 px-3 py-2 w-full items-center">
-                              {/* Name */}
-                              <div className="flex items-center gap-2 text-start col-span-1 overflow-hidden">
-                                {line.item.image ? (
-                                  <img src={line.item.image} alt="Product" className="w-6 h-6 object-cover rounded-md border border-border shrink-0" />
-                                ) : (
-                                  <div className="w-6 h-6 bg-surface-container flex items-center justify-center rounded-md border border-border text-[8px] text-muted-foreground font-mono shrink-0">
-                                    N/A
-                                  </div>
-                                )}
-                                <div className="flex flex-col items-start min-w-0 overflow-hidden">
-                                  <span className="text-[11px] font-bold text-foreground dark:text-white leading-tight line-clamp-2">
-                                    {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                                  </span>
-                                  <span className="text-[9px] text-muted-foreground dark:text-gray-500 font-mono uppercase mt-1">
-                                    {line.item.code}
-                                  </span>
-                                </div>
-                              </div>
-                              {/* Lot */}
-                              {!hideLotColumns && (
-                                <div className="flex justify-center text-center">
-                                  <span className="text-[10px] text-muted-foreground dark:text-gray-500 font-mono">
+                          <div className="flex flex-col gap-2 p-3 bg-card dark:bg-[#1A2234] border-x border-b border-[#b48e67]/50 dark:border-[#b48e67]/50 w-full rounded-b-xl text-start">
+                            {/* LOT & Expiry */}
+                            {!hideLotColumns && (
+                              <div className="flex items-center justify-between gap-3 text-xs w-full">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">{h.lot}:</span>
+                                  <span className="text-xs font-mono text-foreground bg-muted/60 dark:bg-slate-900/60 px-2 py-0.5 rounded border border-border/50 truncate max-w-[180px]" dir="ltr">
                                     {line.lot ? line.lot.lotNumber : '—'}
                                   </span>
                                 </div>
-                              )}
-                              {/* Expiry */}
-                              {!hideLotColumns && (
-                                <div className="flex justify-center text-center">
-                                  <span className="text-[10px] text-muted-foreground dark:text-gray-500 font-mono">
-                                    {line.lot?.expiryDate ? formatDate(line.lot.expiryDate, locale as 'ar' | 'en') : '—'}
-                                  </span>
-                                </div>
-                              )}
-                              {/* Qty */}
-                              <div className="flex justify-center text-center col-span-1">
-                                {renderQty ? renderQty(line) : (
-                                  <div className="border border-border dark:border-[#b48e67]/30 rounded bg-transparent px-2 py-0.5 text-foreground dark:text-white font-mono text-xs shadow-sm">
-                                    {line.qty}
+                                {line.lot?.expiryDate && (
+                                  <div className="flex items-center gap-1.5 shrink-0 text-[11px]">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">{h.expiry}:</span>
+                                    <span className="font-mono text-muted-foreground" dir="ltr">
+                                      {formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}
+                                    </span>
                                   </div>
                                 )}
                               </div>
-                            </div>
+                            )}
+
+                            {/* Extra Columns (ALLOCATE) - Side-by-side alignment */}
+                            {extraColumns.map((col, i) => (
+                              <div key={i} className="flex items-center justify-between gap-3 text-xs w-full pt-1.5 border-t border-border/40">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">{col.header}:</span>
+                                <div className="flex items-center justify-end min-w-0 flex-1 overflow-hidden">
+                                  {col.cell(line)}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         ) : mobileLayoutPattern === 'variance-form' ? (
                           <div className="grid grid-cols-2 gap-3 p-4 bg-[#1A2234]/30 rounded-b-xl border-t border-gray-800 w-full">
