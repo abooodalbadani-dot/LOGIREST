@@ -150,10 +150,10 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
       'REJECT': { targetStatus: PO_STATUS.REJECTED, allowedRoles: ['ADMIN', 'GM', 'APPROVER', 'BRANCH_MGR', 'PROC_MGR'] },
     },
     [PO_STATUS.APPROVED]: {
-      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'PROC_MGR'] },
+      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'BRANCH_MGR'] },
     },
     [PO_STATUS.PARTIAL]: {
-      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'PROC_MGR'] },
+      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'BRANCH_MGR'] },
     },
     [PO_STATUS.REJECTED]: {
       'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR', 'BRANCH_MGR'] },

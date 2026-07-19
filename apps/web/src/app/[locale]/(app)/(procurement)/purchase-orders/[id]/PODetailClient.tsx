@@ -61,13 +61,17 @@ export function PODetailClient({ id }: PODetailClientProps) {
    {/* APPROVED: Receive Items + Email */}
    {status === PO_STATUS.APPROVED && !isNew && (
     <>
-     <Button
-      onClick={() => router.push(`/goods-received/new?po_id=${id}`)}
-      className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs shadow-md border-none flex items-center"
-     >
-      <FileText className="w-4 h-4 me-2" />
-      {t('actions.receive_items') || 'Receive Items (GRN)'}
-     </Button>
+     <ActionGuard documentType="PO" status={status} action="FULFILL" role={user?.role}>
+      <PermissionGate action="fulfill" resource="po">
+       <Button
+        onClick={() => router.push(`/goods-received/new?po_id=${id}`)}
+        className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs shadow-md border-none flex items-center"
+       >
+        <FileText className="w-4 h-4 me-2" />
+        {t('actions.receive_items') || 'Receive Items (GRN)'}
+       </Button>
+      </PermissionGate>
+     </ActionGuard>
 
      <Button
       onClick={async () => {
