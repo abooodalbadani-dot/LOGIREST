@@ -155,7 +155,7 @@ describe('OutboxWorker', () => {
 
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
       ['approver1@example.com', 'approver2@example.com'],
-      'Purchase Request PR-2026-0001 awaiting approval',
+      'Purchase Request PR-2026-0001 awaiting approval or review',
       expect.stringContaining('PR-2026-0001'),
       'PR_SUBMITTED',
       mockEvent.payload,

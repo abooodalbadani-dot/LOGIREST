@@ -292,15 +292,15 @@ export class OutboxWorker extends WorkerHost {
         const whId = data.warehouseId;
         const keepers = whId
           ? await this.prisma.user.findMany({
-              where: {
-                role: Role.WH_KEEPER,
-                isActive: true,
-                warehouseScopes: {
-                  some: { warehouseId: whId },
-                },
+            where: {
+              role: Role.WH_KEEPER,
+              isActive: true,
+              warehouseScopes: {
+                some: { warehouseId: whId },
               },
-              select: { email: true, notificationPreferences: true },
-            })
+            },
+            select: { email: true, notificationPreferences: true },
+          })
           : [];
         const managers = await this.prisma.user.findMany({
           where: { role: Role.INV_MGR, isActive: true },
@@ -401,15 +401,15 @@ export class OutboxWorker extends WorkerHost {
         const sendingWhId = data.fromWarehouseId;
         const keepers = sendingWhId
           ? await this.prisma.user.findMany({
-              where: {
-                role: Role.WH_KEEPER,
-                isActive: true,
-                warehouseScopes: {
-                  some: { warehouseId: sendingWhId },
-                },
+            where: {
+              role: Role.WH_KEEPER,
+              isActive: true,
+              warehouseScopes: {
+                some: { warehouseId: sendingWhId },
               },
-              select: { email: true },
-            })
+            },
+            select: { email: true },
+          })
           : [];
         const managers = await this.prisma.user.findMany({
           where: { role: Role.INV_MGR, isActive: true },
@@ -515,12 +515,46 @@ export class OutboxWorker extends WorkerHost {
         `;
         break;
       case 'PR_SUBMITTED':
-        subject = `Purchase Request ${docNo} awaiting approval`;
+        subject = `Purchase Request ${docNo} awaiting approval or review`;
         body = `
           <p>Hello,</p>
           <p>Purchase Request <strong>${docNo}</strong> has been submitted and is currently awaiting your review and approval.</p>
           <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
           <p>Please log in to the Otantik Restaurant console to view the details.</p>
+        `;
+        break;
+      case 'PO_SUBMITTED':
+        subject = `Purchase Order ${docNo} awaiting approval or review`;
+        body = `
+          <p>Hello,</p>
+          <p>Purchase Order <strong>${docNo}</strong> has been submitted and is currently awaiting your review and approval.</p>
+          <p>Please log in to the Otantik Restaurant console to view the details.</p>
+        `;
+        break;
+      case 'GRN_RECEIVED':
+        subject = `Goods Received Note ${docNo} received`;
+        body = `
+          <p>Hello,</p>
+          <p>Goods Received Note <strong>${docNo}</strong> has been received and is awaiting post or verification.</p>
+          <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p>Please log in to the Otantik Restaurant console to view the details.</p>
+        `;
+        break;
+      case 'ISSUE_SUBMITTED':
+        subject = `Stock Issue ${docNo} submitted for posting`;
+        body = `
+          <p>Hello,</p>
+          <p>Stock Issue <strong>${docNo}</strong> has been submitted and is awaiting your post authorization.</p>
+          <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p>Please log in to the Otantik Restaurant console to view the details.</p>
+        `;
+        break;
+      case 'STOCKTAKE_STARTED':
+        subject = `Stocktake Session ${docNo} started`;
+        body = `
+          <p>Hello,</p>
+          <p>A new Stocktake Session <strong>${docNo}</strong> has been started in warehouse <strong>${data.warehouseName || 'N/A'}</strong>.</p>
+          <p>Please begin recording counts.</p>
         `;
         break;
       case 'PR_APPROVED':
@@ -783,6 +817,15 @@ export class OutboxWorker extends WorkerHost {
         return [Role.ADMIN, Role.GM];
       case 'PO_APPROVED':
         return [Role.PROC_MGR, Role.APPROVER, Role.GM];
+      case 'EXPIRY_WARNING':
+      case 'EXPIRY_WARNING_ALERT':
+        return [Role.WH_KEEPER, Role.INV_MGR];
+      case 'STOCKTAKE_STARTED':
+        return [Role.WH_KEEPER, Role.INV_MGR];
+      case 'TRANSFER_SHIPPED':
+        return [Role.WH_KEEPER, Role.INV_MGR];
+      case 'TRANSFER_RECEIVED':
+        return [Role.WH_KEEPER, Role.INV_MGR];
       default:
         return [];
     }

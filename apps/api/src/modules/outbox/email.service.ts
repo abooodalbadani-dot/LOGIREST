@@ -270,23 +270,20 @@ export class EmailService {
     const bccRecipients = recipientList.slice(1);
 
     try {
-      await transporter.sendMail({
-        from,
-        to: primaryRecipient,
-        bcc: bccRecipients.length > 0 ? bccRecipients : undefined,
-        subject: finalSubject,
-        html: this.wrapInBrandTemplate(finalSubject, finalHtml),
-      });
-      this.logger.log(
-        `Successfully dispatched email to: ${primaryRecipient}${
-          bccRecipients.length > 0 ? ` (BCC: ${bccRecipients.join(', ')})` : ''
-        }`,
-      );
+      for (const recipient of recipientList) {
+        await transporter.sendMail({
+          from,
+          to: recipient,
+          subject: finalSubject,
+          html: this.wrapInBrandTemplate(finalSubject, finalHtml),
+        });
+        this.logger.log(`Successfully dispatched email to: ${recipient}`);
+      }
       return { ok: true };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       const stack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`[EmailService] SMTP transmission failed to ${primaryRecipient}: ${msg}`, stack);
+      this.logger.error(`[EmailService] SMTP transmission failed: ${msg}`, stack);
       return { ok: false, reason: 'SEND_FAILED', error: msg };
     }
   }
