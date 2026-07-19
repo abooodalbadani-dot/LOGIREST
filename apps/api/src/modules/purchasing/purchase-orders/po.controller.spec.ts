@@ -85,8 +85,10 @@ describe('PurchaseOrderController', () => {
           prId: undefined,
           isSubmitted: true,
           lines: [{ itemId: 'item-1', quantity: 5, unitPrice: 10 }],
+          warehouseId: undefined,
         },
         'user-1',
+        Role.ADMIN,
       );
       expect(result.data).toBeDefined();
     });

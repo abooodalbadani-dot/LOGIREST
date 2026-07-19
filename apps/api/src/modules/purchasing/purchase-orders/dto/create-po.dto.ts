@@ -38,6 +38,14 @@ export class CreatePoDto {
   @IsOptional()
   prId?: string;
 
+  @IsString()
+  @IsOptional()
+  targetWarehouseId?: string;
+
+  @IsString()
+  @IsOptional()
+  warehouseId?: string;
+
   @IsBoolean()
   @IsOptional()
   isSubmitted?: boolean;

@@ -37,6 +37,14 @@ export class UpdatePoDto {
   @IsOptional()
   currencyId?: string;
 
+  @IsString()
+  @IsOptional()
+  targetWarehouseId?: string;
+
+  @IsString()
+  @IsOptional()
+  warehouseId?: string;
+
   @IsInt()
   @IsNotEmpty()
   version!: number;

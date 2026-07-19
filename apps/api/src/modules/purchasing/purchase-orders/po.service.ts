@@ -25,6 +25,7 @@ export class PurchaseOrderService {
       currencyId: string;
       prId?: string;
       isSubmitted?: boolean;
+      warehouseId?: string;
       lines: Array<{ itemId: string; quantity: number; unitPrice: number }>;
     },
     userId: string,
@@ -32,10 +33,12 @@ export class PurchaseOrderService {
   ) {
     return this.prisma.$transaction(async (tx) => {
       let branchId: string | undefined;
+      let warehouseId: string | undefined = body.warehouseId;
+
       if (body.prId) {
         const pr = await tx.purchaseRequest.findUnique({
           where: { id: body.prId },
-          select: { branchId: true, status: true },
+          select: { branchId: true, status: true, warehouseId: true },
         });
         if (!pr) {
           throw new NotFoundException(
@@ -59,11 +62,22 @@ export class PurchaseOrderService {
         }
 
         branchId = pr.branchId;
+        warehouseId = pr.warehouseId;
 
         await tx.purchaseRequest.update({
           where: { id: body.prId },
           data: { status: 'FULFILLED' },
         });
+      }
+
+      if (!branchId && warehouseId) {
+        const wh = await tx.warehouse.findUnique({
+          where: { id: warehouseId },
+          select: { branchId: true },
+        });
+        if (wh) {
+          branchId = wh.branchId;
+        }
       }
 
       if (!branchId) {
@@ -92,6 +106,7 @@ export class PurchaseOrderService {
           prId: body.prId || null,
           supplierId: body.supplierId,
           currencyId: body.currencyId,
+          warehouseId: warehouseId || null,
           status,
           lines: {
             create: body.lines.map((line) => ({
@@ -169,9 +184,14 @@ export class PurchaseOrderService {
       where.supplierId = params.supplierId;
     }
     if (warehouseId) {
-      where.purchaseRequest = {
-        warehouseId,
-      };
+      where.OR = [
+        { warehouseId },
+        {
+          purchaseRequest: {
+            warehouseId,
+          },
+        },
+      ];
     }
     if (params.search) {
       where.OR = [
@@ -298,6 +318,7 @@ export class PurchaseOrderService {
     body: {
       supplierId?: string;
       currencyId?: string;
+      warehouseId?: string;
       version: number;
       lines?: Array<{
         id?: string;
@@ -341,6 +362,7 @@ export class PurchaseOrderService {
         data: {
           supplierId: body.supplierId,
           currencyId: body.currencyId,
+          warehouseId: body.warehouseId,
           version: { increment: 1 },
           ...(body.lines && {
             lines: {

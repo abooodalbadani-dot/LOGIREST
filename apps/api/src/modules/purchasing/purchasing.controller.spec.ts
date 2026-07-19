@@ -134,8 +134,12 @@ describe('Purchasing Controllers', () => {
       const result = await controller.create(body, 'user-1', Role.ADMIN);
       expect(result.data.id).toEqual('po-1');
       expect(mockPurchaseOrderService.create).toHaveBeenCalledWith(
-        body,
+        {
+          ...body,
+          warehouseId: undefined,
+        },
         'user-1',
+        Role.ADMIN,
       );
     });
 

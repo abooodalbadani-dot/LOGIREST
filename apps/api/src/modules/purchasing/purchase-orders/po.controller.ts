@@ -236,8 +236,16 @@ export class PurchaseOrderController {
       );
     }
     const po = await this.poService.create(
-      { supplierId, currencyId, prId, lines, isSubmitted: body.isSubmitted },
+      {
+        supplierId,
+        currencyId,
+        prId,
+        lines,
+        isSubmitted: body.isSubmitted,
+        warehouseId: body.targetWarehouseId || body.warehouseId,
+      },
       userId,
+      role,
     );
     return { data: mapPODetail(po) };
   }
@@ -397,6 +405,7 @@ export class PurchaseOrderController {
     const updated = await this.poService.update(id, {
       supplierId,
       currencyId,
+      warehouseId: body.targetWarehouseId || body.warehouseId,
       version: body.version,
       lines,
     });
