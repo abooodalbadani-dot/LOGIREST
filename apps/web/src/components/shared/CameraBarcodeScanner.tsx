@@ -52,21 +52,33 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
       scannerRef.current = html5QrCode;
 
       const config = {
-        fps: 12,
+        fps: 15,
         qrbox: (width: number, height: number) => {
-          // Optimized scanning area width and height for linear barcodes
-          const boxWidth = Math.min(width * 0.85, 320);
-          const boxHeight = Math.min(height * 0.35, 120);
+          const size = Math.min(width * 0.7, 250);
           return {
-            width: Math.floor(boxWidth),
-            height: Math.floor(boxHeight)
+            width: Math.floor(size),
+            height: Math.floor(size)
           };
         },
         formatsToSupport: formats,
       };
 
+      interface CameraTrackConstraints extends MediaTrackConstraints {
+        advanced?: Array<MediaTrackConstraintSet & { focusMode?: string; zoom?: number }>;
+      }
+
+      const constraints: CameraTrackConstraints = {
+        facingMode: 'environment',
+        width: { min: 1280, ideal: 1920 },
+        height: { min: 720, ideal: 1080 },
+        advanced: [
+          { focusMode: 'continuous' },
+          { zoom: 1.5 }
+        ]
+      };
+
       html5QrCode.start(
-        { facingMode: 'environment' },
+        constraints,
         config,
         (decodedText) => {
           if (active) {
@@ -144,16 +156,17 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
       {/* Scanning overlay framing */}
       {!isInitializing && !error && (
         <div className="absolute inset-0 pointer-events-none border border-white/5 z-10 flex items-center justify-center">
-          {/* Sighting lines */}
-          <div className="absolute left-[10%] right-[10%] top-[30%] bottom-[30%] border border-primary/20 rounded-md flex items-center justify-center">
+          {/* Centered Square Viewfinder matching qrbox */}
+          <div className="absolute w-[250px] h-[250px] max-w-[70%] max-h-[70%] border border-primary/20 rounded-xl flex items-center justify-center pointer-events-none">
+            {/* Red scanning line animation */}
             <div className="w-full h-0.5 bg-primary/70 shadow-[0_0_12px_rgba(202,174,133,0.8)] animate-[scan-line_2.2s_infinite]" />
+            
+            {/* Viewfinder Corners */}
+            <div className="absolute left-0 top-0 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
+            <div className="absolute right-0 top-0 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
+            <div className="absolute left-0 bottom-0 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
+            <div className="absolute right-0 bottom-0 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
           </div>
-
-          {/* Viewfinder Corners */}
-          <div className="absolute left-[8%] top-[28%] w-3 h-3 border-t-2 border-l-2 border-primary rounded-tl-sm" />
-          <div className="absolute right-[8%] top-[28%] w-3 h-3 border-t-2 border-r-2 border-primary rounded-tr-sm" />
-          <div className="absolute left-[8%] bottom-[28%] w-3 h-3 border-b-2 border-l-2 border-primary rounded-bl-sm" />
-          <div className="absolute right-[8%] bottom-[28%] w-3 h-3 border-b-2 border-r-2 border-primary rounded-br-sm" />
         </div>
       )}
 
