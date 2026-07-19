@@ -2,6 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations, useLocale } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, Controller, useWatch, useFieldArray, type UseFormRegister } from 'react-hook-form';
@@ -154,6 +155,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    const ts = useTranslations('operations.stocktake');
    const locale = useLocale();
    const { user } = useAuth();
+   const queryClient = useQueryClient();
 
    const searchParams = useSearchParams();
    const queryPoId = searchParams ? searchParams.get('po_id') : null;
@@ -510,6 +512,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    );
 
    const isPending = createMutation.isPending || updateMutation.isPending;
+   const isMutationSuccess = createMutation.isSuccess || updateMutation.isSuccess;
+   const isScannerEnabled = status === GRN_STATUS.DRAFT && !isLocked && !isWarehouseLocked && !isPending && !isMutationSuccess;
 
    const onSubmit = async (values: GRNFormValues) => {
       if (!currencies || currencies.length === 0) {
@@ -557,7 +561,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             const result = await createMutation.mutateAsync({ payload, headers });
             playSound('success');
             toast.success(t('create_success'));
-            router.push('/goods-received', { skipGuard: true });
+            router.push(`/goods-received/${result.id}`, { skipGuard: true });
          } else if (initialData) {
             await updateMutation.mutateAsync({
                id: initialData.id,
@@ -569,7 +573,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             });
             playSound('success');
             toast.success(t('update_success'));
-            router.push('/goods-received', { skipGuard: true });
+            queryClient.invalidateQueries({ queryKey: ['grn', initialData.id] });
+            queryClient.invalidateQueries({ queryKey: ['grns'] });
          }
       } catch (error) {
          const isConflict = error && typeof error === 'object' && 'name' in error && error.name === 'ConflictError';
@@ -866,8 +871,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
                            <ScanInput
                               onScan={handleScan}
-                              scannerMode={true}
-                              disabled={isLocked || isWarehouseLocked}
+                              scannerMode={isScannerEnabled}
+                              disabled={!isScannerEnabled}
+                              autoFocus={isScannerEnabled}
                               items={itemsData?.data || []}
                               placeholder={t('scan_placeholder')}
                               onError={(bc) => setScanError(t('no_item_found') + ': ' + bc)}
