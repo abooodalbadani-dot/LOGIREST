@@ -88,7 +88,7 @@ services:
   # OBJECT STORAGE â€” MinIO (S3-compatible)
   # ---------------------------------------------------------------------------
   logirest-minio:
-    image: minio/minio:RELEASE.2024-01-28T22-35-53Z
+    image: minio/minio:latest
     container_name: logirest-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
