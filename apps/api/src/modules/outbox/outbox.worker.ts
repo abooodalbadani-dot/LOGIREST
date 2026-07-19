@@ -256,10 +256,10 @@ export class OutboxWorker extends WorkerHost {
         targetRoles = [Role.ADMIN, Role.INV_MGR];
         break;
       case 'PR_SUBMITTED':
-        targetRoles = [Role.APPROVER, Role.PROC_MGR];
+        targetRoles = [Role.APPROVER, Role.PROC_MGR, Role.BRANCH_MGR];
         break;
       case 'PO_SUBMITTED':
-        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
+        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM, Role.BRANCH_MGR];
         break;
       case 'PR_APPROVED':
       case 'PR_REJECTED': {
@@ -282,7 +282,7 @@ export class OutboxWorker extends WorkerHost {
         return Array.from(new Set(emails));
       }
       case 'GRN_POSTED':
-        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
+        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM, Role.INV_MGR, Role.BRANCH_MGR];
         break;
       case 'LOW_STOCK_ALERT':
         targetRoles = [Role.INV_MGR, Role.PROC_MGR];
@@ -329,17 +329,43 @@ export class OutboxWorker extends WorkerHost {
       case 'KITCHEN_REQUEST_SUBMITTED': {
         const whId = data.warehouseId;
         if (!whId) return [];
-        const keepers = await this.prisma.user.findMany({
+        const users = await this.prisma.user.findMany({
           where: {
-            role: Role.WH_KEEPER,
+            role: { in: [Role.WH_KEEPER, Role.INV_MGR, Role.BRANCH_MGR] },
             isActive: true,
-            warehouseScopes: {
-              some: { warehouseId: whId },
-            },
+            OR: [
+              { role: { in: [Role.INV_MGR, Role.BRANCH_MGR] } },
+              {
+                role: Role.WH_KEEPER,
+                warehouseScopes: {
+                  some: { warehouseId: whId },
+                },
+              },
+            ],
           },
           select: { email: true },
         });
-        return keepers.map((u) => u.email);
+        return users.map((u) => u.email);
+      }
+      case 'ISSUE_SUBMITTED': {
+        const users = await this.prisma.user.findMany({
+          where: {
+            role: { in: [Role.INV_MGR, Role.BRANCH_MGR] },
+            isActive: true,
+          },
+          select: { email: true },
+        });
+        return users.map((u) => u.email);
+      }
+      case 'GRN_RECEIVED': {
+        const users = await this.prisma.user.findMany({
+          where: {
+            role: { in: [Role.INV_MGR, Role.BRANCH_MGR, Role.WH_KEEPER] },
+            isActive: true,
+          },
+          select: { email: true },
+        });
+        return users.map((u) => u.email);
       }
       case 'STOCKTAKE_STARTED': {
         const whId = data.warehouseId;
@@ -735,14 +761,20 @@ export class OutboxWorker extends WorkerHost {
     switch (eventType) {
       case 'SECURITY_ALERT_REPLAY_ATTACK':
         return [Role.ADMIN];
+      case 'ISSUE_SUBMITTED':
+        return [Role.INV_MGR, Role.BRANCH_MGR];
       case 'ISSUE_POSTED':
         return [Role.ADMIN, Role.INV_MGR];
       case 'PR_SUBMITTED':
-        return [Role.APPROVER, Role.PROC_MGR];
+        return [Role.APPROVER, Role.PROC_MGR, Role.BRANCH_MGR];
       case 'PO_SUBMITTED':
-        return [Role.PROC_MGR, Role.APPROVER, Role.GM];
+        return [Role.PROC_MGR, Role.APPROVER, Role.GM, Role.BRANCH_MGR];
+      case 'GRN_RECEIVED':
+        return [Role.INV_MGR, Role.BRANCH_MGR, Role.WH_KEEPER];
       case 'GRN_POSTED':
-        return [Role.PROC_MGR, Role.APPROVER, Role.GM];
+        return [Role.PROC_MGR, Role.APPROVER, Role.GM, Role.INV_MGR, Role.BRANCH_MGR];
+      case 'KITCHEN_REQUEST_SUBMITTED':
+        return [Role.WH_KEEPER, Role.INV_MGR, Role.BRANCH_MGR];
       case 'LOW_STOCK_ALERT':
         return [Role.INV_MGR, Role.PROC_MGR];
       case 'ADJUSTMENT_POSTED':

@@ -144,7 +144,7 @@ describe('OutboxWorker', () => {
 
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
       where: {
-        role: { in: [Role.APPROVER, Role.PROC_MGR] },
+        role: { in: [Role.APPROVER, Role.PROC_MGR, Role.BRANCH_MGR] },
         isActive: true,
       },
       select: {
@@ -533,11 +533,17 @@ describe('OutboxWorker', () => {
 
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
       where: {
-        role: Role.WH_KEEPER,
+        role: { in: [Role.WH_KEEPER, Role.INV_MGR, Role.BRANCH_MGR] },
         isActive: true,
-        warehouseScopes: {
-          some: { warehouseId: 'wh-123' },
-        },
+        OR: [
+          { role: { in: [Role.INV_MGR, Role.BRANCH_MGR] } },
+          {
+            role: Role.WH_KEEPER,
+            warehouseScopes: {
+              some: { warehouseId: 'wh-123' },
+            },
+          },
+        ],
       },
       select: { email: true },
     });
@@ -630,5 +636,64 @@ describe('OutboxWorker', () => {
       'EXPIRY_WARNING_ALERT',
       mockEvent.payload,
     );
+  });
+
+  it('should create NotificationLog records for WH_KEEPER, INV_MGR, and BRANCH_MGR on KITCHEN_REQUEST_SUBMITTED', async () => {
+    const mockEvent = {
+      id: 'event-kr-notif',
+      eventType: 'KITCHEN_REQUEST_SUBMITTED',
+      payload: {
+        id: 'kr-123',
+        documentNumber: 'KR-2026-00022',
+        warehouseId: 'wh-123',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockResolvedValue([
+      { email: 'user@example.com' },
+    ]);
+
+    const mockJob = {
+      id: 'job-kr-notif',
+      data: { eventId: 'event-kr-notif' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockPrisma.notificationLog.create).toHaveBeenCalledWith({
+      data: {
+        targetRole: Role.WH_KEEPER,
+        warehouseId: 'wh-123',
+        message: 'Kitchen Request KR-2026-00022 submitted',
+        documentType: 'KITCHEN_REQUEST',
+        documentId: 'kr-123',
+        isRead: false,
+      },
+    });
+
+    expect(mockPrisma.notificationLog.create).toHaveBeenCalledWith({
+      data: {
+        targetRole: Role.INV_MGR,
+        warehouseId: 'wh-123',
+        message: 'Kitchen Request KR-2026-00022 submitted',
+        documentType: 'KITCHEN_REQUEST',
+        documentId: 'kr-123',
+        isRead: false,
+      },
+    });
+
+    expect(mockPrisma.notificationLog.create).toHaveBeenCalledWith({
+      data: {
+        targetRole: Role.BRANCH_MGR,
+        warehouseId: 'wh-123',
+        message: 'Kitchen Request KR-2026-00022 submitted',
+        documentType: 'KITCHEN_REQUEST',
+        documentId: 'kr-123',
+        isRead: false,
+      },
+    });
   });
 });
