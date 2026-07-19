@@ -102,7 +102,7 @@ services:
     expose:
       - "9000"
     healthcheck:
-      test:     ["CMD-SHELL", "mc ready local || curl -fs http://localhost:9000/minio/health/live || exit 1"]
+      test:     ["CMD-SHELL", "wget -q --spider http://localhost:9000/minio/health/live || exit 1"]
       interval: 15s
       timeout:  5s
       retries:  5
