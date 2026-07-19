@@ -116,7 +116,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
       expect(mockIssuesService.create).toHaveBeenCalledWith(
         {
           departmentId: 'dept-1',
-          lines: [{ itemId: 'item-1', quantity: 5 }],
+          lines: [{ itemId: 'item-1', quantity: 5, lotAllocations: [] }],
           kitchenRequestId: 'req-1',
           notes: 'test notes',
         },

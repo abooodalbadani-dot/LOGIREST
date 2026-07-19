@@ -25,6 +25,7 @@ export class AppController {
     return { success: true, data: body };
   }
 
+  @Public()
   @Get('test-scope')
   testScope(): string {
     return 'scope-ok';
