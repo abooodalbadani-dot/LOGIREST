@@ -101,11 +101,8 @@ services:
     # API port internal only; console bound to loopback (firewall-restrict further)
     expose:
       - "9000"
-    ports:
-      - "127.0.0.1:9001:9001"
     healthcheck:
-      # MinIO health endpoint â€” available without authentication
-      test:     ["CMD-SHELL", "curl -fs http://localhost:9000/minio/health/live || exit 1"]
+      test:     ["CMD-SHELL", "mc ready local || curl -fs http://localhost:9000/minio/health/live || exit 1"]
       interval: 15s
       timeout:  5s
       retries:  5
