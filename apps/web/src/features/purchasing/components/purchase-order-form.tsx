@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 
 import { useTranslations, useLocale } from "next-intl";
@@ -95,6 +96,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const t = useTranslations("procurement.po");
   const tc = useTranslations("common");
   const { router, setDirty } = useUnsavedChangesGuard();
+  const queryClient = useQueryClient();
 
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(formSchema),
@@ -237,7 +239,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         });
         playSound('success');
         toast.success(t("edit_success"));
-        router.push('/purchase-orders', { skipGuard: true });
+        queryClient.invalidateQueries({ queryKey: ['purchase-orders', initialData.id] });
+        queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       } else {
         if (!currencies || currencies.length === 0) {
           playSound('error');
@@ -247,7 +250,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         const result = await createMutation.mutateAsync({ payload: { ...values, isSubmitted } });
         playSound('success');
         toast.success(isSubmitted ? (t("submit_success") || "Purchase order submitted for approval") : (t("draft_success") || "Draft saved successfully"));
-        router.push('/purchase-orders', { skipGuard: true });
+        router.push(`/purchase-orders/${result.id}`, { skipGuard: true });
       }
     } catch (error) {
       console.error('[PO Submit Error Details] ' + JSON.stringify(error));
@@ -260,6 +263,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   }
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isMutationSuccess = createMutation.isSuccess || updateMutation.isSuccess;
+  const isScannerEnabled = status === 'DRAFT' && !isSubmitting && !isMutationSuccess;
 
   const { data: suppliers, isLoading: loadingSuppliers, isError: suppliersError, error: suppliersErrorDetail } = useSuppliers();
   const { data: currencies, isLoading: loadingCurrencies, isError: currenciesError, error: currenciesErrorDetail } = useCurrencies();
@@ -759,7 +764,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         placeholder={tc('select_item')}
                         size="lg"
                         label={t('scan_or_search')}
-                        scannerMode={true}
+                        scannerMode={isScannerEnabled}
+                        disabled={!isScannerEnabled}
+                        autoFocus={isScannerEnabled}
                       />
                     </div>
                   )}
