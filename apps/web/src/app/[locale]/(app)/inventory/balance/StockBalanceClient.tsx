@@ -74,11 +74,28 @@ export default function StockBalanceClient() {
   {
    accessorKey: 'itemCode',
    header: tc('table_headers.code'),
-   cell: ({ row }) => (
-    <span dir="ltr" className="font-mono text-label-xs font-semibold text-muted-foreground/60 uppercase">
-     {row.original.itemCode}#
-    </span>
-   ),
+   cell: ({ row }) => {
+    const barcode = row.original.primaryBarcode;
+    return (
+     <div className="flex flex-col gap-0.5">
+      <span dir="ltr" className="font-mono text-label-xs font-semibold text-muted-foreground/60 uppercase">
+       {row.original.itemCode}#
+      </span>
+      <div className="flex items-center gap-1">
+       <Scan className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+       {barcode ? (
+        <span dir="ltr" className="font-mono text-[11px] text-muted-foreground/50 tracking-wide">
+         {barcode}
+        </span>
+       ) : (
+        <span className="text-[11px] text-muted-foreground/30 italic">
+         {tc('no_barcode') || 'No Barcode'}
+        </span>
+       )}
+      </div>
+     </div>
+    );
+   },
   },
   {
    id: 'item_name',
@@ -363,10 +380,24 @@ export default function StockBalanceClient() {
                 <StatusBadge status="HEALTHY" className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
                )}
               </div>
-              <div className="flex items-center justify-between gap-2 mt-1">
-               <span className="text-[11px] font-mono font-bold text-operational-cyan uppercase">{item.itemCode}#</span>
-               <span className="text-[10px] font-bold text-muted-foreground truncate">{item.warehouseName}</span>
-              </div>
+               <div className="flex items-center justify-between gap-2 mt-1">
+                <div className="flex flex-col gap-0.5">
+                 <span className="text-[11px] font-mono font-bold text-operational-cyan uppercase">{item.itemCode}#</span>
+                 <div className="flex items-center gap-1">
+                  <Scan className="w-2.5 h-2.5 text-muted-foreground/40 shrink-0" />
+                  {item.primaryBarcode ? (
+                   <span dir="ltr" className="font-mono text-[10px] text-muted-foreground/50 tracking-wide">
+                    {item.primaryBarcode}
+                   </span>
+                  ) : (
+                   <span className="text-[10px] text-muted-foreground/30 italic">
+                    {tc('no_barcode') || 'No Barcode'}
+                   </span>
+                  )}
+                 </div>
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground truncate">{item.warehouseName}</span>
+               </div>
            </div>
          </div>
 

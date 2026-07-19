@@ -45,6 +45,10 @@ export class InventoryService {
             include: {
               category: true,
               unitOfMeasure: true,
+              barcodeMappings: {
+                select: { barcode: true },
+                take: 1,
+              },
             },
           },
         },
@@ -78,6 +82,7 @@ export class InventoryService {
       uomCode: wItem.item.unitOfMeasure?.code || 'PCS',
       wac: Number(wItem.wac || 0),
       image: wItem.item.image,
+      primaryBarcode: wItem.item.barcodeMappings[0]?.barcode ?? null,
     }));
 
     return {

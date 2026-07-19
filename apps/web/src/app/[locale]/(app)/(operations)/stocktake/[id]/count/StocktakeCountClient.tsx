@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { mapToSessionVM, StocktakeItemVM } from "@/features/operations/mappers/stocktakeMapper";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   // to distinguish "touched but zero" from "never touched".
   const [touchedItems, setTouchedItems] = React.useState<Set<string>>(new Set())
   const [focusedRowIndex, setFocusedRowIndex] = React.useState<number>(-1)
+  const [isBatchModalOpen, setIsBatchModalOpen] = React.useState(false)
+  const [disambiguationRows, setDisambiguationRows] = React.useState<StocktakeItemVM[]>([])
 
   const rowVirtualizerRef = React.useRef<{ scrollToIndex: (index: number, options?: { align?: string }) => void } | null>(null)
   const inputRefs = React.useRef<Map<number, HTMLInputElement>>(new Map())
@@ -180,14 +183,60 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
     return null;
   }
 
+  const handleSelectBatch = (item: StocktakeItemVM) => {
+    const currentQty = localCounts[item.id] || 0
+    const newQty = currentQty + 1
+
+    setLocalCounts(prev => ({ ...prev, [item.id]: newQty }))
+    setTouchedItems(prev => new Set(prev).add(item.id))
+    updateCount.mutate({
+      stocktakeId: id,
+      itemId: item.itemId,
+      lineId: item.id,
+      countedQty: newQty,
+      signal: abortController.signal,
+      headers: {
+        'X-Idempotency-Key': idempotencyKey
+      }
+    })
+
+    playSound('success');
+    setScanStatus("success")
+    setStatusMessage(`${item.itemName} (${item.lotNumber || (locale === 'ar' ? 'بدون رقم دفعة' : 'No Lot')}): ${newQty}`)
+    
+    const originalIndex = items.findIndex(i => i.id === item.id)
+    if (originalIndex !== -1) {
+      setFocusedRowIndex(originalIndex)
+    }
+
+    setIsBatchModalOpen(false)
+    setDisambiguationRows([])
+
+    setTimeout(() => {
+      setScanStatus("idle")
+      setStatusMessage("")
+    }, 2000)
+  }
+
   const handleScan = async (barcode: string) => {
     if (!isOnline) {
       toast.error(t('offline_error', { defaultValue: 'Offline: Scanning disabled' }));
       throw new Error('Offline');
     }
-    const index = items.findIndex((i) => i.barcode === barcode)
-    if (index !== -1) {
-      const item = items[index] as StocktakeItemVM
+    const matchingRows = items.filter((i) => i.barcode === barcode)
+    if (matchingRows.length === 0) {
+      setScanStatus("error")
+      setStatusMessage(t('no_item_found'))
+      setTimeout(() => {
+        setScanStatus("idle")
+        setStatusMessage("")
+      }, 3000)
+      throw new Error('ItemNotFound')
+    }
+
+    if (matchingRows.length === 1) {
+      // Condition A: Single Batch
+      const item = matchingRows[0]
       const currentQty = localCounts[item.id] || 0
       const newQty = currentQty + 1
 
@@ -204,22 +253,23 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
         }
       })
 
+      playSound('success')
       setScanStatus("success")
       setStatusMessage(`${item.itemName}: ${newQty}`)
-      setFocusedRowIndex(index)
+      
+      const originalIndex = items.findIndex(i => i.id === item.id)
+      if (originalIndex !== -1) {
+        setFocusedRowIndex(originalIndex)
+      }
 
       setTimeout(() => {
         setScanStatus("idle")
         setStatusMessage("")
       }, 2000)
     } else {
-      setScanStatus("error")
-      setStatusMessage(t('no_item_found'))
-      setTimeout(() => {
-        setScanStatus("idle")
-        setStatusMessage("")
-      }, 3000)
-      throw new Error('ItemNotFound')
+      // Condition B: Multiple Batches (Disambiguation)
+      setDisambiguationRows(matchingRows)
+      setIsBatchModalOpen(true)
     }
   }
 
@@ -526,6 +576,87 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
         </div>
       </div>
+
+      {/* Batch Disambiguation Modal */}
+      <Dialog open={isBatchModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsBatchModalOpen(false);
+          setDisambiguationRows([]);
+        }
+      }}>
+        <DialogContent className="w-[min(540px,95vw)] bg-card border border-border shadow-2xl p-6 rounded-2xl text-start">
+          <DialogHeader className="pb-3 border-b border-border text-start">
+            <DialogTitle className="text-lg font-bold text-foreground">
+              {locale === 'ar' ? 'تحديد الدفعة / التشغيلة' : 'Select Batch / Lot'}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-1">
+              {locale === 'ar'
+                ? 'يحتوي هذا الصنف على دفعات متعددة في الجرد الحالي. يرجى تحديد الدفعة التي تقوم بعدّها الآن:'
+                : 'This item has multiple active batches in the current snapshot. Please select the batch you are physically counting:'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {disambiguationRows.length > 0 && (
+            <div className="py-2 text-start">
+              <div className="mb-3 px-3 py-2 bg-[#b48e67]/10 dark:bg-[#b48e67]/5 border border-[#b48e67]/20 rounded-xl">
+                <span className="text-[11px] uppercase font-bold text-gray-400 block tracking-wider">
+                  {locale === 'ar' ? 'الصنف المعني' : 'Scanned Item'}
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {disambiguationRows[0]?.itemName}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+                {disambiguationRows.map((row) => {
+                  const currentVal = localCounts[row.id] ?? 0;
+                  return (
+                    <button
+                      key={row.id}
+                      type="button"
+                      onClick={() => handleSelectBatch(row)}
+                      className="w-full text-start flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-border hover:border-primary bg-card hover:bg-muted/50 dark:hover:bg-slate-800/40 transition-all duration-200 active:scale-[0.99] gap-3 group"
+                    >
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-foreground font-mono bg-muted px-2 py-0.5 rounded border border-border group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                            {row.lotNumber || (locale === 'ar' ? 'بدون رقم دفعة' : 'No Lot')}
+                          </span>
+                        </div>
+                        {row.expiryDate && (
+                          <span className="text-[10px] text-muted-foreground/80 font-semibold font-mono" dir="ltr">
+                            {locale === 'ar' ? 'صلاحية: ' : 'Exp: '}
+                            {row.expiryDate}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-4 shrink-0 sm:self-center">
+                        <div className="flex flex-col items-end">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            {locale === 'ar' ? 'النظام' : 'System'}
+                          </span>
+                          <span className="text-xs font-bold font-mono text-gray-500">
+                            {row.snapshotQty !== null ? `${row.snapshotQty} ${row.uom}` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[10px] font-bold text-[#b48e67] uppercase tracking-wide">
+                            {locale === 'ar' ? 'المعدود' : 'Counted'}
+                          </span>
+                          <span className="text-sm font-black font-mono text-foreground">
+                            {currentVal} {row.uom}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
      </PermissionGate>
     </ScopeGuard>
   )

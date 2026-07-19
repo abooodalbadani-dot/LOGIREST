@@ -440,6 +440,8 @@
   },
   "common": {
     "no_results": "No results found.",
+    "loading_camera": "Initializing Camera Feed...",
+    "camera_error": "Camera Connection Failed",
     "characters": "characters",
     "submission_failed": "Submission failed",
     "reason": "Reason",
@@ -2982,7 +2984,6 @@
       "requested_by": "Requested By",
       "requested_by_placeholder": "Employee Name/ID",
       "save_draft": "Save Draft",
-      "submit": "Submit",
       "submitting": "Submitting...",
       "submit_success": "Issue submitted successfully",
       "submit_error": "Failed to submit issue",

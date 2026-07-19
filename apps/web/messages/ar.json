@@ -440,6 +440,8 @@
   },
   "common": {
     "no_results": "لم يتم العثور على نتائج.",
+    "loading_camera": "تهيئة الكاميرا...",
+    "camera_error": "فشل الاتصال بالكاميرا",
     "characters": "حرف",
     "submission_failed": "فشل التقديم",
     "reason": "السبب",
@@ -2982,7 +2984,6 @@
       "requested_by": "بواسطة",
       "requested_by_placeholder": "اسم الموظف / الرقم الوظيفي",
       "save_draft": "حفظ مسودة",
-      "submit": "تقديم",
       "submitting": "جاري التقديم...",
       "submit_success": "تم تقديم سند الصرف بنجاح",
       "submit_error": "فشل تقديم سند الصرف",

@@ -3,11 +3,14 @@
 import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { cn } from '@/lib/utils';
-import { Loader2, ScanLine, CheckCircle2, AlertCircle, Keyboard } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { Loader2, ScanLine, CheckCircle2, AlertCircle, Keyboard, Camera } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAlwaysFocused } from '@/hooks/useAlwaysFocused';
 import { useScannerWedge } from '@/hooks/useScannerWedge';
 import { SmartCombobox, type ComboboxItem } from '../SmartCombobox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CameraBarcodeScanner } from '../CameraBarcodeScanner';
+import { audioAlerts } from '@/utils/audio';
 
 interface ScanInputProps<T extends ComboboxItem = ComboboxItem> {
     onScan: (barcode: string) => void | Promise<void>;
@@ -17,6 +20,7 @@ interface ScanInputProps<T extends ComboboxItem = ComboboxItem> {
     placeholder?: string;
     className?: string;
     onCameraActivate?: () => void;
+    enableCameraScan?: boolean;
     scanStatus?: "idle" | "success" | "error";
     statusMessage?: string;
     isScanning?: boolean;
@@ -60,6 +64,7 @@ export const ScanInput = forwardRef(
             onChange,
             onManualTrigger,
             onCameraActivate,
+            enableCameraScan = true,
             size = "md",
             label,
             autoFocus = true,
@@ -71,9 +76,19 @@ export const ScanInput = forwardRef(
         ref: React.ForwardedRef<HTMLInputElement>
     ) {
         const tc = useTranslations('common');
+        const locale = useLocale();
         const inputRef = useRef<HTMLInputElement>(null);
         const debounceTimer = useRef<NodeJS.Timeout | null>(null);
         const lastScanRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
+        const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+        const handleCameraClick = () => {
+            if (onCameraActivate) {
+                onCameraActivate();
+            } else {
+                setIsCameraOpen(true);
+            }
+        };
 
         // Expose underlying inputRef via forwardRef
         useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
@@ -287,17 +302,16 @@ export const ScanInput = forwardRef(
                                     </button>
                                 )}
 
-                                {onCameraActivate && !readOnly && (
+                                {enableCameraScan && !readOnly && (
                                     <button
                                         type="button"
-                                        onClick={onCameraActivate}
+                                        onClick={handleCameraClick}
                                         className={cn(
                                             "transition-all active:scale-95",
-                                            "p-3 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-sm",
-                                            config.buttonIcon
+                                            "p-2 w-10 h-10 flex items-center justify-center text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-sm",
                                         )}
                                     >
-                                        <ScanLine className="w-full h-full" />
+                                        <Camera className={cn("transition-transform", config.buttonIcon)} />
                                     </button>
                                 )}
                             </div>
@@ -312,6 +326,47 @@ export const ScanInput = forwardRef(
                             </div>
                         )}
 
+                        {variant === 'standard' && (
+                            <div className="shrink-0 flex items-center gap-1.5 z-10 ms-auto">
+                                {(!readOnly) && (items || onManualTrigger) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (items) {
+                                                setIsManual(prev => !prev);
+                                            } else if (onManualTrigger) {
+                                                onManualTrigger();
+                                            }
+                                        }}
+                                        className="h-8 px-2.5 bg-transparent hover:bg-gray-200/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-semibold rounded-md transition-colors text-xs flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 group/btn"
+                                    >
+                                        {isManual ? (
+                                            <>
+                                                <ScanLine className="w-3.5 h-3.5" />
+                                                <span className="hidden sm:inline">{tc('scan_mode')}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Keyboard className="w-3.5 h-3.5" />
+                                                <span className="hidden sm:inline">{tc('manual_entry')}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+
+                                {enableCameraScan && !readOnly && (
+                                    <button
+                                        type="button"
+                                        onClick={handleCameraClick}
+                                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary dark:text-gray-500 dark:hover:text-primary hover:bg-gray-200/50 dark:hover:bg-gray-800/50 rounded-md transition-all active:scale-95"
+                                        title={locale === 'ar' ? 'مسح بالكاميرا' : 'Camera Scan'}
+                                    >
+                                        <Camera className="w-4.5 h-4.5" />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
                         {/* Industrial scan line animation when focused */}
                         {variant === 'retro' && <div className={cn(
                             "absolute top-0 left-0 w-[4px] h-full bg-operational-cyan shadow-[0_0_25px_var(--operational-cyan)] opacity-0 pointer-events-none transition-all duration-[2000ms] ease-in-out z-0",
@@ -319,46 +374,6 @@ export const ScanInput = forwardRef(
                             !disabled && !isScanning && !readOnly && scanStatus === 'idle' && "group-focus-within:opacity-60"
                         )} />}
                     </div>
-
-                    {variant === 'standard' && (
-                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto flex-wrap">
-                            {(!readOnly) && (items || onManualTrigger) && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (items) {
-                                            setIsManual(prev => !prev);
-                                        } else if (onManualTrigger) {
-                                            onManualTrigger();
-                                        }
-                                    }}
-                                    className="w-full sm:w-auto flex-1 mt-2 sm:mt-0 py-2 px-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-md hover:bg-gray-50 dark:hover:bg-[#1A2234] hover:text-[#0B1220] dark:hover:text-white transition-colors text-sm text-center flex items-center justify-center gap-2 whitespace-nowrap active:scale-95 group/btn shadow-sm"
-                                >
-                                    {isManual ? (
-                                        <>
-                                            <ScanLine className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
-                                            {tc('scan_mode')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Keyboard className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
-                                            {tc('manual_entry')}
-                                        </>
-                                    )}
-                                </button>
-                            )}
-
-                            {onCameraActivate && !readOnly && (
-                                <button
-                                    type="button"
-                                    onClick={onCameraActivate}
-                                    className="w-14 h-11 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-[#0B1220] dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#1A2234] border border-gray-300 dark:border-gray-700 rounded-md transition-all active:scale-95 shadow-sm"
-                                >
-                                    <ScanLine className="w-5 h-5" />
-                                </button>
-                            )}
-                        </div>
-                    )}
                 </div>
 
                 <style jsx>{`
@@ -369,6 +384,28 @@ export const ScanInput = forwardRef(
       100% { transform: translateX(calc(100% - 4px)); opacity: 0; }
      }
     `}</style>
+
+                <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+                    <DialogContent className="w-[min(440px,95vw)] bg-card border border-border shadow-lg p-0 rounded-2xl overflow-hidden">
+                        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border">
+                            <DialogTitle className="text-label-sm font-bold uppercase text-foreground flex items-center gap-2">
+                                <ScanLine className="w-5 h-5 text-primary shrink-0" />
+                                {locale === 'ar' ? 'مسح الباركود بالكاميرا' : 'Camera Barcode Scan'}
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="w-full">
+                            {isCameraOpen && (
+                                <CameraBarcodeScanner
+                                    onScanSuccess={(barcode) => {
+                                        audioAlerts.playScanSuccess();
+                                        processScan(barcode);
+                                        setIsCameraOpen(false);
+                                    }}
+                                />
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         );
     }

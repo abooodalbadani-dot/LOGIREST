@@ -9,6 +9,7 @@ import { useRouter } from '@/i18n/navigation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { CameraBarcodeScanner } from '@/components/shared/CameraBarcodeScanner';
 
 export default function ScannerClient() {
  const t = useTranslations('operational.inventory');
@@ -113,18 +114,27 @@ export default function ScannerClient() {
      
      {status === 'scanning' && (
       <>
+       {/* Live Camera Scanner as Background */}
+       <div className="absolute inset-0 w-full h-full z-0">
+         <CameraBarcodeScanner
+           onScanSuccess={(barcode) => {
+             setBarcodeInput(barcode);
+           }}
+           className="h-full w-full"
+         />
+       </div>
+
        {/* Scanning Animation */}
-       <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-[2px] bg-operational-cyan shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)] animate-[scan_2s_ease-in-out_infinite]" />
+       <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-[2px] bg-operational-cyan shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)] animate-[scan_2s_ease-in-out_infinite] z-10 pointer-events-none" />
        
        {/* Viewfinder Corners */}
-       <div className="absolute top-12 start-12 w-12 h-12 border-t-4 border-s-4 border-operational-cyan rounded-ss-2xl opacity-40" />
-       <div className="absolute top-12 end-12 w-12 h-12 border-t-4 border-e-4 border-operational-cyan rounded-se-2xl opacity-40" />
-       <div className="absolute bottom-12 start-12 w-12 h-12 border-b-4 border-s-4 border-operational-cyan rounded-bs-2xl opacity-40" />
-       <div className="absolute bottom-12 end-12 w-12 h-12 border-b-4 border-e-4 border-operational-cyan rounded-be-2xl opacity-40" />
+       <div className="absolute top-12 start-12 w-12 h-12 border-t-4 border-s-4 border-operational-cyan rounded-ss-2xl opacity-60 z-10 pointer-events-none" />
+       <div className="absolute top-12 end-12 w-12 h-12 border-t-4 border-e-4 border-operational-cyan rounded-se-2xl opacity-60 z-10 pointer-events-none" />
+       <div className="absolute bottom-12 start-12 w-12 h-12 border-b-4 border-s-4 border-operational-cyan rounded-bs-2xl opacity-60 z-10 pointer-events-none" />
+       <div className="absolute bottom-12 end-12 w-12 h-12 border-b-4 border-e-4 border-operational-cyan rounded-be-2xl opacity-60 z-10 pointer-events-none" />
 
-       <div className="relative z-10 flex flex-col items-center gap-4 text-white min-w-0">
-        <Camera className="w-16 h-16 animate-pulse text-operational-cyan" />
-        <p className="text-label-sm font-bold text-operational-cyan/80">{t('scanner.align_tip')}</p>
+       <div className="relative z-20 flex flex-col items-center gap-4 text-white min-w-0 bg-slate-950/65 p-6 rounded-[2rem] backdrop-blur-md border border-white/10 max-w-[90%] mx-auto shadow-2xl">
+        <p className="text-label-sm font-bold text-operational-cyan">{t('scanner.align_tip')}</p>
         
         {/* Hidden or subtle input to capture hardware scanner keystrokes */}
         <Input 
@@ -132,16 +142,16 @@ export default function ScannerClient() {
          autoFocus
          value={barcodeInput}
          onChange={(e) => setBarcodeInput(e.target.value)}
-         className="mt-2 bg-transparent border-b border-operational-cyan/30 text-center text-operational-cyan font-mono focus:outline-none w-48 placeholder-operational-cyan/30"
+         className="mt-2 bg-slate-900/60 border border-operational-cyan/20 text-center text-operational-cyan font-mono focus:outline-none w-48 placeholder-operational-cyan/30 rounded-lg py-1 text-sm focus:border-operational-cyan"
          placeholder="Awaiting scan..."
         />
 
         <Button 
          onClick={resetScanner}
-         className="mt-4 !bg-card/10 hover:!bg-card/20 !text-white rounded-full h-12 px-8 gap-2 border border-white/20 shadow-sm backdrop-blur-md transition-all active:scale-95 shadow-operational-cyan/10"
+         className="mt-2 !bg-card/10 hover:!bg-card/20 !text-white rounded-full h-11 px-6 gap-2 border border-white/20 shadow-sm backdrop-blur-md transition-all active:scale-95 shadow-operational-cyan/10"
         >
-         <RotateCcw className="w-5 h-5 text-operational-cyan" />
-         <span className="font-bold">{t('scanner.rescan_matrix')}</span>
+         <RotateCcw className="w-4 h-4 text-operational-cyan" />
+         <span className="font-bold text-xs">{t('scanner.rescan_matrix')}</span>
         </Button>
        </div>
       </>

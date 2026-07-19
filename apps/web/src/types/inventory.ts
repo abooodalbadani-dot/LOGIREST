@@ -13,6 +13,7 @@ export const StockBalanceItemSchema = z.object({
   uomCode: z.string().optional(),
   wac: z.number().optional(),
   image: z.string().optional().nullable(),
+  primaryBarcode: z.string().optional().nullable(),
 });
 
 export type StockBalanceItem = z.infer<typeof StockBalanceItemSchema>;
