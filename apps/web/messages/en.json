@@ -3591,6 +3591,7 @@
       "edit_not_allowed_desc": "This document has already been submitted or processed and cannot be edited.",
       "edit_po": "Edit Order",
       "edit_success": "Purchase order updated successfully.",
+      "draft_success": "Draft saved successfully.",
       "errors": {
         "no_currencies_available": "No currencies available. Please check system settings.",
         "pr_load_failed": "Failed to load Purchase Request data.",
