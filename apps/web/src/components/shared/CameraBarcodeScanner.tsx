@@ -34,6 +34,13 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
   useEffect(() => {
     let active = true;
 
+    // Check for Secure Context (HTTPS requirement for camera access)
+    if (typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      setError('Camera access requires a secure HTTPS connection (or Chrome flags override).');
+      setIsInitializing(false);
+      return;
+    }
+
     // Dynamically import html5-qrcode to prevent server-side rendering issues
     import('html5-qrcode').then(({ Html5Qrcode, Html5QrcodeSupportedFormats }) => {
       if (!active) return;
@@ -67,28 +74,44 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
         advanced?: Array<MediaTrackConstraintSet & { focusMode?: string; zoom?: number }>;
       }
 
-      const constraints: CameraTrackConstraints = {
+      // Stage 1: Ideal high-res constraints with continuous focus and zoom
+      const stage1Constraints: CameraTrackConstraints = {
         facingMode: 'environment',
-        width: { min: 1280, ideal: 1920 },
-        height: { min: 720, ideal: 1080 },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
         advanced: [
           { focusMode: 'continuous' },
           { zoom: 1.5 }
         ]
       };
 
-      html5QrCode.start(
-        constraints,
-        config,
-        (decodedText) => {
-          if (active) {
-            stableOnScanSuccess(decodedText);
+      const startScanner = (constraints: MediaTrackConstraints | { facingMode: string } | boolean) => {
+        return html5QrCode.start(
+          constraints as MediaTrackConstraints,
+          config,
+          (decodedText) => {
+            if (active) {
+              stableOnScanSuccess(decodedText);
+            }
+          },
+          () => {
+            // Ignore verbose individual frame scanning failure logs
           }
-        },
-        () => {
-          // Ignore verbose individual frame scanning failure logs
-        }
-      )
+        );
+      };
+
+      // Execute 3-stage fallback strategy for maximum device compatibility
+      startScanner(stage1Constraints as MediaTrackConstraints)
+        .catch((err1: unknown) => {
+          console.warn('Camera Stage 1 init failed, attempting Stage 2 (standard environment camera)...', err1);
+          // Stage 2: Standard environment camera fallback
+          return startScanner({ facingMode: 'environment' });
+        })
+        .catch((err2: unknown) => {
+          console.warn('Camera Stage 2 init failed, attempting Stage 3 (default system camera)...', err2);
+          // Stage 3: Any available system camera fallback (e.g. laptop/desktop webcam)
+          return startScanner(true);
+        })
         .then(() => {
           if (active) {
             setIsInitializing(false);
