@@ -181,7 +181,7 @@ services:
       - uploads_data:/app/apps/web/public/uploads
       - ./backups:/backups:ro
     healthcheck:
-      test:     ["CMD-SHELL", "curl -fs http://localhost:4000/health || exit 1"]
+      test:     ["CMD-SHELL", "node -e \"const h=require('http');const o={host:'localhost',port:4000,path:'/health',timeout:2000};const r=h.request(o,res=>{process.exit(res.statusCode===200?0:1)});r.on('error',()=>process.exit(1));r.end();\""]
       interval: 15s
       timeout:  5s
       retries:  5

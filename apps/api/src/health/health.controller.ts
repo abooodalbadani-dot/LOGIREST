@@ -1,11 +1,11 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, VERSION_NEUTRAL } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { BackupService } from '../backup/backup.service';
 import { BackupCalculatorService } from '../modules/health/backup-calculator.service';
 import { Role } from '@prisma/client';
 
-@Controller('health')
+@Controller({ path: 'health', version: VERSION_NEUTRAL })
 export class HealthController {
   constructor(
     private readonly backupService: BackupService,
