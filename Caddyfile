@@ -195,27 +195,25 @@
 # =============================================================================
 # BLOCK 3 — MONITORING DOMAIN (Optional)
 # Exposes Grafana behind TLS. Only active when MONITORING_DOMAIN is set.
-# If MONITORING_DOMAIN is empty or unset, this block is safely skipped
-# because Caddy treats an empty hostname as invalid and ignores it.
 #
-# To enable: set MONITORING_DOMAIN=monitoring.yourdomain.com in .env.prod
-# To disable: leave MONITORING_DOMAIN unset or comment out this block.
+# DISABLED: Uncomment this block and set MONITORING_DOMAIN=monitoring.yourdomain.com
+# in .env.prod to enable. When MONITORING_DOMAIN is empty/unset, Caddy interprets
+# a bare {$MONITORING_DOMAIN:} block as a global config block and fails to start.
 # =============================================================================
-{$MONITORING_DOMAIN:} {
-
-    import security_headers
-
-    # Grafana runs on port 3001 inside the logirest_network bridge.
-    reverse_proxy http://logirest-grafana:3001 {
-        import proxy_headers
-    }
-
-    log {
-        output file /var/log/caddy/monitoring-access.log {
-            roll_size     20MiB
-            roll_keep     7
-            roll_keep_for 168h
-        }
-        format json
-    }
-}
+# {$MONITORING_DOMAIN} {
+#
+#     import security_headers
+#
+#     reverse_proxy http://logirest-grafana:3001 {
+#         import proxy_headers
+#     }
+#
+#     log {
+#         output file /var/log/caddy/monitoring-access.log {
+#             roll_size     20MiB
+#             roll_keep     7
+#             roll_keep_for 168h
+#         }
+#         format json
+#     }
+# }
