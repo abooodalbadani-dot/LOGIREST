@@ -1815,6 +1815,7 @@ export class ReportsService {
       ledgerAggregation,
       pendingIssues,
       pendingTransfers,
+      lastBackupSetting,
     ] = await Promise.all([
       this.prisma.warehouseItem.findMany({
         where: { warehouseId },
@@ -2063,6 +2064,9 @@ export class ReportsService {
         },
         orderBy: { createdAt: 'desc' },
         take: 5,
+      }),
+      this.prisma.systemSetting.findUnique({
+        where: { key: 'last_backup_at' },
       }),
     ]);
 
@@ -2347,6 +2351,8 @@ export class ReportsService {
       topVendors,
       efficiencyMetrics,
       systemAuditLogs,
+      lastBackupTimestamp:
+        lastBackupSetting?.value || (await this.getFilesystemLastBackup()),
     };
   }
 

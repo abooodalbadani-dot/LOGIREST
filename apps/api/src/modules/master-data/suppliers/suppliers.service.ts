@@ -13,13 +13,14 @@ interface SupplierDto {
   contactEmail?: string;
   contactPhone?: string;
   contactName?: string;
+  paymentTerms?: string;
   isActive?: boolean;
   version?: number;
 }
 
 @Injectable()
 export class SuppliersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async getBaseCurrencyId(): Promise<string> {
     const base = await this.prisma.currency.findFirst({
@@ -42,27 +43,46 @@ export class SuppliersService {
       contactPhone: supplier.contactPhone || '',
       contactName: supplier.contactName || '',
       currencyId: currencyId,
-      paymentTerms: 'NET_30',
+      paymentTerms: ((supplier as Record<string, unknown>).paymentTerms as string) || 'NET_30',
       isActive: supplier.isActive,
       version: supplier.version,
     };
   }
 
-  async findAll() {
+  async findAll(filters?: { search?: string; page?: string; limit?: string }) {
+    const pageNum = filters?.page ? parseInt(filters.page, 10) : 1;
+    const limitNum = Math.min(filters?.limit ? parseInt(filters.limit, 10) : 20, 50);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: Prisma.SupplierWhereInput = {};
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { code: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
+
     const currencyId = await this.getBaseCurrencyId();
-    const suppliers = await this.prisma.supplier.findMany({
-      orderBy: { code: 'asc' },
-    });
+    const [suppliers, total] = await Promise.all([
+      this.prisma.supplier.findMany({
+        where,
+        orderBy: { code: 'asc' },
+        skip,
+        take: limitNum,
+      }),
+      this.prisma.supplier.count({ where }),
+    ]);
+
     const data = suppliers.map((sup) =>
       this.mapDbSupplierToFrontend(sup, currencyId),
     );
     return {
       data,
       meta: {
-        total: data.length,
-        page: 1,
-        pageSize: data.length || 1,
-        totalPages: 1,
+        total,
+        page: pageNum,
+        pageSize: limitNum,
+        totalPages: Math.ceil(total / limitNum) || 1,
       },
     };
   }
@@ -126,6 +146,7 @@ export class SuppliersService {
           contactEmail: contactEmail || null,
           contactPhone: contactPhone || null,
           contactName: contactName || null,
+          paymentTerms: body.paymentTerms || 'NET_30',
           isActive: body.isActive !== undefined ? body.isActive : true,
           version: 1,
         },
@@ -181,6 +202,8 @@ export class SuppliersService {
             contactPhone !== undefined ? contactPhone : existing.contactPhone,
           contactName:
             contactName !== undefined ? contactName : existing.contactName,
+          paymentTerms:
+            body.paymentTerms !== undefined ? body.paymentTerms : existing.paymentTerms,
           isActive:
             body.isActive !== undefined ? body.isActive : existing.isActive,
           version: existing.version + 1,

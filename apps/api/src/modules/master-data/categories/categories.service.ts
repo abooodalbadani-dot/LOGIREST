@@ -33,26 +33,36 @@ export class CategoriesService {
     };
   }
 
-  async findAll(search?: string) {
+  async findAll(filters?: { search?: string; page?: string; limit?: string }) {
+    const pageNum = filters?.page ? parseInt(filters.page, 10) : 1;
+    const limitNum = Math.min(filters?.limit ? parseInt(filters.limit, 10) : 20, 50);
+    const skip = (pageNum - 1) * limitNum;
+
     const where: Prisma.CategoryWhereInput = {};
-    if (search) {
+    if (filters?.search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { code: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
-    const categories = await this.prisma.category.findMany({
-      where,
-      orderBy: { name: 'asc' },
-    });
+    const [categories, total] = await Promise.all([
+      this.prisma.category.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limitNum,
+      }),
+      this.prisma.category.count({ where }),
+    ]);
+
     const data = categories.map((cat) => this.mapDbCategoryToFrontend(cat));
     return {
       data,
       meta: {
-        total: data.length,
-        page: 1,
-        pageSize: data.length || 1,
-        totalPages: 1,
+        total,
+        page: pageNum,
+        pageSize: limitNum,
+        totalPages: Math.ceil(total / limitNum) || 1,
       },
     };
   }

@@ -84,7 +84,7 @@ export interface EntityField {
 export class NotificationTemplateService implements OnModuleInit {
   private readonly logger = new Logger(NotificationTemplateService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async onModuleInit() {
     await this.seedDefaultTemplates();
@@ -128,7 +128,7 @@ export class NotificationTemplateService implements OnModuleInit {
           ) {
             updateData.subjectAr = exists.subjectAr.replace(
               /logirest/gi,
-              'مطاعم أوتانتك',
+              'مطاعم اوتانتك',
             );
             needsUpdate = true;
           }
@@ -148,7 +148,7 @@ export class NotificationTemplateService implements OnModuleInit {
           ) {
             updateData.bodyAr = exists.bodyAr.replace(
               /logirest/gi,
-              'مطاعم أوتانتك',
+              'مطاعم اوتانتك',
             );
             needsUpdate = true;
           }
@@ -248,15 +248,15 @@ export class NotificationTemplateService implements OnModuleInit {
       const sendingWhId = data.fromWarehouseId;
       const keepers = sendingWhId
         ? await this.prisma.user.findMany({
-            where: {
-              role: Role.WH_KEEPER,
-              isActive: true,
-              warehouseScopes: {
-                some: { warehouseId: sendingWhId },
-              },
+          where: {
+            role: Role.WH_KEEPER,
+            isActive: true,
+            warehouseScopes: {
+              some: { warehouseId: sendingWhId },
             },
-            select: { email: true },
-          })
+          },
+          select: { email: true },
+        })
         : [];
       const managers = await this.prisma.user.findMany({
         where: { role: Role.INV_MGR, isActive: true },
@@ -276,15 +276,15 @@ export class NotificationTemplateService implements OnModuleInit {
       const whId = data.warehouseId;
       const keepers = whId
         ? await this.prisma.user.findMany({
-            where: {
-              role: Role.WH_KEEPER,
-              isActive: true,
-              warehouseScopes: {
-                some: { warehouseId: whId },
-              },
+          where: {
+            role: Role.WH_KEEPER,
+            isActive: true,
+            warehouseScopes: {
+              some: { warehouseId: whId },
             },
-            select: { email: true },
-          })
+          },
+          select: { email: true },
+        })
         : [];
       const managers = await this.prisma.user.findMany({
         where: { role: Role.INV_MGR, isActive: true },

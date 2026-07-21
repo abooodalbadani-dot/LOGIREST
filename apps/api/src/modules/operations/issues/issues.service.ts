@@ -159,7 +159,7 @@ export class IssuesService {
   }
 
   async findAll(
-    params: { status?: string; search?: string; page?: number },
+    params: { status?: string; search?: string; page?: number; limit?: number },
     activeScope?: {
       branchId?: string;
       warehouseId?: string;
@@ -168,7 +168,7 @@ export class IssuesService {
     user?: { id: string; role: Role },
   ) {
     const page = Number(params.page) || 1;
-    const limit = 10;
+    const limit = Math.min(Number(params.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const where: Prisma.InventoryIssueWhereInput = {};
@@ -235,24 +235,19 @@ export class IssuesService {
     const [items, total] = await Promise.all([
       this.prisma.inventoryIssue.findMany({
         where,
-        include: {
-          lines: {
-            include: {
-              item: {
-                include: {
-                  unitOfMeasure: true,
-                  category: true,
-                },
-              },
-              lotAllocations: {
-                include: {
-                  lot: true,
-                },
-              },
-            },
-          },
-          warehouse: true,
-          department: true,
+        select: {
+          id: true,
+          issueNumber: true,
+          status: true,
+          warehouseId: true,
+          departmentId: true,
+          notes: true,
+          version: true,
+          createdAt: true,
+          postedAt: true,
+          warehouse: { select: { id: true, name: true, branchId: true } },
+          department: { select: { id: true, name: true } },
+          kitchenRequest: { select: { id: true, requestNumber: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -261,37 +256,8 @@ export class IssuesService {
       this.prisma.inventoryIssue.count({ where }),
     ]);
 
-    const issueIds = items.map((i) => i.id);
-    const approvalEvents =
-      issueIds.length > 0
-        ? await this.prisma.approvalEvent.findMany({
-            where: {
-              documentId: { in: issueIds },
-              documentType: DocumentType.INVENTORY_ISSUE,
-            },
-            include: { user: { select: { name: true, role: true } } },
-            orderBy: { createdAt: 'asc' },
-          })
-        : [];
-
-    const eventsByDocId = new Map<string, typeof approvalEvents>();
-    for (const ev of approvalEvents) {
-      if (!eventsByDocId.has(ev.documentId)) {
-        eventsByDocId.set(ev.documentId, []);
-      }
-      const existing = eventsByDocId.get(ev.documentId);
-      if (existing) {
-        existing.push(ev);
-      }
-    }
-
-    const itemsWithEvents = items.map((i) => ({
-      ...i,
-      approvalEvents: eventsByDocId.get(i.id) || [],
-    }));
-
     return {
-      data: itemsWithEvents,
+      data: items,
       meta: {
         total,
         page,

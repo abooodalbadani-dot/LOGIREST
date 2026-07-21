@@ -143,11 +143,14 @@ function mapPOSummary(po: Record<string, unknown>) {
   const currency = po.currency as Record<string, unknown> | null;
   const warehouse = po.warehouse as Record<string, unknown> | null;
 
-  const supplierTotalAmount = lines.reduce(
-    (sum: number, line: Record<string, unknown>) =>
-      sum + Number(line.quantity) * Number(line.unitPrice),
-    0,
-  );
+  const supplierTotalAmount =
+    po.totalAmount !== undefined && po.totalAmount !== null
+      ? Number(po.totalAmount)
+      : lines.reduce(
+          (sum: number, line: Record<string, unknown>) =>
+            sum + Number(line.quantity) * Number(line.unitPrice),
+          0,
+        );
 
   const createdAtIso = po.createdAt
     ? (po.createdAt instanceof Date

@@ -29,14 +29,35 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { NetworkStatusBanner } from '@/core/network/NetworkStatusBanner';
 import '@/app/globals.css';
 
+const defaultUrl = process.env.NEXT_PUBLIC_APP_URL
+    ? process.env.NEXT_PUBLIC_APP_URL
+    : process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : 'https://otantikrestaurant.tech';
+
 export const metadata: Metadata = {
-    title: 'مطاعم أوتانتيك | Otantik Restaurant',
+    metadataBase: new URL(defaultUrl),
+    title: 'مطاعم اوتانتك | Otantik Restaurant',
     description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
     robots: 'index, follow',
     openGraph: {
-        title: 'مطاعم أوتانتيك | Otantik Restaurant',
+        title: 'مطاعم اوتانتك | Otantik Restaurant',
         description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
         type: 'website',
+        images: [
+            {
+                url: '/opengraph-image.png',
+                width: 1200,
+                height: 630,
+                alt: 'مطاعم اوتانتك | Otantik Restaurant',
+            },
+        ],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'مطاعم اوتانتك | Otantik Restaurant',
+        description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
+        images: ['/opengraph-image.png'],
     },
     icons: {
         icon: '/icon.svg',

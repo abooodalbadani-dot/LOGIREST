@@ -39,12 +39,16 @@ export class WarehousesDirectController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
     @Query('branchId') branchId?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limitQuery?: string,
+    @Query('page') pageQuery?: string,
     @Query('includeInactive') includeInactive?: string,
     @Query('ignoreScope') ignoreScope?: string,
     @Query('search') search?: string,
   ) {
-    const take = limit ? parseInt(limit, 10) : undefined;
+    const limitNum = Math.min(limitQuery ? parseInt(limitQuery, 10) : 20, 50);
+    const pageNum = pageQuery ? parseInt(pageQuery, 10) : 1;
+    const skip = (pageNum - 1) * limitNum;
+
     const filter: Record<string, unknown> = {};
     if (includeInactive !== 'true') {
       filter.isActive = true;
@@ -65,21 +69,33 @@ export class WarehousesDirectController {
         },
       };
     }
-    const warehouses = await this.prisma.warehouse.findMany({
-      where: filter,
-      take,
-      include: {
-        branch: true,
-      },
-      orderBy: { name: 'asc' },
-    });
+
+    const [warehouses, total] = await Promise.all([
+      this.prisma.warehouse.findMany({
+        where: filter,
+        skip,
+        take: limitNum,
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          branchId: true,
+          isActive: true,
+          version: true,
+          branch: { select: { id: true, name: true, code: true } },
+        },
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.warehouse.count({ where: filter }),
+    ]);
+
     return {
       data: warehouses,
       meta: {
-        total: warehouses.length,
-        page: 1,
-        pageSize: take || warehouses.length,
-        totalPages: 1,
+        total,
+        page: pageNum,
+        pageSize: limitNum,
+        totalPages: Math.ceil(total / limitNum) || 1,
       },
     };
   }

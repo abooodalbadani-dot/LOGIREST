@@ -14,8 +14,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations('common');
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row md:h-screen md:overflow-hidden bg-background">
-      <div className="flex flex-1 flex-col overflow-x-hidden md:overflow-hidden relative w-full">
+    <div className="flex h-[100dvh] flex-col md:flex-row overflow-hidden bg-background">
+      <div className="flex flex-1 flex-col overflow-hidden relative w-full h-[100dvh]">
         {isLocked && (
           <div className="bg-status-warning/10 px-4 py-1.5 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 z-[60] print:hidden">
             <Lock className="w-3.5 h-3.5 text-status-warning" />
@@ -30,7 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Topbar locale={locale} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         </div>
 
-        <div className="flex flex-1 flex-col md:flex-row overflow-x-hidden md:overflow-hidden relative">
+        <div className="flex flex-1 flex-col md:flex-row overflow-hidden relative">
           {/* Mobile Sidebar Overlay */}
           <div
             className={cn(
@@ -48,10 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Sidebar onClose={() => setIsSidebarOpen(false)} />
           </div>
 
-          <main className={cn(
-            "flex-1 w-full min-w-0 max-w-[100vw] 2xl:max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 overflow-x-hidden md:overflow-y-auto bg-background transition-all duration-300 print:w-full print:m-0 print:p-0 print:col-span-full print:overflow-visible",
-            isLocked && 'grayscale-[0.05] opacity-98'
-          )}>
+          <main className="flex-1 w-full min-w-0 max-w-[100vw] 2xl:max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto bg-background transition-all duration-300 print:w-full print:m-0 print:p-0 print:col-span-full print:overflow-visible">
             {children}
           </main>
         </div>

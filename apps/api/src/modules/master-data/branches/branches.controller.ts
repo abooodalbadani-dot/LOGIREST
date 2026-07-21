@@ -42,8 +42,9 @@ export class BranchesController {
     @Query('includeArchived') includeArchived?: string,
     @Query('search') search?: string,
   ) {
-    const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
-    const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
+    const take = Math.min(limit ? parseInt(limit, 10) : 20, 50);
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const skip = (pageNum - 1) * take;
 
     const where: Record<string, unknown> = {};
     if (search) {
@@ -64,16 +65,22 @@ export class BranchesController {
       };
     }
 
-    const branches = await this.prisma.branch.findMany({
-      where,
-      orderBy: { name: 'asc' },
-      ...(take ? { take } : {}),
-      ...(skip ? { skip } : {}),
-      include: { warehouses: true },
-    });
-
-    const total = await this.prisma.branch.count({ where });
-    const pageNum = page ? parseInt(page, 10) : 1;
+    const [branches, total] = await Promise.all([
+      this.prisma.branch.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        take,
+        skip,
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          isActive: true,
+          version: true,
+        },
+      }),
+      this.prisma.branch.count({ where }),
+    ]);
     const limitNum = take || total || 1;
 
     return {

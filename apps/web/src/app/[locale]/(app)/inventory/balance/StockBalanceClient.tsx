@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations, useLocale } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -45,6 +46,11 @@ export default function StockBalanceClient() {
  const currentLocale = useLocale();
  const router = useRouter();
  const isRtl = currentLocale === 'ar';
+
+ const [mounted, setMounted] = useState(false);
+ useEffect(() => {
+  setMounted(true);
+ }, []);
 
  const { currency: baseCurrency } = useBaseCurrency();
 
@@ -235,7 +241,7 @@ export default function StockBalanceClient() {
  }, [data?.data]);
 
  return (
-  <div className="text-foreground min-w-0 bg-card flex-1 gap-6 selection:bg-operational-cyan/30 selection:text-operational-cyan flex-col flex min-h-screen w-full overflow-hidden">
+  <div className="text-foreground min-w-0 bg-card flex-1 gap-6 selection:bg-operational-cyan/30 selection:text-operational-cyan flex-col flex min-h-[100dvh] w-full overflow-hidden">
    <div className="flex-1 w-full max-w-full min-w-0 overflow-hidden px-4 md:px-6 pb-32 mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
     
     <ReportHeader />
@@ -443,35 +449,38 @@ export default function StockBalanceClient() {
     </div>
 
     {/* Floating Quick Actions Bar */}
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-between gap-3 md:gap-6 bg-card/70 backdrop-blur-xl border border-brand-gold/30 shadow-2xl rounded-full px-6 py-3 z-50 w-[95vw] md:w-max max-w-2xl transition-all overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden animate-in slide-in-from-bottom-4 duration-500">
-     <div className="flex items-center gap-2 border-e border-brand-gold/20 pe-4 md:pe-6 shrink-0">
-      <span className="text-muted-foreground text-xs tracking-wider uppercase font-medium leading-none">{t('quick_actions')}</span>
-     </div>
-    
-     <div className="flex items-center gap-2 md:gap-4 shrink-0">
-      <PermissionGate action="view" resource="inventory">
-       <button 
-        onClick={() => router.push('/inventory/scan-mode')}
-        className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:bg-brand-gold/10 hover:text-brand-gold transition-colors rounded-lg active:scale-95 group shrink-0"
-       >
-        <Scan className="w-4 h-4 md:w-5 md:h-5 text-brand-gold transition-transform group-hover:scale-110" />
-        <span className="hidden sm:inline">{t('barcode_scanner')}</span>
-       </button>
-      </PermissionGate>
-      
-      <div className="w-px h-6 bg-brand-gold/20 shrink-0" />
-      
-      <PermissionGate action="create" resource="adjustment">
-       <button 
-        onClick={() => router.push('/adjustments/new')}
-        className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:bg-brand-gold/10 hover:text-brand-gold transition-colors rounded-lg active:scale-95 group shrink-0"
-       >
-        <Scale className="w-4 h-4 md:w-5 md:h-5 text-brand-gold transition-transform group-hover:scale-110" />
-        <span className="hidden sm:inline">{t('reconciliation')}</span>
-       </button>
-      </PermissionGate>
-     </div>
-    </div>
+    {mounted && createPortal(
+     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-between gap-3 md:gap-6 bg-card/70 backdrop-blur-xl border border-brand-gold/30 shadow-2xl rounded-full px-6 py-3 z-50 w-[95vw] md:w-max max-w-2xl transition-all overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden animate-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center gap-2 border-e border-brand-gold/20 pe-4 md:pe-6 shrink-0">
+       <span className="text-muted-foreground text-xs tracking-wider uppercase font-medium leading-none">{t('quick_actions')}</span>
+      </div>
+     
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
+       <PermissionGate action="view" resource="inventory">
+        <button 
+         onClick={() => router.push('/inventory/scan-mode')}
+         className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:bg-brand-gold/10 hover:text-brand-gold transition-colors rounded-lg active:scale-95 group shrink-0"
+        >
+         <Scan className="w-4 h-4 md:w-5 md:h-5 text-brand-gold transition-transform group-hover:scale-110" />
+         <span className="hidden sm:inline">{t('barcode_scanner')}</span>
+        </button>
+       </PermissionGate>
+       
+       <div className="w-px h-6 bg-brand-gold/20 shrink-0" />
+       
+       <PermissionGate action="create" resource="adjustment">
+        <button 
+         onClick={() => router.push('/adjustments/new')}
+         className="flex items-center gap-2 md:gap-3 px-3 py-1.5 text-label-xs md:text-label-sm font-black uppercase text-foreground/80 dark:text-white hover:bg-brand-gold/10 hover:text-brand-gold transition-colors rounded-lg active:scale-95 group shrink-0"
+        >
+         <Scale className="w-4 h-4 md:w-5 md:h-5 text-brand-gold transition-transform group-hover:scale-110" />
+         <span className="hidden sm:inline">{t('reconciliation')}</span>
+        </button>
+       </PermissionGate>
+      </div>
+     </div>,
+     document.body
+    )}
    </div>
   );
 }

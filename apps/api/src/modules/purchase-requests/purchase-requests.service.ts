@@ -85,12 +85,13 @@ export class PurchaseRequestsService {
       status?: string;
       search?: string;
       page?: number;
+      limit?: number;
       unconverted?: boolean;
     },
     warehouseId?: string,
   ) {
     const page = Number(params.page) || 1;
-    const limit = 10;
+    const limit = Math.min(Number(params.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const where: Prisma.PurchaseRequestWhereInput = {};
@@ -133,19 +134,16 @@ export class PurchaseRequestsService {
     const [items, total] = await Promise.all([
       this.prisma.purchaseRequest.findMany({
         where,
-        include: {
-          warehouse: true,
-          branch: true,
-          lines: {
-            include: {
-              item: {
-                include: {
-                  unitOfMeasure: true,
-                  category: true,
-                },
-              },
-            },
-          },
+        select: {
+          id: true,
+          requestNumber: true,
+          status: true,
+          warehouseId: true,
+          branchId: true,
+          version: true,
+          createdAt: true,
+          warehouse: { select: { id: true, name: true } },
+          branch: { select: { id: true, name: true } },
           createdBy: {
             select: { id: true, name: true, email: true, role: true },
           },
@@ -157,37 +155,8 @@ export class PurchaseRequestsService {
       this.prisma.purchaseRequest.count({ where }),
     ]);
 
-    const prIds = items.map((p) => p.id);
-    const approvalEvents =
-      prIds.length > 0
-        ? await this.prisma.approvalEvent.findMany({
-            where: {
-              documentId: { in: prIds },
-              documentType: DocumentType.PURCHASE_REQUEST,
-            },
-            include: { user: { select: { id: true, name: true, role: true } } },
-            orderBy: { createdAt: 'asc' },
-          })
-        : [];
-
-    const eventsByDocId = new Map<string, typeof approvalEvents>();
-    for (const ev of approvalEvents) {
-      if (!eventsByDocId.has(ev.documentId)) {
-        eventsByDocId.set(ev.documentId, []);
-      }
-      const existing = eventsByDocId.get(ev.documentId);
-      if (existing) {
-        existing.push(ev);
-      }
-    }
-
-    const itemsWithEvents = items.map((p) => ({
-      ...p,
-      approvalEvents: eventsByDocId.get(p.id) || [],
-    }));
-
     return {
-      data: itemsWithEvents,
+      data: items,
       meta: {
         total,
         page,

@@ -36,26 +36,36 @@ export class UomService {
     };
   }
 
-  async findAll(search?: string) {
+  async findAll(filters?: { search?: string; page?: string; limit?: string }) {
+    const pageNum = filters?.page ? parseInt(filters.page, 10) : 1;
+    const limitNum = Math.min(filters?.limit ? parseInt(filters.limit, 10) : 20, 50);
+    const skip = (pageNum - 1) * limitNum;
+
     const where: Prisma.UnitOfMeasureWhereInput = {};
-    if (search) {
+    if (filters?.search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { code: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
-    const uoms = await this.prisma.unitOfMeasure.findMany({
-      where,
-      orderBy: { code: 'asc' },
-    });
+    const [uoms, total] = await Promise.all([
+      this.prisma.unitOfMeasure.findMany({
+        where,
+        orderBy: { code: 'asc' },
+        skip,
+        take: limitNum,
+      }),
+      this.prisma.unitOfMeasure.count({ where }),
+    ]);
+
     const data = uoms.map((uom) => this.mapDbUoMToFrontend(uom));
     return {
       data,
       meta: {
-        total: data.length,
-        page: 1,
-        pageSize: data.length || 1,
-        totalPages: 1,
+        total,
+        page: pageNum,
+        pageSize: limitNum,
+        totalPages: Math.ceil(total / limitNum) || 1,
       },
     };
   }

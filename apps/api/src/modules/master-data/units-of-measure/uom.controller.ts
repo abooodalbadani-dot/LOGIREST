@@ -31,8 +31,8 @@ export class UomController {
 
   @Get()
   @AllRoles()
-  async findAll(@Query('search') search?: string) {
-    return this.uomService.findAll(search);
+  async findAll(@Query() query: { search?: string; page?: string; limit?: string }) {
+    return this.uomService.findAll(query);
   }
 
   @Get(':id')

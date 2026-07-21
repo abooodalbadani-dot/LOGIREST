@@ -58,7 +58,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
             <td style="padding: 10px; border-bottom: 1px solid #edf2f7; font-weight: bold; font-size: 14px; color: #e53e3e;">{{item_currentStock}}</td>
           </tr>
         </table>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">هذا تنبيه تلقائي للمخزون من نظام مطاعم أوتانتيك.</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">هذا تنبيه تلقائي للمخزون من نظام مطاعم اوتانتك.</p>
       </div>
     `,
     trigger_event: 'LOW_STOCK_ALERT',
@@ -136,7 +136,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
             <td style="padding: 10px; border-bottom: 1px solid #edf2f7; font-weight: bold; font-size: 14px; color: #3182ce;">{{purchaseorder_status}}</td>
           </tr>
         </table>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">يرجى مراجعة هذا المستند واعتماده في نظام مطاعم أوتانتيك.</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">يرجى مراجعة هذا المستند واعتماده في نظام مطاعم اوتانتك.</p>
       </div>
     `,
     trigger_event: 'PO_PENDING_APPROVAL',
@@ -208,7 +208,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
             <td style="padding: 10px; border-bottom: 1px solid #edf2f7; font-weight: bold; font-size: 14px; color: #2d3748;">{{userName}}</td>
           </tr>
         </table>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">نظام إدارة المخازن لمطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">نظام إدارة المخازن لمطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'ADJUSTMENT_POSTED',
@@ -274,7 +274,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
             <td style="padding: 10px; border-bottom: 1px solid #edf2f7; font-weight: bold; font-size: 14px; color: #2d3748;">{{userName}}</td>
           </tr>
         </table>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">تنبيهات نظام مطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">تنبيهات نظام مطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'STOCKTAKE_POSTED',
@@ -332,7 +332,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
             <td style="padding: 10px; border-bottom: 1px solid #edf2f7; font-weight: bold; font-size: 14px; color: #2d3748;">{{warehouseName}}</td>
           </tr>
         </table>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إشعارات الشحن واللوجستيات لمطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إشعارات الشحن واللوجستيات لمطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'TRANSFER_SHIPPED',
@@ -392,7 +392,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
             <td style="padding: 10px; border-bottom: 1px solid #edf2f7; font-weight: bold; font-size: 14px; color: #2d3748;">{{userName}}</td>
           </tr>
         </table>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إشعارات الشحن واللوجستيات لمطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إشعارات الشحن واللوجستيات لمطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'TRANSFER_RECEIVED',
@@ -440,7 +440,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
         </div>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">تمت الموافقة على طلب الشراء الخاص بك رقم <strong>{{documentNumber}}</strong> من قبل إدارة المشتريات.</p>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">بدأت الآن إجراءات تحويل طلب الشراء إلى أمر توريد.</p>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">تنبيهات نظام مطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">تنبيهات نظام مطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'PR_APPROVED',
@@ -476,7 +476,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
         </div>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">تم رفض طلب الشراء رقم <strong>{{documentNumber}}</strong> من قبل إدارة المشتريات.</p>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">يرجى مراجعة تفاصيل الرفض أو الملاحظات عبر لوحة التحكم الخاصة بك.</p>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">نظام مطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">نظام مطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'PR_REJECTED',
@@ -510,7 +510,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
           <strong style="color: #38a169; font-size: 16px;">✔️ الموافقة على أمر الشراء</strong>
         </div>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">تمت الموافقة على أمر الشراء رقم <strong>{{documentNumber}}</strong> وأصبح نشطاً وقابلاً للتوريد.</p>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">تنبيهات نظام مطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">تنبيهات نظام مطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'PO_APPROVED',
@@ -544,7 +544,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
           <strong style="color: #3182ce; font-size: 16px;">🍳 تقديم طلب مطبخ جديد</strong>
         </div>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">تم تقديم طلب مطبخ جديد رقم <strong>{{documentNumber}}</strong> بنجاح وهو بانتظار التحضير والصرف من المخزن.</p>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إدارة المطابخ لمطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إدارة المطابخ لمطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'KITCHEN_REQUEST_SUBMITTED',
@@ -578,7 +578,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
           <strong style="color: #38a169; font-size: 16px;">🍳 صرف طلب المطبخ</strong>
         </div>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">تم صرف وتلبية طلب المطبخ رقم <strong>{{documentNumber}}</strong> بنجاح وتسليمه للمطبخ المعني.</p>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إشعارات نظام مطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إشعارات نظام مطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'KITCHEN_REQUEST_POSTED',
@@ -612,7 +612,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultTemplate[] = [
           <strong style="color: #38a169; font-size: 16px;">📥 ترحيل استلام البضائع</strong>
         </div>
         <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">تم ترحيل إشعار استلام البضائع رقم <strong>{{documentNumber}}</strong> وتحديث كميات المخزون الفعلي بالمستودع.</p>
-        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إدارة المخزون لمطاعم أوتانتيك</p>
+        <p style="margin-top: 25px; color: #a0aec0; font-size: 12px; border-top: 1px solid #edf2f7; padding-top: 15px; text-align: center;">إدارة المخزون لمطاعم اوتانتك</p>
       </div>
     `,
     trigger_event: 'GRN_POSTED',

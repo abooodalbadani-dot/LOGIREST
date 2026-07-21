@@ -285,7 +285,7 @@ export class GrnController {
   @Get()
   @AllRoles()
   async findAll(
-    @Query() query: { status?: string; search?: string; page?: string },
+    @Query() query: { status?: string; search?: string; page?: string; limit?: string },
     @ActiveScope()
     activeScope?: {
       branchId?: string;
@@ -298,6 +298,7 @@ export class GrnController {
         status: query.status,
         search: query.search,
         page: query.page ? Number(query.page) : 1,
+        limit: query.limit ? Number(query.limit) : 20,
       },
       activeScope,
     );

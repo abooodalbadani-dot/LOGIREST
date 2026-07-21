@@ -33,8 +33,8 @@ export class InventoryService {
       }),
     };
 
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 50;
+    const page = Number(query.page) || 1;
+    const limit = Math.min(Number(query.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([

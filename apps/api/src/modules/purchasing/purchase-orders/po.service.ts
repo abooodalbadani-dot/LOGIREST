@@ -169,11 +169,12 @@ export class PurchaseOrderService {
       supplierId?: string;
       search?: string;
       page?: number;
+      limit?: number;
     },
     warehouseId?: string,
   ) {
     const page = Number(params.page) || 1;
-    const limit = 10;
+    const limit = Math.min(Number(params.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const where: Prisma.PurchaseOrderWhereInput = {};
@@ -216,25 +217,19 @@ export class PurchaseOrderService {
     const [items, total] = await Promise.all([
       this.prisma.purchaseOrder.findMany({
         where,
-        include: {
-          lines: {
-            include: {
-              item: {
-                include: {
-                  unitOfMeasure: true,
-                  category: true,
-                },
-              },
-            },
-          },
-          supplier: true,
-          currency: true,
-          warehouse: true,
-          purchaseRequest: {
-            include: {
-              warehouse: true,
-            },
-          },
+        select: {
+          id: true,
+          poNumber: true,
+          status: true,
+          supplierId: true,
+          warehouseId: true,
+          currencyId: true,
+          version: true,
+          createdAt: true,
+          supplier: { select: { id: true, name: true, code: true } },
+          warehouse: { select: { id: true, name: true } },
+          currency: { select: { id: true, code: true, symbol: true } },
+          purchaseRequest: { select: { id: true, requestNumber: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -243,37 +238,8 @@ export class PurchaseOrderService {
       this.prisma.purchaseOrder.count({ where }),
     ]);
 
-    const poIds = items.map((p) => p.id);
-    const approvalEvents =
-      poIds.length > 0
-        ? await this.prisma.approvalEvent.findMany({
-            where: {
-              documentId: { in: poIds },
-              documentType: DocumentType.PURCHASE_ORDER,
-            },
-            include: { user: { select: { id: true, name: true, role: true } } },
-            orderBy: { createdAt: 'asc' },
-          })
-        : [];
-
-    const eventsByDocId = new Map<string, typeof approvalEvents>();
-    for (const ev of approvalEvents) {
-      if (!eventsByDocId.has(ev.documentId)) {
-        eventsByDocId.set(ev.documentId, []);
-      }
-      const existing = eventsByDocId.get(ev.documentId);
-      if (existing) {
-        existing.push(ev);
-      }
-    }
-
-    const itemsWithEvents = items.map((p) => ({
-      ...p,
-      approvalEvents: eventsByDocId.get(p.id) || [],
-    }));
-
     return {
-      data: itemsWithEvents,
+      data: items,
       meta: {
         total,
         page,

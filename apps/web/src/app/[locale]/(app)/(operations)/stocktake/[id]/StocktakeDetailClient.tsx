@@ -25,6 +25,7 @@ import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { StocktakeForm } from "./StocktakeForm";
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { StatusTimeline, type Status } from "@/components/shared/StatusTimeline";
 import { toast } from 'sonner';
 import {
  Dialog,
@@ -44,6 +45,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  const conflict = useConflictHandler('stocktake', id);
  const cancelStocktake = useCancelStocktake();
  const [isCancelDialogOpen, setIsCancelDialogOpen] = React.useState(false);
+ const [isAuditDialogOpen, setIsAuditDialogOpen] = React.useState(false);
  const [cancelReason, setCancelReason] = React.useState("");
  
  const { data: rawSession, isLoading, error } = useStocktake(id);
@@ -94,12 +96,12 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
    <div className="w-full md:w-auto flex flex-col-reverse md:flex-row items-stretch md:items-center gap-3">
     {/* Quick Tools Group */}
     <div className="flex items-center gap-1 me-1">
-
      <Button 
       variant="ghost" 
       size="icon"
-      className="h-10 w-10 md:h-12 md:w-12 rounded-full text-white/50 hover:text-operational-cyan hover:bg-card/5 transition-all"
-      title={t('audit_trail') || 'Audit Trail'}
+      onClick={() => setIsAuditDialogOpen(true)}
+      className="h-10 w-10 md:h-12 md:w-12 rounded-full text-foreground/70 hover:text-foreground hover:bg-muted/60 transition-all border border-border/40"
+      title={locale === 'ar' ? 'سجل العمليات والتدقيق (Audit Trail)' : 'Audit Trail'}
      >
       <History className="w-4 h-4 md:w-5 md:h-5" />
      </Button>
@@ -198,68 +200,108 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
         <Button 
          variant="outline"
          onClick={() => setIsCancelDialogOpen(true)} 
-         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-6 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide" 
+         className="w-full md:w-auto flex justify-center h-10 md:h-12 px-4 md:px-6 border-red-500/40 text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide" 
         >
-         <XCircle className="w-4 h-4 md:w-5 md:h-5" />
-         <span className="hidden xs:inline">{tc('cancel') || 'Cancel'}</span>
+         <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+         <span>{locale === 'ar' ? 'إلغاء الجلسة' : 'Cancel Session'}</span>
         </Button>
        </ActionGuard>
       </PermissionGate>
      )}
-   </div>
-  );
+    </div>
+   );
 
- return (
-  <ScopeGuard warehouseId={session?.warehouseId}>
-   <StocktakeForm 
-    session={session} 
-    locale={locale} 
-    actions={workflowActions} 
-    isLocked={isLocked}
-    onConflict={conflict.triggerConflict}
-   />
+  return (
+   <ScopeGuard warehouseId={session?.warehouseId}>
+    <StocktakeForm 
+     session={session} 
+     locale={locale} 
+     actions={workflowActions} 
+     isLocked={isLocked}
+     onConflict={conflict.triggerConflict}
+    />
 
-   <ConflictDialog 
-    open={conflict.open}
-    onClose={conflict.handleClose}
-    onReload={conflict.handleReload}
-   />
+    <ConflictDialog 
+     open={conflict.open}
+     onClose={conflict.handleClose}
+     onReload={conflict.handleReload}
+    />
 
-   <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-    <DialogContent className="w-[95vw] sm:w-[500px] sm:max-w-[500px] bg-surface-container-high border-none p-0 overflow-hidden rounded-[2rem]">
-     <div className="p-8 space-y-6">
+    {/* Dedicated Interactive Audit Trail Dialog */}
+    <Dialog open={isAuditDialogOpen} onOpenChange={setIsAuditDialogOpen}>
+     <DialogContent className="w-[95vw] sm:w-[550px] sm:max-w-[550px] bg-card border border-border p-6 overflow-hidden rounded-2xl shadow-xl">
       <DialogHeader>
-       <DialogTitle className="text-headline-lg font-semibold">{tc('cancel') || 'Cancel Stocktake'}</DialogTitle>
-       <DialogDescription className="text-muted-foreground">
-        {t('cancel_confirm_desc') || 'Are you sure you want to cancel this stocktake? This action cannot be undone.'}
+       <DialogTitle className="text-title-md font-bold flex items-center gap-2">
+        <History className="w-5 h-5 text-primary" />
+        {locale === 'ar' ? 'سجل العمليات والتدقيق (Audit Trail)' : 'Audit Trail'}
+       </DialogTitle>
+       <DialogDescription className="text-label-xs text-muted-foreground">
+        {locale === 'ar' ? 'التسلسل الزمني الكامل لجميع الحركات والتغييرات في هذه الجلسة' : 'Complete chronological history of events and status transitions for this session'}
        </DialogDescription>
       </DialogHeader>
-      <div className="space-y-3">
-       <label className="text-label-xs font-semibold uppercase text-muted-foreground/50">
-        {tc('reason') || 'Reason'} (optional)
-       </label>
-       <Textarea 
-        value={cancelReason}
-        onChange={(e) => setCancelReason(e.target.value)}
-        placeholder={tc('enter_reason') || 'Enter reason...'}
-        className="min-h-[80px] bg-card border border-border shadow-sm border-none resize-none rounded-2xl focus-visible:ring-1 focus-visible:ring-status-error/30"
-       />
+
+      <div className="py-4 max-h-[60vh] overflow-y-auto space-y-4 px-1">
+        {(() => {
+          const timeline = (session.auditLog ?? []).map(log => ({
+            status: log.status.toLowerCase() as Status,
+            at: log.createdAt,
+            by: log.userName || tc('system_user'),
+          }));
+          if (timeline.length === 0) {
+            timeline.push({ 
+              status: 'draft' as Status, 
+              at: session.createdAt || new Date().toISOString(), 
+              by: session.startedBy || tc('system_user') 
+            });
+          }
+          return <StatusTimeline entries={timeline} />;
+        })()}
       </div>
-       <DialogFooter className="gap-3">
-        <Button variant="ghost" onClick={() => setIsCancelDialogOpen(false)} className="rounded-xl">
-         {locale === 'ar' ? 'تراجع / إغلاق' : 'Close'}
-        </Button>
-        <Button 
-         onClick={handleCancel} 
-         disabled={cancelStocktake.isPending}
-         className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-8"
-        >
-         {locale === 'ar' ? 'تأكيد إلغاء الجلسة' : 'Confirm Cancel'}
-        </Button>
-       </DialogFooter>
-     </div>
-    </DialogContent>
-   </Dialog>
-  </ScopeGuard>
- );
-}
+
+      <DialogFooter>
+       <Button variant="outline" onClick={() => setIsAuditDialogOpen(false)} className="rounded-xl w-full">
+        {locale === 'ar' ? 'إغلاق' : 'Close'}
+       </Button>
+      </DialogFooter>
+     </DialogContent>
+    </Dialog>
+
+    {/* Cancel Session Confirmation Dialog */}
+    <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+     <DialogContent className="w-[95vw] sm:w-[500px] sm:max-w-[500px] bg-surface-container-high border-none p-0 overflow-hidden rounded-[2rem]">
+      <div className="p-8 space-y-6">
+       <DialogHeader>
+        <DialogTitle className="text-headline-lg font-semibold">{locale === 'ar' ? 'إلغاء جلسة الجرد' : 'Cancel Stocktake'}</DialogTitle>
+        <DialogDescription className="text-muted-foreground">
+         {t('cancel_confirm_desc') || 'Are you sure you want to cancel this stocktake? This action cannot be undone.'}
+        </DialogDescription>
+       </DialogHeader>
+       <div className="space-y-3">
+        <label className="text-label-xs font-semibold uppercase text-muted-foreground/50">
+         {tc('reason') || 'Reason'} (optional)
+        </label>
+        <Textarea 
+         value={cancelReason}
+         onChange={(e) => setCancelReason(e.target.value)}
+         placeholder={tc('enter_reason') || 'Enter reason...'}
+         className="min-h-[80px] bg-card border border-border shadow-sm border-none resize-none rounded-2xl focus-visible:ring-1 focus-visible:ring-status-error/30"
+        />
+       </div>
+        <DialogFooter className="gap-3">
+         <Button variant="ghost" onClick={() => setIsCancelDialogOpen(false)} className="rounded-xl">
+          {locale === 'ar' ? 'تراجع / إغلاق' : 'Close'}
+         </Button>
+         <Button 
+          onClick={handleCancel} 
+          disabled={cancelStocktake.isPending}
+          className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-8"
+         >
+          {locale === 'ar' ? 'تأكيد إلغاء الجلسة' : 'Confirm Cancel'}
+         </Button>
+        </DialogFooter>
+      </div>
+     </DialogContent>
+    </Dialog>
+   </ScopeGuard>
+  );
+ }

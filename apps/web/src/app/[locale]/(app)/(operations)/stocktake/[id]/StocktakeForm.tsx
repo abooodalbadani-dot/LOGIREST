@@ -336,10 +336,10 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
           )}
 
           {/* Status Timeline */}
-          <div className="bg-card border border-border shadow-sm p-8 rounded-2xl shadow-sm transition-all hover:bg-card border border-border shadow-sm/50">
-            <div className="flex items-center gap-3 mb-10">
-              <History className="w-4 h-4 text-primary opacity-20" />
-              <h3 className="text-label-xs font-semibold uppercase text-primary/30">{common('audit_trail') || 'Audit Trail'}</h3>
+          <div id="audit-trail-section" className="bg-card border border-border shadow-sm p-6 md:p-8 rounded-2xl transition-all">
+            <div className="flex items-center gap-3 mb-6">
+              <History className="w-5 h-5 text-primary" />
+              <h3 className="text-label-sm font-bold uppercase text-foreground">{common('audit_trail') || 'Audit Trail (سجل العمليات والتدقيق)'}</h3>
             </div>
             {(() => {
               const timeline = (session.auditLog ?? []).map(log => ({
@@ -357,6 +357,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
 
         <FormFooter
           onCancel={() => router.push('/stocktake')}
+          cancelLabel={locale === 'ar' ? 'عودة للقائمة' : 'Back to List'}
           isLocked={isLocked}
           isDirty={false}
           actions={actions}

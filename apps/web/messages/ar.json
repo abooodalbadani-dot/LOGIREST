@@ -207,7 +207,7 @@
         "identity": "الهوية التجارية",
         "legal": "البيانات القانونية"
       },
-      "subtitle": "مطاعم أوتانتيك | Otantik Restaurant",
+      "subtitle": "مطاعم اوتانتك | Otantik Restaurant",
       "title": "ملف المطعم",
       "upload_logo": "رفع الشعار",
       "validation": {
@@ -402,7 +402,7 @@
       "description": "أدخل بيانات الاعتماد الخاصة بك للوصول إلى البوابة الآمنة.",
       "hardware_token": "رمز الأمان المادي",
       "hero_subtitle": "إدارة دقيقة للمطابخ عالية الأداء. تتبع المخزون في الوقت الفعلي والمشتريات المؤتمتة.",
-      "hero_title": "Otantik Restaurant | مطاعم أوتانتيك",
+      "hero_title": "Otantik Restaurant | مطاعم اوتانتك",
       "initialize_session": "بدء الجلسة",
       "operator_id": "معرف المشغل",
       "operator_id_placeholder": "أدخل المعرف أو البريد الإلكتروني",
@@ -416,7 +416,7 @@
       "version": "الإصدار v3.1.04"
     },
     "login_failed": "فشلت عملية المصادقة",
-    "logo_alt": "شعار مطاعم أوتانتيك",
+    "logo_alt": "شعار مطاعم اوتانتك",
     "new_password": "كلمة المرور الجديدة",
     "password": "كلمة المرور",
     "password_reset_redirect": "تمت مزامنة مفتاح الوصول بنجاح. جاري إعادة التوجيه إلى البوابة...",
@@ -516,8 +516,8 @@
     "bilingual_record": "سجل تصنيف ثنائي اللغة",
     "branches": "الفروع",
     "branding": {
-      "logirest_logo": "شعار مطاعم أوتانتيك",
-      "logo_alt": "شعار مطاعم أوتانتيك",
+      "logirest_logo": "شعار مطاعم اوتانتك",
+      "logo_alt": "شعار مطاعم اوتانتك",
       "restaurant_logo": "شعار المطعم"
     },
     "cancel": "إلغاء",
@@ -932,7 +932,7 @@
       "live_updates": "تحديثات مباشرة"
     },
     "system": {
-      "name": "مطاعم أوتانتيك",
+      "name": "مطاعم اوتانتك",
       "restaurant_logo": "شعار المطعم",
       "toggle_theme": "تبديل المظهر"
     },

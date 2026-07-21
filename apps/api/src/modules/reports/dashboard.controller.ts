@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Query,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
@@ -38,10 +39,18 @@ export class DashboardController {
     @ActiveScope('warehouseId') warehouseId: string | null,
     @ActiveScope('departmentId') departmentId: string | null,
     @CurrentUser('role') role: Role,
+    @Query('warehouseId') warehouseIdQuery?: string,
   ) {
+    const effectiveWarehouseId = warehouseIdQuery || warehouseId;
+
+    if (effectiveWarehouseId) {
+      return this.reportsService.getDashboardStats(role, effectiveWarehouseId);
+    }
+
     if (role === Role.ADMIN || role === Role.GM) {
       return this.reportsService.getGlobalDashboardStats();
     }
+
     if (role === Role.KITCHEN_CHIEF) {
       if (!departmentId) {
         throw new BadRequestException(
@@ -50,11 +59,9 @@ export class DashboardController {
       }
       return this.reportsService.getKitchenChiefDashboardStats(departmentId);
     }
-    if (!warehouseId) {
-      throw new BadRequestException(
-        'Warehouse ID is required for scoped dashboard statistics.',
-      );
-    }
-    return this.reportsService.getDashboardStats(role, warehouseId);
+
+    throw new BadRequestException(
+      'Warehouse ID is required for scoped dashboard statistics.',
+    );
   }
 }

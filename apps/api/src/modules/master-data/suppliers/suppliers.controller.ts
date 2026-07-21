@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   Req,
   HttpCode,
@@ -30,8 +31,8 @@ export class SuppliersController {
 
   @Get()
   @AllRoles()
-  async findAll() {
-    return this.suppliersService.findAll();
+  async findAll(@Query() query: { search?: string; page?: string; limit?: string }) {
+    return this.suppliersService.findAll(query);
   }
 
   @Get(':id')

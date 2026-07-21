@@ -304,11 +304,12 @@ export function DataTable<T>({
         <div
           ref={parentRef}
           className={cn(
-            "w-full min-w-0 -mx-4 px-4 md:mx-0 md:px-0 md:border md:rounded-xl overflow-x-auto bg-card md:bg-transparent custom-scrollbar",
+            "w-full min-w-0 -mx-4 px-4 md:mx-0 md:px-0 md:border md:rounded-xl bg-card md:bg-transparent custom-scrollbar",
+            enableVirtualization ? "overflow-y-auto overflow-x-auto flex-1 min-h-[400px]" : "overflow-x-auto",
             isIssuesList ? "md:border-brand-gold" : "md:border-border/50",
             renderMobileCard ? "hidden md:block" : ""
           )}
-          style={enableVirtualization ? { height: containerHeight } : {}}
+          style={enableVirtualization ? { height: containerHeight, maxHeight: containerHeight } : {}}
         >
           <table
             className={cn(
@@ -316,7 +317,7 @@ export function DataTable<T>({
               "min-w-[800px]"
             )}
           >
-            <thead className="hidden md:table-header-group bg-muted/50 border-b border-border text-slate-300 font-semibold text-xs uppercase tracking-wider sticky top-0 z-20">
+            <thead className="hidden md:table-header-group bg-card dark:bg-surface-container border-b border-border text-slate-300 font-semibold text-xs uppercase tracking-wider sticky top-0 z-20">
               {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header, idx) => {
@@ -328,7 +329,7 @@ export function DataTable<T>({
                       <th
                         key={header.id}
                         className={cn(
-                          "px-6 py-4 font-medium text-start whitespace-nowrap backdrop-blur-sm bg-muted/50 group/header",
+                          "px-6 py-4 font-medium text-start whitespace-nowrap bg-card dark:bg-surface-container sticky top-0 z-20 group/header",
                           isNumeric ? 'text-end' : 'text-start',
                           isFirst ? 'sticky start-0 z-30 bg-card group-hover:bg-muted/50 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)] rtl:shadow-[-4px_0_12px_rgba(0,0,0,0.03)] rtl:dark:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]' : '',
                           sortable && 'cursor-pointer select-none'

@@ -189,7 +189,7 @@ export class StocktakeController {
 
   @Get()
   async findAll(
-    @Query() query: { status?: string; search?: string; page?: string },
+    @Query() query: { status?: string; search?: string; page?: string; limit?: string },
     @ActiveScope('warehouseId') warehouseId?: string,
   ) {
     const result = await this.stocktakeService.findAll(
@@ -197,6 +197,7 @@ export class StocktakeController {
         status: query.status,
         search: query.search,
         page: query.page ? Number(query.page) : 1,
+        limit: query.limit ? Number(query.limit) : 20,
       },
       warehouseId,
     );

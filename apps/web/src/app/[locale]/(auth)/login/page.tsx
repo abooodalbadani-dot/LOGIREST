@@ -186,7 +186,7 @@ export default function LoginPage() {
 
                     <div>
                         <h1 className="text-3xl md:text-5xl font-bold text-white tracking-wide mb-2">
-                            Otantik Restaurant <span className="text-brand-gold">|</span> مطاعم أوتانتيك
+                            Otantik Restaurant <span className="text-brand-gold">|</span> مطاعم اوتانتك
                         </h1>
                         <p className="text-gray-300 text-sm md:text-base font-light tracking-wide">
                             {t('login.hero_subtitle')}

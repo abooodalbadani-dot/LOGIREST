@@ -180,6 +180,7 @@ export class PurchaseRequestsController {
       status?: string;
       search?: string;
       page?: string;
+      limit?: string;
       unconverted?: string;
     },
     @ActiveScope('warehouseId') warehouseId?: string,
@@ -189,6 +190,7 @@ export class PurchaseRequestsController {
         status: query.status,
         search: query.search,
         page: query.page ? Number(query.page) : 1,
+        limit: query.limit ? Number(query.limit) : 20,
         unconverted: query.unconverted === 'true',
       },
       warehouseId,

@@ -110,7 +110,7 @@ export class ItemsService {
     limit?: string;
   }) {
     const pageNum = filters.page ? parseInt(filters.page, 10) : 1;
-    const limitNum = Math.min(filters.limit ? parseInt(filters.limit, 10) : 50, 200);
+    const limitNum = Math.min(filters.limit ? parseInt(filters.limit, 10) : 20, 50);
     const skip = (pageNum - 1) * limitNum;
 
     const where: Prisma.ItemWhereInput = {};
@@ -144,9 +144,20 @@ export class ItemsService {
         where,
         skip,
         take: limitNum,
-        include: {
-          category: true,
-          unitOfMeasure: true,
+        select: {
+          id: true,
+          sku: true,
+          name: true,
+          categoryId: true,
+          uomId: true,
+          isActive: true,
+          image: true,
+          reorderPoint: true,
+          isBatched: true,
+          hasExpiry: true,
+          version: true,
+          category: { select: { id: true, code: true, name: true, version: true } },
+          unitOfMeasure: { select: { id: true, code: true, name: true, version: true } },
           barcodeMappings: { select: { barcode: true }, take: 1 },
         },
         orderBy: { sku: 'asc' },

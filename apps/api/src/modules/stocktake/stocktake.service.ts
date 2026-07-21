@@ -29,11 +29,11 @@ export class StocktakeService {
   }
 
   async findAll(
-    params: { status?: string; search?: string; page?: number },
+    params: { status?: string; search?: string; page?: number; limit?: number },
     warehouseId?: string,
   ) {
     const page = Number(params.page) || 1;
-    const limit = 10;
+    const limit = Math.min(Number(params.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const where: Prisma.StocktakeSessionWhereInput = {};
@@ -46,6 +46,7 @@ export class StocktakeService {
     if (params.search) {
       where.OR = [
         { sessionNumber: { contains: params.search, mode: 'insensitive' } },
+        { warehouse: { name: { contains: params.search, mode: 'insensitive' } } },
         {
           snapshots: {
             some: {
@@ -65,27 +66,14 @@ export class StocktakeService {
     const [items, total] = await Promise.all([
       this.prisma.stocktakeSession.findMany({
         where,
-        include: {
-          counts: {
-            include: {
-              countedBy: {
-                select: { id: true, name: true, email: true },
-              },
-            },
-          },
-          snapshots: {
-            include: {
-              item: {
-                include: {
-                  unitOfMeasure: true,
-                  category: true,
-                  barcodeMappings: true,
-                },
-              },
-              lot: true,
-            },
-          },
-          warehouse: true,
+        select: {
+          id: true,
+          sessionNumber: true,
+          status: true,
+          warehouseId: true,
+          version: true,
+          createdAt: true,
+          warehouse: { select: { id: true, name: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,

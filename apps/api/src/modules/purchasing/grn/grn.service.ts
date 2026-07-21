@@ -173,11 +173,11 @@ export class GrnService {
   }
 
   async findAll(
-    params: { status?: string; search?: string; page?: number },
+    params: { status?: string; search?: string; page?: number; limit?: number },
     activeScope?: { branchId?: string; warehouseId?: string },
   ) {
     const page = Number(params.page) || 1;
-    const limit = 10;
+    const limit = Math.min(Number(params.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const where: Prisma.GoodsReceivedNoteWhereInput = {};
@@ -227,25 +227,25 @@ export class GrnService {
     const [items, total] = await Promise.all([
       this.prisma.goodsReceivedNote.findMany({
         where,
-        include: {
-          lines: {
-            include: {
-              item: {
-                include: {
-                  unitOfMeasure: true,
-                  category: true,
-                },
-              },
-              lot: true,
-            },
-          },
+        select: {
+          id: true,
+          grnNumber: true,
+          status: true,
+          warehouseId: true,
+          poId: true,
+          version: true,
+          createdAt: true,
+          postedAt: true,
+          warehouse: { select: { id: true, name: true } },
           purchaseOrder: {
-            include: {
-              supplier: true,
-              currency: true,
+            select: {
+              id: true,
+              poNumber: true,
+              supplierId: true,
+              supplier: { select: { id: true, name: true, code: true } },
+              currency: { select: { id: true, code: true, symbol: true } },
             },
           },
-          warehouse: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -254,37 +254,8 @@ export class GrnService {
       this.prisma.goodsReceivedNote.count({ where }),
     ]);
 
-    const grnIds = items.map((g) => g.id);
-    const approvalEvents =
-      grnIds.length > 0
-        ? await this.prisma.approvalEvent.findMany({
-            where: {
-              documentId: { in: grnIds },
-              documentType: DocumentType.GOODS_RECEIVED_NOTE,
-            },
-            include: { user: { select: { id: true, name: true } } },
-            orderBy: { createdAt: 'asc' },
-          })
-        : [];
-
-    const eventsByDocId = new Map<string, typeof approvalEvents>();
-    for (const ev of approvalEvents) {
-      if (!eventsByDocId.has(ev.documentId)) {
-        eventsByDocId.set(ev.documentId, []);
-      }
-      const existing = eventsByDocId.get(ev.documentId);
-      if (existing) {
-        existing.push(ev);
-      }
-    }
-
-    const itemsWithEvents = items.map((g) => ({
-      ...g,
-      approvalEvents: eventsByDocId.get(g.id) || [],
-    }));
-
     return {
-      data: itemsWithEvents,
+      data: items,
       meta: {
         total,
         page,

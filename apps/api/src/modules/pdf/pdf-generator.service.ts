@@ -8,7 +8,7 @@ import { getDocumentTitle } from '@logirest/shared-types';
 
 @Injectable()
 export class PdfGeneratorService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async getBaseCurrencyCode(): Promise<string> {
     try {
@@ -421,7 +421,7 @@ export class PdfGeneratorService {
   ${summaryHtml ? `<div class="summary-section">${summaryHtml}</div>` : ''}
   
   <footer>
-    <div>${isAr ? 'نظام إدارة مخزون مطابخ أوتانتيك' : 'Otantik Kitchen Inventory Management System'}</div>
+    <div>${isAr ? 'نظام إدارة مخزون مطابخ اوتانتك' : 'Otantik Kitchen Inventory Management System'}</div>
     <div>${isAr ? 'وثيقة داخلية' : 'Internal Document'}</div>
   </footer>
 </body>

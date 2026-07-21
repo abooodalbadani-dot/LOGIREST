@@ -31,8 +31,8 @@ export class CategoriesController {
 
   @Get()
   @AllRoles()
-  async findAll(@Query('search') search?: string) {
-    return this.categoriesService.findAll(search);
+  async findAll(@Query() query: { search?: string; page?: string; limit?: string }) {
+    return this.categoriesService.findAll(query);
   }
 
   @Get(':id')

@@ -29,6 +29,10 @@ export class CreateSupplierDto {
   @IsOptional()
   contactName?: string;
 
+  @IsString()
+  @IsOptional()
+  paymentTerms?: string;
+
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
@@ -55,6 +59,10 @@ export class UpdateSupplierDto {
   @IsString()
   @IsOptional()
   contactName?: string;
+
+  @IsString()
+  @IsOptional()
+  paymentTerms?: string;
 
   @IsBoolean()
   @IsOptional()

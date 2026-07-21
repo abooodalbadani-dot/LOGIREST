@@ -66,11 +66,11 @@ export class TransfersService {
   }
 
   async findAll(
-    params: { status?: string; search?: string; page?: number },
+    params: { status?: string; search?: string; page?: number; limit?: number },
     activeScope?: { branchId?: string; warehouseId?: string },
   ) {
     const page = Number(params.page) || 1;
-    const limit = 10;
+    const limit = Math.min(Number(params.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const where: Prisma.TransferWhereInput = {};
@@ -145,14 +145,16 @@ export class TransfersService {
     const [items, total] = await Promise.all([
       this.prisma.transfer.findMany({
         where,
-        include: {
-          lines: {
-            include: {
-              item: true,
-            },
-          },
-          fromWarehouse: true,
-          toWarehouse: true,
+        select: {
+          id: true,
+          transferNumber: true,
+          status: true,
+          fromWarehouseId: true,
+          toWarehouseId: true,
+          version: true,
+          createdAt: true,
+          fromWarehouse: { select: { id: true, name: true, branchId: true } },
+          toWarehouse: { select: { id: true, name: true, branchId: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -161,37 +163,8 @@ export class TransfersService {
       this.prisma.transfer.count({ where }),
     ]);
 
-    const transferIds = items.map((t) => t.id);
-    const approvalEvents =
-      transferIds.length > 0
-        ? await this.prisma.approvalEvent.findMany({
-            where: {
-              documentId: { in: transferIds },
-              documentType: DocumentType.TRANSFER,
-            },
-            include: { user: { select: { id: true, name: true, role: true } } },
-            orderBy: { createdAt: 'asc' },
-          })
-        : [];
-
-    const eventsByDocId = new Map<string, typeof approvalEvents>();
-    for (const ev of approvalEvents) {
-      if (!eventsByDocId.has(ev.documentId)) {
-        eventsByDocId.set(ev.documentId, []);
-      }
-      const existing = eventsByDocId.get(ev.documentId);
-      if (existing) {
-        existing.push(ev);
-      }
-    }
-
-    const itemsWithEvents = items.map((t) => ({
-      ...t,
-      approvalEvents: eventsByDocId.get(t.id) || [],
-    }));
-
     return {
-      data: itemsWithEvents,
+      data: items,
       meta: {
         total,
         page,

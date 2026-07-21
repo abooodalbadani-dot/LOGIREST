@@ -42,8 +42,9 @@ export class DepartmentsController {
     @Query('page') page?: string,
     @Query('search') search?: string,
   ) {
-    const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
-    const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
+    const take = Math.min(limit ? parseInt(limit, 10) : 20, 50);
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const skip = (pageNum - 1) * take;
 
     const where: Record<string, unknown> = branchId ? { branchId } : {};
     if (search) {
@@ -70,14 +71,19 @@ export class DepartmentsController {
       this.prisma.department.findMany({
         where,
         orderBy: { name: 'asc' },
-        ...(take ? { take } : {}),
-        ...(skip ? { skip } : {}),
-        include: { branch: true },
+        take,
+        skip,
+        select: {
+          id: true,
+          name: true,
+          branchId: true,
+          version: true,
+          branch: { select: { id: true, name: true, code: true } },
+        },
       }),
       this.prisma.department.count({ where }),
     ]);
 
-    const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = take || total || 1;
 
     return {

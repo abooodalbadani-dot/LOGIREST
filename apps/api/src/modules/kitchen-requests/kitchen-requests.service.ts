@@ -123,7 +123,7 @@ export class KitchenRequestsService {
     user?: { id: string; role: Role },
   ) {
     const page = Number(params.page) || 1;
-    const limit = Number(params.limit) || 50;
+    const limit = Math.min(Number(params.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
     const where: Prisma.KitchenRequestWhereInput = {};
@@ -177,19 +177,19 @@ export class KitchenRequestsService {
     const [items, total] = await Promise.all([
       this.prisma.kitchenRequest.findMany({
         where,
-        include: {
-          items: {
-            include: {
-              item: {
-                include: {
-                  unitOfMeasure: true,
-                },
-              },
-            },
-          },
-          department: true,
-          warehouse: true,
-          requestedBy: true,
+        select: {
+          id: true,
+          requestNumber: true,
+          departmentId: true,
+          warehouseId: true,
+          status: true,
+          notes: true,
+          createdAt: true,
+          version: true,
+          issueId: true,
+          department: { select: { id: true, name: true } },
+          warehouse: { select: { id: true, name: true } },
+          requestedBy: { select: { id: true, name: true, role: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -198,37 +198,8 @@ export class KitchenRequestsService {
       this.prisma.kitchenRequest.count({ where }),
     ]);
 
-    const krIds = items.map((k) => k.id);
-    const approvalEvents =
-      krIds.length > 0
-        ? await this.prisma.approvalEvent.findMany({
-            where: {
-              documentId: { in: krIds },
-              documentType: DocumentType.KITCHEN_REQUEST,
-            },
-            include: { user: { select: { id: true, name: true, role: true } } },
-            orderBy: { createdAt: 'asc' },
-          })
-        : [];
-
-    const eventsByDocId = new Map<string, typeof approvalEvents>();
-    for (const ev of approvalEvents) {
-      if (!eventsByDocId.has(ev.documentId)) {
-        eventsByDocId.set(ev.documentId, []);
-      }
-      const existing = eventsByDocId.get(ev.documentId);
-      if (existing) {
-        existing.push(ev);
-      }
-    }
-
-    const itemsWithEvents = items.map((k) => ({
-      ...k,
-      approvalEvents: eventsByDocId.get(k.id) || [],
-    }));
-
     return {
-      data: itemsWithEvents,
+      data: items,
       meta: {
         total,
         page,
