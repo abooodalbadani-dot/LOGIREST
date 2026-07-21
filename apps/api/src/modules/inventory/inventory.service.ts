@@ -26,6 +26,7 @@ export class InventoryService {
             OR: [
               { name: { contains: query.search, mode: 'insensitive' } },
               { sku: { contains: query.search, mode: 'insensitive' } },
+              { barcodeMappings: { some: { barcode: { contains: query.search, mode: 'insensitive' } } } },
             ],
           }),
         },
@@ -104,6 +105,14 @@ export class InventoryService {
         lot: {
           status: query.status,
         },
+      }),
+      ...(query.search && {
+        OR: [
+          { lot: { lotNumber: { contains: query.search, mode: 'insensitive' } } },
+          { item: { name: { contains: query.search, mode: 'insensitive' } } },
+          { item: { sku: { contains: query.search, mode: 'insensitive' } } },
+          { item: { barcodeMappings: { some: { barcode: { contains: query.search, mode: 'insensitive' } } } } },
+        ],
       }),
     };
 
@@ -297,9 +306,14 @@ export class InventoryService {
       LIMIT ${limit} OFFSET ${skip}
     `;
 
-    // Retrieve total count matching the filters
-    const totalResult = await this.prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(*)::bigint as count
+    // Single aggregation query for total, inbound, and outbound counts
+    const aggResult = await this.prisma.$queryRaw<
+      Array<{ total: bigint; inboundCount: bigint; outboundCount: bigint }>
+    >`
+      SELECT
+        COUNT(*)::bigint as total,
+        COUNT(*) FILTER (WHERE sl.quantity > 0)::bigint as "inboundCount",
+        COUNT(*) FILTER (WHERE sl.quantity < 0)::bigint as "outboundCount"
       FROM stock_ledger sl
       INNER JOIN items i ON i.id = sl."itemId"
       LEFT JOIN goods_received_notes grn ON grn.id = sl."documentId" AND sl."documentType" = 'GOODS_RECEIVED_NOTE'
@@ -314,7 +328,9 @@ export class InventoryService {
         ${query.startDate ? Prisma.sql`AND sl."postedAt" >= ${new Date(query.startDate)}` : Prisma.empty}
         ${query.endDate ? Prisma.sql`AND sl."postedAt" <= ${new Date(query.endDate)}` : Prisma.empty}
     `;
-    const total = Number(totalResult[0]?.count || 0);
+    const total = Number(aggResult[0]?.total ?? 0);
+    const inboundCount = Number(aggResult[0]?.inboundCount ?? 0);
+    const outboundCount = Number(aggResult[0]?.outboundCount ?? 0);
 
     const data = rawMovements.map((movement) => ({
       id: movement.id,
@@ -334,6 +350,8 @@ export class InventoryService {
       data,
       meta: {
         total,
+        inboundCount,
+        outboundCount,
         page,
         pageSize: limit,
         totalPages: Math.ceil(total / limit) || 1,

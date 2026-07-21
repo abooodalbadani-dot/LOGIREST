@@ -206,7 +206,25 @@ export class IssuesService {
     }
     if (params.search) {
       andConditions.push({
-        issueNumber: { contains: params.search, mode: 'insensitive' },
+        OR: [
+          { issueNumber: { contains: params.search, mode: 'insensitive' } },
+          { notes: { contains: params.search, mode: 'insensitive' } },
+          { warehouse: { name: { contains: params.search, mode: 'insensitive' } } },
+          { department: { name: { contains: params.search, mode: 'insensitive' } } },
+          {
+            lines: {
+              some: {
+                item: {
+                  OR: [
+                    { name: { contains: params.search, mode: 'insensitive' } },
+                    { sku: { contains: params.search, mode: 'insensitive' } },
+                    { barcodeMappings: { some: { barcode: { contains: params.search, mode: 'insensitive' } } } },
+                  ],
+                },
+              },
+            },
+          },
+        ],
       });
     }
 

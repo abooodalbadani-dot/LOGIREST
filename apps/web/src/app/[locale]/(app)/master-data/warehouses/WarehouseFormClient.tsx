@@ -81,13 +81,12 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const codeValue = useWatch({ control, name: 'code' });
 
   useEffect(() => {
-    if (!id && warehousesData?.data && !codeValue && !isAutoPopulated) {
+    if (!id && warehousesData?.data && !isDirty) {
       const existingCodes = warehousesData.data.map((w: WarehouseModel) => w.code);
       const nextCode = generateNextCode(existingCodes, 'WH-', 3);
-      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
-      setIsAutoPopulated(true);
+      setValue('code', nextCode, { shouldDirty: false, shouldValidate: true });
     }
-  }, [id, warehousesData, setValue, codeValue, isAutoPopulated]);
+  }, [id, warehousesData, setValue, isDirty]);
 
   const branchItems = useMemo(() => {
     return branches.map((b) => ({

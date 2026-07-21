@@ -202,9 +202,18 @@ export class GrnService {
       andConditions.push({
         OR: [
           { grnNumber: { contains: params.search, mode: 'insensitive' } },
+          { purchaseOrder: { poNumber: { contains: params.search, mode: 'insensitive' } } },
           {
-            purchaseOrder: {
-              poNumber: { contains: params.search, mode: 'insensitive' },
+            lines: {
+              some: {
+                item: {
+                  OR: [
+                    { name: { contains: params.search, mode: 'insensitive' } },
+                    { sku: { contains: params.search, mode: 'insensitive' } },
+                    { barcodeMappings: { some: { barcode: { contains: params.search, mode: 'insensitive' } } } },
+                  ],
+                },
+              },
             },
           },
         ],

@@ -40,11 +40,18 @@ export class BranchesController {
     @Query('limit') limit?: string,
     @Query('page') page?: string,
     @Query('includeArchived') includeArchived?: string,
+    @Query('search') search?: string,
   ) {
     const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
     const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
 
     const where: Record<string, unknown> = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+      ];
+    }
     if (role !== 'ADMIN') {
       where.warehouses = {
         some: {

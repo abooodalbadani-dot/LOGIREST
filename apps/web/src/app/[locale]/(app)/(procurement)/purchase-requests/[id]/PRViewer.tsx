@@ -119,6 +119,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
 
       <div className="bg-card border border-border shadow-sm rounded-[2rem] overflow-hidden border border-surface-variant/5">
        <DocumentLineItemTable
+        mobileLayoutPattern="purchase-request-form"
         lines={document.lines.map(l => ({
          id: l.id,
          item: {

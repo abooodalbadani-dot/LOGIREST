@@ -161,7 +161,12 @@ export class KitchenRequestsService {
     }
     if (params.search) {
       andConditions.push({
-        requestNumber: { contains: params.search, mode: 'insensitive' },
+        OR: [
+          { requestNumber: { contains: params.search, mode: 'insensitive' } },
+          { notes: { contains: params.search, mode: 'insensitive' } },
+          { warehouse: { name: { contains: params.search, mode: 'insensitive' } } },
+          { department: { name: { contains: params.search, mode: 'insensitive' } } },
+        ],
       });
     }
 

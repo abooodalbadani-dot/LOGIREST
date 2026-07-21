@@ -557,8 +557,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       headerClassName: "min-w-[210px]",
       cellClassName: "min-w-[210px]",
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-center w-full min-w-[200px]">
-          <div className="flex h-11 w-full max-w-[200px] md:mx-auto shadow-sm">
+        <div className="flex justify-center w-full">
+          <div className="flex h-11 w-full shadow-sm">
             <Input
               type="text"
               placeholder={t('lot_placeholder') || 'Enter lot...'}

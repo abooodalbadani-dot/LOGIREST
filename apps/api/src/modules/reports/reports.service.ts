@@ -330,6 +330,7 @@ export class ReportsService {
         OR: [
           { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
           { sku: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { barcodeMappings: { some: { barcode: { contains: search, mode: Prisma.QueryMode.insensitive } } } },
         ],
       };
     }
@@ -2582,7 +2583,16 @@ export class ReportsService {
 
   private async attachDocumentNumbers<
     T extends { documentId: string; documentType: DocumentType },
-  >(data: T[]): Promise<(T & { documentNumber: string | null })[]> {
+  >(
+    data: T[],
+  ): Promise<
+    (T & {
+      documentNumber: string | null;
+      from: string | null;
+      to: string | null;
+      user: string | null;
+    })[]
+  > {
     if (!data.length) return [];
 
     const grnIds = data
@@ -2602,39 +2612,109 @@ export class ReportsService {
       grnIds.length
         ? this.prisma.goodsReceivedNote.findMany({
             where: { id: { in: grnIds } },
-            select: { id: true, grnNumber: true },
+            select: {
+              id: true,
+              grnNumber: true,
+              purchaseOrder: {
+                select: { supplier: { select: { name: true } } },
+              },
+              warehouse: { select: { name: true } },
+              createdBy: { select: { name: true } },
+            },
           })
         : [],
       adjustmentIds.length
         ? this.prisma.adjustment.findMany({
             where: { id: { in: adjustmentIds } },
-            select: { id: true, adjustmentNumber: true },
+            select: {
+              id: true,
+              adjustmentNumber: true,
+              warehouse: { select: { name: true } },
+              createdBy: { select: { name: true } },
+            },
           })
         : [],
       transferIds.length
         ? this.prisma.transfer.findMany({
             where: { id: { in: transferIds } },
-            select: { id: true, transferNumber: true },
+            select: {
+              id: true,
+              transferNumber: true,
+              fromWarehouse: { select: { name: true } },
+              toWarehouse: { select: { name: true } },
+            },
           })
         : [],
       issueIds.length
         ? this.prisma.inventoryIssue.findMany({
             where: { id: { in: issueIds } },
-            select: { id: true, issueNumber: true },
+            select: {
+              id: true,
+              issueNumber: true,
+              warehouse: { select: { name: true } },
+              department: { select: { name: true } },
+              createdBy: { select: { name: true } },
+            },
           })
         : [],
     ]);
 
-    const docMap = new Map<string, string>();
-    grns.forEach((g) => docMap.set(g.id, g.grnNumber));
-    adjustments.forEach((a) => docMap.set(a.id, a.adjustmentNumber));
-    transfers.forEach((t) => docMap.set(t.id, t.transferNumber));
-    issues.forEach((i) => docMap.set(i.id, i.issueNumber));
+    const docMap = new Map<
+      string,
+      {
+        documentNumber: string;
+        from: string | null;
+        to: string | null;
+        user: string | null;
+      }
+    >();
 
-    return data.map((m) => ({
-      ...m,
-      documentNumber: docMap.get(m.documentId) || null,
-    }));
+    grns.forEach((g) =>
+      docMap.set(g.id, {
+        documentNumber: g.grnNumber,
+        from: g.purchaseOrder?.supplier?.name || null,
+        to: g.warehouse?.name || null,
+        user: g.createdBy?.name || null,
+      }),
+    );
+
+    adjustments.forEach((a) =>
+      docMap.set(a.id, {
+        documentNumber: a.adjustmentNumber,
+        from: a.warehouse?.name || null,
+        to: a.warehouse?.name || null,
+        user: a.createdBy?.name || null,
+      }),
+    );
+
+    transfers.forEach((t) =>
+      docMap.set(t.id, {
+        documentNumber: t.transferNumber,
+        from: t.fromWarehouse?.name || null,
+        to: t.toWarehouse?.name || null,
+        user: null,
+      }),
+    );
+
+    issues.forEach((i) =>
+      docMap.set(i.id, {
+        documentNumber: i.issueNumber,
+        from: i.warehouse?.name || null,
+        to: i.department?.name || null,
+        user: i.createdBy?.name || null,
+      }),
+    );
+
+    return data.map((m) => {
+      const doc = docMap.get(m.documentId);
+      return {
+        ...m,
+        documentNumber: doc?.documentNumber || null,
+        from: doc?.from || null,
+        to: doc?.to || null,
+        user: doc?.user || null,
+      };
+    });
   }
 }
 

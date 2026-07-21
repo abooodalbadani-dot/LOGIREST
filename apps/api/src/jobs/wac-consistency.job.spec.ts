@@ -3,6 +3,8 @@ import { WacConsistencyJob } from './wac-consistency.job';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationService } from '../modules/notifications/notification.service';
 
+import { RedisLockService } from '../redis/redis-lock.service';
+
 describe('WacConsistencyJob', () => {
   let job: WacConsistencyJob;
 
@@ -23,6 +25,12 @@ describe('WacConsistencyJob', () => {
         WacConsistencyJob,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: NotificationService, useValue: mockNotificationService },
+        {
+          provide: RedisLockService,
+          useValue: {
+            runWithLock: jest.fn().mockImplementation((_key, _ttl, fn) => fn()),
+          },
+        },
       ],
     }).compile();
 

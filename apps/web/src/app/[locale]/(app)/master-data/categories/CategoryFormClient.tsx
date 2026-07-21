@@ -72,13 +72,12 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   }, [data, reset]);
 
   useEffect(() => {
-    if (!id && categoriesData?.data && !codeValue && !isAutoPopulated) {
+    if (!id && categoriesData?.data && !isDirty) {
       const existingCodes = categoriesData.data.map((c: Category) => c.code);
       const nextCode = generateNextCode(existingCodes, 'CAT-', 3);
-      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
-      setIsAutoPopulated(true);
+      setValue('code', nextCode, { shouldDirty: false, shouldValidate: true });
     }
-  }, [id, categoriesData, setValue, codeValue, isAutoPopulated]);
+  }, [id, categoriesData, setValue, isDirty]);
 
   // 1. Loading State
   if (id && isLoading) {

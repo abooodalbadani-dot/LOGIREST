@@ -2,10 +2,12 @@
 
 import { Input } from '@/components/ui/input';
 import { useState, useMemo } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations, useLocale } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Link } from '@/i18n/navigation';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { useInventoryMovements } from '@/features/inventory/hooks/useInventoryMovements';
 import { generateExcel } from '@/utils/export';
 import { InventoryMovement } from '@/types/inventory';
@@ -16,6 +18,8 @@ import { Activity, ArrowUpRight, ArrowDownRight, Search, Download, History } fro
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 const getTypeStyle = (docType: string) => {
  const normalized = docType.toUpperCase();
@@ -43,9 +47,10 @@ export default function MovementsClient() {
  const [searchFilter, setSearchFilter] = useState('');
  const [typeFilter, setTypeFilter] = useState('');
  const [page, setPage] = useState(1);
+ const debouncedSearch = useDebounce(searchFilter, 300);
 
  const { data, isLoading, isError, error } = useInventoryMovements({
-  search: searchFilter || undefined,
+  search: debouncedSearch || undefined,
   documentType: typeFilter || undefined,
   page
  });
@@ -153,7 +158,7 @@ export default function MovementsClient() {
 
  const handleExport = () => {
   if (!data?.data) return;
-  const columns = [
+  const exportCols = [
    { header: t('posted_at'), key: 'timestamp', width: 20 },
    { header: t('document_number'), key: 'documentReference', width: 20 },
    { header: t('document_type'), key: 'transactionType', width: 15 },
@@ -167,19 +172,19 @@ export default function MovementsClient() {
    timestamp: formatDate(item.timestamp, currentLocale as 'ar' | 'en'),
   }));
 
-  generateExcel(columns, rows, 'Stock_Movements');
+  generateExcel(exportCols, rows, 'Stock_Movements');
  };
 
  const stats = useMemo(() => ({
-  total: data?.meta?.total || 0,
-  inbound: data?.data?.filter(m => m.quantity > 0).length || 0,
-  outbound: data?.data?.filter(m => m.quantity < 0).length || 0,
+  total: data?.meta?.total ?? 0,
+  inbound: data?.meta?.inboundCount ?? 0,
+  outbound: data?.meta?.outboundCount ?? 0,
  }), [data]);
 
  return (
   <div className="space-y-12 animate-in fade-in duration-1000">
    {/* KPI Section */}
-   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+   <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-8">
     <div className="relative group overflow-hidden bg-card border border-border shadow-sm p-8 rounded-2xl shadow-2xl transition-all hover:bg-surface-container-high border border-border-muted/50">
      <div className="absolute top-0 end-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
       <Activity className="w-20 h-20 text-operational-cyan" />
@@ -269,10 +274,10 @@ export default function MovementsClient() {
        onValueChange={(val) => { if (val) { setTypeFilter(val === 'ALL' ? '' : val); setPage(1); } }}
       >
        <SelectTrigger className="h-12 bg-surface-container-highest/30 border-none rounded-xl text-label-xs font-semibold uppercase focus:ring-operational-cyan/30 transition-all px-6">
-        <SelectValue placeholder={tc('statuses.all')} />
+        <SelectValue placeholder={tc('active_status')} />
        </SelectTrigger>
        <SelectContent className="bg-card border border-border shadow-sm border border-border-muted/50 shadow-2xl rounded-2xl">
-        <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('statuses.all')}</SelectItem>
+        <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('active_status')}</SelectItem>
         <SelectItem value="GRN" className="text-label-xs font-semibold uppercase text-status-success">{t('types.grn')}</SelectItem>
         <SelectItem value="ISSUE" className="text-label-xs font-semibold uppercase text-status-warning">{t('types.issue')}</SelectItem>
         <SelectItem value="TRANSFER" className="text-label-xs font-semibold uppercase text-operational-cyan">{t('types.transfer')}</SelectItem>
@@ -282,14 +287,24 @@ export default function MovementsClient() {
      </div>
     </div>
 
-    <Button
-     variant="default"
-     onClick={handleExport}
-     className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-    >
-     <Download className="w-4 h-4 me-3 text-white transition-transform group-hover:-translate-y-0.5" />
-     {t('export_manifest')}
-    </Button>
+    {data?.data && data.data.length > 0 && (
+     <PermissionGate action="export" resource="inventory_movements">
+      <div className="shrink-0 w-full sm:w-auto">
+       <ExportMenu
+        data={data.data as unknown as Record<string, unknown>[]}
+        columns={[
+         { header: 'Date', key: 'createdAt' },
+         { header: 'Document Reference', key: 'documentReference' },
+         { header: 'Type', key: 'transactionType' },
+         { header: 'Item Name', key: 'itemName' },
+         { header: 'Quantity', key: 'quantity' },
+        ]}
+        filename="inventory_movements"
+        title={t('title') || 'Stock Movements'}
+       />
+      </div>
+     </PermissionGate>
+    )}
    </div>
 
    <div className="bg-card border border-border shadow-sm rounded-2xl shadow-2xl border border-border-muted/50 overflow-hidden">
@@ -300,10 +315,11 @@ export default function MovementsClient() {
     )}
     <div className="flex-1 w-full min-h-[400px] md:min-h-0">
      <div className="hidden md:block w-full">
-      <DataTable
+      <DataTable<InventoryMovement>
        columns={columns}
        data={data?.data ?? []}
        isLoading={isLoading}
+       enableVirtualization={true}
        collectionName="inventory_operational_ledger"
        pagination={data?.meta ? {
         page: data.meta.page,
@@ -322,8 +338,12 @@ export default function MovementsClient() {
      </div>
 
      {!isLoading && (data?.data ?? []).length > 0 && (
-      <div className="flex flex-col gap-3 md:hidden mt-4 p-4">
-       {(data?.data ?? []).map((movement) => {
+      <VirtualizedMobileGrid<InventoryMovement>
+       data={data?.data ?? []}
+       estimateSize={150}
+       maxHeight={600}
+       className="mt-4 p-4 block md:hidden"
+       renderCard={(movement: InventoryMovement) => {
         const isEntry = movement.quantity > 0;
         return (
         <div 
@@ -373,8 +393,9 @@ export default function MovementsClient() {
            </Link>
          </div>
         </div>
-       )})}
-      </div>
+       );
+      }}
+      />
      )}
     </div>
    </div>

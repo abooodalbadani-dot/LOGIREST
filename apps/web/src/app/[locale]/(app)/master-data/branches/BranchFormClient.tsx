@@ -96,13 +96,12 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   }, [data, reset]);
 
   useEffect(() => {
-    if (!id && branchesData?.data && !codeValue && !isAutoPopulated) {
+    if (!id && branchesData?.data && !isDirty) {
       const existingCodes = branchesData.data.map((b: Branch) => b.code);
       const nextCode = generateNextCode(existingCodes, 'BR-', 3);
-      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
-      setIsAutoPopulated(true);
+      setValue('code', nextCode, { shouldDirty: false, shouldValidate: true });
     }
-  }, [id, branchesData, setValue, codeValue, isAutoPopulated]);
+  }, [id, branchesData, setValue, isDirty]);
 
   const onValid = (values: BranchFormValues) => {
     console.log('3. [BranchForm] Validation PASSED. Data:', values);

@@ -97,13 +97,12 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
   }, [data, reset]);
 
   useEffect(() => {
-    if (!id && suppliersData?.data && !codeValue && !isAutoPopulated) {
+    if (!id && suppliersData?.data && !isDirty) {
       const existingCodes = suppliersData.data.map((s: Supplier) => s.code);
       const nextCode = generateNextCode(existingCodes, 'SUP-', 4);
-      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
-      setIsAutoPopulated(true);
+      setValue('code', nextCode, { shouldDirty: false, shouldValidate: true });
     }
-  }, [id, suppliersData, setValue, codeValue, isAutoPopulated]);
+  }, [id, suppliersData, setValue, isDirty]);
 
   const onValid = (values: SupplierFormValues) => {
     if (isReadOnly) return;

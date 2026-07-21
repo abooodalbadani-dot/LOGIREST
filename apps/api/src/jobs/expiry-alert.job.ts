@@ -2,6 +2,7 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { OutboxService } from '../modules/outbox/outbox.service';
+import { RedisLockService } from '../redis/redis-lock.service';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from '../redis/redis.module';
 
@@ -13,6 +14,7 @@ export class ExpiryAlertJob {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
+    private readonly lockService: RedisLockService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -98,9 +100,10 @@ export class ExpiryAlertJob {
    */
   @Cron('0 7 * * *')
   async checkExpiringLots() {
-    await this.autoExpireExpiredLots();
+    await this.lockService.runWithLock('expiry-alert-job', 300, async () => {
+      await this.autoExpireExpiredLots();
 
-    this.logger.log('Starting daily lot expiry threshold scan...');
+      this.logger.log('Starting daily lot expiry threshold scan...');
 
     try {
       const sevenDaysFromNow = new Date();
@@ -195,6 +198,7 @@ export class ExpiryAlertJob {
         `Failed to run expiring lot check job: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+    });
   }
 
   /**
@@ -204,7 +208,8 @@ export class ExpiryAlertJob {
    */
   @Cron('30 7 * * *')
   async checkExpiringLots30Days() {
-    this.logger.log('Starting daily 30-day lot expiry threshold scan...');
+    await this.lockService.runWithLock('expiry-alert-30days-job', 300, async () => {
+      this.logger.log('Starting daily 30-day lot expiry threshold scan...');
 
     try {
       const thirtyDaysFromNow = new Date();
@@ -294,5 +299,6 @@ export class ExpiryAlertJob {
         `Failed to run 30-day expiring lot check job: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+    });
   }
 }

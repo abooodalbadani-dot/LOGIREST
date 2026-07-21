@@ -91,6 +91,60 @@ export default function AvailableInventoryClient() {
  />
  }
  collectionName="reports"
+ enableVirtualization={true}
+ renderMobileCard={(item: AvailableInventoryReport) => (
+  <div className="flex flex-col bg-card border border-border shadow-sm rounded-2xl p-4 transition-all hover:border-brand-gold/30 space-y-3">
+   {/* Header: Name + Category + SKU */}
+   <div className="flex flex-col gap-1 min-w-0 w-full pb-3 border-b border-border/40 text-start items-start">
+    <div className="flex items-center justify-between w-full gap-2">
+     <span className="text-sm font-bold text-foreground truncate" title={item.name}>
+      {item.name}
+     </span>
+     {item.category && (
+      <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-md uppercase shrink-0">
+       {item.category}
+      </span>
+     )}
+    </div>
+    <span className="font-mono font-bold text-[11px] bg-surface-container-highest/60 border border-surface-variant/10 px-2 py-0.5 rounded text-muted-foreground text-start rtl:text-right ltr:text-left" dir="ltr">
+     {item.sku}
+    </span>
+   </div>
+
+   {/* Quantities Row (Physical, Reserved, Available) */}
+   <div className="grid grid-cols-3 gap-2 w-full bg-slate-50/70 dark:bg-slate-900/40 border border-border/50 rounded-xl p-3 text-center">
+    {/* Physical */}
+    <div className="flex flex-col gap-1">
+     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+      {t('table.qty_physical')}
+     </span>
+     <span className="font-mono text-xs font-bold text-foreground" dir="ltr">
+      {formatQuantity(item.qtyPhysical, locale)}
+     </span>
+    </div>
+
+    {/* Reserved */}
+    <div className="flex flex-col gap-1 border-x border-border/40 px-1">
+     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+      {t('table.qty_reserved')}
+     </span>
+     <span className="font-mono text-xs font-bold text-amber-500" dir="ltr">
+      {formatQuantity(item.qtyReserved, locale)}
+     </span>
+    </div>
+
+    {/* Available */}
+    <div className="flex flex-col gap-1">
+     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+      {t('table.qty_available')}
+     </span>
+     <span className="font-mono text-xs font-black text-operational-cyan" dir="ltr">
+      {formatQuantity(item.qtyAvailable, locale)}
+     </span>
+    </div>
+   </div>
+  </div>
+ )}
  />
  </div>
  );

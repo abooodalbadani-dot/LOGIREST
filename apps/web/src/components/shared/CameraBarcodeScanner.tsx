@@ -4,16 +4,24 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import type { Html5Qrcode } from 'html5-qrcode';
 
 interface CameraBarcodeScannerProps {
   onScanSuccess: (decodedText: string) => void;
   className?: string;
 }
 
+/**
+ * Scans barcodes using the native getUserMedia API for reliable back-camera selection.
+ * Bypasses html5-qrcode camera selection entirely.
+ *
+ * Strategy:
+ * 1. getUserMedia with facingMode: environment => reliable back camera on all mobile devices.
+ * 2. BarcodeDetector API (Chrome/Android) for scanning if available.
+ * 3. Fall back to html5-qrcode scanFile() loop for iOS Safari.
+ */
 export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcodeScannerProps) {
   const t = useTranslations('common');
-  
+
   const translateSafe = useCallback((key: string, fallback: string) => {
     try {
       return t(key) || fallback;
@@ -24,9 +32,12 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
 
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const elementId = useRef(`camera-scanner-${Math.random().toString(36).substring(2, 11)}`).current;
-  // Stable callback ref — prevents scanner re-initialization when parent re-renders with new inline arrow
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
   const onScanSuccessRef = useRef(onScanSuccess);
   useEffect(() => { onScanSuccessRef.current = onScanSuccess; }, [onScanSuccess]);
   const stableOnScanSuccess = useCallback((text: string) => onScanSuccessRef.current(text), []);
@@ -34,126 +45,185 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
   useEffect(() => {
     let active = true;
 
-    // Check for Secure Context (HTTPS requirement for camera access)
-    if (typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      setError('Camera access requires a secure HTTPS connection (or Chrome flags override).');
+    if (typeof window === 'undefined') return;
+
+    if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      setError('Camera access requires a secure HTTPS connection.');
       setIsInitializing(false);
       return;
     }
 
-    // Dynamically import html5-qrcode to prevent server-side rendering issues
-    import('html5-qrcode').then(({ Html5Qrcode, Html5QrcodeSupportedFormats }) => {
-      if (!active) return;
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
 
-      const formats = [
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.QR_CODE
-      ];
-
-      const html5QrCode = new Html5Qrcode(elementId);
-      scannerRef.current = html5QrCode;
-
-      const config = {
-        fps: 15,
-        qrbox: (width: number, height: number) => {
-          const size = Math.min(width * 0.7, 250);
-          return {
-            width: Math.floor(size),
-            height: Math.floor(size)
-          };
-        },
-        formatsToSupport: formats,
-      };
-
-      interface CameraTrackConstraints extends MediaTrackConstraints {
-        advanced?: Array<MediaTrackConstraintSet & { focusMode?: string; zoom?: number }>;
+    const stopStream = () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+    };
 
-      // Stage 1: Ideal high-res constraints with continuous focus and zoom
-      const stage1Constraints: CameraTrackConstraints = {
-        facingMode: 'environment',
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        advanced: [
-          { focusMode: 'continuous' },
-          { zoom: 1.5 }
-        ]
-      };
-
-      const startScanner = (constraints: MediaTrackConstraints | { facingMode: string } | boolean) => {
-        return html5QrCode.start(
-          constraints as MediaTrackConstraints,
-          config,
-          (decodedText) => {
-            if (active) {
-              stableOnScanSuccess(decodedText);
-            }
+    const startCamera = async () => {
+      try {
+        // The native getUserMedia API is the ONLY reliable way to get the back camera.
+        // The OS-level browser handles facingMode: environment correctly on all mobile devices.
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
           },
-          () => {
-            // Ignore verbose individual frame scanning failure logs
-          }
-        );
-      };
-
-      // Execute 3-stage fallback strategy for maximum device compatibility
-      startScanner(stage1Constraints as MediaTrackConstraints)
-        .catch((err1: unknown) => {
-          console.warn('Camera Stage 1 init failed, attempting Stage 2 (standard environment camera)...', err1);
-          // Stage 2: Standard environment camera fallback
-          return startScanner({ facingMode: 'environment' });
-        })
-        .catch((err2: unknown) => {
-          console.warn('Camera Stage 2 init failed, attempting Stage 3 (default system camera)...', err2);
-          // Stage 3: Any available system camera fallback (e.g. laptop/desktop webcam)
-          return startScanner(true);
-        })
-        .then(() => {
-          if (active) {
-            setIsInitializing(false);
-          }
-        })
-        .catch((err: unknown) => {
-          if (active) {
-            const msg = err instanceof Error ? err.message : 'Camera permission denied or camera not found.';
-            console.error('Failed to initialize browser camera scanner:', msg);
-            setError(msg);
-            setIsInitializing(false);
-          }
+          audio: false,
         });
-    }).catch((err: unknown) => {
-      if (active) {
-        const msg = err instanceof Error ? err.message : 'Failed to load scanner module.';
-        console.error('Failed to load html5-qrcode scanner module:', msg);
-        setError(msg);
-        setIsInitializing(false);
-      }
-    });
 
-    return () => {
-      active = false;
-      if (scannerRef.current) {
-        const scanner = scannerRef.current;
-        if (scanner.isScanning) {
-          scanner.stop().catch((err: unknown) => {
-            console.error('Failed to stop camera scanner session:', err instanceof Error ? err.message : String(err));
+        if (!active) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+
+        streamRef.current = stream;
+        videoEl.srcObject = stream;
+        await videoEl.play();
+
+        if (!active) return;
+        setIsInitializing(false);
+
+        const canvas = document.createElement('canvas');
+        canvasRef.current = canvas;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        type BarcodeFormat = 'ean_13' | 'ean_8' | 'code_128' | 'code_39' | 'upc_a' | 'upc_e' | 'qr_code';
+        interface DetectedBarcode { rawValue: string }
+        interface BarcodeDetectorLike {
+          detect(source: HTMLVideoElement): Promise<DetectedBarcode[]>;
+        }
+        interface BarcodeDetectorConstructor {
+          new(options: { formats: BarcodeFormat[] }): BarcodeDetectorLike;
+        }
+
+        const windowRecord = window as unknown as Record<string, unknown>;
+        const BarcodeDetectorClass = (
+          'BarcodeDetector' in window
+            ? windowRecord['BarcodeDetector']
+            : undefined
+        ) as BarcodeDetectorConstructor | undefined;
+
+        if (BarcodeDetectorClass) {
+          // Path A: Native BarcodeDetector API (Chrome Android)
+          const detector = new BarcodeDetectorClass({
+            formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'qr_code'],
           });
+
+          const scanLoop = async () => {
+            if (!active) return;
+            try {
+              if (videoEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+                const barcodes = await detector.detect(videoEl);
+                if (barcodes.length > 0 && active) {
+                  stableOnScanSuccess(barcodes[0].rawValue);
+                }
+              }
+            } catch {
+              // Suppress per-frame errors
+            }
+            animFrameRef.current = requestAnimationFrame(() => { void scanLoop(); });
+          };
+
+          animFrameRef.current = requestAnimationFrame(() => { void scanLoop(); });
+        } else {
+          // Path B: html5-qrcode scanFile() fallback (iOS Safari)
+          const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
+          if (!active) return;
+
+          const tempId = '_scanner_temp_' + Math.random().toString(36).slice(2);
+          const tempDiv = document.createElement('div');
+          tempDiv.id = tempId;
+          tempDiv.style.display = 'none';
+          document.body.appendChild(tempDiv);
+
+          const scanner = new Html5Qrcode(tempId, {
+            formatsToSupport: [
+              Html5QrcodeSupportedFormats.EAN_13,
+              Html5QrcodeSupportedFormats.EAN_8,
+              Html5QrcodeSupportedFormats.CODE_128,
+              Html5QrcodeSupportedFormats.CODE_39,
+              Html5QrcodeSupportedFormats.UPC_A,
+              Html5QrcodeSupportedFormats.UPC_E,
+              Html5QrcodeSupportedFormats.QR_CODE,
+            ],
+            verbose: false,
+          });
+
+          let scanning = false;
+
+          const scanLoop = () => {
+            if (!active) {
+              scanner.clear();
+              tempDiv.remove();
+              return;
+            }
+
+            if (!scanning && videoEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && videoEl.videoWidth > 0) {
+              canvas.width = videoEl.videoWidth;
+              canvas.height = videoEl.videoHeight;
+              ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+              scanning = true;
+              canvas.toBlob(blob => {
+                if (!blob || !active) {
+                  scanning = false;
+                  return;
+                }
+
+                const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' });
+                scanner.scanFile(file, false)
+                  .then(result => {
+                    if (active) stableOnScanSuccess(result);
+                  })
+                  .catch(() => {})
+                  .finally(() => {
+                    scanning = false;
+                  });
+              }, 'image/jpeg', 0.9);
+            }
+
+            animFrameRef.current = requestAnimationFrame(scanLoop);
+          };
+
+          animFrameRef.current = requestAnimationFrame(scanLoop);
+        }
+      } catch (err) {
+        if (active) {
+          const msg = err instanceof Error ? err.message : String(err);
+          setError('Camera connection failed: ' + msg);
+          setIsInitializing(false);
         }
       }
     };
-    // stableOnScanSuccess is memoized — safe dep; elementId is stable (computed once via useRef)
-  }, [stableOnScanSuccess, elementId]);
+
+    void startCamera();
+
+    return () => {
+      active = false;
+      stopStream();
+    };
+  }, [stableOnScanSuccess]);
 
   return (
-    <div className={cn("w-full bg-black overflow-hidden relative", className || "h-72")}>
-      {/* Camera viewfinder target element — html5-qrcode injects <div><video> here */}
-      <div id={elementId} className="absolute inset-0 w-full h-full [&>div]:!w-full [&>div]:!h-full [&>div>video]:!w-full [&>div>video]:!h-full [&>div>video]:object-cover" />
+    <div className={cn('w-full bg-black overflow-hidden relative', className || 'h-72')}>
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover"
+        muted
+        playsInline
+        autoPlay
+      />
 
-      {/* Loading state indicator */}
       {isInitializing && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 z-20 text-white gap-3 p-4">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -163,7 +233,6 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
         </div>
       )}
 
-      {/* Error permission overlay */}
       {error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 z-20 text-white gap-4 p-6 text-center">
           <div className="p-3 bg-red-500/10 text-red-500 rounded-full border border-red-500/20">
@@ -176,15 +245,10 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
         </div>
       )}
 
-      {/* Scanning overlay framing */}
       {!isInitializing && !error && (
         <div className="absolute inset-0 pointer-events-none border border-white/5 z-10 flex items-center justify-center">
-          {/* Centered Square Viewfinder matching qrbox */}
           <div className="absolute w-[250px] h-[250px] max-w-[70%] max-h-[70%] border border-primary/20 rounded-xl flex items-center justify-center pointer-events-none">
-            {/* Red scanning line animation */}
             <div className="w-full h-0.5 bg-primary/70 shadow-[0_0_12px_rgba(202,174,133,0.8)] animate-[scan-line_2.2s_infinite]" />
-            
-            {/* Viewfinder Corners */}
             <div className="absolute left-0 top-0 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
             <div className="absolute right-0 top-0 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
             <div className="absolute left-0 bottom-0 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
@@ -192,7 +256,6 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
           </div>
         </div>
       )}
-
     </div>
   );
 }

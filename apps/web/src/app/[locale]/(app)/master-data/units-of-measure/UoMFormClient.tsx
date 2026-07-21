@@ -75,13 +75,12 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
   }, [data, reset]);
 
   useEffect(() => {
-    if (!id && uomsData?.data && !codeValue && !isAutoPopulated) {
+    if (!id && uomsData?.data && !isDirty) {
       const existingCodes = uomsData.data.map((u: UoM) => u.code);
       const nextCode = generateNextCode(existingCodes, 'UOM-', 3);
-      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
-      setIsAutoPopulated(true);
+      setValue('code', nextCode, { shouldDirty: false, shouldValidate: true });
     }
-  }, [id, uomsData, setValue, codeValue, isAutoPopulated]);
+  }, [id, uomsData, setValue, isDirty]);
 
   // 1. Loading State
   if (id && isLoading) {

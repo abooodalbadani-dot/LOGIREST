@@ -44,7 +44,7 @@ export default function LotTraceReportClient() {
  const columns: ColumnDef<LotTraceAllocation>[] = [
   {
    accessorKey: 'documentNumber',
-   header: t('lot_trace_table.source_document') || 'Document Number',
+   header: t('lot_trace_table.source_document'),
    cell: ({ row }) => {
     const doc = row.original;
     const type = (doc.documentType || '').toLowerCase();
@@ -68,11 +68,11 @@ export default function LotTraceReportClient() {
   },
   {
    accessorKey: 'documentType',
-   header: t('lot_trace_table.source_document_type') || 'Document Type',
+   header: t('lot_trace_table.source_document_type'),
   },
   {
    accessorKey: 'quantity',
-   header: t('lot_trace_table.quantity') || 'Quantity',
+   header: t('lot_trace_table.quantity'),
    meta: { numeric: true },
    cell: ({ row }) => (
     <span dir="ltr" className="font-mono">
@@ -82,7 +82,7 @@ export default function LotTraceReportClient() {
   },
   {
    accessorKey: 'date',
-   header: t('lot_trace_table.received_date') || 'Date',
+   header: t('lot_trace_table.received_date'),
    cell: ({ row }) => (
     <span dir="ltr" className="font-mono">
      {formatDate(row.getValue('date'), locale)}
@@ -91,7 +91,7 @@ export default function LotTraceReportClient() {
   },
   {
    accessorKey: 'status',
-   header: t('lot_trace_table.status') || 'Status',
+   header: t('lot_trace_table.status'),
   },
  ];
 
@@ -173,6 +173,51 @@ export default function LotTraceReportClient() {
      collectionName="reports"
      enableVirtualization={true}
      containerHeight="600px"
+     renderMobileCard={(item: LotTraceAllocation) => (
+      <div className="flex flex-col bg-card border border-border shadow-sm rounded-2xl p-4 transition-all hover:border-brand-gold/30 space-y-3">
+       {/* Header: Doc Number & Type */}
+       <div className="flex items-center justify-between w-full pb-3 border-b border-border/40">
+        <span className="font-mono font-bold text-sm text-cyan-400" dir="ltr">
+         {item.documentNumber}
+        </span>
+        {item.documentType && (
+         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-secondary/60 text-secondary-foreground uppercase">
+          {item.documentType}
+         </span>
+        )}
+       </div>
+
+       {/* Quantities & Details Grid */}
+       <div className="grid grid-cols-3 gap-2 w-full bg-slate-50/70 dark:bg-slate-900/40 border border-border/50 rounded-xl p-3 text-center">
+        <div className="flex flex-col gap-1">
+         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+          {t('lot_trace_table.quantity')}
+         </span>
+         <span className="font-mono text-xs font-black text-operational-cyan" dir="ltr">
+          {formatQuantity(item.quantity, locale)}
+         </span>
+        </div>
+
+        <div className="flex flex-col gap-1 border-x border-border/40 px-1">
+         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+          {t('lot_trace_table.received_date')}
+         </span>
+         <span className="font-mono text-xs font-bold text-foreground" dir="ltr">
+          {formatDate(item.date, locale)}
+         </span>
+        </div>
+
+        <div className="flex flex-col gap-1">
+         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+          {t('lot_trace_table.status')}
+         </span>
+         <span className="text-xs font-bold text-foreground truncate">
+          {item.status || '—'}
+         </span>
+        </div>
+       </div>
+      </div>
+     )}
     />
    ) : (
     <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border-muted/20 rounded-3xl bg-card border border-border shadow-sm/40">

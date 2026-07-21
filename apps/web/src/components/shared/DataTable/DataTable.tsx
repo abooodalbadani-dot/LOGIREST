@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslations, useLocale } from 'next-intl';
 import { Pagination } from './Pagination';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { cn } from '@/lib/utils';
 
 import { TableSkeleton } from '@/components/shared/TableSkeleton';
@@ -129,7 +130,7 @@ export function DataTable<T>({
   pagination,
   onExport,
   exportComponent,
-  enableExport = true,
+  enableExport = false,
   exportFilename,
   exportTitle,
   emptyState,
@@ -430,7 +431,7 @@ export function DataTable<T>({
                             )}
                             dir={isNumeric ? 'ltr' : undefined}
                           >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </td>
                         );
                       })}
@@ -443,13 +444,12 @@ export function DataTable<T>({
         </div>
       )}
       {renderMobileCard && !isLoading && data.length > 0 && (
-        <div className="flex flex-col gap-4 md:hidden w-full mt-4">
-          {data.map((item, idx) => (
-            <React.Fragment key={idx}>
-              {renderMobileCard(item)}
-            </React.Fragment>
-          ))}
-        </div>
+        <VirtualizedMobileGrid
+          data={data}
+          renderCard={renderMobileCard}
+          estimateSize={140}
+          className="mt-4"
+        />
       )}
 
       {pagination && !isLoading && data.length > 0 && (

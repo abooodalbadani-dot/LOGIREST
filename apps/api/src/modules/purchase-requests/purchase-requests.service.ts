@@ -117,7 +117,13 @@ export class PurchaseRequestsService {
         {
           lines: {
             some: {
-              item: { name: { contains: params.search, mode: 'insensitive' } },
+              item: {
+                OR: [
+                  { name: { contains: params.search, mode: 'insensitive' } },
+                  { sku: { contains: params.search, mode: 'insensitive' } },
+                  { barcodeMappings: { some: { barcode: { contains: params.search, mode: 'insensitive' } } } },
+                ],
+              },
             },
           },
         },

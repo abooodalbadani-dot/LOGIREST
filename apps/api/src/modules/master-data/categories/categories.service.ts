@@ -33,8 +33,16 @@ export class CategoriesService {
     };
   }
 
-  async findAll() {
+  async findAll(search?: string) {
+    const where: Prisma.CategoryWhereInput = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+      ];
+    }
     const categories = await this.prisma.category.findMany({
+      where,
       orderBy: { name: 'asc' },
     });
     const data = categories.map((cat) => this.mapDbCategoryToFrontend(cat));

@@ -6,7 +6,8 @@ export function normalizeDigits(value: string): string {
 
   return value
     .replace(/[٠-٩]/g, d => arabicIndic.indexOf(d).toString())
-    .replace(/[۰-۹]/g, d => easternArabicIndic.indexOf(d).toString());
+    .replace(/[۰-۹]/g, d => easternArabicIndic.indexOf(d).toString())
+    .replace(/[٫]/g, '.');
 }
 
 export function toSafeNumber(value: string | number | undefined | null): number {

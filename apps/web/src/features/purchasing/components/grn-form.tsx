@@ -79,74 +79,74 @@ interface GRNFormProps {
 }
 
 interface GRNReceivedQtyCellProps {
- register: UseFormRegister<GRNFormValues>;
- index: number;
- isLocked: boolean;
- isWarehouseLocked: boolean;
- qty: number;
- receivedQty: number;
- hasError: boolean;
+   register: UseFormRegister<GRNFormValues>;
+   index: number;
+   isLocked: boolean;
+   isWarehouseLocked: boolean;
+   qty: number;
+   receivedQty: number;
+   hasError: boolean;
 }
 
 function GRNReceivedQtyCell({
- register,
- index,
- isLocked,
- isWarehouseLocked,
- qty,
- receivedQty,
- hasError
+   register,
+   index,
+   isLocked,
+   isWarehouseLocked,
+   qty,
+   receivedQty,
+   hasError
 }: GRNReceivedQtyCellProps) {
- const isOver = receivedQty > qty;
- return (
-  <Input
-   type="number"
-   dir="ltr"
-   lang="en"
-   style={{ WebkitLocale: '"en"' }}
-   disabled={isLocked || isWarehouseLocked}
-   className={cn(
-    "w-16 md:w-20 h-7 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50",
-    hasError
-     ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
-     : isOver
-       ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
-        : "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
-   )}
-   {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
-  />
- );
+   const isOver = receivedQty > qty;
+   return (
+      <Input
+         type="number"
+         dir="ltr"
+         lang="en"
+         style={{ WebkitLocale: '"en"' }}
+         disabled={isLocked || isWarehouseLocked}
+         className={cn(
+            "w-full h-10 rounded-xl bg-background border border-border text-center px-2 py-0.5 font-mono text-sm font-black text-foreground outline-none transition-all disabled:opacity-50",
+            hasError
+               ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
+               : isOver
+                  ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
+                  : "focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none"
+         )}
+         {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
+      />
+   );
 }
 
 interface GRNLotAllocationCellProps {
- field: LineItem;
- hasLot: boolean;
- label: string;
- onClick: () => void;
+   field: LineItem;
+   hasLot: boolean;
+   label: string;
+   onClick: () => void;
 }
 
 function GRNLotAllocationCell({ field, hasLot, label, onClick }: GRNLotAllocationCellProps) {
- return (
-  <button
-   type="button"
-   className={cn(
-    'inline-flex items-center justify-center transition-all text-[10px] font-bold uppercase rounded px-2 md:px-2.5 py-0.5 md:py-1 h-7 border',
-    hasLot
-       ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 w-auto font-mono gap-1.5'
-       : 'border-[#b48e67] text-[#b48e67] hover:bg-[#b48e67] hover:text-black w-auto'
-   )}
-   onClick={onClick}
-  >
-   {hasLot ? (
-      <>
-       <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shrink-0" />
-       <span dir="ltr" className="font-mono">{field.lot!.lotNumber}</span>
-      </>
-   ) : (
-      label
-   )}
-  </button>
- );
+   return (
+      <button
+         type="button"
+         className={cn(
+            'inline-flex items-center justify-center transition-all text-xs font-bold uppercase rounded-xl px-3 py-1.5 h-9 border shadow-sm',
+            hasLot
+               ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 font-mono gap-1.5'
+               : 'border-[#b48e67] text-[#b48e67] hover:bg-[#b48e67] hover:text-black'
+         )}
+         onClick={onClick}
+      >
+         {hasLot ? (
+            <>
+               <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shrink-0" />
+               <span dir="ltr" className="font-mono">{field.lot!.lotNumber}</span>
+            </>
+         ) : (
+            label
+         )}
+      </button>
+   );
 }
 
 export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) {
@@ -264,18 +264,18 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       name: "lines"
    });
 
-    const handleLotClick = useCallback((line: LineItem) => {
-       const index = fields.findIndex(f => f.id === line.id);
-       if (index < 0) return;
-       setLotDialogState({
-          open: true,
-          lineId: line.id,
-          lineIndex: index,
-          itemName: line.item.name || line.item.nameEn || line.item.nameAr || '',
-          receivedQty: line.receivedQty,
-          currentLot: line.lot,
-       });
-    }, [fields]);
+   const handleLotClick = useCallback((line: LineItem) => {
+      const index = fields.findIndex(f => f.id === line.id);
+      if (index < 0) return;
+      setLotDialogState({
+         open: true,
+         lineId: line.id,
+         lineIndex: index,
+         itemName: line.item.name || line.item.nameEn || line.item.nameAr || '',
+         receivedQty: line.receivedQty,
+         currentLot: line.lot,
+      });
+   }, [fields]);
 
 
 
@@ -327,14 +327,14 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       return currencies?.find(c => c.id === currencyId)?.code || '';
    }, [currencies, currencyId]);
 
-    const { currency: baseCurrency } = useBaseCurrency();
-    const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
-    const watchedExchangeRate = useWatch({ control, name: 'exchangeRate' });
-    const currentFxRate = typeof watchedExchangeRate === 'number'
-       ? watchedExchangeRate
-       : (watchedExchangeRate && !isNaN(parseFloat(watchedExchangeRate)))
-          ? parseFloat(watchedExchangeRate)
-          : (fxRates?.[0]?.rate || 1);
+   const { currency: baseCurrency } = useBaseCurrency();
+   const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
+   const watchedExchangeRate = useWatch({ control, name: 'exchangeRate' });
+   const currentFxRate = typeof watchedExchangeRate === 'number'
+      ? watchedExchangeRate
+      : (watchedExchangeRate && !isNaN(parseFloat(watchedExchangeRate)))
+         ? parseFloat(watchedExchangeRate)
+         : (fxRates?.[0]?.rate || 1);
 
    const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
 
@@ -431,7 +431,19 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          toast.error(ts('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
          throw new Error('WarehouseLocked');
       }
-      const item = itemsData?.data?.find(i => i.code === barcode || i.barcode === barcode);
+      const clean = barcode.trim();
+      let item = itemsData?.data?.find(i => i.code === clean || i.barcode === clean);
+      if (!item) {
+         try {
+            const res = await apiClient.get(
+               `/items?search=${encodeURIComponent(clean)}`,
+               z.object({ data: z.array(z.unknown()) })
+            );
+            item = (res as { data: NonNullable<typeof itemsData>['data'] })?.data?.[0];
+         } catch {
+            // ignore fallback errors
+         }
+      }
 
       if (item) {
          const currentLines = getValues("lines") || [];
@@ -695,166 +707,169 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
             <DocumentLockWrapper isLocked={isLocked || isWarehouseLocked}>
                <DocumentReadOnlyOverlay isPosted={isLocked || isWarehouseLocked}>
-                  <div className="space-y-10">
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
-                           <Label htmlFor="supplier-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('supplier')}</Label>
-                           <Controller
-                              name="supplierId"
-                              control={control}
-                              render={({ field }) => (
-                                 <SmartCombobox
-                                    items={supplierItems}
-                                    value={field.value}
-                                    onSelect={(item) => field.onChange(item.id)}
-                                    placeholder={tc('select_supplier')}
-                                    className="mt-2"
-                                    triggerClassName={cn(
-                                       "w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase",
-                                       hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
-                                    )}
-                                    disabled={isLocked || isWarehouseLocked || hasPo}
-                                 />
-                              )}
-                           />
-                           {errors.supplierId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplierId.message}</span>}
+                  <div className="space-y-6">
+                     {/* Unified Header Manifest Card (Compact & Responsive for Mobile) */}
+                     <div className="bg-card border border-border shadow-sm p-4 sm:p-6 rounded-2xl space-y-4">
+                        <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+                           <span className="text-label-xs font-extrabold uppercase tracking-wider text-muted-foreground">
+                              {locale === 'ar' ? 'بيانات السند' : 'MANIFEST & DOCUMENT DETAILS'}
+                           </span>
                         </div>
 
-                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
-                           <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-                              <Wallet className="w-12 h-12" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                           {/* Supplier */}
+                           <div className="flex flex-col gap-1">
+                              <Label htmlFor="supplier-select" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tc('supplier')}</Label>
+                              <Controller
+                                 name="supplierId"
+                                 control={control}
+                                 render={({ field }) => (
+                                    <SmartCombobox
+                                       items={supplierItems}
+                                       value={field.value}
+                                       onSelect={(item) => field.onChange(item.id)}
+                                       placeholder={tc('select_supplier')}
+                                       className="mt-1"
+                                       triggerClassName={cn(
+                                          "w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase",
+                                          hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                       )}
+                                       disabled={isLocked || isWarehouseLocked || hasPo}
+                                    />
+                                 )}
+                              />
+                              {errors.supplierId && <span className="text-[10px] text-destructive font-bold">{errors.supplierId.message}</span>}
                            </div>
-                           <Label htmlFor="currency-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('order_currency')}</Label>
-                           <Controller
-                              name="currencyId"
-                              control={control}
-                              render={({ field }) => (
-                                 <SmartCombobox
-                                    items={currencyItems}
-                                    value={field.value}
-                                    onSelect={(item) => field.onChange(item.id)}
-                                    placeholder={tc('select_currency')}
-                                    className="mt-2"
-                                    triggerClassName={cn(
-                                       "w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase",
-                                       hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
-                                    )}
-                                    disabled={isLocked || isWarehouseLocked || hasPo}
-                                 />
-                              )}
-                           />
-                           {errors.currencyId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currencyId.message}</span>}
+
+                           {/* Order Currency */}
+                           <div className="flex flex-col gap-1">
+                              <Label htmlFor="currency-select" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tc('order_currency')}</Label>
+                              <Controller
+                                 name="currencyId"
+                                 control={control}
+                                 render={({ field }) => (
+                                    <SmartCombobox
+                                       items={currencyItems}
+                                       value={field.value}
+                                       onSelect={(item) => field.onChange(item.id)}
+                                       placeholder={tc('select_currency')}
+                                       className="mt-1"
+                                       triggerClassName={cn(
+                                          "w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase",
+                                          hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                       )}
+                                       disabled={isLocked || isWarehouseLocked || hasPo}
+                                    />
+                                 )}
+                              />
+                              {errors.currencyId && <span className="text-[10px] text-destructive font-bold">{errors.currencyId.message}</span>}
+                           </div>
+
+                           {/* Exchange Rate */}
+                           <div className="flex flex-col gap-1">
+                              <Label htmlFor="exchange-rate-input" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                                 {t('exchange_rate') || 'Exchange Rate'}
+                              </Label>
+                              <Controller
+                                 name="exchangeRate"
+                                 control={control}
+                                 render={({ field }) => (
+                                    <Input
+                                       id="exchange-rate-input"
+                                       type="text"
+                                       inputMode="decimal"
+                                       disabled={isLocked || isWarehouseLocked || hasPo}
+                                       className={cn(
+                                          "w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl font-mono text-label-xs mt-1",
+                                          hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                       )}
+                                       placeholder="1.00"
+                                       {...field}
+                                       value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
+                                       onChange={(e) => {
+                                          let val = e.target.value.replace(/[^0-9.]/g, '');
+                                          const parts = val.split('.');
+                                          if (parts.length > 2) {
+                                             val = parts[0] + '.' + parts.slice(1).join('');
+                                          }
+                                          field.onChange(val);
+                                       }}
+                                    />
+                                 )}
+                              />
+                              {errors.exchangeRate && <span className="text-[10px] text-destructive font-bold">{errors.exchangeRate.message}</span>}
+                           </div>
+
+                           {/* Reference Document */}
+                           <div className="flex flex-col gap-1">
+                              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tc('ref_document')}</p>
+                              <div className="mt-1">
+                                 {initialData?.poNumber || poData?.documentNumber ? (
+                                    <div className="flex items-center gap-2">
+                                       <Badge variant="outline" className="h-10 sm:h-11 px-3 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
+                                          <span dir="ltr" className="font-mono">{initialData?.poNumber || poData?.documentNumber}</span>
+                                       </Badge>
+                                       {isNew && !initialData && (
+                                          <Button
+                                             type="button"
+                                             variant="ghost"
+                                             size="sm"
+                                             className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive text-xs"
+                                             onClick={() => {
+                                                setValue('poId', '');
+                                                router.replace('/goods-received/new', { skipGuard: true });
+                                             }}
+                                          >
+                                             ✕
+                                          </Button>
+                                       )}
+                                    </div>
+                                 ) : isNew ? (
+                                    <SmartCombobox
+                                       items={poItems}
+                                       value=""
+                                       onSelect={(item) => {
+                                          router.replace(`/goods-received/new?po_id=${item.id}`, { skipGuard: true });
+                                       }}
+                                       placeholder={t('select_po') || "Select Purchase Order"}
+                                       triggerClassName="w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase"
+                                    />
+                                 ) : (
+                                    <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
+                                 )}
+                              </div>
+                           </div>
+
+                           {/* Warehouse */}
+                           <div className="flex flex-col gap-1">
+                              <Label htmlFor="warehouse-select" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tc('warehouse')}</Label>
+                              <Controller
+                                 name="warehouseId"
+                                 control={control}
+                                 render={({ field }) => (
+                                    <SmartCombobox
+                                       items={warehouseItems}
+                                       value={field.value}
+                                       onSelect={(item) => field.onChange(item.id)}
+                                       placeholder={tc('select_warehouse')}
+                                       className="mt-1"
+                                       triggerClassName="w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase"
+                                       disabled={isLocked || isWarehouseLocked}
+                                    />
+                                 )}
+                              />
+                              {errors.warehouseId && <span className="text-[10px] text-destructive font-bold">{errors.warehouseId.message}</span>}
+                           </div>
                         </div>
 
-                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
-                           <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-                              <TrendingUp className="w-12 h-12" />
-                           </div>
-                           <Label htmlFor="exchange-rate-input" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                              {t('exchange_rate') || 'Exchange Rate'}
-                           </Label>
-                           <Controller
-                              name="exchangeRate"
-                              control={control}
-                              render={({ field }) => (
-                                 <Input
-                                    id="exchange-rate-input"
-                                    type="text"
-                                    inputMode="decimal"
-                                    disabled={isLocked || isWarehouseLocked || hasPo}
-                                    className={cn(
-                                       "w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl font-mono mt-2",
-                                       hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
-                                    )}
-                                    placeholder="1.00"
-                                    {...field}
-                                    value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
-                                    onChange={(e) => {
-                                       let val = e.target.value.replace(/[^0-9.]/g, '');
-                                       const parts = val.split('.');
-                                       if (parts.length > 2) {
-                                          val = parts[0] + '.' + parts.slice(1).join('');
-                                       }
-                                       field.onChange(val);
-                                    }}
-                                 />
-                              )}
-                           />
-                           {errors.exchangeRate && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.exchangeRate.message}</span>}
-                        </div>
-
-                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden">
-                           <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-                              <PackageSearch className="w-12 h-12" />
-                           </div>
-                           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('ref_document')}</p>
-                           <div className="mt-2">
-                              {initialData?.poNumber || poData?.documentNumber ? (
-                                 <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
-                                       <span dir="ltr" className="font-mono">{initialData?.poNumber || poData?.documentNumber}</span>
-                                    </Badge>
-                                    {isNew && !initialData && (
-                                       <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive text-xs"
-                                          onClick={() => {
-                                             setValue('poId', '');
-                                             router.replace('/goods-received/new', { skipGuard: true });
-                                          }}
-                                       >
-                                          ✕
-                                       </Button>
-                                    )}
-                                 </div>
-                              ) : isNew ? (
-                                 <SmartCombobox
-                                    items={poItems}
-                                    value=""
-                                    onSelect={(item) => {
-                                       router.replace(`/goods-received/new?po_id=${item.id}`, { skipGuard: true });
-                                    }}
-                                    placeholder={t('select_po') || "Select Purchase Order"}
-                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
-                                 />
-                              ) : (
-                                 <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
-                              )}
-                           </div>
-                        </div>
-
-                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-visible">
-                           <Label htmlFor="warehouse-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('warehouse')}</Label>
-                           <Controller
-                              name="warehouseId"
-                              control={control}
-                              render={({ field }) => (
-                                 <SmartCombobox
-                                    items={warehouseItems}
-                                    value={field.value}
-                                    onSelect={(item) => field.onChange(item.id)}
-                                    placeholder={tc('select_warehouse')}
-                                    className="mt-2"
-                                    triggerClassName="w-full h-12 px-4 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl uppercase"
-                                    disabled={isLocked || isWarehouseLocked}
-                                 />
-                              )}
-                           />
-                           {errors.warehouseId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouseId.message}</span>}
-                        </div>
-
-                        <div className="col-span-full bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl flex flex-col gap-1 group relative overflow-hidden">
-                           <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-                              <MessageSquare className="w-12 h-12" />
-                           </div>
-                           <Label htmlFor="notes-area" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{tc('notes')}</Label>
+                        {/* Notes */}
+                        <div className="flex flex-col gap-1 pt-3 border-t border-border/60">
+                           <Label htmlFor="notes-area" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tc('notes')}</Label>
                            <Textarea
                               id="notes-area"
                               {...register('notes')}
                               disabled={isLocked || isWarehouseLocked}
-                              className="mt-2 w-full min-h-[100px] bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white placeholder:text-gray-400 dark:placeholder:text-muted-foreground/70 rounded-xl p-4 resize-none"
+                              className="mt-1 w-full min-h-[70px] sm:min-h-[90px] bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white placeholder:text-gray-400 dark:placeholder:text-muted-foreground/70 rounded-xl p-3 text-label-xs resize-none"
                               placeholder={tc('notes_placeholder')}
                            />
                         </div>
@@ -914,10 +929,11 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                               isReadOnly={isLocked || isWarehouseLocked}
                               dense={true}
                               layoutMode="table"
+                              mobileLayoutPattern="goods-received-form"
                               hideLotColumns={true}
                               hideUomColumn={true}
                               borderless={true}
-                              noCollapse={true}
+                              noCollapse={false}
                               enableVirtualization={false}
                               rowClassName={(line) => expiredLineIds.includes(line.id) ? 'border-l-2 border-l-destructive bg-destructive/5' : ''}
                               onRemoveLine={(id) => {

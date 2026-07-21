@@ -134,23 +134,23 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
           "space-y-6 transition-all duration-500",
           isLocked && "opacity-80 grayscale-[0.2] select-none"
         )}>
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Metadata Grid (Compact 2-Column Grid on Mobile) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
               { label: common('warehouse'), value: <RelationalName name={warehouseName} rawId={session.warehouseId} />, icon: Warehouse, color: 'text-primary' },
               { label: t('owner'), value: session.postedBy || common('system_user'), icon: User, color: 'text-foreground' },
               { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
               { label: t('last_updated'), value: session.updatedAt ? <ClientOnlyTime date={session.updatedAt} mode="time" /> : common('dash'), icon: Clock, color: 'text-amber-500' },
             ].map((item, idx) => (
-              <Card key={idx} className="p-5 bg-card border brand-gold/50 shadow-sm border-brand-gold/50 shadow-sm flex flex-col gap-3 rounded-xl relative overflow-hidden group">
+              <Card key={idx} className="p-3 sm:p-4 md:p-5 bg-card border border-border/80 shadow-sm flex flex-col justify-between gap-2.5 sm:gap-3 rounded-2xl relative overflow-hidden group">
                 <div className="flex items-center justify-between relative z-10">
-                  <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center", item.color)}>
-                    <item.icon className="w-5 h-5" />
+                  <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-current/10 flex items-center justify-center shrink-0", item.color)}>
+                    <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <span className="text-label-xxs font-semibold text-brand-gold/50 uppercase">{item.label}</span>
+                  <span className="text-[10px] sm:text-label-xxs font-bold text-muted-foreground uppercase tracking-wider">{item.label}</span>
                 </div>
                 <div className="flex flex-col relative z-10">
-                  <span className="text-title-sm font-semibold text-foreground line-clamp-1">{item.value}</span>
+                  <span className="text-label-md sm:text-title-sm font-extrabold text-foreground line-clamp-1">{item.value}</span>
                 </div>
               </Card>
             ))}
@@ -165,16 +165,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
             </div>
           </div>
           <div className="px-6 pb-3 flex flex-col gap-3">
-            <div className="relative">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-              <Input
-                type="text"
-                value={manifestSearch}
-                onChange={(e) => setManifestSearch(e.target.value)}
-                placeholder={t('manifest_search_placeholder')}
-                className="w-full ps-9 pe-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-[#0B1220] dark:border-gray-700 dark:text-white text-label-sm placeholder:text-gray-400 dark:placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-              />
-            </div>
+
             {manifestSearch && (
               <p className="text-label-xs font-semibold text-muted-foreground/50">
                 {t('manifest_search_count', { filtered: filteredItems.length, total: session.items.length })}

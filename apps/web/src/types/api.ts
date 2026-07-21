@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export interface PaginatedResponse<T> {
   data: T[];
-  meta: { page: number; pageSize: number; total: number; totalPages: number; };
+  meta: { page: number; pageSize: number; total: number; totalPages: number; inboundCount?: number; outboundCount?: number };
 }
 
 export interface ApiError {
@@ -16,6 +16,8 @@ export const PaginationMetaSchema = z.object({
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
   totalPages: z.number().int().nonnegative(),
+  inboundCount: z.number().int().nonnegative().optional(),
+  outboundCount: z.number().int().nonnegative().optional(),
 });
 
 export function paginatedSchema<T>(itemSchema: z.ZodType<T, z.ZodTypeDef, unknown>) {

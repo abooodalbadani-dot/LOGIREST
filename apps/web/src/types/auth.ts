@@ -4,9 +4,11 @@ import { z } from 'zod';
 export const WarehouseDetailsSchema = z.object({
   id: z.string(),
   name: z.string(),
+  code: z.string().nullable().optional(),
   branch: z.object({
     id: z.string(),
     name: z.string(),
+    code: z.string().nullable().optional(),
   }).nullable().optional(),
 }).nullable().optional();
 
@@ -18,10 +20,17 @@ export const UserScopeSchema = z.object({
  department: z.object({
    id: z.string(),
    name: z.string(),
+   code: z.string().nullable().optional(),
+   branch: z.object({
+     id: z.string(),
+     name: z.string(),
+     code: z.string().nullable().optional(),
+   }).nullable().optional(),
  }).nullable().optional(),
  branch: z.object({
    id: z.string(),
    name: z.string(),
+   code: z.string().nullable().optional(),
  }).nullable().optional(),
 });
 

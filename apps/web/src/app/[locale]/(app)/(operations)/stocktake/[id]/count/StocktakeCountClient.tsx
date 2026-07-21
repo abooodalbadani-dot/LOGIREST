@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { mapToSessionVM, StocktakeItemVM } from "@/features/operations/mappers/stocktakeMapper";
+import { normalizeDigits } from "@/utils/number";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DocumentLineItemTable } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
+import { VirtualizedMobileGrid } from "@/components/shared/VirtualizedMobileGrid";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { PermissionGate } from "@/components/shared/PermissionGate";
@@ -413,11 +415,11 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                         onFocus={() => setFocusedRowIndex(index)}
                         disabled={completeCounting.isPending || !isOnline}
                         onChange={(e) => {
-                          const rawValue = e.target.value.replace(/[^0-9]/g, '');
-                          const val = rawValue ? parseInt(rawValue, 10) : 0;
-                          setLocalCounts(prev => ({ ...prev, [line.id]: val }))
-                          setTouchedItems(prev => new Set(prev).add(line.id))
-                          debouncedUpdate(line.itemId, line.id, val)
+                          const normalized = normalizeDigits(e.target.value).replace(/[^0-9.]/g, '');
+                          const val = normalized ? parseFloat(normalized) : 0;
+                          setLocalCounts(prev => ({ ...prev, [line.id]: val }));
+                          setTouchedItems(prev => new Set(prev).add(line.id));
+                          debouncedUpdate(line.itemId, line.id, val);
                         }}
                         className={cn(
                           "text-right font-mono tabular-nums w-full h-10 transition-all rounded-lg max-w-[120px] mx-auto focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] outline-none",
@@ -437,8 +439,12 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             </Card>
           </div>
 
-          <div className="flex flex-col gap-4 md:hidden w-full pb-24">
-            {tableLines.map((line) => {
+          <VirtualizedMobileGrid
+            data={tableLines}
+            estimateSize={180}
+            maxHeight={650}
+            className="pb-24 mt-4"
+            renderCard={(line) => {
               const isTouched = touchedItems.has(line.id);
               const countValue = localCounts[line.id];
               return (
@@ -467,7 +473,6 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                   <div className="flex flex-col gap-1 bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="text-gray-500 uppercase font-bold">LOT:</span>
-                      {/* TRUNCATE long GRN references to prevent overlap */}
                       <span className="font-mono text-[#0B1220] dark:text-gray-200" dir="ltr">
                         {line.lotNumber && line.lotNumber.length > 15 ? line.lotNumber.slice(0, 15) + '...' : (line.lotNumber || '—')}
                       </span>
@@ -483,12 +488,12 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                   {/* BOTTOM TIER: The Active Input (Giant Target) */}
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <span className="text-xs font-bold text-gray-700 dark:text-gray-300">الكمية الفعلية</span>
-                    {/* Status Icon (Checkmark) to the left of the input */}
                     <div className="flex items-center gap-2 flex-1 justify-end">
                       {isTouched && <CheckCircle2 className="w-5 h-5 text-slate-400 dark:text-[#b48e67] shrink-0" />}
                       <Input 
-                        type="number" 
+                        type="text" 
                         inputMode="decimal"
+                        pattern="[0-9.]*"
                         lang="en-u-nu-latn"
                         className={cn(
                           "w-24 h-10 text-center font-black text-lg text-gray-900 dark:text-gray-100 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none [font-variant-numeric:lining-nums_tabular-nums]",
@@ -500,8 +505,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                         value={countValue !== null && countValue !== undefined ? String(countValue) : "0"}
                         disabled={completeCounting.isPending || !isOnline}
                         onChange={(e) => {
-                          const rawValue = e.target.value.replace(/[^0-9]/g, '');
-                          const val = rawValue ? parseInt(rawValue, 10) : 0;
+                          const normalized = normalizeDigits(e.target.value).replace(/[^0-9.]/g, '');
+                          const val = normalized ? parseFloat(normalized) : 0;
                           setLocalCounts(prev => ({ ...prev, [line.id]: val }));
                           setTouchedItems(prev => new Set(prev).add(line.id));
                           debouncedUpdate(line.itemId, line.id, val);
@@ -509,11 +514,10 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                       />
                     </div>
                   </div>
-
                 </div>
               );
-            })}
-          </div>
+            }}
+          />
          </div>
 
         {/* ── Sticky Submit Footer ── */}

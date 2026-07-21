@@ -57,7 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
               An unexpected error occurred in the operational runtime. Diagnostic data has been logged.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center max-w-lg">
+            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center max-w-2xl">
               <button
                 onClick={this.handleReset}
                 className="flex items-center justify-center gap-2 h-11 px-5 bg-brand-gold hover:bg-brand-gold/90 text-black text-label-xs font-bold uppercase rounded-xl transition-all duration-200 active:scale-[0.98] border-none shadow-lg shadow-brand-gold/10 cursor-pointer"

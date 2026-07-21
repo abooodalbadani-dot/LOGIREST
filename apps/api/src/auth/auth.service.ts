@@ -247,18 +247,135 @@ export class AuthService {
     };
   }
 
+  private mapUserScopes(user: {
+    warehouseScopes?: Array<{
+      warehouseId: string;
+      warehouse?: {
+        id: string;
+        name: string;
+        code?: string | null;
+        branchId?: string | null;
+        branch?: { id: string; name: string; code?: string | null } | null;
+      } | null;
+    }>;
+    departmentScopes?: Array<{
+      departmentId: string;
+      department?: {
+        id: string;
+        name: string;
+        code?: string | null;
+        branchId?: string | null;
+        branch?: { id: string; name: string; code?: string | null } | null;
+      } | null;
+    }>;
+    branchScopes?: Array<{
+      branchId: string;
+      branch?: { id: string; name: string; code?: string | null } | null;
+    }>;
+  }) {
+    const rawScopes = [
+      ...(user.warehouseScopes || []).map((s) => ({
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
+        warehouse: s.warehouse
+          ? {
+              id: s.warehouse.id,
+              name: s.warehouse.name,
+              code: s.warehouse.code ?? null,
+            }
+          : null,
+        department: null,
+        branch: s.warehouse?.branch
+          ? {
+              id: s.warehouse.branch.id,
+              name: s.warehouse.branch.name,
+              code: s.warehouse.branch.code ?? null,
+            }
+          : null,
+      })),
+      ...(user.departmentScopes || []).map((s) => ({
+        branchId: s.department?.branchId ?? null,
+        warehouseId: null,
+        departmentId: s.departmentId,
+        warehouse: null,
+        department: s.department
+          ? {
+              id: s.department.id,
+              name: s.department.name,
+              code: s.department.code ?? null,
+            }
+          : null,
+        branch: s.department?.branch
+          ? {
+              id: s.department.branch.id,
+              name: s.department.branch.name,
+              code: s.department.branch.code ?? null,
+            }
+          : null,
+      })),
+      ...(user.branchScopes || []).map((s) => ({
+        branchId: s.branchId,
+        warehouseId: null,
+        departmentId: null,
+        warehouse: null,
+        department: null,
+        branch: s.branch
+          ? {
+              id: s.branch.id,
+              name: s.branch.name,
+              code: s.branch.code ?? null,
+            }
+          : null,
+      })),
+    ];
+
+    // Collect branchIds that have specific warehouse or department scopes
+    const specificBranchIds = new Set(
+      rawScopes
+        .filter((s) => s.warehouseId || s.departmentId)
+        .map((s) => s.branchId)
+        .filter(Boolean)
+    );
+
+    // Filter out redundant pure branch scopes if specific warehouse/department scope exists for that branch
+    const deduplicated = rawScopes.filter((s) => {
+      if (!s.warehouseId && !s.departmentId && s.branchId && specificBranchIds.has(s.branchId)) {
+        return false;
+      }
+      return true;
+    });
+
+    // Also deduplicate exact identical scope records (by branchId + warehouseId + departmentId)
+    const seen = new Set<string>();
+    return deduplicated.filter((s) => {
+      const key = `${s.branchId ?? 'NULL'}:${s.warehouseId ?? 'NULL'}:${s.departmentId ?? 'NULL'}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         warehouseScopes: {
           include: {
-            warehouse: true,
+            warehouse: {
+              include: {
+                branch: true,
+              },
+            },
           },
         },
         departmentScopes: {
           include: {
-            department: true,
+            department: {
+              include: {
+                branch: true,
+              },
+            },
           },
         },
         branchScopes: {
@@ -278,45 +395,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      scopes: [
-        ...(user.warehouseScopes || []).map((s) => ({
-          branchId: s.warehouse?.branchId ?? null,
-          warehouseId: s.warehouseId,
-          departmentId: null,
-          warehouse: s.warehouse
-            ? {
-                id: s.warehouse.id,
-                name: s.warehouse.name,
-              }
-            : null,
-          department: null,
-        })),
-        ...(user.departmentScopes || []).map((s) => ({
-          branchId: s.department?.branchId ?? null,
-          warehouseId: null,
-          departmentId: s.departmentId,
-          warehouse: null,
-          department: s.department
-            ? {
-                id: s.department.id,
-                name: s.department.name,
-              }
-            : null,
-        })),
-        ...(user.branchScopes || []).map((s) => ({
-          branchId: s.branchId,
-          warehouseId: null,
-          departmentId: null,
-          warehouse: null,
-          department: null,
-          branch: s.branch
-            ? {
-                id: s.branch.id,
-                name: s.branch.name,
-              }
-            : null,
-        })),
-      ],
+      scopes: this.mapUserScopes(user),
       status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
       language: (user.locale || 'ar') as 'en' | 'ar',
       avatarUrl: user.avatarUrl || null,
@@ -329,7 +408,16 @@ export class AuthService {
     };
   }
 
-  async updateProfile(userId: string, body: UpdateProfileDto) {
+  async updateProfile(userId: string, roleOrBody: string | UpdateProfileDto, bodyDto?: UpdateProfileDto) {
+    let role = 'ADMIN';
+    let body: UpdateProfileDto;
+    if (typeof roleOrBody === 'string') {
+      role = roleOrBody;
+      body = bodyDto || {};
+    } else {
+      body = roleOrBody;
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -337,6 +425,11 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    // Security RBAC Check: Only General Manager / ADMIN role can update profile identity (name, email)
+    const isAdmin = role === 'ADMIN';
+    const nameToUpdate = isAdmin && body.name ? body.name : undefined;
+    const emailToUpdate = isAdmin && body.email ? body.email : undefined;
 
     const targetLocale = body.locale || body.language || undefined;
 
@@ -372,8 +465,8 @@ export class AuthService {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        name: body.name || undefined,
-        email: body.email || undefined,
+        name: nameToUpdate,
+        email: emailToUpdate,
         phone: body.phone !== undefined ? body.phone : undefined,
         locale: targetLocale,
         themePreferences: body.themePreferences || undefined,
@@ -383,12 +476,20 @@ export class AuthService {
       include: {
         warehouseScopes: {
           include: {
-            warehouse: true,
+            warehouse: {
+              include: {
+                branch: true,
+              },
+            },
           },
         },
         departmentScopes: {
           include: {
-            department: true,
+            department: {
+              include: {
+                branch: true,
+              },
+            },
           },
         },
         branchScopes: {
@@ -428,45 +529,7 @@ export class AuthService {
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
-      scopes: [
-        ...(updatedUser.warehouseScopes || []).map((s) => ({
-          branchId: s.warehouse?.branchId ?? null,
-          warehouseId: s.warehouseId,
-          departmentId: null,
-          warehouse: s.warehouse
-            ? {
-                id: s.warehouse.id,
-                name: s.warehouse.name,
-              }
-            : null,
-          department: null,
-        })),
-        ...(updatedUser.departmentScopes || []).map((s) => ({
-          branchId: s.department?.branchId ?? null,
-          warehouseId: null,
-          departmentId: s.departmentId,
-          warehouse: null,
-          department: s.department
-            ? {
-                id: s.department.id,
-                name: s.department.name,
-              }
-            : null,
-        })),
-        ...(updatedUser.branchScopes || []).map((s) => ({
-          branchId: s.branchId,
-          warehouseId: null,
-          departmentId: null,
-          warehouse: null,
-          department: null,
-          branch: s.branch
-            ? {
-                id: s.branch.id,
-                name: s.branch.name,
-              }
-            : null,
-        })),
-      ],
+      scopes: this.mapUserScopes(updatedUser),
       status: updatedUser.isActive ? 'ACTIVE' : 'INACTIVE',
       language: (updatedUser.locale || 'ar') as 'en' | 'ar',
       avatarUrl: updatedUser.avatarUrl || null,

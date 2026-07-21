@@ -85,7 +85,7 @@ services:
     working_dir: /app/apps/api
     command: sh -c "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; fi && ../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma migrate deploy && npm run start:dev"
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"const http = require('http'); const req = http.request({host: 'localhost', port: 4000, path: '/v1/health', timeout: 2000}, (res) => { if (res.statusCode === 200) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();\""]
+      test: ["CMD-SHELL", "node -e \"const http = require('http'); const req = http.request({host: 'localhost', port: 4000, path: '/health', timeout: 2000}, (res) => { if (res.statusCode === 200) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();\""]
       interval: 10s
       timeout: 5s
       retries: 5

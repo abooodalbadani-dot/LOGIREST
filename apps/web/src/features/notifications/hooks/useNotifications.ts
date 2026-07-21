@@ -15,7 +15,8 @@ export function useNotifications() {
     return [];
    }
   },
-  refetchInterval: 10000, // Poll every 10 seconds for reactive bell updates
+  refetchInterval: 60000, // Poll every 60 seconds
+  staleTime: 30000, // Prevent tab-switching from triggering instant re-fetches
  });
 }
 

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useInventoryLots } from '@/features/inventory/hooks/useInventoryLots';
 import { useAuth } from '@/providers/AuthProvider';
+import { useDebounce } from '@/hooks/useDebounce';
 import { 
   ShieldAlert, 
   ShieldCheck, 
@@ -14,23 +15,25 @@ import {
   Search,
   RefreshCw,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
   Archive,
-  Info,
   Package
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
+import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { ColumnDef } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { apiClient } from '@/lib/api/client';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { formatDate } from '@/utils/currency';
+import { type InventoryLot } from '@/types/inventory';
 import { z } from 'zod';
 
 export default function LotBalanceClient() {
@@ -47,11 +50,13 @@ export default function LotBalanceClient() {
   const [page, setPage] = useState(1);
   const [includeExpired, setIncludeExpired] = useState(true);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
 
-  const { data: lotData, isLoading, isPlaceholderData } = useInventoryLots({
+  const { data: lotData, isLoading, refetch } = useInventoryLots({
     include_expired: includeExpired,
     page,
+    search: debouncedSearch || undefined,
   });
 
   const handleQuarantine = async (lotId: string) => {
@@ -87,17 +92,121 @@ export default function LotBalanceClient() {
   };
 
   const canManageLots = user?.role === 'ADMIN' || user?.role === 'INV_MGR';
+  const lotsList = lotData?.data || [];
 
-  // Filter lots on client side for search query
-  const filteredLots = (lotData?.data || []).filter(lot => {
-    const term = searchQuery.toLowerCase();
-    if (!term) return true;
-    return (
-      lot.lotNumber.toLowerCase().includes(term) ||
-      lot.itemCode.toLowerCase().includes(term) ||
-      lot.itemName.toLowerCase().includes(term)
-    );
-  });
+  const columns = useMemo<ColumnDef<InventoryLot, unknown>[]>(() => [
+    {
+      accessorKey: 'lotNumber',
+      header: 'Lot Identity',
+      cell: ({ row }) => (
+        <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
+          {row.original.lotNumber}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'itemName',
+      header: 'Inventory Item SKU',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 overflow-hidden shrink-0">
+            {row.original.image ? (
+              <img src={row.original.image} alt={row.original.itemName} className="w-full h-full object-cover" />
+            ) : (
+              <Package className="w-4 h-4 text-muted-foreground/60" />
+            )}
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-mono text-muted-foreground">{row.original.itemCode}</span>
+            <p className="text-xs font-bold text-foreground">{row.original.itemName}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'qtyAvailable',
+      header: () => <div className="text-end">Available Stock</div>,
+      cell: ({ row }) => (
+        <div className="text-end font-mono font-bold text-xs text-foreground" dir="ltr">
+          {Number(row.original.qtyAvailable ?? 0).toLocaleString('en-US')} {row.original.uomCode || ''}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'expiryDate',
+      header: () => <div className="text-center">Expiration Date</div>,
+      cell: ({ row }) => (
+        <div className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground w-full">
+          <Calendar className="w-3.5 h-3.5" />
+          {row.original.expiryDate ? formatDate(row.original.expiryDate, locale as 'ar' | 'en') : '—'}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: () => <div className="text-center">Status State</div>,
+      cell: ({ row }) => {
+        const lot = row.original;
+        const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
+        return (
+          <div className="flex justify-center">
+            {status === 'QUARANTINE' ? (
+              <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                <ShieldAlert className="w-3 h-3" />
+                Quarantined
+              </Badge>
+            ) : status === 'EXPIRED' ? (
+              <Badge className="bg-amber-500/15 text-amber-500 hover:bg-amber-500/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                <Clock className="w-3 h-3" />
+                Expired
+              </Badge>
+            ) : (
+              <Badge className="bg-status-active/15 text-status-active hover:bg-status-active/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                <ShieldCheck className="w-3 h-3" />
+                Active
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: () => <div className="text-center">Override Actions</div>,
+      cell: ({ row }) => {
+        const lot = row.original;
+        const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
+        if (!canManageLots) return null;
+        return (
+          <div className="flex justify-center w-full">
+            {status === 'QUARANTINE' ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleRelease(lot.id)}
+                disabled={actionLoadingMap[lot.id]}
+                className="h-8 px-3 border-outline-low hover:bg-status-active/10 hover:border-status-active/20 text-status-active text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
+              >
+                {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
+                Release
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleQuarantine(lot.id)}
+                disabled={actionLoadingMap[lot.id] || status === 'EXPIRED'}
+                className="h-8 px-3 border-outline-low hover:bg-status-error/10 hover:border-status-error/20 text-status-error text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
+              >
+                {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />}
+                Quarantine
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ], [locale, canManageLots, actionLoadingMap]);
 
   return (
     <div className="min-h-screen bg-surface text-foreground space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -140,7 +249,7 @@ export default function LotBalanceClient() {
                     type="text"
                     placeholder={tCommon('search_placeholder') || "Search..."}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                     className="w-full h-12 font-medium bg-black/5 dark:bg-white/5 border border-border/50 shadow-sm rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all ltr:pl-12 rtl:pr-12"
                   />
                 </div>
@@ -159,270 +268,164 @@ export default function LotBalanceClient() {
               </div>
             </div>
 
-            {/* End side: Refresh Button */}
-            <div className="flex items-center">
+            {/* End side: Refresh Button & Export */}
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['inventory/lots'] })}
+                onClick={() => refetch()}
                 className="h-12 px-4 bg-black/5 dark:bg-white/5 border border-border/50 hover:bg-surface-container-high rounded-2xl text-muted-foreground shrink-0"
               >
                 <RefreshCw className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
                 <span className="font-bold text-xs uppercase">{tCommon('retry') || 'Refresh'}</span>
               </Button>
+
+              {lotsList && lotsList.length > 0 && (
+                <PermissionGate action="export" resource="inventory_lots">
+                  <div className="shrink-0">
+                    <ExportMenu
+                      data={lotsList as unknown as Record<string, unknown>[]}
+                      columns={[
+                        { header: 'Lot #', key: 'lotNumber' },
+                        { header: 'Item', key: 'itemName' },
+                        { header: 'Quantity', key: 'quantity' },
+                        { header: 'Status', key: 'status' },
+                      ]}
+                      filename="inventory_lots"
+                      title="Lot Directory"
+                    />
+                  </div>
+                </PermissionGate>
+              )}
             </div>
           </div>
 
-          {/* Table Container */}
-          {isLoading ? (
-            <div className="py-32 flex flex-col items-center justify-center space-y-4">
-              <Loader2 className="w-8 h-8 animate-spin text-operational-cyan" />
-              <p className="text-xs text-muted-foreground">Indexing ledger lots...</p>
-            </div>
-          ) : filteredLots.length === 0 ? (
-            <div className="py-24 flex flex-col items-center justify-center text-center space-y-4 w-full">
-              <div className="p-4 bg-surface-container-high rounded-full shrink-0">
-                <Database className="w-8 h-8 text-muted-foreground/40" />
-              </div>
-              <div className="space-y-1 w-full max-w-[320px] px-4 shrink-0">
-                <p className="text-sm font-bold text-foreground w-full">No Lots Located</p>
-                <p className="text-xs text-muted-foreground w-full">
-                  No inventory lots matching the active filters or search terms could be found.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-              <table className="w-full text-start border-collapse block md:table">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs uppercase tracking-wider hidden md:table-header-group">
-                  <tr>
-                    <th className="px-6 py-4 font-medium text-start whitespace-nowrap w-1/4">
-                      Lot Identity
-                    </th>
-                    <th className="px-6 py-4 font-medium text-start whitespace-nowrap w-1/4">
-                      Inventory Item SKU
-                    </th>
-                    <th className="px-6 py-4 font-medium text-end whitespace-nowrap w-1/6">
-                      Available Stock
-                    </th>
-                    <th className="px-6 py-4 font-medium text-center whitespace-nowrap w-1/6">
-                      Expiration Date
-                    </th>
-                    <th className="px-6 py-4 font-medium text-center whitespace-nowrap w-1/6">
-                      Status State
-                    </th>
-                    {canManageLots && (
-                      <th className="px-6 py-4 font-medium text-center whitespace-nowrap w-1/6">
-                        Override Actions
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="bg-card divide-y divide-border block md:table-row-group md:divide-y-0">
-                  {filteredLots.map((lot) => {
-                    const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
-                    return (
-                      <tr 
-                        key={lot.id} 
-                        className="flex flex-col md:table-row border-b border-slate-800 p-4 md:p-0 gap-3 md:gap-0 hover:bg-muted/50 transition-colors group"
-                      >
-                        {/* Mobile Only: Top Row (Flex Between) */}
-                        <td className="block md:hidden w-full">
-                          <div className="flex justify-between items-center w-full">
-                            <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
-                              {lot.lotNumber}
-                            </span>
-                            <div>
-                              {status === 'QUARANTINE' ? (
-                                <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                                  <ShieldAlert className="w-3 h-3" />
-                                  Quarantined
-                                </Badge>
-                              ) : status === 'EXPIRED' ? (
-                                <Badge className="bg-amber-500/15 text-amber-500 hover:bg-amber-500/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                                  <Clock className="w-3 h-3" />
-                                  Expired
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-status-active/15 text-status-active hover:bg-status-active/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                                  <ShieldCheck className="w-3 h-3" />
-                                  Active
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </td>
+          {/* Mobile Card View (Virtualized) */}
+          <VirtualizedMobileGrid<InventoryLot>
+            data={lotsList}
+            estimateSize={140}
+            maxHeight={600}
+            className="mt-4 block md:hidden"
+            renderCard={(lot) => {
+              const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
+              return (
+                <div key={lot.id} className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+                  <div className="flex justify-between items-center w-full">
+                    <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
+                      {lot.lotNumber}
+                    </span>
+                    <div>
+                      {status === 'QUARANTINE' ? (
+                        <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                          <ShieldAlert className="w-3 h-3" />
+                          Quarantined
+                        </Badge>
+                      ) : status === 'EXPIRED' ? (
+                        <Badge className="bg-amber-500/15 text-amber-500 hover:bg-amber-500/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                          <Clock className="w-3 h-3" />
+                          Expired
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-status-active/15 text-status-active hover:bg-status-active/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
+                          <ShieldCheck className="w-3 h-3" />
+                          Active
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
 
-                        {/* Desktop Only: Lot Identity */}
-                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap">
-                          <div className="space-y-1">
-                            <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
-                              {lot.lotNumber}
-                            </span>
-                          </div>
-                        </td>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 overflow-hidden shrink-0">
+                      {lot.image ? (
+                        <img src={lot.image} alt={lot.itemName} className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="w-4 h-4 text-muted-foreground/60" />
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-mono text-muted-foreground">{lot.itemCode}</span>
+                      <p className="text-xs font-bold text-foreground">{lot.itemName}</p>
+                    </div>
+                  </div>
 
-                        {/* Middle Row: Inventory Item SKU */}
-                        <td className="block md:table-cell px-0 md:px-6 py-0 md:py-4 text-sm text-foreground whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 overflow-hidden shrink-0">
-                              {lot.image ? (
-                                <img
-                                  src={lot.image}
-                                  alt={lot.itemName}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <Package className="w-4 h-4 text-muted-foreground/60" />
-                              )}
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-mono text-muted-foreground">
-                                {lot.itemCode}
-                              </span>
-                              <p className="text-xs font-bold text-foreground">
-                                {lot.itemName}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
+                  <div className="grid grid-cols-2 gap-4 w-full pt-2 border-t border-border/50">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Available Stock</span>
+                      <span className="text-xs font-bold font-mono text-foreground">
+                        {Number(lot.qtyAvailable ?? 0).toLocaleString('en-US')} {lot.uomCode || ''}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1 text-end">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Expiration Date</span>
+                      <div className="inline-flex items-center justify-end gap-1.5 text-xs font-medium text-muted-foreground">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* Desktop Only: Available Stock with UoM */}
-                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap text-end" dir="ltr">
-                          <span className="text-xs font-bold font-mono text-foreground tabular-nums">
-                            {Number(lot.qtyAvailable).toLocaleString('en-US')} {lot.uomCode || ''}
-                          </span>
-                        </td>
+                  {canManageLots && (
+                    <div className="flex justify-end w-full pt-2 border-t border-border/50">
+                      {status === 'QUARANTINE' ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRelease(lot.id)}
+                          disabled={actionLoadingMap[lot.id]}
+                          className="h-8 px-3 border-outline-low hover:bg-status-active/10 hover:border-status-active/20 text-status-active text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
+                        >
+                          {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
+                          Release
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleQuarantine(lot.id)}
+                          disabled={actionLoadingMap[lot.id] || status === 'EXPIRED'}
+                          className="h-8 px-3 border-outline-low hover:bg-status-error/10 hover:border-status-error/20 text-status-error text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
+                        >
+                          {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />}
+                          Quarantine
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }}
+          />
 
-                        {/* Desktop Only: Expiration Date */}
-                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
-                          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
-                          </div>
-                        </td>
-
-                        {/* Mobile Only: Data Row (Grid cols-2) */}
-                        <td className="block md:hidden w-full">
-                          <div className="grid grid-cols-2 gap-4 w-full">
-                            {/* Left: Available Stock */}
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                Available Stock
-                              </span>
-                              <span className="text-xs font-bold font-mono text-foreground">
-                                {Number(lot.qtyAvailable).toLocaleString('en-US')} {lot.uomCode || ''}
-                              </span>
-                            </div>
-                            {/* Right: Expiration Date */}
-                            <div className="flex flex-col gap-1 text-end">
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                Expiration Date
-                              </span>
-                              <div className="inline-flex items-center justify-end gap-1.5 text-xs font-medium text-muted-foreground">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Desktop Only: Status State */}
-                        <td className="hidden md:table-cell px-6 py-4 text-sm text-foreground whitespace-nowrap text-center">
-                          <div className="flex justify-center">
-                            {status === 'QUARANTINE' ? (
-                              <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                                <ShieldAlert className="w-3 h-3" />
-                                Quarantined
-                              </Badge>
-                            ) : status === 'EXPIRED' ? (
-                              <Badge className="bg-amber-500/15 text-amber-500 hover:bg-amber-500/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                                <Clock className="w-3 h-3" />
-                                Expired
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-status-active/15 text-status-active hover:bg-status-active/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                                <ShieldCheck className="w-3 h-3" />
-                                Active
-                              </Badge>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Override Actions */}
-                        {canManageLots && (
-                          <td className="block md:table-cell px-0 md:px-6 py-0 md:py-4 text-sm text-foreground whitespace-nowrap">
-                            <div className="flex justify-end md:justify-center w-full">
-                              {status === 'QUARANTINE' ? (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleRelease(lot.id)}
-                                  disabled={actionLoadingMap[lot.id]}
-                                  className="h-9 px-3 border-outline-low hover:bg-status-active/10 hover:border-status-active/20 text-status-active text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
-                                >
-                                  {actionLoadingMap[lot.id] ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    <ShieldCheck className="w-3 h-3" />
-                                  )}
-                                  Release
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleQuarantine(lot.id)}
-                                  disabled={actionLoadingMap[lot.id] || status === 'EXPIRED'}
-                                  className="h-9 px-3 border-outline-low hover:bg-status-error/10 hover:border-status-error/20 text-status-error text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
-                                >
-                                  {actionLoadingMap[lot.id] ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    <ShieldAlert className="w-3 h-3" />
-                                  )}
-                                  Quarantine
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination Controls */}
-          {lotData?.meta && lotData.meta.totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-surface-highest/10 pt-6 px-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 1}
-                onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                className="h-10 px-4 border-outline-low rounded-xl text-xs font-bold gap-1"
-              >
-                <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
-                Prev
-              </Button>
-              <span className="text-xs text-muted-foreground font-medium">
-                Page <span className="font-bold text-foreground">{page}</span> of {lotData.meta.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === lotData.meta.totalPages}
-                onClick={() => setPage(prev => Math.min(lotData.meta.totalPages, prev + 1))}
-                className="h-10 px-4 border-outline-low rounded-xl text-xs font-bold gap-1"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 rtl:rotate-180" />
-              </Button>
-            </div>
-          )}
+          {/* Desktop Table View (DataTable + Virtualized) */}
+          <div className="hidden md:block w-full">
+            <DataTable<InventoryLot>
+              columns={columns}
+              data={lotsList}
+              isLoading={isLoading}
+              collectionName="inventory_lots"
+              enableVirtualization={true}
+              emptyState={
+                <div className="py-24 flex flex-col items-center justify-center text-center space-y-4 w-full">
+                  <div className="p-4 bg-surface-container-high rounded-full shrink-0">
+                    <Database className="w-8 h-8 text-muted-foreground/40" />
+                  </div>
+                  <div className="space-y-1 w-full max-w-[320px] px-4 shrink-0">
+                    <p className="text-sm font-bold text-foreground w-full">No Lots Located</p>
+                    <p className="text-xs text-muted-foreground w-full">
+                      No inventory lots matching the active filters or search terms could be found.
+                    </p>
+                  </div>
+                </div>
+              }
+              pagination={lotData?.meta ? {
+                page: lotData.meta.page,
+                pageSize: lotData.meta.pageSize,
+                total: lotData.meta.total,
+                totalPages: lotData.meta.totalPages,
+                onPageChange: setPage
+              } : undefined}
+            />
+          </div>
         </div>
       </div>
     </div>

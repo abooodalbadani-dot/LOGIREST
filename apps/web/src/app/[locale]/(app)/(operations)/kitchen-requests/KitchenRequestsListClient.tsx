@@ -28,6 +28,7 @@ import {
 
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 import { audioAlerts } from '@/utils/audio';
 
 import { isPendingStatus, isApprovedStatus, isCompletedStatus, type DocumentStatus } from '@logirest/shared-types';
@@ -78,7 +79,7 @@ export function KitchenRequestsListClient({
       return;
     }
     const params = new URLSearchParams(searchParams.toString());
-    
+
     if (debouncedSearch) {
       params.set('search', debouncedSearch);
     } else {
@@ -207,19 +208,17 @@ export function KitchenRequestsListClient({
         subtitle={t('description')}
         children={
           <PermissionGate action="create" resource="kitchen_requests">
-            <Button
-              onClick={() => router.push('/kitchen-requests/new')}
-              variant="outline"
-              className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity border-none"
-            >
-              <Plus className="w-4 h-4" />
-              {t('create_new')}
-            </Button>
+            <Link href="/kitchen-requests/new" className="shrink-0 w-full sm:w-auto">
+              <Button className="h-14 px-10 bg-brand-gold hover:bg-brand-gold-hover text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-brand-gold/30 border-none">
+                <Plus className="w-5 h-5 me-3" />
+                {t('create_new')}
+              </Button>
+            </Link>
           </PermissionGate>
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <MetricCard
           label={t('statuses.submitted')}
           value={submittedCount}
@@ -247,10 +246,55 @@ export function KitchenRequestsListClient({
       </div>
 
       <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+        {/* Unified Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 w-full">
+            <div className="w-full sm:w-64">
+              <div className="relative w-full">
+                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder={tc('search') || "Search..."}
+                  value={searchVal}
+                  onChange={(e) => setSearchVal(e.target.value)}
+                  className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+                />
+              </div>
+            </div>
+            <div className="w-full sm:w-48 relative group">
+              <SmartCombobox
+                items={statusItems}
+                value={statusVal || 'ALL'}
+                onSelect={(item) => setStatusVal(item.id === 'ALL' ? '' : String(item.id))}
+                placeholder={tc('statuses.all')}
+                triggerClassName="h-11 bg-background border border-border shadow-sm w-full"
+              />
+            </div>
+          </div>
+
+          {data?.data && data.data.length > 0 && (
+            <PermissionGate action="export" resource="kitchen_requests">
+              <div className="flex items-center gap-2 shrink-0">
+                <ExportMenu
+                  data={data.data as unknown as Record<string, unknown>[]}
+                  columns={[
+                    { header: t('doc_number'), key: 'requestNumber' },
+                    { header: t('department'), key: 'departmentName' },
+                    { header: t('warehouse'), key: 'warehouseName' },
+                    { header: t('requested_by'), key: 'requestedBy' },
+                    { header: t('status'), key: 'status' },
+                  ]}
+                  filename="kitchen_requests"
+                  title={t('title')}
+                />
+              </div>
+            </PermissionGate>
+          )}
+        </div>
         <DataTable
           columns={columns}
           data={data?.data ?? []}
           isLoading={isLoading}
+          enableVirtualization={true}
           collectionName="kitchen_requests"
           exportTitle={t('title')}
           exportFilename="operational_requisitions"
@@ -293,50 +337,7 @@ export function KitchenRequestsListClient({
               </div>
             </div>
           )}
-          filters={
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-              <div className="w-full sm:w-64">
-                <div className="relative w-full">
-                  <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    placeholder={tc('search')}
-                    value={searchVal}
-                    onChange={(e) => setSearchVal(e.target.value)}
-                    className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
-                  />
-                  {searchVal && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
-                      onClick={() => setSearchVal('')}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div className="w-full sm:w-48 relative group">
-                <SmartCombobox
-                  items={statusItems}
-                  value={statusVal || 'ALL'}
-                  onSelect={(item) => setStatusVal(item.id === 'ALL' ? '' : String(item.id))}
-                  placeholder={tc('statuses.all')}
-                  triggerClassName={statusVal ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
-                />
-                {statusVal && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                    onClick={(e) => { e.stopPropagation(); setStatusVal(''); }}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          }
+
           pagination={{
             page: initialPage,
             pageSize: initialLimit,

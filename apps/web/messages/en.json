@@ -6,6 +6,7 @@
     "validation": "Validation failed. Please correct the highlighted errors.",
     "unknown": "An unexpected error occurred. Please try again later.",
     "generic": "An unexpected error occurred. Please try again later.",
+    "not_found": "Item or record not found",
     "operations_title": "Operations Module Error",
     "operations_desc": "A rendering error occurred in this operations view. This might be due to mismatched data or a temporary connection loss.",
     "retry": "Retry Action",
@@ -3867,7 +3868,9 @@
       "received_date": "Received Date",
       "expiry_date": "Expiry Date",
       "quantity": "Quantity",
-      "source_document": "Source Document"
+      "source_document": "Source Document",
+      "source_document_type": "Document Type",
+      "status": "Status"
     }
   },
   "transfers": {

@@ -124,10 +124,11 @@ export class TransfersService {
             lines: {
               some: {
                 item: {
-                  name: {
-                    contains: params.search,
-                    mode: Prisma.QueryMode.insensitive,
-                  },
+                  OR: [
+                    { name: { contains: params.search, mode: Prisma.QueryMode.insensitive } },
+                    { sku: { contains: params.search, mode: Prisma.QueryMode.insensitive } },
+                    { barcodeMappings: { some: { barcode: { contains: params.search, mode: Prisma.QueryMode.insensitive } } } },
+                  ],
                 },
               },
             },

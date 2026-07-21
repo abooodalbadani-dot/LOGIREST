@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { apiClient } from '@/lib/api/client';
 import { onFormError } from '@/hooks/useFormError';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -239,8 +240,20 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
   const watchLines = form.watch('lines') || [];
 
-  const handleScan = (barcode: string) => {
-    const item = itemsData?.data?.find((i: Item) => i.barcode === barcode || i.code === barcode);
+  const handleScan = async (barcode: string) => {
+    const clean = barcode.trim();
+    let item = itemsData?.data?.find((i: Item) => i.barcode === clean || i.code === clean);
+    if (!item) {
+      try {
+        const res = await apiClient.get(
+          `/items?search=${encodeURIComponent(clean)}`,
+          z.object({ data: z.array(z.unknown()) })
+        );
+        item = (res as { data: NonNullable<typeof itemsData>['data'] })?.data?.[0];
+      } catch {
+        // ignore fallback errors
+      }
+    }
     if (item) {
       const currentLines = form.getValues('lines') || [];
       const index = currentLines.findIndex(l => l.item.id === item.id);
@@ -602,6 +615,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
                 <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
                   <DocumentLineItemTable
+                    mobileLayoutPattern="purchase-request-form"
                     lines={fields.map((f, idx) => {
                       const live = watchLines[idx] || {};
                       const item = live.item || f.item || {};

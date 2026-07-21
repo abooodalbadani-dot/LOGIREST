@@ -272,7 +272,7 @@ export function StocktakeListClient({
         error={data === undefined && !isLoading ? new Error('Failed to load data') : null}
         loadingFallback={<PageSkeleton />}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <MetricCard
             label={t('total_sessions')}
             value={activeSessionsCount}

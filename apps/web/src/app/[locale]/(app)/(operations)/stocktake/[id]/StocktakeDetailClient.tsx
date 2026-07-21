@@ -245,18 +245,18 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
         className="min-h-[80px] bg-card border border-border shadow-sm border-none resize-none rounded-2xl focus-visible:ring-1 focus-visible:ring-status-error/30"
        />
       </div>
-      <DialogFooter className="gap-3">
-       <Button variant="ghost" onClick={() => setIsCancelDialogOpen(false)} className="rounded-xl">
-        {tc('cancel') || 'Close'}
-       </Button>
-       <Button 
-        onClick={handleCancel} 
-        disabled={cancelStocktake.isPending}
-        className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-8"
-       >
-        {tc('cancel') || 'Cancel Stocktake'}
-       </Button>
-      </DialogFooter>
+       <DialogFooter className="gap-3">
+        <Button variant="ghost" onClick={() => setIsCancelDialogOpen(false)} className="rounded-xl">
+         {locale === 'ar' ? 'تراجع / إغلاق' : 'Close'}
+        </Button>
+        <Button 
+         onClick={handleCancel} 
+         disabled={cancelStocktake.isPending}
+         className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-8"
+        >
+         {locale === 'ar' ? 'تأكيد إلغاء الجلسة' : 'Confirm Cancel'}
+        </Button>
+       </DialogFooter>
      </div>
     </DialogContent>
    </Dialog>

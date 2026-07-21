@@ -38,18 +38,27 @@ export interface UserScope {
   warehouse?: {
     id: string;
     name: string;
+    code?: string | null;
     branch?: {
       id: string;
       name: string;
+      code?: string | null;
     } | null;
   } | null;
   department?: {
     id: string;
     name: string;
+    code?: string | null;
+    branch?: {
+      id: string;
+      name: string;
+      code?: string | null;
+    } | null;
   } | null;
   branch?: {
     id: string;
     name: string;
+    code?: string | null;
   } | null;
 }
 export interface ActiveScope { branchId: string | null; warehouseId: string | null; departmentId: string | null; }

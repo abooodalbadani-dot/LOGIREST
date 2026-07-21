@@ -552,55 +552,71 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                     const selectedItem = items?.find(i => i.id === selectedItemId);
                     if (!selectedItem) return null;
                     return (
-                      <div key={field.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm relative animate-in fade-in duration-200">
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          className="absolute top-3 left-3 rtl:left-auto rtl:right-3 p-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-md hover:bg-red-100 transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                        <div className="flex gap-3 items-center pl-8 rtl:pl-0 rtl:pr-8 border-b border-gray-100 dark:border-gray-800 pb-2 mb-2">
-                          {selectedItem.image ? (
-                            <img src={selectedItem.image} alt={selectedItem.name} className="w-10 h-10 object-cover rounded-md border border-border shrink-0" />
-                          ) : (
-                            <div className="w-10 h-10 bg-surface-container flex items-center justify-center rounded-md border border-border text-[9px] text-muted-foreground font-mono shrink-0">
-                              N/A
+                      <div key={field.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm relative animate-in fade-in duration-200 hover:border-brand-gold/30">
+                        {/* Header: Image + Item Name + Code + UOM Badge on Start side, Delete Button on End side (opposite side) */}
+                        <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {selectedItem.image ? (
+                              <img src={selectedItem.image} alt={selectedItem.name} className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
+                            ) : (
+                              <div className="w-10 h-10 bg-surface-container flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">
+                                N/A
+                              </div>
+                            )}
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">{selectedItem.name}</span>
+                                {selectedItem.primaryUom?.code && (
+                                  <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-md uppercase shrink-0">
+                                    {selectedItem.primaryUom.code}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-gray-400 font-mono tracking-widest block mt-0.5">{selectedItem.code || '---'}</span>
                             </div>
-                          )}
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-sm font-black text-[#0B1220] dark:text-white truncate block">{selectedItem.name}</span>
-                            <span className="text-[10px] text-gray-400 font-mono tracking-widest block">{selectedItem.code || '---'}</span>
                           </div>
+
+                          {/* Delete Button (On the opposite side of item name) */}
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            className="p-2 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition-colors shrink-0 ms-2"
+                            aria-label={tCommon('actions.remove_line') || 'Remove'}
+                          >
+                            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="flex-1">
-                            <label className="text-[10px] font-bold text-gray-500 mb-1 block">الكمية</label>
-                            <div className="flex items-center gap-2">
-                              <QuantityInput
-                                value={form.watch(`items.${index}.quantity`)}
-                                onChange={(val) => {
-                                  form.setValue(`items.${index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
-                                }}
-                                disabled={form.formState.isSubmitting}
-                                className="w-full text-center font-black text-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
-                              />
-                              <span className="text-xs font-bold text-gray-500 px-2">{selectedItem.primaryUom?.code || '---'}</span>
-                            </div>
+
+                        {/* Last Row: Quantity (Smaller) & Notes (Larger) Side-by-side */}
+                        <div className="flex items-start gap-3 w-full">
+                          {/* Quantity Field (Smaller) */}
+                          <div className="w-1/3 min-w-[100px] shrink-0 space-y-1">
+                            <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 block">{locale === 'ar' ? 'الكمية' : 'Qty'}</label>
+                            <QuantityInput
+                              value={form.watch(`items.${index}.quantity`)}
+                              onChange={(val) => {
+                                form.setValue(`items.${index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
+                              }}
+                              disabled={form.formState.isSubmitting}
+                              className="w-full text-center font-black text-base h-10 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-xl outline-none transition-all"
+                            />
                             {form.formState.errors.items?.[index]?.quantity && (
                               <p className="text-label-xxs font-bold text-red-500 uppercase mt-1">{t('validation.qty_positive')}</p>
                             )}
                           </div>
-                        </div>
-                        <div>
-                          <Input
-                            type="text"
-                            placeholder="ملاحظات السطر..."
-                            {...form.register(`items.${index}.notes`)}
-                            className="w-full text-xs p-2 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 rounded-md focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-gray-900 dark:text-gray-100 placeholder:text-muted-foreground/50"
-                          />
+
+                          {/* Notes Field (Larger) */}
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 block">{tCommon('notes') || (locale === 'ar' ? 'الملاحظات' : 'Notes')}</label>
+                            <Input
+                              type="text"
+                              placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
+                              {...form.register(`items.${index}.notes`)}
+                              className="w-full h-10 text-xs px-3 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 rounded-xl focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-gray-900 dark:text-gray-100 placeholder:text-muted-foreground/50"
+                            />
+                          </div>
                         </div>
                       </div>
                     );

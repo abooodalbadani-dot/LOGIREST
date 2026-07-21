@@ -39,15 +39,15 @@ export function EmptyState({
      <EffectiveIcon className="w-full h-full" strokeWidth={1} />
     </div>
    ) : !isMinimal && (
-    <div className="relative w-64 h-64 mb-4 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-200">
+    <div className="relative w-64 h-64 mb-4 opacity-80 hover:opacity-100 transition-all duration-300">
      <Image
       src={imageUrl}
       alt={title}
       fill
-      className="object-contain"
+      className="object-contain drop-shadow-2xl"
       priority
      />
-     <div className="absolute inset-0 bg-operational-cyan/5 blur-[80px] rounded-full -z-10" />
+     <div className="absolute inset-0 bg-operational-cyan/10 blur-[90px] rounded-full -z-10" />
     </div>
    )}
 

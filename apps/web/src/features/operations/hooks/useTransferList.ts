@@ -25,7 +25,10 @@ export function useTransferList(filters: { status?: string; page?: number; searc
  const { warehouseId, branchId } = useOperationalScope();
  const scopeWarehouseId = filters.warehouseId ?? warehouseId ?? undefined;
  const params = new URLSearchParams();
- if (filters.status) params.set('transfer_status', filters.status);
+  if (filters.status) {
+    params.set('status', filters.status);
+    params.set('transfer_status', filters.status);
+  }
  if (scopeWarehouseId) params.set('warehouse_id', scopeWarehouseId);
  if (branchId) params.set('branch_id', branchId);
  if (filters.search) params.set('search', filters.search);

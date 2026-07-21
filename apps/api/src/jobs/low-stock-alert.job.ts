@@ -2,6 +2,7 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { OutboxService } from '../modules/outbox/outbox.service';
+import { RedisLockService } from '../redis/redis-lock.service';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from '../redis/redis.module';
 
@@ -14,6 +15,7 @@ export class LowStockAlertJob {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
+    private readonly lockService: RedisLockService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -24,7 +26,8 @@ export class LowStockAlertJob {
    */
   @Cron('0 6 * * *')
   async checkLowStockThresholds() {
-    this.logger.log('Starting daily low stock threshold scan...');
+    await this.lockService.runWithLock('low-stock-alert-job', 300, async () => {
+      this.logger.log('Starting daily low stock threshold scan...');
 
     try {
       // Fetch all WarehouseItems where qtyOnHand <= Item.reorderPoint
@@ -115,5 +118,6 @@ export class LowStockAlertJob {
         `Failed to run low stock alert check job: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+    });
   }
 }

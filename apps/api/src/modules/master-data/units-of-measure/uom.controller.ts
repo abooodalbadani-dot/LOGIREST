@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   Req,
   HttpCode,
@@ -30,8 +31,8 @@ export class UomController {
 
   @Get()
   @AllRoles()
-  async findAll() {
-    return this.uomService.findAll();
+  async findAll(@Query('search') search?: string) {
+    return this.uomService.findAll(search);
   }
 
   @Get(':id')

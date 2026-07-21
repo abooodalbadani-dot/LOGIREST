@@ -96,9 +96,10 @@ export class AuthController {
   @Put('profile')
   async updateProfile(
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: string,
     @Body() body: UpdateProfileDto,
   ) {
-    return this.authService.updateProfile(userId, body);
+    return this.authService.updateProfile(userId, role, body);
   }
 
   @AllRoles()

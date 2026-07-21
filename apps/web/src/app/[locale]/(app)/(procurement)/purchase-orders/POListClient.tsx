@@ -6,6 +6,7 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Pagination } from '@/components/shared/DataTable/Pagination';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { ColumnDef } from '@tanstack/react-table';
 import { usePOList, POSummary } from '@/features/purchasing/hooks/usePOList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -27,6 +28,7 @@ import { formatCurrency } from '@/utils/currency';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';
 import { cn } from '@/lib/utils';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
@@ -196,7 +198,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-6">
         <MetricCard
           label={t('metrics.total')}
           value={totalPOs}
@@ -218,12 +220,66 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       </div>
 
       <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+        {/* Unified Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 w-full">
+            <div className="w-full sm:w-64">
+              <div className="relative w-full">
+                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder={tc('search')}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+                />
+              </div>
+            </div>
+            <div className="w-full sm:w-48 relative group">
+              <SmartCombobox
+                items={statusItems}
+                value={status || 'ALL'}
+                onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+                placeholder={tc('statuses.all')}
+                triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+              />
+              {status && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {data?.data && data.data.length > 0 && (
+            <PermissionGate action="export" resource="po">
+              <div className="flex items-center gap-2 shrink-0">
+                <ExportMenu
+                  data={data.data as unknown as Record<string, unknown>[]}
+                  columns={[
+                    { header: 'Doc #', key: 'orderNumber' },
+                    { header: 'Status', key: 'status' },
+                    { header: 'Supplier', key: 'supplierName' },
+                  ]}
+                  filename="purchase_orders"
+                  title={t('title')}
+                />
+              </div>
+            </PermissionGate>
+          )}
+        </div>
+
         {/* Desktop Version */}
         <div className="hidden lg:block">
           <DataTable
             columns={columns}
             data={data?.data || []}
             isLoading={isLoading}
+            enableVirtualization={true}
             onRowClick={(row: POSummary) => router.push(`/purchase-orders/${row.id}`)}
             collectionName="procurement_po"
             emptyState={
@@ -249,80 +305,11 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
               totalPages: data.meta.totalPages,
               onPageChange: setPage
             } : undefined}
-            filters={
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                <div className="w-full sm:w-64">
-                  <div className="relative w-full">
-                    <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                      placeholder={tc('search')}
-                      value={search}
-                      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                      className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-                <div className="w-full sm:w-48 relative group">
-                  <SmartCombobox
-                    items={statusItems}
-                    value={status || 'ALL'}
-                    onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
-                    placeholder={tc('statuses.all')}
-                    triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
-                  />
-                  {status && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                      onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            }
           />
         </div>
 
         {/* Mobile Version */}
         <div className="block lg:hidden flex flex-col gap-6 w-full min-w-0">
-          {/* Filters Row */}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full mb-6 min-w-0">
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-              <div className="w-full sm:w-64">
-                <div className="relative w-full">
-                  <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    placeholder={tc('search')}
-                    value={search}
-                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                    className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
-                  />
-                </div>
-              </div>
-              <div className="w-full sm:w-48 relative group">
-                <SmartCombobox
-                  items={statusItems}
-                  value={status || 'ALL'}
-                  onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
-                  placeholder={tc('statuses.all')}
-                  triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
-                />
-                {status && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                    onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
 
           {/* Cards or Empty/Loading State */}
           {isLoading ? (
@@ -378,8 +365,12 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full animate-in fade-in duration-500">
-                {data.data.map((po) => {
+              <VirtualizedMobileGrid
+                data={data.data}
+                estimateSize={160}
+                maxHeight={600}
+                className="mt-4"
+                renderCard={(po) => {
                   const isOverdue = po.expectedDate && new Date(po.expectedDate) < new Date() && po.status !== 'FULFILLED';
                   const isDraft = po.status === 'DRAFT';
                   return (
@@ -494,8 +485,8 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                }}
+              />
 
               {/* Pagination */}
               {data?.meta && (

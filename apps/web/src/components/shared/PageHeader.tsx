@@ -21,10 +21,10 @@ export interface PageHeaderProps {
   description?: React.ReactNode;
 }
 
-export function PageHeader({ 
-  title, 
-  highlight, 
-  subtitle, 
+export function PageHeader({
+  title,
+  highlight,
+  subtitle,
   children,
   className,
   backHref,
@@ -36,7 +36,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   const actualSubtitle = subtitle || description;
   const actualChildren = children || actions;
-  
+
   let finalTitle = title;
   let finalHighlight = highlight;
 
@@ -53,7 +53,7 @@ export function PageHeader({
       <div className="flex flex-col items-start text-start gap-2 min-w-0">
         <div className="flex items-start sm:items-center gap-4 flex-wrap flex-1 min-w-0 w-full">
           {backHref && (
-            <Link 
+            <Link
               href={backHref}
               className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 mt-1 sm:mt-0"
             >

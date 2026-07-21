@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { ColumnDef, SortingState } from '@tanstack/react-table';
 import { useTransferList, TransferSummary } from '@/features/operations/hooks/useTransferList';
 import { useTransferSummary } from '@/features/operations/hooks/useTransferSummary';
@@ -21,9 +22,9 @@ import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/useDebounce';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { isTransferPosted } from '@/domain/status-guards';
 import { getStatusConfig } from '@/domain/status-ui-map';
-import { TRANSFER_STATUS } from '@logirest/shared-types';
+import { TRANSFER_STATUS, type TransferStatus } from '@logirest/shared-types';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 export function TransferListClient() {
   const t = useTranslations('operations.transfer');
@@ -59,21 +60,26 @@ export function TransferListClient() {
   }, [status, dateFrom, dateTo]);
 
   const statusItems = useMemo(() => {
-    const allItem = {
-      id: 'ALL',
-      name_en: tCommon('statuses.all') || 'All Statuses',
-      name_ar: tCommon('statuses.all') || 'كل الحالات',
-    };
-    const statuses = Object.entries(TRANSFER_STATUS).map(([, value]) => {
-      const config = getStatusConfig(value);
-      return {
-        id: value,
-        name_en: tCommon(config.labelKey) || value,
-        name_ar: tCommon(config.labelKey) || value,
-      };
-    });
-    return [allItem, ...statuses];
-  }, [tCommon]);
+    const isAr = locale === 'ar';
+    const list = [
+      { id: 'ALL', name: isAr ? 'كل الحالات' : 'All Statuses' },
+      { id: TRANSFER_STATUS.DRAFT, name: isAr ? 'مسودة' : 'Draft' },
+      { id: TRANSFER_STATUS.IN_TRANSIT, name: isAr ? 'قيد النقل' : 'In Transit' },
+      { id: TRANSFER_STATUS.RECEIVED, name: isAr ? 'تم الاستلام' : 'Received' },
+      { id: TRANSFER_STATUS.POSTED, name: isAr ? 'مرحّل' : 'Posted' },
+      { id: TRANSFER_STATUS.DISPUTED, name: isAr ? 'نزاع' : 'Disputed' },
+      { id: TRANSFER_STATUS.CANCELLED, name: isAr ? 'ملغى' : 'Cancelled' },
+      { id: TRANSFER_STATUS.VOIDED, name: isAr ? 'باطل' : 'Voided' },
+    ];
+
+    return list.map(item => ({
+      ...item,
+      name_en: item.name,
+      name_ar: item.name,
+      nameEn: item.name,
+      nameAr: item.name,
+    }));
+  }, [locale]);
 
   const { data, isLoading } = useTransferList({ status, page, search: debouncedSearch, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined, sortBy, sortDir });
   const { data: summaryData } = useTransferSummary();
@@ -226,7 +232,7 @@ export function TransferListClient() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-6">
         <MetricCard
           label={t('total_transfers')}
           value={totalTransfersCount}
@@ -250,6 +256,59 @@ export function TransferListClient() {
       </div>
 
       <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+        {/* Unified Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 w-full">
+            <div className="w-full sm:w-64">
+              <div className="relative w-full">
+                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder={tCommon('search') || "Search..."}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+                />
+              </div>
+            </div>
+            <div className="w-full sm:w-48 relative group">
+              <SmartCombobox
+                items={statusItems}
+                value={status || 'ALL'}
+                onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
+                placeholder={tCommon('statuses.all') || "All Statuses"}
+                triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
+              />
+              {status && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {data?.data && data.data.length > 0 && (
+            <PermissionGate action="export" resource="transfer">
+              <div className="flex items-center gap-2 shrink-0">
+                <ExportMenu
+                  data={data.data as unknown as Record<string, unknown>[]}
+                  columns={[
+                    { header: 'Doc #', key: 'transferNumber' },
+                    { header: 'Status', key: 'status' },
+                    { header: 'Type', key: 'type' },
+                  ]}
+                  filename="stock_transfers"
+                  title={t('title')}
+                />
+              </div>
+            </PermissionGate>
+          )}
+        </div>
+
         <div className="hidden md:block h-full">
           <DataTable
             columns={columns}
@@ -259,6 +318,7 @@ export function TransferListClient() {
             collectionName="operations_transfers"
             enableVirtualization={true}
             containerHeight="600px"
+            enableExport={false}
             sorting={sorting}
             onSortingChange={setSorting}
             emptyState={
@@ -275,49 +335,15 @@ export function TransferListClient() {
               totalPages: data.meta.totalPages,
               onPageChange: setPage
             } : undefined}
-            filters={
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                <div className="w-full sm:w-64">
-                  <div className="relative w-full">
-                    <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                      placeholder={tCommon('search') || "Search..."}
-                      value={search}
-                      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                      className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-                <div className="w-full sm:w-48 relative group">
-                  <SmartCombobox
-                    items={statusItems}
-                    value={status || 'ALL'}
-                    onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : String(item.id)); setPage(1); }}
-                    placeholder={tCommon('statuses.all') || "All Statuses"}
-                    triggerClassName={status ? "h-11 bg-background border border-border shadow-sm pr-8 w-full" : "h-11 bg-background border border-border shadow-sm w-full"}
-                  />
-                  {status && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                      onClick={(e) => { e.stopPropagation(); setStatus(''); setPage(1); }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            }
           />
         </div>
-        <div className="flex flex-col gap-3 md:hidden mt-4 pb-10">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8"><span className="text-muted-foreground text-sm font-semibold animate-pulse">{tCommon('loading')}...</span></div>
-          ) : (!data?.data || data.data.length === 0) ? (
-            <EmptyState variant="minimal" title={tCommon('datatable.no_records')} />
-          ) : (
-            data.data.map((item) => (
+        {!isLoading && data?.data && data.data.length > 0 && (
+          <VirtualizedMobileGrid
+            data={data.data}
+            estimateSize={140}
+            maxHeight={600}
+            className="mt-4 pb-10"
+            renderCard={(item) => (
               <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
                 <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
                   <div><StatusBadge status={item.transferStatus} /></div>
@@ -342,9 +368,9 @@ export function TransferListClient() {
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            )}
+          />
+        )}
       </div>
     </div>
   );

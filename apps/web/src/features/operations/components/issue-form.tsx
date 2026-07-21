@@ -197,7 +197,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           })
         }))
       });
-      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, { signal: abortController.signal });
+      const clean = barcode.trim();
+      let res = await apiClient.get(`/items?search=${encodeURIComponent(clean)}`, ItemSchema, { signal: abortController.signal });
+      if (!res.data || res.data.length === 0) {
+        res = await apiClient.get(`/items?barcode=${encodeURIComponent(clean)}`, ItemSchema, { signal: abortController.signal });
+      }
+
       if (!res.data || res.data.length === 0) {
         setScanError(t('no_item_found'));
         playSound('error');

@@ -118,23 +118,23 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        {/* Metadata Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Metadata Grid (Compact 2-Column Grid on Mobile) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: common('warehouse'), value: <RelationalName name={warehouseName} rawId={session.warehouseId} />, icon: Warehouse, color: 'text-primary' },
             { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-foreground' },
             { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
             { label: t('last_updated'), value: <ClientOnlyTime date={session.updatedAt ?? session.snapshotAt} mode="time" />, icon: Clock, color: 'text-amber-500' },
           ].map((item, idx) => (
-            <Card key={idx} className="p-5 bg-card border border-border shadow-sm border-none shadow-sm flex flex-col gap-3 group transition-all rounded-xl relative overflow-hidden">
+            <Card key={idx} className="p-3 sm:p-4 md:p-5 bg-card border border-border shadow-sm flex flex-col justify-between gap-2.5 sm:gap-3 rounded-2xl relative overflow-hidden group">
               <div className="flex items-center justify-between relative z-10">
-                <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center", item.color)}>
-                  <item.icon className="w-5 h-5" />
+                <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-current/10 flex items-center justify-center shrink-0", item.color)}>
+                  <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-xs font-bold text-muted-foreground uppercase">{item.label}</span>
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">{item.label}</span>
               </div>
               <div className="flex flex-col relative z-10">
-                <span className="text-title-sm font-bold text-foreground line-clamp-1 not-italic">{item.value}</span>
+                <span className="text-label-md sm:text-title-sm font-extrabold text-foreground line-clamp-1 not-italic">{item.value}</span>
               </div>
             </Card>
           ))}

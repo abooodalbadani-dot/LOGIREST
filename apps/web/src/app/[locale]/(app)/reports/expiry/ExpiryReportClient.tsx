@@ -98,6 +98,56 @@ export default function ExpiryReportClient() {
  />
  }
  collectionName="reports"
+ enableVirtualization={true}
+ renderMobileCard={(item: ExpiryReport) => (
+  <div className="flex flex-col bg-card border border-border shadow-sm rounded-2xl p-4 transition-all hover:border-brand-gold/30 space-y-3">
+   {/* Header: Name + Status + SKU & Lot */}
+   <div className="flex flex-col gap-1 min-w-0 w-full pb-3 border-b border-border/40 text-start items-start">
+    <div className="flex items-center justify-between w-full gap-2">
+     <span className="text-sm font-bold text-foreground truncate" title={item.name}>
+      {item.name}
+     </span>
+     {item.status && (
+      <StatusBadge 
+       status={item.status} 
+       variant={item.status === 'EXPIRED' ? 'error' : 'warning'} 
+      />
+     )}
+    </div>
+    <div className="flex items-center gap-2 mt-1">
+     <span className="font-mono font-bold text-[11px] bg-surface-container-highest/60 border border-surface-variant/10 px-2 py-0.5 rounded text-muted-foreground text-start rtl:text-right ltr:text-left" dir="ltr">
+      {item.sku}
+     </span>
+     {item.lotNo && (
+      <span className="font-mono text-[11px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded border border-border/40" dir="ltr">
+       {item.lotNo}
+      </span>
+     )}
+    </div>
+   </div>
+
+   {/* Details Row */}
+   <div className="grid grid-cols-2 gap-2 w-full bg-slate-50/70 dark:bg-slate-900/40 border border-border/50 rounded-xl p-3 text-center">
+    <div className="flex flex-col gap-1">
+     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+      {t('table.expiry_date')}
+     </span>
+     <span className="font-mono text-xs font-bold text-foreground" dir="ltr">
+      {formatDate(item.expiryDate, locale as 'ar' | 'en')}
+     </span>
+    </div>
+
+    <div className="flex flex-col gap-1 border-s border-border/40 ps-2">
+     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider truncate">
+      {t('table.days_remaining')}
+     </span>
+     <span className={`font-mono text-xs font-black ${item.daysRemaining <= 0 ? 'text-red-500' : 'text-amber-500'}`} dir="ltr">
+      {formatNumber(item.daysRemaining, locale as 'ar' | 'en')}
+     </span>
+    </div>
+   </div>
+  </div>
+ )}
  />
  </div>
  );

@@ -36,11 +36,22 @@ interface ItemUpdateDto extends ItemCreateDto {
 export class ItemsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapDbItemToFrontend(
-    item: Prisma.ItemGetPayload<{
-      include: { unitOfMeasure: true; barcodeMappings: true; category: true };
-    }>,
-  ) {
+  private mapDbItemToFrontend(item: {
+    id: string;
+    sku: string;
+    name: string;
+    categoryId: string | null;
+    uomId: string;
+    isBatched: boolean;
+    hasExpiry: boolean;
+    isActive: boolean;
+    reorderPoint: unknown;
+    image: string | null;
+    version: number;
+    barcodeMappings: Array<{ barcode: string }>;
+    category: { id: string; code: string; name: string; version: number } | null;
+    unitOfMeasure: { id: string; code: string; name: string; version: number } | null;
+  }) {
     return {
       id: item.id,
       code: item.sku,
@@ -80,8 +91,8 @@ export class ItemsService {
       isBatchTracked: item.isBatched || item.hasExpiry,
       trackLots: item.isBatched || item.hasExpiry,
       min_stock_level: 0,
-      reorder_point: item.reorderPoint
-        ? parseFloat(item.reorderPoint.toString())
+      reorder_point: item.reorderPoint != null
+        ? parseFloat(String(item.reorderPoint))
         : 0,
       last_purchase_price: 0,
       is_active: item.isActive,
@@ -99,7 +110,7 @@ export class ItemsService {
     limit?: string;
   }) {
     const pageNum = filters.page ? parseInt(filters.page, 10) : 1;
-    const limitNum = filters.limit ? parseInt(filters.limit, 10) : 1000;
+    const limitNum = Math.min(filters.limit ? parseInt(filters.limit, 10) : 50, 200);
     const skip = (pageNum - 1) * limitNum;
 
     const where: Prisma.ItemWhereInput = {};
@@ -124,6 +135,7 @@ export class ItemsService {
       where.OR = [
         { name: { contains: filters.search, mode: 'insensitive' } },
         { sku: { contains: filters.search, mode: 'insensitive' } },
+        { barcodeMappings: { some: { barcode: { contains: filters.search, mode: 'insensitive' } } } },
       ];
     }
 
@@ -135,7 +147,7 @@ export class ItemsService {
         include: {
           category: true,
           unitOfMeasure: true,
-          barcodeMappings: true,
+          barcodeMappings: { select: { barcode: true }, take: 1 },
         },
         orderBy: { sku: 'asc' },
       }),
@@ -151,6 +163,24 @@ export class ItemsService {
         totalPages: Math.ceil(total / limitNum),
       },
     };
+  }
+
+  async getNextCode(): Promise<{ nextCode: string }> {
+    const lastItem = await this.prisma.item.findFirst({
+      where: { sku: { startsWith: 'ITEM-' } },
+      orderBy: { sku: 'desc' },
+      select: { sku: true },
+    });
+
+    let maxNum = 0;
+    if (lastItem) {
+      const matches = lastItem.sku.match(/^ITEM-(\d+)$/);
+      if (matches) {
+        maxNum = parseInt(matches[1], 10);
+      }
+    }
+
+    return { nextCode: `ITEM-${String(maxNum + 1).padStart(4, '0')}` };
   }
 
   async findOne(id: string) {

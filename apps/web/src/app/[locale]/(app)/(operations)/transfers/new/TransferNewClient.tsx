@@ -120,7 +120,7 @@ function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLine
   };
 
   return (
-    <div className="w-full">
+    <div className="w-28 sm:w-32 mx-auto">
       <Input
         dir="ltr"
         type="text"
@@ -129,7 +129,7 @@ function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLine
         onChange={handleChange}
         onBlur={handleBlur}
         className={cn(
-          "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all",
+          "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all h-10",
           isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
         )}
       />
@@ -183,7 +183,7 @@ export function TransferNewClient() {
       .map((inv) => ({
         id: inv.itemId,
         code: inv.itemCode,
-        barcode: inv.itemCode,
+        barcode: inv.primaryBarcode || inv.itemCode,
         name: inv.itemName,
         qtyAvailable: inv.qtyAvailable,
         primaryUom: { id: inv.uomCode || '', code: inv.uomCode || '' },
@@ -226,15 +226,43 @@ export function TransferNewClient() {
   const { data: toLockState } = useWarehouseLock(toWarehouseId);
   const isEitherLocked = !!fromLockState?.isLocked || !!toLockState?.isLocked;
 
-  const handleAddItem = (barcode: string) => {
+  const handleAddItem = async (barcode: string) => {
     if (!fromWarehouseId) {
       toast.error(locale === 'ar' ? 'يرجى تحديد مستودع المصدر أولاً' : 'Please select the source warehouse first');
       throw new Error('NoSourceWarehouse');
     }
 
-    const item = allItems?.find((i) => i.barcode === barcode || i.code === barcode);
+    const clean = barcode.trim();
+    let item = allItems?.find(
+      (i) => i.barcode?.toLowerCase() === clean.toLowerCase() || i.code?.toLowerCase() === clean.toLowerCase()
+    );
+
     if (!item) {
-      toast.error(`${tCommon('no_item_found') || "Item not found"}: "${barcode}"`);
+      try {
+        const res = await apiClient.get(
+          `/items?search=${encodeURIComponent(clean)}`,
+          z.object({ data: z.array(z.unknown()) })
+        );
+        const apiFound = (res as { data: Array<{ id: string; code: string; name: string; barcode?: string; primaryUom?: { code?: string } }> })?.data?.[0];
+        if (apiFound) {
+          item = {
+            id: apiFound.id,
+            code: apiFound.code,
+            barcode: apiFound.barcode || apiFound.code,
+            name: apiFound.name,
+            qtyAvailable: 999999,
+            primaryUom: { id: apiFound.primaryUom?.code || 'EA', code: apiFound.primaryUom?.code || 'EA' },
+            isActive: true,
+            image: null,
+          };
+        }
+      } catch {
+        // ignore fallback error
+      }
+    }
+
+    if (!item) {
+      toast.error(`${tCommon('no_item_found') || "Item not found"}: "${clean}"`);
       throw new Error('ItemNotFound');
     }
 
@@ -389,6 +417,8 @@ export function TransferNewClient() {
   const extraColumns = useMemo(() => [
     {
       header: tCommon('notes'),
+      headerClassName: "w-full min-w-[280px] md:min-w-[380px] text-start",
+      cellClassName: "w-full min-w-[280px] md:min-w-[380px] text-start",
       cell: (line: NewTransferLine) => (
         <TransferLineNotesCell
           locale={locale as 'ar' | 'en'}

@@ -12,6 +12,8 @@ export type EmailResult =
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private hasDbConfig = false;
+  private cachedSystemSettings: { config: Record<string, unknown> | null; timestamp: number } | null = null;
+  private readonly SETTINGS_CACHE_TTL_MS = 60000; // 60s TTL
 
   constructor(
     private readonly config: ConfigService,
@@ -26,13 +28,27 @@ export class EmailService {
     );
   }
 
-  private async initializeTransporter() {
+  private async getSystemSettingsConfig(): Promise<Record<string, unknown> | null> {
+    const now = Date.now();
+    if (this.cachedSystemSettings && now - this.cachedSystemSettings.timestamp < this.SETTINGS_CACHE_TTL_MS) {
+      return this.cachedSystemSettings.config;
+    }
     try {
       const setting = await this.prisma.systemSetting.findUnique({
         where: { key: 'system_settings' },
       });
-      if (setting) {
-        const config = JSON.parse(setting.value) as Record<string, unknown>;
+      const config = setting ? (JSON.parse(setting.value) as Record<string, unknown>) : null;
+      this.cachedSystemSettings = { config, timestamp: now };
+      return config;
+    } catch (err) {
+      return this.cachedSystemSettings?.config ?? null;
+    }
+  }
+
+  private async initializeTransporter() {
+    try {
+      const config = await this.getSystemSettingsConfig();
+      if (config) {
         const mailProvider = (config.mailProvider ?? config.mail_provider) as
           | string
           | undefined;
@@ -63,12 +79,9 @@ export class EmailService {
 
   private async getTransporter(): Promise<nodemailer.Transporter | null> {
     try {
-      const setting = await this.prisma.systemSetting.findUnique({
-        where: { key: 'system_settings' },
-      });
+      const config = await this.getSystemSettingsConfig();
 
-      if (setting) {
-        const config = JSON.parse(setting.value) as Record<string, unknown>;
+      if (config) {
         const mailProvider = (config.mailProvider ?? config.mail_provider) as
           | string
           | undefined;
@@ -230,11 +243,8 @@ export class EmailService {
     let fromEmail = '';
 
     try {
-      const setting = await this.prisma.systemSetting.findUnique({
-        where: { key: 'system_settings' },
-      });
-      if (setting) {
-        const config = JSON.parse(setting.value) as Record<string, unknown>;
+      const config = await this.getSystemSettingsConfig();
+      if (config) {
         fromName = (config.senderName ??
           config.sender_name ??
           fromName) as string;

@@ -5,6 +5,7 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { ColumnDef, SortingState } from '@tanstack/react-table';
 import { useAdjustmentList, AdjustmentSummary } from '@/features/operations/hooks/useAdjustmentList';
 import { useAdjustmentSummary } from '@/features/operations/hooks/useAdjustmentSummary';
@@ -27,7 +28,6 @@ import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
 import { ADJUSTMENT_STATUS, type AdjustmentStatus, type DocumentStatus } from '@logirest/shared-types';
 import { usePostAdjustment } from '@/features/operations/hooks/usePostAdjustment';
 import { useApproveAdjustment } from '@/features/operations/hooks/useApproveAdjustment';
-import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2 } from '@logirest/shared-types';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
@@ -47,7 +47,7 @@ const REASON_CHIP: Record<string, string> = {
 
 
 export function AdjustmentListClient() {
-const t = useTranslations('operations.adjustment');
+ const t = useTranslations('operations.adjustment');
  const tCommon = useTranslations('common');
  const tFilters = useTranslations('filters');
  const tb = useTranslations('batch');
@@ -56,41 +56,17 @@ const t = useTranslations('operations.adjustment');
  const queryClient = useQueryClient();
  const { user } = useAuth();
 
- const { data: warehousesData } = useWarehouses();
- const warehouseMap = useMemo(() => {
-  const list = warehousesData?.data ?? [];
-  return new Map(list.map((w) => [w.id, w.name || '']));
- }, [warehousesData]);
-
- const warehouseItems = useMemo(() => {
-  const list = warehousesData?.data ?? [];
-  const allItem = {
-   id: 'ALL',
-   name_en: 'All Warehouses',
-   name_ar: 'كل المستودعات',
-   code: 'ALL',
-  };
-  const mapped = list.map((w) => ({
-   id: w.id,
-   name_en: w.name || '',
-   name_ar: w.name || '',
-   code: w.code,
-  }));
-  return [allItem, ...mapped];
- }, [warehousesData]);
-
  const exportColumns = useMemo(() => [
-  { header: t('doc_number') || 'Document #', key: 'documentNumber' },
-  { header: t('reason') || 'Reason', key: 'reason' },
-  { header: tCommon('warehouse') || 'Warehouse', key: 'warehouseName' },
-  { header: t('approved_by') || 'Approved By', key: 'approvedBy' },
-  { header: tCommon('created_at') || 'Created At', key: 'createdAt' },
-  { header: tCommon('status_label') || 'Status', key: 'status' }
- ], [t, tCommon]);
+  { header: 'Document #', key: 'documentNumber' },
+  { header: 'Reason', key: 'reason' },
+  { header: 'Warehouse', key: 'warehouseName' },
+  { header: 'Approved By', key: 'approvedBy' },
+  { header: 'Created At', key: 'createdAt' },
+  { header: 'Status', key: 'status' }
+ ], []);
 
  const [page, setPage] = useState(1);
  const [status, setStatus] = useState<string>('');
- const [warehouseFilter, setWarehouseFilter] = useState('');
  const [search, setSearch] = useState('');
  const debouncedSearch = useDebounce(search, 500);
  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -102,43 +78,41 @@ const t = useTranslations('operations.adjustment');
  const [dateTo, setDateTo] = useState<string>('');
  const [sorting, setSorting] = useState<SortingState>([]);
 
- const { warehouseId } = useOperationalScope();
-
- const isWarehouseLocked = user?.role === 'WH_KEEPER' || user?.role === 'STORE_MGR';
- const effectiveWarehouseId = isWarehouseLocked ? (warehouseId || '') : warehouseFilter;
-
  const sortBy = sorting[0]?.id || undefined;
  const sortDir = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
 
  const activeFilterCount = useMemo(() => {
   let count = 0;
   if (status) count++;
-  if (warehouseFilter && !isWarehouseLocked) count++;
   if (dateFrom) count++;
   if (dateTo) count++;
   return count;
- }, [status, warehouseFilter, isWarehouseLocked, dateFrom, dateTo]);
+ }, [status, dateFrom, dateTo]);
 
  const postAdjustment = usePostAdjustment();
  const approveAdjustment = useApproveAdjustment();
 
  const statusItems = useMemo(() => {
-  const allItem = {
-   id: 'ALL',
-   name_en: tCommon('statuses.all') || 'All Statuses',
-   name_ar: tCommon('statuses.all') || 'كل الحالات',
-  };
-  const statuses = Object.entries(ADJUSTMENT_STATUS_UI)
-   .filter(([key]) => Object.values(ADJUSTMENT_STATUS).includes(key as AdjustmentStatus))
-   .map(([key, config]) => ({
-    id: key,
-    name_en: tCommon(config.labelKey) || key,
-    name_ar: tCommon(config.labelKey) || key,
-   }));
-  return [allItem, ...statuses];
- }, [tCommon]);
+  const isAr = locale === 'ar';
+  const list = [
+   { id: 'ALL', name: isAr ? 'كل الحالات' : 'All Statuses' },
+   { id: ADJUSTMENT_STATUS.DRAFT, name: isAr ? 'مسودة' : 'Draft' },
+   { id: ADJUSTMENT_STATUS.SUBMITTED, name: isAr ? 'بانتظار الموافقة' : 'Pending Approval' },
+   { id: ADJUSTMENT_STATUS.APPROVED, name: isAr ? 'معتمد' : 'Approved' },
+   { id: ADJUSTMENT_STATUS.POSTED, name: isAr ? 'مرحّل' : 'Posted' },
+   { id: ADJUSTMENT_STATUS.REJECTED, name: isAr ? 'مرفوض' : 'Rejected' },
+   { id: ADJUSTMENT_STATUS.CANCELLED, name: isAr ? 'ملغى' : 'Cancelled' },
+  ];
+  return list.map(item => ({
+   ...item,
+   name_en: item.name,
+   name_ar: item.name,
+   nameEn: item.name,
+   nameAr: item.name,
+  }));
+ }, [locale]);
 
- const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page, warehouse_id: effectiveWarehouseId || undefined, date_from: dateFrom || undefined, date_to: dateTo || undefined, sort_by: sortBy, sort_dir: sortDir });
+ const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page, date_from: dateFrom || undefined, date_to: dateTo || undefined, sort_by: sortBy, sort_dir: sortDir });
  const { data: summaryData } = useAdjustmentSummary();
 
  const mappedData = useMemo(() => {
@@ -150,10 +124,10 @@ const t = useTranslations('operations.adjustment');
     ...item,
     rawReason: item.rawReason || item.reason,
     reason: reasonLabel,
-    warehouseName: item.warehouseName || warehouseMap.get(item.warehouseId) || '—',
+    warehouseName: item.warehouseName || '—',
    };
   });
- }, [data?.data, t, warehouseMap]);
+ }, [data?.data, t]);
 
  const allData = mappedData;
  const selectedItems = allData.filter(item => selectedIds.has(item.id));
@@ -369,7 +343,7 @@ const t = useTranslations('operations.adjustment');
     </div>
    ),
   },
- ], [t, tCommon, router, selectedIds, allData, setSelectedIds, warehouseMap, locale]);
+ ], [t, tCommon, router, selectedIds, allData, setSelectedIds, locale]);
 
  const totalAdjustments = summaryData?.total ?? data?.meta?.total ?? 0;
  const pendingApprovalsCount = summaryData?.pending ?? 0;
@@ -409,7 +383,7 @@ const t = useTranslations('operations.adjustment');
    />
 
    {/* Summary Cards - Operational Nocturne Standard */}
-   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
     <MetricCard
      label={t('correction_volume')}
      value={totalAdjustments}
@@ -469,15 +443,6 @@ const t = useTranslations('operations.adjustment');
           placeholder={tCommon('statuses.all') || "All Statuses"}
           triggerClassName="w-full sm:w-[160px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold uppercase rounded-xl shadow-sm whitespace-nowrap"
         />
-
-        <SmartCombobox
-          items={warehouseItems}
-          value={isWarehouseLocked ? (warehouseId || '') : warehouseFilter}
-          onSelect={(item) => { if (!isWarehouseLocked) { setWarehouseFilter(item.id === 'ALL' ? '' : String(item.id)); setPage(1); } }}
-          placeholder={tFilters('warehouse')}
-          disabled={isWarehouseLocked}
-          triggerClassName="w-full sm:w-[180px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold rounded-xl shadow-sm whitespace-nowrap"
-        />
       </div>
 
       <div className="flex items-center justify-end shrink-0 gap-3 w-full sm:w-auto">
@@ -498,6 +463,7 @@ const t = useTranslations('operations.adjustment');
       columns={columns}
       data={allData}
       isLoading={isLoading}
+      enableVirtualization={true}
       onRowClick={(row: AdjustmentSummary) => router.push(`/adjustments/${row.id}`)}
       collectionName="operations_adjustments"
       sorting={sorting}
@@ -535,65 +501,71 @@ const t = useTranslations('operations.adjustment');
        <div key={i} className="bg-card border border-border rounded-xl p-4 shadow-sm animate-pulse h-28" />
       ))
      ) : allData && allData.length > 0 ? (
-      allData.map((row) => {
-       const rawReason = (row.rawReason || row.reason || '').toUpperCase();
-       const reasonCls = REASON_CHIP[rawReason] ?? REASON_CHIP.OTHER;
-       const reasonLabel = row.reason;
-       const warehouseName = row.warehouseName || '—';
+      <VirtualizedMobileGrid
+       data={allData}
+       estimateSize={140}
+       maxHeight={600}
+       className="mt-4 pb-20"
+       renderCard={(row) => {
+        const rawReason = (row.rawReason || row.reason || '').toUpperCase();
+        const reasonCls = REASON_CHIP[rawReason] ?? REASON_CHIP.OTHER;
+        const reasonLabel = row.reason;
+        const warehouseName = row.warehouseName || '—';
 
-       return (
-        <div key={row.id} className="bg-card border border-border rounded-xl flex flex-col shadow-sm relative overflow-hidden">
-         {/* Identity & Status */}
-         <div className="flex justify-between items-start p-3 pb-2 border-b border-border/50">
-          <div className="flex flex-col gap-1">
-           <div className="flex items-center gap-2">
-            <span dir="ltr" className="text-xs font-mono font-bold text-operational-cyan dark:text-[#b48e67]">{row.documentNumber}</span>
-            <StatusBadge status={row.status} />
+        return (
+         <div key={row.id} className="bg-card border border-border rounded-xl flex flex-col shadow-sm relative overflow-hidden">
+          {/* Identity & Status */}
+          <div className="flex justify-between items-start p-3 pb-2 border-b border-border/50">
+           <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+             <span dir="ltr" className="text-xs font-mono font-bold text-operational-cyan dark:text-[#b48e67]">{row.documentNumber}</span>
+             <StatusBadge status={row.status} />
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">{warehouseName}</span>
            </div>
-           <span className="text-xs text-muted-foreground font-medium">{warehouseName}</span>
+           <div className="flex flex-col items-end gap-1">
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] uppercase ${reasonCls}`}>
+             {reasonLabel}
+            </span>
+           </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-           <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] uppercase ${reasonCls}`}>
-            {reasonLabel}
+
+          {/* Meta */}
+          <div className="flex justify-between items-center p-3 py-2 bg-muted/30">
+           <div className="flex items-center gap-1.5">
+            {row.approvedBy ? (
+             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-status-success">
+              <CheckCircle2 className="w-3 h-3" />
+              {row.approvedBy}
+             </span>
+            ) : (
+             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground/50 italic">
+              <Clock className="w-3 h-3" />
+              {tCommon('statuses.pending')}
+             </span>
+            )}
+           </div>
+           <span dir="ltr" className="text-[10px] text-muted-foreground/60 font-mono">
+            <ClientOnlyTime date={row.createdAt} mode="date" />
            </span>
           </div>
-         </div>
 
-         {/* Meta */}
-         <div className="flex justify-between items-center p-3 py-2 bg-muted/30">
-          <div className="flex items-center gap-1.5">
-           {row.approvedBy ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-status-success">
-             <CheckCircle2 className="w-3 h-3" />
-             {row.approvedBy}
-            </span>
-           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground/50 italic">
-             <Clock className="w-3 h-3" />
-             {tCommon('statuses.pending')}
-            </span>
-           )}
+          {/* Action Footer */}
+          <div className="flex gap-2 px-3 py-2 border-t border-border/50">
+           <button
+            onClick={(e) => {
+             e.stopPropagation();
+             router.push(`/adjustments/${row.id}`);
+            }}
+            className="flex-1 h-9 flex items-center justify-center bg-muted/50 border border-border text-foreground text-xs font-bold rounded-lg uppercase tracking-wider hover:bg-muted transition-colors"
+           >
+            {tCommon('view')}
+           </button>
           </div>
-          <span dir="ltr" className="text-[10px] text-muted-foreground/60 font-mono">
-           <ClientOnlyTime date={row.createdAt} mode="date" />
-          </span>
          </div>
-
-         {/* Action Footer */}
-         <div className="flex gap-2 px-3 py-2 border-t border-border/50">
-          <button
-           onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/adjustments/${row.id}`);
-           }}
-           className="flex-1 h-9 flex items-center justify-center bg-muted/50 border border-border text-foreground text-xs font-bold rounded-lg uppercase tracking-wider hover:bg-muted transition-colors"
-          >
-           {tCommon('view')}
-          </button>
-         </div>
-        </div>
-       );
-      })
+        );
+       }}
+      />
      ) : (
       <EmptyState
        variant="minimal"

@@ -198,6 +198,7 @@ export function PRApprovalClient({ id }: Props) {
         
         <div className="w-full overflow-x-auto pb-4">
          <DocumentLineItemTable
+          mobileLayoutPattern="purchase-request-form"
           lines={pr.lines.map(l => ({
            id: l.id,
            item: {

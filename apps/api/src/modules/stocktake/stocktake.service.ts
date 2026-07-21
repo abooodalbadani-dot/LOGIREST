@@ -46,6 +46,19 @@ export class StocktakeService {
     if (params.search) {
       where.OR = [
         { sessionNumber: { contains: params.search, mode: 'insensitive' } },
+        {
+          snapshots: {
+            some: {
+              item: {
+                OR: [
+                  { name: { contains: params.search, mode: 'insensitive' } },
+                  { sku: { contains: params.search, mode: 'insensitive' } },
+                  { barcodeMappings: { some: { barcode: { contains: params.search, mode: 'insensitive' } } } },
+                ],
+              },
+            },
+          },
+        },
       ];
     }
 

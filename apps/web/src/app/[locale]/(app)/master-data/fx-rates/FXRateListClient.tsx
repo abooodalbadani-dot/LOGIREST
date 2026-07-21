@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -222,7 +223,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
     />
    </div>
 
-   <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+   <div className="w-full grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
     <MetricCard
      label={tfx('metrics.total_rates')}
      value={stats.total}
@@ -249,6 +250,35 @@ export function FXRateListClient({ locale }: { locale: string }) {
    </div>
 
    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    {/* Responsive Search Toolbar */}
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+      <div className="relative w-full sm:w-80 md:w-96 group">
+        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+        <Input
+          placeholder={tfx('search_placeholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
+        />
+      </div>
+
+      {rates && rates.length > 0 && (
+        <PermissionGate action="export" resource="master_data_fx_rates">
+          <div className="flex items-center gap-2 shrink-0">
+            <ExportMenu
+              data={rates as unknown as Record<string, unknown>[]}
+              columns={[
+                { header: 'Code', key: 'fromCurrencyId' },
+                { header: 'Rate', key: 'rate' },
+              ]}
+              filename="fx_rates"
+              title={tfx('title') || 'FX Rates'}
+            />
+          </div>
+        </PermissionGate>
+      )}
+    </div>
+
     <div className="hidden md:block w-full">
      <DataTable 
       columns={columns} 
@@ -261,21 +291,6 @@ export function FXRateListClient({ locale }: { locale: string }) {
         title={t('no_data')}
        />
       }
-      filters={
-         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-           <div className="w-full sm:w-80 md:w-96">
-             <div className="relative w-full group">
-               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-               <Input
-           placeholder={tfx('search_placeholder')}
-           value={search}
-           onChange={(e) => setSearch(e.target.value)}
-           className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
-          />
-             </div>
-           </div>
-         </div>
-        }
      />
     </div>
 

@@ -73,7 +73,7 @@ export default function DashboardClient() {
                 return (
                     <div className="min-w-0 gap-6 flex-1 flex-col flex space-y-10 w-full">
                         {/* KPI Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6">
                             <KPICard
                                 title={t('kpi.total_stock')}
                                 value={formatCurrency(stats.totalStockValue, stats.baseCurrency, locale as 'ar' | 'en')}

@@ -12,6 +12,7 @@ import { type Currency } from '@/types/master-data';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
@@ -193,36 +194,52 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  />
  </div>
 
- <div className="flex-1 w-full min-h-[400px] md:min-h-0">
-  <div className="hidden md:block w-full">
-   <DataTable 
-    columns={columns} 
-    data={filteredCurrencies} 
-    isLoading={isLoading}
-    collectionName="master_data_currencies"
-    onRowClick={(r: Currency) => router.push(`/master-data/currencies/${r.id}`)}
-    emptyState={
-     <EmptyState 
-      variant="minimal"
-      title={tc('no_data')}
+  <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+   {/* Responsive Search Toolbar */}
+   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+    <div className="relative w-full sm:w-80 md:w-96 group">
+     <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+     <Input
+      placeholder={tc('search_placeholder') || (locale === 'ar' ? 'البحث بالاسم، الرمز، أو كود العملة...' : 'Search by name, symbol, or code...')}
+      value={search}
+      onChange={(e) => { setSearch(e.target.value); }}
+      className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
      />
-    }
-    filters={
-       <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-         <div className="w-full sm:w-80 md:w-96">
-           <div className="relative w-full group">
-             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-             <Input
-         placeholder={tc('search_placeholder') || (locale === 'ar' ? 'البحث بالاسم، الرمز، أو كود العملة...' : 'Search by name, symbol, or code...')}
-         value={search}
-         onChange={(e) => { setSearch(e.target.value); }} className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
-        />
-           </div>
-         </div>
-       </div>
-      }
-   />
-  </div>
+    </div>
+
+    {filteredCurrencies && filteredCurrencies.length > 0 && (
+     <PermissionGate action="export" resource="master_data_currencies">
+      <div className="flex items-center gap-2 shrink-0">
+       <ExportMenu
+        data={filteredCurrencies as unknown as Record<string, unknown>[]}
+        columns={[
+         { header: 'Code', key: 'code' },
+         { header: 'Name', key: 'name' },
+         { header: 'Symbol', key: 'symbol' },
+        ]}
+        filename="currencies"
+        title={t('title') || 'Currencies'}
+       />
+      </div>
+     </PermissionGate>
+    )}
+   </div>
+
+   <div className="hidden md:block w-full">
+    <DataTable 
+     columns={columns} 
+     data={filteredCurrencies} 
+     isLoading={isLoading}
+     collectionName="master_data_currencies"
+     onRowClick={(r: Currency) => router.push(`/master-data/currencies/${r.id}`)}
+     emptyState={
+      <EmptyState 
+       variant="minimal"
+       title={tc('no_data')}
+      />
+     }
+    />
+   </div>
 
   {!isLoading && filteredCurrencies.length > 0 && (
    <div className="flex flex-col gap-3 md:hidden mt-4">

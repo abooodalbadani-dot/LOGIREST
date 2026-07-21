@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationService } from '../modules/notifications/notification.service';
+import { RedisLockService } from '../redis/redis-lock.service';
 import { Role, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class WacConsistencyJob {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    private readonly lockService: RedisLockService,
   ) {}
 
   /**
@@ -20,7 +22,8 @@ export class WacConsistencyJob {
    */
   @Cron('0 2 * * 0')
   async checkWacConsistency() {
-    this.logger.log('Starting weekly WAC ledger consistency scan...');
+    await this.lockService.runWithLock('wac-consistency-job', 600, async () => {
+      this.logger.log('Starting weekly WAC ledger consistency scan...');
 
     try {
       // Fetch all warehouse items
@@ -104,5 +107,6 @@ export class WacConsistencyJob {
         `Failed to execute WAC consistency check job: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+    });
   }
 }

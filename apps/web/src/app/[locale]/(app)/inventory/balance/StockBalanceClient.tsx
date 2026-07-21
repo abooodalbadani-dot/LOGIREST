@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations, useLocale } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBalance';
 import { generateExcel } from '@/utils/export';
@@ -50,10 +52,11 @@ export default function StockBalanceClient() {
  const [searchFilter, setSearchFilter] = useState('');
  const [statusFilter, setStatusFilter] = useState('all');
  const [page, setPage] = useState(1);
+ const debouncedSearch = useDebounce(searchFilter, 300);
 
  const { data, isLoading } = useInventoryBalance({
   warehouse_id: warehouseFilter && warehouseFilter !== 'all' ? warehouseFilter : undefined,
-  search: searchFilter || undefined,
+  search: debouncedSearch || undefined,
   page,
  });
 
@@ -273,7 +276,7 @@ export default function StockBalanceClient() {
     </div>
 
     {/* KPI Cards */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full min-w-0">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 w-full min-w-0">
      <MetricCard
       label={t('total_value')}
       value={formatCurrency(totalValue, baseCurrency, currentLocale as 'ar' | 'en')}
@@ -338,6 +341,7 @@ export default function StockBalanceClient() {
        data={filteredItems}
        isLoading={isLoading}
        collectionName="inventory_orchestration_feed"
+       enableVirtualization={true}
        pagination={{
         page,
         pageSize: data?.meta?.pageSize ?? 15,
@@ -350,8 +354,13 @@ export default function StockBalanceClient() {
      </div>
 
      {!isLoading && filteredItems.length > 0 && (
-      <div className="flex flex-col gap-3 md:hidden mt-4">
-       {filteredItems.map((item) => {
+      <VirtualizedMobileGrid
+       data={filteredItems}
+       estimateSize={150}
+       maxHeight={600}
+       className="mt-4"
+       keyExtractor={(item) => `${item.itemCode}-${item.warehouseId}`}
+       renderCard={(item) => {
         const qty = item.qtyAvailable;
         const reorderPoint = item.reorderPoint;
         const isOutOfStock = qty === 0;
@@ -359,7 +368,6 @@ export default function StockBalanceClient() {
         
         return (
         <div 
-         key={`${item.itemCode}-${item.warehouseId}`} 
          className="bg-surface-lowest dark:bg-surface-container rounded-xl p-3 flex flex-col gap-2 shadow-sm border-0"
         >
          {/* TOP TIER: Identity */}
@@ -427,8 +435,9 @@ export default function StockBalanceClient() {
            </div>
          </div>
         </div>
-       )})}
-      </div>
+        );
+       }}
+      />
      )}
     </div>
 

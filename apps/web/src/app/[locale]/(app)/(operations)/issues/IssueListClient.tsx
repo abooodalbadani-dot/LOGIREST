@@ -7,7 +7,6 @@ import { useRouter, usePathname, Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useIssueList, IssueSummary } from '@/features/operations/hooks/useIssueList';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
-import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useAuth } from '@/providers/AuthProvider';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -19,7 +18,7 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
-import { Plus, Filter, Search, ArrowUpRight, LayoutGrid, List as ListIcon, Activity, FileText, ClipboardCheck, ChevronRight } from 'lucide-react';
+import { Plus, Search, ArrowUpRight, Activity, FileText, ClipboardCheck, ChevronRight } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ExportMenu } from '@/components/shared/ExportMenu';
 
@@ -31,52 +30,34 @@ import { ISSUE_STATUS } from '@logirest/shared-types';
 export function IssueListClient({ initialStatus, initialPage }: { initialStatus?: string; initialPage: number }) {
     const t = useTranslations('operations.issue');
     const tc = useTranslations('common');
-    const tFilters = useTranslations('filters');
     const locale = useLocale();
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const { user } = useAuth();
-    const { warehouseId } = useOperationalScope();
-    const { data: warehousesData } = useWarehouses();
 
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 400);
 
-    const [warehouseFilter, setWarehouseFilter] = useState('');
-    const isWarehouseLocked = user?.role === 'WH_KEEPER' || user?.role === 'STORE_MGR';
-    const effectiveWarehouseId = isWarehouseLocked ? (warehouseId || '') : warehouseFilter;
-
-    const warehouseItems = useMemo(() => {
-        const list = warehousesData?.data ?? [];
-        return list.map((w) => ({
-            id: w.id,
-            name_en: w.name || '',
-            name_ar: w.name || '',
-            code: w.code,
-        }));
-    }, [warehousesData]);
-
     const statusItems = React.useMemo(() => {
-        const allItem = {
-            id: 'ALL',
-            name_en: tc('statuses.all') || 'All Statuses',
-            name_ar: tc('statuses.all') || 'كل الحالات',
-        };
-        const statuses = Object.values(ISSUE_STATUS).map((value) => {
-            const config = getStatusConfig(value, ISSUE_STATUS_UI);
-            return {
-                id: value,
-                name_en: tc(config.labelKey) || value,
-                name_ar: tc(config.labelKey) || value,
-            };
-        });
-        return [allItem, ...statuses];
-    }, [tc]);
+        const isAr = locale === 'ar';
+        const list = [
+            { id: 'ALL', name: isAr ? 'كل الحالات' : 'All Statuses' },
+            { id: ISSUE_STATUS.DRAFT, name: isAr ? 'مسودة' : 'Draft' },
+            { id: ISSUE_STATUS.SUBMITTED, name: isAr ? 'مقدم' : 'Submitted' },
+            { id: ISSUE_STATUS.POSTED, name: isAr ? 'مرحّل' : 'Posted' },
+            { id: ISSUE_STATUS.CANCELLED, name: isAr ? 'ملغى' : 'Cancelled' },
+        ];
+        return list.map(item => ({
+            ...item,
+            name_en: item.name,
+            name_ar: item.name,
+            nameEn: item.name,
+            nameAr: item.name,
+        }));
+    }, [locale]);
 
     const { data, isLoading } = useIssueList({
         status: initialStatus,
-        warehouse_id: effectiveWarehouseId || undefined,
         page: initialPage,
         search: debouncedSearch || undefined,
     });
@@ -222,13 +203,12 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
             />
 
             {/* Fulfillment Status Ribbon */}
-            <div className="flex flex-row md:grid md:grid-cols-4 overflow-x-auto md:overflow-x-visible gap-4 md:gap-6 pb-4 md:pb-0 snap-x hide-scrollbar">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6 w-full">
                 <MetricCard
                     label={t('throughput_volume')}
                     value={totalItemsCount}
                     icon={Activity}
                     trend="active"
-                    className="min-w-[85vw] sm:min-w-[250px] snap-center flex-shrink-0 md:min-w-0"
                 />
                 <MetricCard
                     label={t('pending_selection')}
@@ -236,7 +216,6 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                     icon={FileText}
                     trend="active"
                     color="amber"
-                    className="min-w-[85vw] sm:min-w-[250px] snap-center flex-shrink-0 md:min-w-0"
                 />
                 <MetricCard
                     label={t('finalized_issues')}
@@ -244,9 +223,8 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                     icon={ClipboardCheck}
                     trend="active"
                     color="emerald"
-                    className="min-w-[85vw] sm:min-w-[250px] snap-center flex-shrink-0 md:min-w-0"
                 />
-                <div className="hidden sm:flex min-w-[250px] snap-center flex-shrink-0 md:min-w-0 bg-card border border-border shadow-sm p-6 flex-col gap-2 transition-all hover:bg-card border border-border shadow-sm/50 justify-center rounded-2xl ambient-shadow hover:scale-[1.01] duration-200">
+                <div className="hidden sm:flex bg-card border border-border shadow-sm p-6 flex-col gap-2 transition-all hover:bg-card border border-border shadow-sm/50 justify-center rounded-2xl ambient-shadow hover:scale-[1.01] duration-200">
                     <div className="flex items-center gap-3">
                         <div className="flex -space-x-2 rtl:space-x-reverse">
                             {[1, 2, 3].map(i => (
@@ -262,10 +240,10 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                 </div>
             </div>
 
-            {/* Unified Toolbar */}
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 w-full mb-6">
-                <div className="flex flex-wrap items-center gap-3 flex-1 overflow-x-auto custom-scrollbar pb-2">
-                    <div className="flex-1 min-w-[200px] max-w-[300px] relative group">
+            {/* Responsive Action Toolbar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-1">
+                    <div className="w-full sm:w-[260px] relative group">
                         <div className="absolute inset-y-0 start-4 flex items-center pointer-events-none transition-colors group-focus-within:text-foreground text-muted-foreground/40">
                             <Search className="w-4 h-4" />
                         </div>
@@ -282,32 +260,11 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                         value={initialStatus || 'ALL'}
                         onSelect={(item) => handleStatusChange(item.id)}
                         placeholder={tc('statuses.all') || "All Statuses"}
-                        triggerClassName="w-[160px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold uppercase rounded-xl shadow-sm focus:ring-1 focus:ring-cyan-500/30 whitespace-nowrap"
+                        triggerClassName="w-full sm:w-[160px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold uppercase rounded-xl shadow-sm focus:ring-1 focus:ring-cyan-500/30 whitespace-nowrap"
                     />
-
-                    <SmartCombobox
-                        items={warehouseItems}
-                        value={isWarehouseLocked ? (warehouseId || '') : warehouseFilter}
-                        onSelect={(item) => { if (!isWarehouseLocked) { setWarehouseFilter(item.id as string); } }}
-                        placeholder={tFilters('warehouse')}
-                        disabled={isWarehouseLocked}
-                        triggerClassName="w-[180px] bg-card border border-border/50 h-11 px-4 text-label-xs font-semibold rounded-xl shadow-sm focus:ring-1 focus:ring-cyan-500/30 whitespace-nowrap"
-                    />
-
-                    <Button variant="outline" className="h-11 px-4 bg-card hover:bg-surface-container-low border border-border/50 rounded-xl shadow-sm">
-                        <Filter className="w-4 h-4 text-muted-foreground/60" />
-                    </Button>
                 </div>
 
-                <div className="flex items-center shrink-0 gap-3">
-                    <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-border/50">
-                        <Button size="icon" variant="ghost" className="w-9 h-9 rounded-lg text-foreground bg-card shadow-sm">
-                            <LayoutGrid className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="w-9 h-9 rounded-lg text-muted-foreground/40 hover:text-foreground">
-                            <ListIcon className="w-4 h-4" />
-                        </Button>
-                    </div>
+                <div className="flex items-center justify-end shrink-0 gap-3 w-full sm:w-auto">
                     <PermissionGate action="export" resource="issue">
                         <ExportMenu
                             data={data?.data || []}
@@ -326,9 +283,10 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                     columns={columns}
                     data={data?.data || []}
                     isLoading={isLoading}
+                    enableVirtualization={true}
                     onRowClick={(row: IssueSummary) => router.push(`/issues/${row.id}`)}
                     collectionName="operations_issues"
-                    enableVirtualization={true}
+
                     containerHeight="600px"
                     enableExport={false}
                     emptyState={

@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api/client";
 import { onFormError } from "@/hooks/useFormError";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
@@ -158,11 +159,22 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       return;
     }
 
-    const cleanBarcode = barcode.trim().toLowerCase();
-    const item = itemsData?.data?.find(i =>
-      i.code?.toLowerCase() === cleanBarcode ||
-      i.barcode?.toLowerCase() === cleanBarcode
+    const cleanBarcode = barcode.trim();
+    let item = itemsData?.data?.find(i =>
+      i.code?.toLowerCase() === cleanBarcode.toLowerCase() ||
+      i.barcode?.toLowerCase() === cleanBarcode.toLowerCase()
     );
+    if (!item) {
+      try {
+        const res = await apiClient.get(
+          `/items?search=${encodeURIComponent(cleanBarcode)}`,
+          z.object({ data: z.array(z.unknown()) })
+        );
+        item = (res as { data: Item[] })?.data?.[0];
+      } catch {
+        // ignore fallback errors
+      }
+    }
     if (item) {
       const currentLines = form.getValues('lines') as PurchaseOrderFormValues['lines'];
       // If the first line is empty, replace it instead of appending

@@ -11,10 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Card, CardContent } from '@/components/ui/card';
-import { useItem, useCreateItem, useUpdateItem, useDeleteItem, useItems } from '@/features/items/hooks/useItems';
+import { useItem, useCreateItem, useUpdateItem, useDeleteItem, useNextItemCode } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category, type UoMConversion, type Item } from '@/types/master-data';
+import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category, type UoMConversion } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from '@/hooks/useFormError';
-import { generateNextCode } from '@/lib/code-generator';
+
 
 interface Props {
   id: string | null;
@@ -50,7 +50,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const { data: categories, isLoading: isLoadingCats, isError: isErrorCats } = useCategories();
   const { data: uoms, isLoading: isLoadingUoms, isError: isErrorUoms } = useMasterDataList('units-of-measure', UoMSchema);
 
-  const { data: itemsData } = useItems({ limit: 10000 });
+  const { data: nextCodeData } = useNextItemCode();
   const create = useCreateItem();
   const conflict = useConflictHandler('item', id ?? '');
   const update = useUpdateItem({ onConflict: conflict.triggerConflict });
@@ -95,13 +95,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const codeValue = useWatch({ control, name: 'code' });
 
   useEffect(() => {
-    if (!id && itemsData?.data && !codeValue && !isAutoPopulated) {
-      const existingCodes = itemsData.data.map((i: Item) => i.code);
-      const nextCode = generateNextCode(existingCodes, 'ITEM-', 4);
-      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
-      setIsAutoPopulated(true);
+    if (!id && nextCodeData?.nextCode && !isDirty) {
+      setValue('code', nextCodeData.nextCode, { shouldDirty: false, shouldValidate: true });
     }
-  }, [id, itemsData, setValue, codeValue, isAutoPopulated]);
+  }, [id, nextCodeData, setValue, isDirty]);
 
   const categoryItems = useMemo(() => {
     const list = categories?.data?.map((c: Category) => ({

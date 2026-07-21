@@ -228,7 +228,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   </div>
 
  {/* Metrics Grid */}
- <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+ <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
  <MetricCard 
  label={t('metrics.total_items')} 
  value={formatNumber(session.items.length, locale)} 

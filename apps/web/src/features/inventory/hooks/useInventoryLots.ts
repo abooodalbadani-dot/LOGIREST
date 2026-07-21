@@ -6,7 +6,7 @@ import { InventoryLotSchema, InventoryLot } from '@/types/inventory';
 import { useAuth } from '@/providers/AuthProvider';
 
 export function useInventoryLots(
- filters: { include_expired?: boolean; page?: number } = {},
+ filters: { include_expired?: boolean; page?: number; search?: string } = {},
  options?: { enabled?: boolean }
 ) {
  const { activeScope } = useAuth();
@@ -16,6 +16,7 @@ export function useInventoryLots(
    const qs = new URLSearchParams();
    if (filters.include_expired) qs.append('include_expired', 'true');
    if (filters.page) qs.append('page', filters.page.toString());
+   if (filters.search) qs.append('search', filters.search);
    const path = `/inventory/lots${qs.toString() ? `?${qs.toString()}` : ''}`;
    return apiClient.get<PaginatedResponse<InventoryLot>>(path, paginatedSchema(InventoryLotSchema), { signal });
   },

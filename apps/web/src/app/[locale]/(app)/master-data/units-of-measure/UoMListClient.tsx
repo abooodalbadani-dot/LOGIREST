@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Plus, Ruler, Search, Scale, BoxSelect } from 'lucide-react';
@@ -18,14 +19,16 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 export function UoMListClient({ locale }: { locale: string }) {
  const t = useTranslations('common');
  const tu = useTranslations('master_data.uoms');
  const router = useRouter();
  const [search, setSearch] = useState('');
+ const debouncedSearch = useDebounce(search, 300);
 
- const { data, isLoading, isError, refetch } = useUoMs({ search });
+ const { data, isLoading, isError, refetch } = useUoMs({ search: debouncedSearch || undefined });
 
  const columns = useMemo<ColumnDef<UoM, unknown>[]>(() => [
   { 
@@ -121,7 +124,7 @@ export function UoMListClient({ locale }: { locale: string }) {
     />
    </div>
 
-   <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+   <div className="w-full grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
     <MetricCard
      label={tu('metrics.total_uoms')}
      value={data?.meta?.total || 0}
@@ -147,10 +150,40 @@ export function UoMListClient({ locale }: { locale: string }) {
     />
    </div>
 
+   {/* Responsive Search Toolbar */}
+   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-2">
+    <div className="relative w-full sm:w-80 md:w-96 group">
+     <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+     <Input
+      placeholder={t('search') || 'Search...'}
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
+     />
+    </div>
+
+    {data?.data && data.data.length > 0 && (
+     <PermissionGate action="export" resource="master_data_units_of_measure">
+      <div className="flex items-center gap-2 shrink-0">
+       <ExportMenu
+        data={data.data as unknown as Record<string, unknown>[]}
+        columns={[
+         { header: 'Code', key: 'code' },
+         { header: 'Name', key: 'name' },
+        ]}
+        filename="units_of_measure"
+        title={tu('title') || 'Units of Measure'}
+       />
+      </div>
+     </PermissionGate>
+    )}
+   </div>
+
    <DataTable 
     columns={columns} 
     data={data?.data ?? []} 
     isLoading={isLoading}
+    enableVirtualization={true}
     collectionName="master_data_units_of_measure"
     onRowClick={(r: UoM) => router.push(`/master-data/units-of-measure/${r.id}`)}
     emptyState={
@@ -159,6 +192,59 @@ export function UoMListClient({ locale }: { locale: string }) {
       title={t('no_data')}
      />
     }
+    renderMobileCard={(item: UoM) => (
+     <div
+      onClick={() => router.push(`/master-data/units-of-measure/${item.id}`)}
+      className="flex flex-col bg-card border border-border shadow-sm rounded-2xl p-4 transition-all cursor-pointer hover:border-brand-gold/30 space-y-3"
+     >
+      {/* UoM Identity: Icon + Name + Code */}
+      <div className="flex items-center gap-3 min-w-0 w-full">
+       <div className="w-10 h-10 rounded-xl bg-operational-cyan/10 border border-operational-cyan/20 flex items-center justify-center shrink-0">
+        <Ruler className="w-5 h-5 text-operational-cyan" />
+       </div>
+       <div className="flex flex-col min-w-0 flex-1 text-start items-start">
+        <span className="text-sm font-bold text-foreground truncate w-full" title={item.name}>
+         {item.name}
+        </span>
+        <div className="flex items-center gap-2 mt-1">
+         <span className="font-mono font-bold text-[11px] bg-muted/50 border border-operational-cyan/10 px-2.5 py-0.5 rounded-lg text-foreground uppercase text-start rtl:text-right ltr:text-left" dir="ltr">
+          {item.code}
+         </span>
+        </div>
+       </div>
+      </div>
+
+      {/* Action Buttons Row */}
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40 w-full">
+       <PermissionGate action="view" resource="master_data_units_of_measure">
+        <Button
+         variant="ghost"
+         size="sm"
+         className="h-8 px-4 bg-[#0B1220] text-white font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center text-xs"
+         onClick={(e) => {
+          e.stopPropagation();
+          router.push(`/master-data/units-of-measure/${item.id}`);
+         }}
+        >
+         {t('view')}
+        </Button>
+       </PermissionGate>
+       <PermissionGate action="edit" resource="master_data_units_of_measure">
+        <Button
+         variant="ghost"
+         size="sm"
+         className="text-label-xs font-bold uppercase text-status-warning hover:bg-status-warning/10 h-8 px-3.5 rounded-xl transition-all"
+         onClick={(e) => {
+          e.stopPropagation();
+          router.push(`/master-data/units-of-measure/${item.id}/edit`);
+         }}
+        >
+         {t('edit')}
+        </Button>
+       </PermissionGate>
+      </div>
+     </div>
+    )}
     filters={
        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
          <div className="w-full sm:w-80 md:w-96">

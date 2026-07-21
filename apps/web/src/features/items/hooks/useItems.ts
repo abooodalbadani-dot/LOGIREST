@@ -11,7 +11,7 @@ import { z } from 'zod';
 
 const QUERY_KEY = ['items'];
 
-export function useItems(filters?: { search?: string; category_id?: string; is_active?: boolean; limit?: number }) {
+export function useItems(filters?: { search?: string; category_id?: string; is_active?: boolean; limit?: number; page?: number }) {
     return useQuery({
         queryKey: [...QUERY_KEY, filters],
         queryFn: ({ signal }) => {
@@ -20,10 +20,24 @@ export function useItems(filters?: { search?: string; category_id?: string; is_a
             if (filters?.category_id) params.append('category_id', filters.category_id);
             if (filters?.is_active !== undefined) params.append('is_active', String(filters.is_active));
             if (filters?.limit !== undefined) params.append('limit', String(filters.limit));
+            if (filters?.page !== undefined) params.append('page', String(filters.page));
 
             const path = `/items${params.toString() ? `?${params.toString()}` : ''}`;
             return apiClient.get<PaginatedResponse<Item>>(path, paginatedSchema(ItemSchema), { signal });
         }
+    });
+}
+
+export function useNextItemCode() {
+    return useQuery({
+        queryKey: [...QUERY_KEY, 'next-code'],
+        queryFn: ({ signal }) =>
+            apiClient.get<{ nextCode: string }>(
+                '/items/next-code',
+                z.object({ nextCode: z.string() }),
+                { signal },
+            ),
+        staleTime: 0,
     });
 }
 

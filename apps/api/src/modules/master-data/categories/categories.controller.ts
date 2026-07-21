@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   Req,
   HttpCode,
@@ -30,8 +31,8 @@ export class CategoriesController {
 
   @Get()
   @AllRoles()
-  async findAll() {
-    return this.categoriesService.findAll();
+  async findAll(@Query('search') search?: string) {
+    return this.categoriesService.findAll(search);
   }
 
   @Get(':id')

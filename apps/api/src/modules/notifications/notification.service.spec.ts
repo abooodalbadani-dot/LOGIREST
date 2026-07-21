@@ -89,6 +89,7 @@ describe('NotificationService', () => {
         orderBy: {
           createdAt: 'desc',
         },
+        take: 50,
       });
     });
   });

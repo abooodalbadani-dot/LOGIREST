@@ -42,6 +42,7 @@ export class WarehousesDirectController {
     @Query('limit') limit?: string,
     @Query('includeInactive') includeInactive?: string,
     @Query('ignoreScope') ignoreScope?: string,
+    @Query('search') search?: string,
   ) {
     const take = limit ? parseInt(limit, 10) : undefined;
     const filter: Record<string, unknown> = {};
@@ -50,6 +51,12 @@ export class WarehousesDirectController {
     }
     if (branchId) {
       filter.branchId = branchId;
+    }
+    if (search) {
+      filter.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+      ];
     }
     if (role !== 'ADMIN' && ignoreScope !== 'true') {
       filter.userScopes = {

@@ -73,30 +73,30 @@ export function KPICard({ title, value, icon: Icon, accent, description, trend, 
         <Icon className={`w-28 h-28 ${accentColors[accent]}`} />
       </div>
 
-      <div className="p-7 relative z-10">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <p className="text-label-xs font-semibold text-muted-foreground uppercase">
+      <div className="p-3 sm:p-5 md:p-7 relative z-10">
+        <div className="space-y-2 sm:space-y-4 md:space-y-6">
+          <div className="flex items-center justify-between gap-1">
+            <p className="text-[10px] sm:text-label-xs font-bold text-muted-foreground uppercase line-clamp-1">
               {title}
             </p>
-            <div className={`p-3 rounded-2xl text-muted-foreground transition-transform duration-200 group-hover:scale-110`}>
-              <Icon className="w-4 h-4" />
+            <div className={`p-1.5 sm:p-2 md:p-3 rounded-lg sm:rounded-2xl text-muted-foreground transition-transform duration-200 group-hover:scale-110 shrink-0`}>
+              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <h3 className={`text-headline-lg font-display tabular-nums ${accentColors[accent]}`}>
+          <div className="space-y-1 sm:space-y-2">
+            <h3 className={`text-headline-xs sm:text-headline-sm md:text-headline-lg font-display tabular-nums truncate ${accentColors[accent]}`}>
               {renderValue()}
             </h3>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {trend && (
-                <span className={`text-label-xs font-semibold uppercase px-2.5 py-1 rounded-xl ${trend.isPositive ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                <span className={`text-[9px] sm:text-label-xs font-semibold uppercase px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl ${trend.isPositive ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
                   {trend.isPositive ? '↑' : '↓'} {trend.value}
                 </span>
               )}
               {description && (
-                <p className="text-label-xs font-semibold text-muted-foreground uppercase">
+                <p className="text-[9px] sm:text-label-xs font-semibold text-muted-foreground uppercase line-clamp-1">
                   {description}
                 </p>
               )}

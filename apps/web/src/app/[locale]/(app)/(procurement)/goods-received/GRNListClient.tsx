@@ -5,23 +5,23 @@ import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useGRNList, type GRNSummary } from '@/features/purchasing/hooks/useGRNList';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { ColumnDef } from '@tanstack/react-table';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
-import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
-
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@logirest/shared-types';
 import { GRN_STATUS } from '@logirest/shared-types';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
@@ -29,7 +29,7 @@ export function GRNListClient({
  initialStatus,
  initialPage,
  locale,
- }: {
+}: {
  initialStatus?: string;
  initialPage: number;
  locale: 'ar' | 'en';
@@ -46,23 +46,22 @@ export function GRNListClient({
  const [sortField, setSortField] = useState<string>('');
  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const statusItems = useMemo(() => [
-   { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
-   { id: GRN_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
-   { id: GRN_STATUS.RECEIVED, name_en: tc('statuses.received'), name_ar: tc('statuses.received') },
-   { id: GRN_STATUS.POSTED, name_en: tc('statuses.posted'), name_ar: tc('statuses.posted') },
-   { id: GRN_STATUS.CANCELLED, name_en: tc('statuses.cancelled'), name_ar: tc('statuses.cancelled') },
-   { id: GRN_STATUS.VOIDED, name_en: tc('statuses.voided'), name_ar: tc('statuses.voided') },
-  ], [tc]);
+ const statusItems = useMemo(() => [
+  { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
+  { id: GRN_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
+  { id: GRN_STATUS.RECEIVED, name_en: tc('statuses.received'), name_ar: tc('statuses.received') },
+  { id: GRN_STATUS.POSTED, name_en: tc('statuses.posted'), name_ar: tc('statuses.posted') },
+  { id: GRN_STATUS.CANCELLED, name_en: tc('statuses.cancelled'), name_ar: tc('statuses.cancelled') },
+  { id: GRN_STATUS.VOIDED, name_en: tc('statuses.voided'), name_ar: tc('statuses.voided') },
+ ], [tc]);
 
- // Debounce search input
  useEffect(() => {
- const timer = setTimeout(() => setDebouncedSearch(search), 500);
- return () => clearTimeout(timer);
+  const timer = setTimeout(() => setDebouncedSearch(search), 500);
+  return () => clearTimeout(timer);
  }, [search]);
 
-  const activeStatusQuery = status === 'ALL' || !status ? undefined : status;
-  const { data, isLoading } = useGRNList({ status: activeStatusQuery, page, search: debouncedSearch, sortField, sortOrder });
+ const activeStatusQuery = status === 'ALL' || !status ? undefined : status;
+ const { data, isLoading } = useGRNList({ status: activeStatusQuery, page, search: debouncedSearch, sortField, sortOrder });
 
  const toggleSort = (field: string) => {
   setSortField(prev => {
@@ -88,21 +87,21 @@ export function GRNListClient({
  );
 
  const columns = useMemo<ColumnDef<GRNSummary, unknown>[]>(() => [
- {
- accessorKey: 'status',
- header: tc('status_label'),
- cell: ({ row }) => <StatusBadge status={row.original.status as BadgeStatus} />,
- },
- {
- accessorKey: 'documentNumber',
- header: tc('doc_number'),
- cell: ({ row }) => (
- <div className="flex flex-col gap-0.5 min-w-0">
- <span dir="ltr" className="font-mono text-foreground font-semibold text-body-md">{row.original.documentNumber}</span>
- <span className="text-label-xxs font-semibold uppercase opacity-30">{t('received_manifest_sub')}</span>
- </div>
- ),
- },
+  {
+   accessorKey: 'status',
+   header: tc('status_label'),
+   cell: ({ row }) => <StatusBadge status={row.original.status as BadgeStatus} />,
+  },
+  {
+   accessorKey: 'documentNumber',
+   header: tc('doc_number'),
+   cell: ({ row }) => (
+    <div className="flex flex-col gap-0.5 min-w-0">
+     <span dir="ltr" className="font-mono text-foreground font-semibold text-body-md">{row.original.documentNumber}</span>
+     <span className="text-label-xxs font-semibold uppercase opacity-30">{t('received_manifest_sub')}</span>
+    </div>
+   ),
+  },
   {
    accessorKey: 'supplierName',
    header: () => <SortHeader field="supplierName" label={tc('supplier')} />,
@@ -141,93 +140,92 @@ export function GRNListClient({
      </div>
     ) : <span className="opacity-10 text-label-xs font-semibold italic">{t('pending_label')}</span>,
   },
- {
-  id: 'actions',
-  header: '',
-  cell: ({ row }) => {
-   const isDraft = row.original.status === GRN_STATUS.DRAFT;
-   return (
-    <div className="gap-2 min-w-0 items-center flex-1 gap-6 justify-end flex-col flex w-full">
-     <PermissionGate action="view" resource="grn">
-      <Button
-       variant="ghost"
-       size="sm"
-       className="text-xs font-bold tracking-wider text-muted-foreground hover:text-brand-gold uppercase transition-colors h-8 px-3 rounded-lg"
-       onClick={(e) => {
-        e.stopPropagation();
-        router.push(`/goods-received/${row.original.id}`);
-       }}
-      >
-       {tc('view')}
-       <ArrowRight className="w-3 h-3 ms-2 opacity-0 group-hover:opacity-100 transition-all translate-x-[-4px] group-hover:translate-x-0 rtl:translate-x-[4px] rtl:group-hover:translate-x-0 rtl:rotate-180" />
-      </Button>
-     </PermissionGate>
-
-     {isDraft && (
-      <PermissionGate action="delete" resource="grn">
+  {
+   id: 'actions',
+   header: '',
+   cell: ({ row }) => {
+    const isDraft = row.original.status === GRN_STATUS.DRAFT;
+    return (
+     <div className="flex items-center gap-2 justify-end">
+      <PermissionGate action="view" resource="grn">
        <Button
         variant="ghost"
-        size="icon"
-        disabled={deleteGRN.isPending}
-        className="w-8 h-8 rounded-md bg-red-500/5 hover:bg-red-500/20 text-red-500 transition-all"
-        onClick={async (e) => {
+        size="sm"
+        className="text-xs font-bold tracking-wider text-muted-foreground hover:text-brand-gold uppercase transition-colors h-8 px-3 rounded-lg"
+        onClick={(e) => {
          e.stopPropagation();
-         const confirmed = window.confirm('Are you sure you want to delete this draft goods received note?');
-         if (!confirmed) return;
-         try {
-          await deleteGRN.mutateAsync({ id: row.original.id });
-         } catch (err) {
-          console.error(err);
-         }
+         router.push(`/goods-received/${row.original.id}`);
         }}
        >
-        <Trash2 className="w-4 h-4" />
+        {tc('view')}
+        <ArrowRight className="w-3 h-3 ms-2 opacity-0 group-hover:opacity-100 transition-all translate-x-[-4px] group-hover:translate-x-0 rtl:translate-x-[4px] rtl:group-hover:translate-x-0 rtl:rotate-180" />
        </Button>
       </PermissionGate>
-     )}
-    </div>
-   );
+      {isDraft && (
+       <PermissionGate action="delete" resource="grn">
+        <Button
+         variant="ghost"
+         size="icon"
+         disabled={deleteGRN.isPending}
+         className="w-8 h-8 rounded-md bg-red-500/5 hover:bg-red-500/20 text-red-500 transition-all"
+         onClick={async (e) => {
+          e.stopPropagation();
+          const confirmed = window.confirm('Are you sure you want to delete this draft goods received note?');
+          if (!confirmed) return;
+          try {
+           await deleteGRN.mutateAsync({ id: row.original.id });
+          } catch (err) {
+           console.error(err);
+          }
+         }}
+        >
+         <Trash2 className="w-4 h-4" />
+        </Button>
+       </PermissionGate>
+      )}
+     </div>
+    );
+   },
   },
- },
-  ], [locale, router, t, tc, sortField, sortOrder, deleteGRN.isPending, deleteGRN]);
+ ], [locale, router, t, tc, sortField, sortOrder, deleteGRN.isPending, deleteGRN]);
 
  const totalGRNs = data?.meta?.total || 0;
  const postedCount = data?.data?.filter(p => isPostedStatus('GRN', p.status as DocumentStatus)).length || 0;
  const draftCount = data?.data?.filter(p => isPendingStatus('GRN', p.status as DocumentStatus)).length || 0;
 
  return (
- <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
- <div className="space-y-4">
- <Breadcrumb 
- items={[
-  { label: tc('sidebar.dashboard'), href: '/dashboard' },
- { label: tc('sidebar.grn') }
- ]} 
- />
- <PageHeader
- title={t('title')}
- subtitle={t('description')}
- children={
- <div className="flex items-center gap-6">
- <PermissionGate action="create" resource="grn">
-  <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
- <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
- <Plus className="w-3.5 h-3.5 me-2" />
- {t('create_new')}
- </Button>
- </Link>
- </PermissionGate>
- </div>
- }
- />
- </div>
+  <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+   <div className="space-y-4">
+    <Breadcrumb 
+     items={[
+      { label: tc('sidebar.dashboard'), href: '/dashboard' },
+      { label: tc('sidebar.grn') }
+     ]} 
+    />
+    <PageHeader
+     title={t('title')}
+     subtitle={t('description')}
+     children={
+      <div className="flex items-center gap-6">
+       <PermissionGate action="create" resource="grn">
+        <Link href="/goods-received/new" className="shrink-0 w-full sm:w-auto">
+         <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+          <Plus className="w-3.5 h-3.5 me-2" />
+          {t('create_new')}
+         </Button>
+        </Link>
+       </PermissionGate>
+      </div>
+     }
+    />
+   </div>
 
- <QueryBoundary 
+   <QueryBoundary 
     isLoading={isLoading} 
     error={data === undefined && !isLoading ? new Error('Failed to load data') : null}
     loadingFallback={<PageSkeleton />}
    >
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-8">
      <MetricCard
       label={t('stats.total_manifests')}
       value={totalGRNs}
@@ -248,19 +246,49 @@ export function GRNListClient({
      />
     </div>
 
-     <div className="flex w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-      <Tabs value={status || 'ALL'} onValueChange={(val) => { setStatus(val); setPage(1); }} className="w-full">
-       <TabsList variant="line" className="w-full justify-start overflow-x-auto overflow-y-hidden hide-scrollbar border-b border-border/10 pb-0 gap-6">
-        {statusItems.map((tab) => (
-         <TabsTrigger key={tab.id} value={tab.id} className="pb-3 text-label-xs font-bold uppercase tracking-wider h-auto">
-          {locale === 'ar' ? tab.name_ar : tab.name_en}
-         </TabsTrigger>
-        ))}
-       </TabsList>
-      </Tabs>
-     </div>
+    <div className="flex w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+     <Tabs value={status || 'ALL'} onValueChange={(val) => { setStatus(val); setPage(1); }} className="w-full">
+      <TabsList variant="line" className="w-full justify-start overflow-x-auto overflow-y-hidden hide-scrollbar border-b border-border/10 pb-0 gap-6">
+       {statusItems.map((tab) => (
+        <TabsTrigger key={tab.id} value={tab.id} className="pb-3 text-label-xs font-bold uppercase tracking-wider h-auto">
+         {locale === 'ar' ? tab.name_ar : tab.name_en}
+        </TabsTrigger>
+       ))}
+      </TabsList>
+     </Tabs>
+    </div>
 
     <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+     {/* Unified Search Toolbar */}
+     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+      <div className="relative w-full sm:w-64">
+       <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+       <Input
+        placeholder={tc('search')}
+        value={search}
+        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+        className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
+       />
+      </div>
+
+      {data?.data && data.data.length > 0 && (
+       <PermissionGate action="export" resource="grn">
+        <div className="flex items-center gap-2 shrink-0">
+         <ExportMenu
+          data={data.data as unknown as Record<string, unknown>[]}
+          columns={[
+           { header: 'Doc #', key: 'documentNumber' },
+           { header: 'Status', key: 'status' },
+           { header: 'Supplier', key: 'supplierName' },
+          ]}
+          filename="goods_received"
+          title={t('title')}
+         />
+        </div>
+       </PermissionGate>
+      )}
+     </div>
+
      <div className="hidden md:block w-full">
       <DataTable
        columns={columns}
@@ -293,64 +321,53 @@ export function GRNListClient({
         totalPages: data.meta.totalPages,
         onPageChange: setPage
        } : undefined}
-       filters={
-         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-           <div className="w-full sm:w-64">
-             <div className="relative w-full">
-               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-               <Input
-                 placeholder={tc('search')}
-                 value={search}
-                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                 className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
-               />
-             </div>
-           </div>
-         </div>
-       }
       />
      </div>
 
      {(!isLoading && data?.data && data.data.length > 0) && (
-      <div className="flex flex-col gap-3 md:hidden mt-4 p-4">
-       {data.data.map((grn) => {
+      <VirtualizedMobileGrid
+       data={data.data}
+       estimateSize={150}
+       maxHeight={600}
+       className="mt-4 p-4"
+       renderCard={(grn) => {
         const isDraft = grn.status === GRN_STATUS.DRAFT;
         return (
-        <div 
-         key={grn.id} 
-         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
-         onClick={() => router.push(`/goods-received/${grn.id}`)}
-        >
-         {/* TOP TIER: Identity */}
-         <div className="flex justify-between items-start">
+         <div 
+          key={grn.id} 
+          className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+          onClick={() => router.push(`/goods-received/${grn.id}`)}
+         >
+          {/* TOP TIER: Identity */}
+          <div className="flex justify-between items-start">
            <div className="flex flex-col gap-1 w-full">
-             <div className="flex justify-between items-start gap-2">
-               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{grn.documentNumber}</span>
-               <StatusBadge status={grn.status as BadgeStatus} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
-             </div>
-             <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{grn.supplierName || '—'}</span>
+            <div className="flex justify-between items-start gap-2">
+             <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{grn.documentNumber}</span>
+             <StatusBadge status={grn.status as BadgeStatus} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
+            </div>
+            <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{grn.supplierName || '—'}</span>
            </div>
-         </div>
+          </div>
 
-         {/* MIDDLE TIER: Meta */}
-         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+          {/* MIDDLE TIER: Meta */}
+          <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
            <div className="flex flex-col">
-             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tc('warehouse')}</span>
-             <span className="text-sm font-bold text-foreground">
-               {grn.warehouseName || grn.warehouseId || '-'}
-             </span>
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tc('warehouse')}</span>
+            <span className="text-sm font-bold text-foreground">
+             {grn.warehouseName || grn.warehouseId || '-'}
+            </span>
            </div>
-         </div>
+          </div>
 
-         {/* BOTTOM TIER: Actions */}
-         <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
+          {/* BOTTOM TIER: Actions */}
+          <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
             {grn.postedAt ? (
-              <ClientOnlyTime 
-               date={grn.postedAt} 
-               mode="date" 
-               className="font-mono font-medium" 
-              />
+             <ClientOnlyTime 
+              date={grn.postedAt} 
+              mode="date" 
+              className="font-mono font-medium" 
+             />
             ) : <span className="opacity-50 italic">{t('pending_label')}</span>}
            </div>
            
@@ -379,18 +396,19 @@ export function GRNListClient({
                 }
                }}
               >
-               <Trash2 className="w-3.5 h-3.5" />
+               <Trash2 className="w-4 h-4" />
               </Button>
              </PermissionGate>
             )}
            </div>
+          </div>
          </div>
-        </div>
-       )})}
-      </div>
+        );
+       }}
+      />
      )}
     </div>
    </QueryBoundary>
- </div>
+  </div>
  );
 }

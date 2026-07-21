@@ -40,11 +40,18 @@ export class DepartmentsController {
     @Query('branchId') branchId?: string,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
+    @Query('search') search?: string,
   ) {
     const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
     const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
 
     const where: Record<string, unknown> = branchId ? { branchId } : {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+      ];
+    }
     if (role !== 'ADMIN') {
       where.branch = {
         warehouses: {

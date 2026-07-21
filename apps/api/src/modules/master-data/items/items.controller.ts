@@ -49,6 +49,12 @@ export class ItemsController {
     });
   }
 
+  @Get('next-code')
+  @AllRoles()
+  async getNextCode() {
+    return this.itemsService.getNextCode();
+  }
+
   @Get(':id')
   @AllRoles()
   async findOne(@Param('id') id: string) {

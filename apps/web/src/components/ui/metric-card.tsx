@@ -100,30 +100,30 @@ export function MetricCard({
 
     return (
         <Card className={cn(
-            "bg-card border border-border shadow-sm rounded-xl p-4 sm:p-5 flex flex-row items-center justify-between overflow-hidden relative group transition-all isolate",
+            "bg-card border border-border shadow-sm rounded-xl p-3 sm:p-4 md:p-5 flex flex-row items-center justify-between overflow-hidden relative group transition-all isolate min-w-0",
             className
         )}>
-            {/* Background Icon Decoration (Optional/Hidden on mobile to save space) */}
-            <div className="hidden sm:block absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity transform group-hover:scale-110 duration-200 pointer-events-none">
+            {/* Background Icon Decoration */}
+            <div className="hidden md:block absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity transform group-hover:scale-110 duration-200 pointer-events-none">
                 {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as ElementType, { className: "w-24 h-24" })) : null}
             </div>
 
-            <div className="flex flex-col items-start gap-1 z-10">
-                <CardDescription className="text-label-xs font-semibold uppercase text-[#b48e67] whitespace-nowrap" dir="auto" style={{ unicodeBidi: 'isolate' }}>
+            <div className="flex flex-col items-start gap-0.5 sm:gap-1 z-10 min-w-0 flex-1 me-2 sm:me-3">
+                <CardDescription className="text-[10px] sm:text-label-xs font-bold uppercase text-[#b48e67] line-clamp-1 break-words w-full" dir="auto" style={{ unicodeBidi: 'isolate' }}>
                     {label}
                 </CardDescription>
-                <CardTitle className={cn("text-headline-sm sm:text-headline-md font-display font-bold", valueColor)} dir="auto" style={{ unicodeBidi: 'isolate' }}>
+                <CardTitle className={cn("text-headline-xs sm:text-headline-sm md:text-headline-md font-display font-extrabold truncate w-full", valueColor)} dir="auto" style={{ unicodeBidi: 'isolate' }}>
                     <span dir="ltr" className="font-mono">{renderValue()}</span>
                 </CardTitle>
                 {trend && (
-                    <span className="text-label-xs font-semibold uppercase opacity-60 mt-1">
+                    <span className="text-[9px] sm:text-label-xs font-semibold uppercase opacity-60 mt-0.5 truncate w-full">
                         {trend}
                     </span>
                 )}
             </div>
 
-            <div className={cn("p-2.5 rounded-xl flex-shrink-0 z-10 transition-colors", styles.bg)}>
-                {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as ElementType, { className: cn("w-6 h-6 sm:w-8 sm:h-8", isZero ? 'text-muted-foreground dark:text-gray-400' : styles.text) })) : null}
+            <div className={cn("p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl flex-shrink-0 z-10 transition-colors", styles.bg)}>
+                {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as ElementType, { className: cn("w-4.5 h-4.5 sm:w-6 sm:h-6 md:w-8 md:h-8", isZero ? 'text-muted-foreground dark:text-gray-400' : styles.text) })) : null}
             </div>
         </Card>
     );

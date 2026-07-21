@@ -4,6 +4,8 @@ import { PrismaService } from '../database/prisma.service';
 import { OutboxService } from '../modules/outbox/outbox.service';
 import { REDIS_CLIENT } from '../redis/redis.module';
 
+import { RedisLockService } from '../redis/redis-lock.service';
+
 describe('LowStockAlertJob', () => {
   let job: LowStockAlertJob;
   let mockRedis: {
@@ -66,6 +68,12 @@ describe('LowStockAlertJob', () => {
         {
           provide: REDIS_CLIENT,
           useValue: mockRedis,
+        },
+        {
+          provide: RedisLockService,
+          useValue: {
+            runWithLock: jest.fn().mockImplementation((_key, _ttl, fn) => fn()),
+          },
         },
       ],
     }).compile();

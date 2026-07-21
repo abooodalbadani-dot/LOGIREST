@@ -69,7 +69,7 @@ export function ProcurementDashboard() {
    </PageHeader>
 
    {/* KPI Grid */}
-   <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" aria-labelledby="kpi-heading">
+   <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6" aria-labelledby="kpi-heading">
     <h2 id="kpi-heading" className="sr-only">{t('kpi.title')}</h2>
     <KPICard
      title={t('procurement.pending_prs')}

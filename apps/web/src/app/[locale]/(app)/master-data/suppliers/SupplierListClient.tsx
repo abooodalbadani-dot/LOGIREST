@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Plus, Users, CheckCircle2, ExternalLink, CreditCard, Search } from 'lucide-react';
@@ -13,19 +14,22 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ColumnDef } from '@tanstack/react-table';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
+import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 export function SupplierListClient({ locale }: { locale: string }) {
  const t = useTranslations('common');
  const tc = useTranslations('master_data.suppliers');
  const router = useRouter();
  const [search, setSearch] = useState('');
+ const debouncedSearch = useDebounce(search, 300);
 
- const { data, isLoading, isError, refetch } = useSuppliers({ search });
+ const { data, isLoading, isError, refetch } = useSuppliers({ search: debouncedSearch || undefined });
 
  const stats = useMemo(() => {
   const suppliers = data?.data || [];
@@ -135,7 +139,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
     }
    />
 
-   <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+   <div className="w-full grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
     <MetricCard
      label={tc('metrics.total_suppliers') || 'إجمالي الموردين'}
      value={stats.total}
@@ -162,12 +166,44 @@ export function SupplierListClient({ locale }: { locale: string }) {
    </div>
 
    <div className="flex-1 w-full min-h-[400px] md:min-h-0">
+    {/* Responsive Search Toolbar */}
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+      <div className="relative w-full sm:w-80 md:w-96 group">
+        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
+        <Input
+          placeholder={tc('search_placeholder') || 'البحث عن الموردين بالكود أو الاسم...'}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
+        />
+      </div>
+
+      {data?.data && data.data.length > 0 && (
+        <PermissionGate action="export" resource="master_data_suppliers">
+          <div className="flex items-center gap-2 shrink-0">
+            <ExportMenu
+              data={data.data as unknown as Record<string, unknown>[]}
+              columns={[
+                { header: 'Code', key: 'code' },
+                { header: 'Name', key: 'name' },
+                { header: 'Status', key: 'isActive' },
+              ]}
+              filename="suppliers"
+              title={tc('title') || 'Suppliers'}
+            />
+          </div>
+        </PermissionGate>
+      )}
+    </div>
+
+    {/* Desktop Table View */}
     <div className="hidden md:block w-full">
      <DataTable
       columns={columns}
       data={data?.data ?? []}
       isLoading={isLoading}
       collectionName="master_data_suppliers"
+      enableVirtualization={true}
       onRowClick={(r: Supplier) => router.push(`/master-data/suppliers/${r.id}`)}
       emptyState={
        <EmptyState 
@@ -175,27 +211,17 @@ export function SupplierListClient({ locale }: { locale: string }) {
         title={t('no_data')}
        />
       }
-      filters={
-         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-           <div className="w-full sm:w-80 md:w-96">
-             <div className="relative w-full group">
-               <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-foreground transition-colors pointer-events-none" />
-               <Input
-           placeholder={tc('search_placeholder') || 'البحث عن الموردين بالكود أو الاسم...'}
-           value={search}
-           onChange={ (e) => setSearch(e.target.value) }
-           className="w-full h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold text-foreground shrink-0 rounded-lg"
-          />
-             </div>
-           </div>
-         </div>
-        }
      />
     </div>
 
+    {/* Mobile Cards View (Virtualized) */}
     {!isLoading && (data?.data ?? []).length > 0 && (
-     <div className="flex flex-col gap-3 md:hidden mt-4">
-      {(data?.data ?? []).map((supplier) => (
+     <VirtualizedMobileGrid
+      data={data?.data ?? []}
+      estimateSize={130}
+      maxHeight={600}
+      className="mt-4"
+      renderCard={(supplier) => (
        <div 
         key={supplier.id} 
         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
@@ -253,8 +279,8 @@ export function SupplierListClient({ locale }: { locale: string }) {
           </div>
         </div>
        </div>
-      ))}
-     </div>
+      )}
+     />
     )}
    </div>
   </div>

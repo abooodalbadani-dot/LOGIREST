@@ -36,8 +36,16 @@ export class UomService {
     };
   }
 
-  async findAll() {
+  async findAll(search?: string) {
+    const where: Prisma.UnitOfMeasureWhereInput = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+      ];
+    }
     const uoms = await this.prisma.unitOfMeasure.findMany({
+      where,
       orderBy: { code: 'asc' },
     });
     const data = uoms.map((uom) => this.mapDbUoMToFrontend(uom));

@@ -48,6 +48,7 @@ export class SearchController {
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
           { sku: { contains: query, mode: 'insensitive' } },
+          { barcodeMappings: { some: { barcode: { contains: query, mode: 'insensitive' } } } },
         ],
       },
       take: 10,

@@ -174,6 +174,7 @@ export function AuditLogsClient() {
      data={data?.data ?? []}
      isLoading={isLoading}
      collectionName="admin_audit_logs"
+     enableVirtualization={true}
      emptyState={
      <EmptyState
      title={t('audit_logs.no_ledger_entries')}
