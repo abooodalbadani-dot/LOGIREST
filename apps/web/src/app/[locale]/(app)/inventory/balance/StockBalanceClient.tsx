@@ -440,6 +440,7 @@ export default function StockBalanceClient() {
       />
      )}
     </div>
+    </div>
 
     {/* Floating Quick Actions Bar */}
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-between gap-3 md:gap-6 bg-card/70 backdrop-blur-xl border border-brand-gold/30 shadow-2xl rounded-full px-6 py-3 z-50 w-[95vw] md:w-max max-w-2xl transition-all overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden animate-in slide-in-from-bottom-4 duration-500">
@@ -472,6 +473,5 @@ export default function StockBalanceClient() {
      </div>
     </div>
    </div>
-  </div>
- );
+  );
 }
