@@ -35,29 +35,34 @@ const defaultUrl = process.env.NEXT_PUBLIC_APP_URL
         ? `https://${process.env.VERCEL_URL}`
         : 'https://otantikrestaurant.tech';
 
+const ogImageUrl = `${defaultUrl}/opengraph-image.png`;
+
 export const metadata: Metadata = {
     metadataBase: new URL(defaultUrl),
-    title: 'مطاعم اوتانتك | Otantik Restaurant',
+    title: 'مطاعم أوتانتك | Otantik Restaurant',
     description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
     robots: 'index, follow',
     openGraph: {
-        title: 'مطاعم اوتانتك | Otantik Restaurant',
+        title: 'مطاعم أوتانتك | Otantik Restaurant',
         description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
-        type: 'website',
+        url: defaultUrl,
+        siteName: 'Otantik Restaurant ERP',
         images: [
             {
-                url: '/opengraph-image.png',
+                url: ogImageUrl,
                 width: 1200,
                 height: 630,
-                alt: 'مطاعم اوتانتك | Otantik Restaurant',
+                alt: 'Otantik Restaurant ERP',
             },
         ],
+        locale: 'ar_SA',
+        type: 'website',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'مطاعم اوتانتك | Otantik Restaurant',
+        title: 'مطاعم أوتانتك | Otantik Restaurant',
         description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
-        images: ['/opengraph-image.png'],
+        images: [ogImageUrl],
     },
     icons: {
         icon: '/icon.svg',

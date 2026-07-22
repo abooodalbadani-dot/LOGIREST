@@ -51,10 +51,16 @@ export function proxy(request: NextRequest) {
   // 1. Skip static/internal paths immediately
   if (
     pathname.startsWith('/_next') ||
+    pathname.startsWith('/opengraph-image') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/icon') ||
+    pathname.startsWith('/logoicon') ||
     pathname.includes('/api/') ||
     pathname.includes('/static') ||
-    pathname.includes('/favicon.svg') ||
-    pathname.includes('/icon.svg') ||
+    pathname.includes('/favicon') ||
+    pathname.includes('/icon') ||
+    pathname.includes('/logoicon') ||
+    pathname.includes('/opengraph-image') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();
@@ -200,8 +206,8 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths except internal Next.js and static files
-    '/((?!api|_next/static|_next/image|favicon.svg|.*\\..*).*)',
+    // Match all paths except internal Next.js and static files/OpenGraph assets
+    '/((?!api|_next/static|_next/image|opengraph-image|favicon|icon|logoicon|.*\\..*).*)',
   ],
 };
 
