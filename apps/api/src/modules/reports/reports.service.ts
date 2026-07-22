@@ -1314,12 +1314,7 @@ export class ReportsService {
         where: { qtyOnHand: { lte: 0 } },
       }),
       // Active users (sessions)
-      this.prisma.refreshToken
-        .groupBy({
-          by: ['sessionId'],
-          where: { expiresAt: { gt: new Date() }, isRevoked: false },
-        })
-        .then((res) => res.length),
+      this.prisma.user.count({ where: { isActive: true } }),
       // Near-expiry lots (within 30 days)
       this.prisma.lot.count({
         where: {
@@ -1546,48 +1541,48 @@ export class ReportsService {
       )
       .slice(0, 5);
 
-    const activityLog = activityLedger.map((l) => ({
+    const activityLog = (activityLedger || []).map((l) => ({
       id: l.id,
-      itemName: l.item.name,
-      qty: Number(l.quantity),
-      uom: l.item.unitOfMeasure?.code ?? '',
-      time: l.postedAt.toISOString(),
-      type: l.documentType,
+      itemName: l.item?.name || 'Item',
+      qty: Number(l.quantity || 0),
+      uom: l.item?.unitOfMeasure?.code ?? '',
+      time: l.postedAt ? l.postedAt.toISOString() : new Date().toISOString(),
+      type: l.documentType || 'TRANSACTION',
     }));
 
     const now = Date.now();
-    const expiringLotsFormatted = expiringLots.map((lot) => {
+    const expiringLotsFormatted = (expiringLots || []).map((lot) => {
       const msLeft = (lot.expiryDate?.getTime() ?? now) - now;
       const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
-      const wil = lot.warehouseItemLots[0];
+      const wil = lot.warehouseItemLots?.[0];
       return {
         id: lot.id,
-        itemId: lot.itemId,
-        itemName: lot.item.name,
-        lotNumber: lot.lotNumber,
+        itemId: lot.itemId || '',
+        itemName: lot.item?.name || 'Item',
+        lotNumber: lot.lotNumber || '',
         expiryDate: lot.expiryDate?.toISOString() ?? '',
         daysLeft,
         warehouseName: wil?.warehouse?.name ?? '',
         qty: Number(wil?.qtyOnHand ?? 0),
-        uom: lot.item.unitOfMeasure?.code ?? '',
+        uom: lot.item?.unitOfMeasure?.code ?? '',
       };
     });
 
-    const pendingApprovalsFormatted = pendingApprovals.map((pr) => ({
+    const pendingApprovalsFormatted = (pendingApprovals || []).map((pr) => ({
       id: pr.id,
-      documentNumber: pr.requestNumber,
+      documentNumber: pr.requestNumber || '',
       type: 'PR' as const,
-      status: pr.status,
+      status: pr.status || 'DRAFT',
       priority: 'NORMAL',
-      destination: pr.warehouse?.name ?? '',
-      createdAt: pr.createdAt.toISOString(),
+      destination: pr.warehouse?.name ?? 'Warehouse',
+      createdAt: pr.createdAt ? pr.createdAt.toISOString() : new Date().toISOString(),
     }));
 
     // Calculate today consumption
     let todayConsumption = 0;
-    for (const issue of todayIssues) {
-      for (const line of issue.lines) {
-        todayConsumption += Number(line.quantity);
+    for (const issue of todayIssues || []) {
+      for (const line of issue.lines || []) {
+        todayConsumption += Number(line.quantity || 0);
       }
     }
 
@@ -1609,25 +1604,25 @@ export class ReportsService {
         : 100;
 
     // Calculate total procurement spend
-    const totalProcurementSpend = globalGrnLines.reduce(
+    const totalProcurementSpend = (globalGrnLines || []).reduce(
       (sum, line) =>
-        sum + Number(line.quantityReceived) * Number(line.unitPrice),
+        sum + Number(line.quantityReceived || 0) * Number(line.unitPrice || 0),
       0,
     );
 
     // Calculate top vendors
-    const vendorSpendMap = suppliers.map((supplier) => {
+    const vendorSpendMap = (suppliers || []).map((supplier) => {
       let totalSpend = 0;
-      for (const po of supplier.purchaseOrders) {
-        for (const grn of po.goodsReceivedNotes) {
-          for (const line of grn.lines) {
+      for (const po of supplier.purchaseOrders || []) {
+        for (const grn of po.goodsReceivedNotes || []) {
+          for (const line of grn.lines || []) {
             totalSpend +=
-              Number(line.quantityReceived) * Number(line.unitPrice);
+              Number(line.quantityReceived || 0) * Number(line.unitPrice || 0);
           }
         }
       }
       return {
-        name: supplier.name,
+        name: supplier.name || '',
         spend: totalSpend,
         status: supplier.isActive ? 'ACTIVE' : 'INACTIVE',
       };
@@ -1645,8 +1640,8 @@ export class ReportsService {
 
     let totalDays = 0;
     let fulfilledCount = 0;
-    for (const req of fulfilledRequests) {
-      if (req.inventoryIssue) {
+    for (const req of fulfilledRequests || []) {
+      if (req.inventoryIssue?.createdAt && req.createdAt) {
         const diffMs =
           req.inventoryIssue.createdAt.getTime() - req.createdAt.getTime();
         const diffDays = diffMs / (1000 * 60 * 60 * 24);
@@ -1659,7 +1654,7 @@ export class ReportsService {
         ? parseFloat((totalDays / fulfilledCount).toFixed(1))
         : 0;
     const throughputWeek = Math.abs(
-      Number(ledgerAggregation._sum.quantity || 0),
+      Number(ledgerAggregation?._sum?.quantity || 0),
     );
 
     // Parallelized query generation for monthly charts
@@ -1702,12 +1697,12 @@ export class ReportsService {
       Math.min(100, Math.round((issues / 50) * 100)),
     );
 
-    const systemAuditLogs = auditLogsList.map((log) => ({
+    const systemAuditLogs = (auditLogsList || []).map((log) => ({
       id: log.id,
-      action: log.action,
+      action: log.action || 'MUTATION',
       user: log.user?.name || log.userId || 'System',
-      time: log.createdAt.toISOString(),
-      type: log.targetTable,
+      time: log.createdAt ? log.createdAt.toISOString() : new Date().toISOString(),
+      type: log.targetTable || 'System',
     }));
 
     return {
@@ -1850,12 +1845,7 @@ export class ReportsService {
           status: { in: ['DRAFT', 'STARTED', 'COUNTING', 'REVIEW'] },
         },
       }),
-      this.prisma.refreshToken
-        .groupBy({
-          by: ['sessionId'],
-          where: { expiresAt: { gt: new Date() }, isRevoked: false },
-        })
-        .then((res) => res.length),
+      this.prisma.user.count({ where: { isActive: true } }),
       this.prisma.lot.count({
         where: {
           status: 'ACTIVE',
@@ -1873,6 +1863,10 @@ export class ReportsService {
       }),
       this.prisma.purchaseOrder.count({
         where: {
+          OR: [
+            { warehouseId },
+            { purchaseRequest: { warehouseId } },
+          ],
           status: { in: ['DRAFT', 'SUBMITTED', 'APPROVED'] },
         },
       }),
@@ -2072,41 +2066,42 @@ export class ReportsService {
 
     let total_value = 0;
     for (const item of warehouseItems) {
-      total_value += Number(item.qtyOnHand) * Number(item.wac || 0);
+      total_value += Number(item.qtyOnHand || 0) * Number(item.wac || 0);
     }
 
-    const shortages = shortagesItems.filter(
+    const shortages = (shortagesItems || []).filter(
       (wi) =>
-        wi.item.reorderPoint !== null &&
-        Number(wi.qtyOnHand) < Number(wi.item.reorderPoint),
+        wi?.item?.reorderPoint !== null &&
+        wi?.item?.reorderPoint !== undefined &&
+        Number(wi.qtyOnHand || 0) < Number(wi.item.reorderPoint),
     ).length;
 
-    const total_procurement_spend = grnLines.reduce(
+    const total_procurement_spend = (grnLines || []).reduce(
       (sum, line) =>
-        sum + Number(line.quantityReceived) * Number(line.unitPrice),
+        sum + Number(line.quantityReceived || 0) * Number(line.unitPrice || 0),
       0,
     );
 
     const recentRequests = [
-      ...issuesList.map((i) => ({
+      ...(issuesList || []).map((i) => ({
         id: i.id,
-        documentNumber: i.issueNumber,
+        documentNumber: i.issueNumber || '',
         type: 'ISSUE' as const,
-        status: i.status,
+        status: i.status || 'DRAFT',
         priority: 'HIGH',
         itemsSummary: 'Stock Issue Request',
-        createdAt: i.createdAt.toISOString(),
-        destination: i.department?.name || i.departmentId,
+        createdAt: i.createdAt ? i.createdAt.toISOString() : new Date().toISOString(),
+        destination: i.department?.name || i.departmentId || 'Department',
       })),
-      ...transfersList.map((t) => ({
+      ...(transfersList || []).map((t) => ({
         id: t.id,
-        documentNumber: t.transferNumber,
+        documentNumber: t.transferNumber || '',
         type: 'TRANSFER' as const,
-        status: t.status,
+        status: t.status || 'DRAFT',
         priority: 'NORMAL',
         itemsSummary: 'Warehouse Transfer Request',
-        createdAt: t.createdAt.toISOString(),
-        destination: t.toWarehouse?.name || t.toWarehouseId,
+        createdAt: t.createdAt ? t.createdAt.toISOString() : new Date().toISOString(),
+        destination: t.toWarehouse?.name || t.toWarehouseId || 'Warehouse',
       })),
     ]
       .sort(
@@ -2115,55 +2110,59 @@ export class ReportsService {
       )
       .slice(0, 5);
 
-    const activityLog = auditLogsList.map((log) => ({
+    const activityLog = (auditLogsList || []).map((log) => ({
       id: log.id,
-      itemName: log.targetTable,
+      itemName: log.targetTable || 'System',
       qty: 1,
       uom: 'PCS',
-      time: log.createdAt.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      type: log.action,
+      time: log.createdAt
+        ? log.createdAt.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '',
+      type: log.action || 'MUTATION',
     }));
 
-    const expiringLots = expiringLotsList.map((l) => {
-      const wil = l.warehouseItemLots[0];
+    const expiringLots = (expiringLotsList || []).map((l) => {
+      const wil = l.warehouseItemLots?.[0];
       return {
         id: l.id,
-        itemId: l.itemId,
-        itemName: l.item.name,
-        lotNumber: l.lotNumber,
+        itemId: l.itemId || '',
+        itemName: l.item?.name || 'Item',
+        lotNumber: l.lotNumber || '',
         expiryDate: l.expiryDate?.toISOString().split('T')[0] || '',
-        daysLeft: Math.ceil(
-          ((l.expiryDate?.getTime() || 0) - Date.now()) / (1000 * 60 * 60 * 24),
-        ),
+        daysLeft: l.expiryDate
+          ? Math.ceil(
+              (l.expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+            )
+          : 0,
         warehouseName: wil?.warehouse?.name || 'Main Warehouse',
         qty: Number(wil?.qtyOnHand || 0),
-        uom: l.item.unitOfMeasure?.code || 'PCS',
+        uom: l.item?.unitOfMeasure?.code || 'PCS',
       };
     });
 
     const fulfillmentQueue = [
-      ...pendingIssues.map((i) => ({
+      ...(pendingIssues || []).map((i) => ({
         id: i.id,
-        documentNumber: i.issueNumber,
+        documentNumber: i.issueNumber || '',
         type: 'ISSUE' as const,
-        status: i.status,
+        status: i.status || 'DRAFT',
         priority: 'HIGH',
-        itemsCount: i.lines.length,
-        destination: i.department?.name || i.departmentId,
-        createdAt: i.createdAt.toISOString(),
+        itemsCount: i.lines?.length || 0,
+        destination: i.department?.name || i.departmentId || 'Department',
+        createdAt: i.createdAt ? i.createdAt.toISOString() : new Date().toISOString(),
       })),
-      ...pendingTransfers.map((t) => ({
+      ...(pendingTransfers || []).map((t) => ({
         id: t.id,
-        documentNumber: t.transferNumber,
+        documentNumber: t.transferNumber || '',
         type: 'TRANSFER' as const,
-        status: t.status,
+        status: t.status || 'DRAFT',
         priority: t.status === 'IN_TRANSIT' ? 'HIGH' : 'NORMAL',
-        itemsCount: t.lines.length,
-        destination: t.toWarehouse?.name || t.toWarehouseId,
-        createdAt: t.createdAt.toISOString(),
+        itemsCount: t.lines?.length || 0,
+        destination: t.toWarehouse?.name || t.toWarehouseId || 'Warehouse',
+        createdAt: t.createdAt ? t.createdAt.toISOString() : new Date().toISOString(),
       })),
     ]
       .sort(
@@ -2172,19 +2171,19 @@ export class ReportsService {
       )
       .slice(0, 5);
 
-    const pendingApprovals = pendingPRsList.map((pr) => {
-      const totalVal = pr.lines.reduce((sum, line) => {
-        const wac = Number(line.item.warehouseItems[0]?.wac || 0);
-        return sum + Number(line.quantity) * wac;
+    const pendingApprovals = (pendingPRsList || []).map((pr) => {
+      const totalVal = (pr.lines || []).reduce((sum, line) => {
+        const wac = Number(line.item?.warehouseItems?.[0]?.wac || 0);
+        return sum + Number(line.quantity || 0) * wac;
       }, 0);
       return {
         id: pr.id,
-        documentNumber: pr.requestNumber,
+        documentNumber: pr.requestNumber || '',
         type: 'PR' as const,
-        status: pr.status,
+        status: pr.status || 'DRAFT',
         priority: 'HIGH',
-        destination: pr.warehouse?.name || pr.warehouseId,
-        createdAt: pr.createdAt.toISOString(),
+        destination: pr.warehouse?.name || pr.warehouseId || 'Warehouse',
+        createdAt: pr.createdAt ? pr.createdAt.toISOString() : new Date().toISOString(),
         totalValue: totalVal,
       };
     });
@@ -2213,24 +2212,24 @@ export class ReportsService {
 
     // Scoped today's consumption
     let todayConsumption = 0;
-    for (const issue of todayIssues) {
-      for (const line of issue.lines) {
-        todayConsumption += Number(line.quantity);
+    for (const issue of todayIssues || []) {
+      for (const line of issue.lines || []) {
+        todayConsumption += Number(line.quantity || 0);
       }
     }
 
-    const vendorSpendMap = suppliers.map((supplier) => {
+    const vendorSpendMap = (suppliers || []).map((supplier) => {
       let totalSpend = 0;
-      for (const po of supplier.purchaseOrders) {
-        for (const grn of po.goodsReceivedNotes) {
-          for (const line of grn.lines) {
+      for (const po of supplier.purchaseOrders || []) {
+        for (const grn of po.goodsReceivedNotes || []) {
+          for (const line of grn.lines || []) {
             totalSpend +=
-              Number(line.quantityReceived) * Number(line.unitPrice);
+              Number(line.quantityReceived || 0) * Number(line.unitPrice || 0);
           }
         }
       }
       return {
-        name: supplier.name,
+        name: supplier.name || '',
         spend: totalSpend,
         status: supplier.isActive ? 'ACTIVE' : 'INACTIVE',
       };
