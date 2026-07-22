@@ -50,9 +50,11 @@ export const metadata: Metadata = {
         images: [
             {
                 url: ogImageUrl,
+                secureUrl: ogImageUrl,
+                type: 'image/png',
                 width: 1200,
                 height: 630,
-                alt: 'Otantik Restaurant ERP',
+                alt: 'مطاعم أوتانتك | Otantik Restaurant',
             },
         ],
         locale: 'ar_SA',

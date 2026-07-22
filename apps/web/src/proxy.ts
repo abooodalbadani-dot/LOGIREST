@@ -80,7 +80,7 @@ export function proxy(request: NextRequest) {
   const locale = hasLocalePrefix ? firstSegment : preferredLocale;
 
   // 3. Helpers & Normalization
-  const publicPaths = ['/login', '/forgot-password', '/reset-password'];
+  const publicPaths = ['/login', '/forgot-password', '/reset-password', '/preview-loading'];
   const internalPaths = ['/debug', '/test-bed', '/style-guide'];
 
   // Extract pure path (no locale)
@@ -108,9 +108,14 @@ export function proxy(request: NextRequest) {
   const reason = request.nextUrl.searchParams.get('reason');
   const isAuthReason = reason === 'expired' || reason === 'verification_failed';
 
+  // Detect Social Web Crawlers (WhatsApp, Facebook, Twitter, Telegram, LinkedIn, etc.)
+  // Crawlers must NOT be subjected to 307 query parameter redirects so they can read OpenGraph tags directly.
+  const userAgent = request.headers.get('user-agent') || '';
+  const isSocialCrawler = /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|TelegramBot|Discordbot|Slackbot|Googlebot|bingbot/i.test(userAgent);
+
   // Debug log (Internal only)
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[Proxy] Path: ${pathname} | Normalized: ${normalizedPath} | Locale: ${locale} | Auth: ${!!token}`);
+    console.log(`[Proxy] Path: ${pathname} | Normalized: ${normalizedPath} | Locale: ${locale} | Auth: ${!!token} | Crawler: ${isSocialCrawler}`);
   }
 
   // A. Internal Tooling Guard (Production)
@@ -119,8 +124,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL(`/${locale}/404`, request.url));
   }
 
-  // B. Unauthenticated -> Login (Locale-Safe)
-  if (!token && !isPublicPage) {
+  // B. Unauthenticated -> Login (Locale-Safe) — Skipped for Social Crawlers
+  if (!token && !isPublicPage && !isSocialCrawler) {
     // Sanitize any potential double slashes in pathname first
     let cleanPath = pathname;
     while (cleanPath.startsWith('//')) {

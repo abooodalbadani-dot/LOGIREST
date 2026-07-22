@@ -12,23 +12,26 @@ const ogImageUrl = `${defaultUrl}/opengraph-image.png`;
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'auth' });
-  const title = `${t('login.title')} | Otantik مطاعم`;
-  const description = 'Secure authentication portal for the Kitchen-Store Inventory System.';
+  const title = `مطاعم أوتانتك | Otantik Restaurant`;
+  const description = 'Enterprise-grade inventory and procurement management for high-volume kitchens.';
 
   return {
+    metadataBase: new URL(defaultUrl),
     title,
     description,
     openGraph: {
       title,
       description,
-      url: `${defaultUrl}/${locale}/login`,
+      url: defaultUrl,
       siteName: 'Otantik Restaurant ERP',
       images: [
         {
           url: ogImageUrl,
+          secureUrl: ogImageUrl,
+          type: 'image/png',
           width: 1200,
           height: 630,
-          alt: 'Otantik Restaurant ERP',
+          alt: 'مطاعم أوتانتك | Otantik Restaurant',
         },
       ],
       locale: locale === 'ar' ? 'ar_SA' : 'en_US',
