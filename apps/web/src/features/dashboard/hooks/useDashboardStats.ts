@@ -105,16 +105,17 @@ export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
  * Hook to fetch unified dashboard statistics.
  * Uses TanStack Query for caching and state management.
  */
- export function useDashboardStats() {
+export function useDashboardStats() {
  const { user, activeScope } = useAuth();
  const userRole = user?.role;
 
  return useQuery<DashboardStats>({
-  queryKey: ['dashboard', 'stats', userRole, activeScope.departmentId],
+  queryKey: ['dashboard', 'stats', userRole, activeScope.departmentId, activeScope.warehouseId],
   queryFn: () => {
    const params = new URLSearchParams();
    if (userRole) params.append('role', userRole);
    if (activeScope.departmentId) params.append('departmentId', activeScope.departmentId);
+   if (activeScope.warehouseId) params.append('warehouseId', activeScope.warehouseId);
    
    return apiClient.get(`/dashboard/stats?${params.toString()}`, DashboardStatsSchema);
   },

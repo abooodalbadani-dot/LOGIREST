@@ -114,6 +114,15 @@ export function AdminDashboard() {
             <Badge className="bg-operational-cyan/10 text-operational-cyan border-none text-label-xs font-semibold uppercase">
               {tc('role.admin')}
             </Badge>
+            {activeScope.warehouseId ? (
+              <Badge variant="outline" className="bg-card border-border text-label-xs font-bold uppercase text-foreground">
+                {activeWarehouseName || 'Selected Warehouse'}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-card border-border/50 text-label-xs font-medium uppercase text-muted-foreground">
+                {locale === 'ar' ? 'جميع المستودعات (عام)' : 'All Warehouses (Global)'}
+              </Badge>
+            )}
           </div>
         }
       />

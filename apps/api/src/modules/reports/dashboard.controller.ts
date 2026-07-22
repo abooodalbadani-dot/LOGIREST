@@ -39,7 +39,14 @@ export class DashboardController {
     @ActiveScope('warehouseId') warehouseId: string | null,
     @ActiveScope('departmentId') departmentId: string | null,
     @CurrentUser('role') role: Role,
+    @Query('warehouseId') warehouseIdQuery?: string,
   ) {
+    const effectiveWarehouseId = warehouseIdQuery || warehouseId;
+
+    if (effectiveWarehouseId) {
+      return this.reportsService.getDashboardStats(role, effectiveWarehouseId);
+    }
+
     if (role === Role.ADMIN || role === Role.GM) {
       return this.reportsService.getGlobalDashboardStats();
     }
@@ -53,10 +60,6 @@ export class DashboardController {
       return this.reportsService.getKitchenChiefDashboardStats(departmentId);
     }
 
-    if (!warehouseId) {
-      return this.reportsService.getGlobalDashboardStats();
-    }
-
-    return this.reportsService.getDashboardStats(role, warehouseId);
+    return this.reportsService.getGlobalDashboardStats();
   }
 }

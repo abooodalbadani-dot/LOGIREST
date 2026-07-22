@@ -4,6 +4,7 @@ import {
   HttpStatus,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import { PrismaService } from '../../database/prisma.service';
@@ -118,6 +119,7 @@ export interface CostLedgerWithItem extends CostLedger {
 
 @Injectable()
 export class ReportsService {
+  private readonly logger = new Logger(ReportsService.name);
   constructor(private readonly prisma: PrismaService) {}
 
   async getKpis(warehouseId: string, warehouseIds?: string[]) {
@@ -1421,10 +1423,8 @@ export class ReportsService {
       this.prisma.warehouseItem.count({
         where: { qtyOnHand: { gt: 0 } },
       }),
-      // 4. Dead lettered outbox events
-      this.prisma.outboxEvent.count({
-        where: { deadLettered: true },
-      }),
+      // 4. Dead lettered outbox events (safe - column may not exist in older DBs)
+      this.prisma.outboxEvent.count({ where: { deadLettered: true } }).catch(() => 0),
       // 5. Today's posted inventory issues
       this.prisma.inventoryIssue.findMany({
         where: {
@@ -1448,7 +1448,9 @@ export class ReportsService {
       // 7. Suppliers for Top Vendors
       this.prisma.supplier.findMany({
         where: { isActive: true },
-        include: {
+        select: {
+          name: true,
+          isActive: true,
           purchaseOrders: {
             include: {
               goodsReceivedNotes: {
@@ -1498,7 +1500,7 @@ export class ReportsService {
       this.prisma.auditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
-        include: { user: true },
+        include: { user: { select: { id: true, name: true } } },
       }),
       // 13. System Last Backup
       this.prisma.systemSetting.findUnique({
@@ -1774,6 +1776,7 @@ export class ReportsService {
   // ─── Private Helpers ─────────────────────────────────────────
 
   async getDashboardStats(role: string, warehouseId: string) {
+    try {
     const { currency, currencySymbol } = await this.getBaseCurrencyConfig();
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
@@ -1917,7 +1920,7 @@ export class ReportsService {
       this.prisma.auditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
-        include: { user: true },
+        include: { user: { select: { id: true, name: true } } },
       }),
       this.prisma.lot.findMany({
         where: {
@@ -1932,16 +1935,22 @@ export class ReportsService {
             },
           },
         },
-        include: {
+        select: {
+          id: true,
+          lotNumber: true,
+          expiryDate: true,
+          itemId: true,
           item: {
-            include: {
-              unitOfMeasure: true,
+            select: {
+              name: true,
+              unitOfMeasure: { select: { code: true } },
             },
           },
           warehouseItemLots: {
             where: { warehouseId },
-            include: {
-              warehouse: true,
+            select: {
+              qtyOnHand: true,
+              warehouse: { select: { name: true } },
             },
           },
         },
@@ -1949,12 +1958,18 @@ export class ReportsService {
       }),
       this.prisma.purchaseRequest.findMany({
         where: { warehouseId, status: 'SUBMITTED' },
-        include: {
+        select: {
+          id: true,
+          requestNumber: true,
+          status: true,
+          createdAt: true,
+          warehouseId: true,
           warehouse: { select: { name: true } },
           lines: {
-            include: {
+            select: {
+              quantity: true,
               item: {
-                include: {
+                select: {
                   warehouseItems: {
                     where: { warehouseId },
                     select: { wac: true },
@@ -1966,9 +1981,8 @@ export class ReportsService {
         },
         take: 5,
       }),
-      this.prisma.outboxEvent.count({
-        where: { deadLettered: true },
-      }),
+      // Scoped dead-lettered count (safe - column may not exist in older DBs)
+      this.prisma.outboxEvent.count({ where: { deadLettered: true } }).catch(() => 0),
       this.prisma.inventoryIssue.findMany({
         where: {
           warehouseId,
@@ -1981,7 +1995,9 @@ export class ReportsService {
       }),
       this.prisma.supplier.findMany({
         where: { isActive: true },
-        include: {
+        select: {
+          name: true,
+          isActive: true,
           purchaseOrders: {
             include: {
               goodsReceivedNotes: {
@@ -2353,6 +2369,12 @@ export class ReportsService {
       lastBackupTimestamp:
         lastBackupSetting?.value || (await this.getFilesystemLastBackup()),
     };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
+      this.logger.error(`[getDashboardStats] FAILED for warehouseId=${warehouseId}: ${message}`, stack);
+      throw err;
+    }
   }
 
   async getKitchenChiefDashboardStats(departmentId: string) {
