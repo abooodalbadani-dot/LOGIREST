@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title,
       description,
-      url: defaultUrl,
+      url: 'https://otantikrestaurant.tech',
       siteName: 'Otantik Restaurant ERP',
       images: [
         {

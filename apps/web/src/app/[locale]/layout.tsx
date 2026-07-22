@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'مطاعم أوتانتك | Otantik Restaurant',
         description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
-        url: defaultUrl,
+        url: 'https://otantikrestaurant.tech',
         siteName: 'Otantik Restaurant ERP',
         images: [
             {
