@@ -342,13 +342,13 @@ export function SmartCombobox<T extends ComboboxItem>({
       <PopoverPrimitive.Popup
        style={{ width: 'var(--anchor-width, var(--radix-popover-trigger-width, auto))', minWidth: '280px' }}
        className={cn(
-        "z-[9999] w-[var(--radix-popover-trigger-width)] bg-surface-container-highest rounded-2xl border border-surface-container-high/60 shadow-2xl p-3 flex flex-col gap-3 backdrop-blur-md overflow-hidden max-h-[350px] outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+        "z-[9999] w-[var(--radix-popover-trigger-width)] bg-card text-card-foreground rounded-2xl border border-border shadow-2xl p-3 flex flex-col gap-3 backdrop-blur-md overflow-hidden max-h-[350px] outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
         isRTL ? "origin-top-right" : "origin-top-left"
        )}
       >
        {/* Search Header */}
        <div className="relative flex items-center">
-        <Search className={cn("absolute w-4 h-4 text-muted-foreground/30", isRTL ? "right-4" : "left-4")} />
+        <Search className={cn("absolute w-4 h-4 text-muted-foreground/50", isRTL ? "right-4" : "left-4")} />
         <Input
          ref={inputRef}
          type="text"
@@ -356,7 +356,7 @@ export function SmartCombobox<T extends ComboboxItem>({
          onChange={(e) => setSearchQuery(e.target.value)}
          placeholder={isRTL ? "البحث بالاسم، الرمز..." : "Search by name, code..."}
          className={cn(
-          "w-full bg-card border border-border shadow-sm/40 rounded-xl h-11 text-body-md font-medium border-none outline-none focus:bg-card border border-border shadow-sm/80 transition-all",
+          "w-full bg-muted/40 border border-border shadow-sm rounded-xl h-11 text-body-md font-medium outline-none focus:border-brand-gold transition-all",
           isRTL ? "pr-11 pl-10 text-right" : "pl-11 pr-10 text-left"
          )}
         />

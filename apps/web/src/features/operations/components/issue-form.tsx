@@ -427,7 +427,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         {isWarehouseLocked && <div className="px-6 lg:px-10 pt-4"><LockBanner lockState={lockState} /></div>}
 
         <DocumentLockWrapper isLocked={effectiveIsLocked} className="flex-1 flex flex-col">
-          <div className="flex-1 w-full min-h-[calc(100vh-280px)] bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl mb-6">
+          <div className="flex-1 w-full min-h-[calc(100vh-280px)] bg-card text-card-foreground border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl mb-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
               {/* Left side (Table) */}
               <div className="lg:col-span-2 flex flex-col gap-6 w-full">

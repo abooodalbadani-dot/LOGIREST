@@ -504,7 +504,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       <Form {...form}>
         <form className="flex-1 w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-8 py-4 md:py-8 space-y-8">
           <DocumentLockWrapper isLocked={isFormDisabled}>
-            <div className="space-y-6 md:space-y-10 w-full bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative transition-all duration-200">
+            <div className="space-y-6 md:space-y-10 w-full bg-card text-card-foreground border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <h3 className="text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-3">

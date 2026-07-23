@@ -498,7 +498,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         <DocumentLockBanner isLocked={isLocked} status={status} />
 
         <div className="px-0 sm:px-6 md:px-8 pt-0 sm:pt-6 md:pt-8 max-w-6xl mx-auto w-full">
-          <div className="bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative">
+          <div className="bg-card text-card-foreground border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative">
             <div className="flex flex-wrap items-center justify-between pb-6 mb-6 gap-4 min-w-0 w-full">
               <h3 className="text-lg md:text-title-lg font-semibold text-operational-cyan uppercase truncate flex-1 min-w-0">
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
