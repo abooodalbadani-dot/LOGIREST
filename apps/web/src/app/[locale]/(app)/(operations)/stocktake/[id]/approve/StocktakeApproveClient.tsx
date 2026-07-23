@@ -185,9 +185,9 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       >
         <ArrowLeft className="w-6 h-6 rtl:rotate-180" />
       </Link>
-      <div className="flex flex-col items-start gap-1">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-foreground tracking-tight uppercase">
+      <div className="flex flex-col items-start gap-1 min-w-0 max-w-full overflow-hidden">
+        <div className="flex items-center gap-3 min-w-0 max-w-full overflow-hidden">
+          <h1 dir="ltr" className="text-base sm:text-2xl font-bold text-foreground tracking-tight uppercase truncate break-all max-w-full">
             {session.sessionName}
           </h1>
           {/* TAMED BADGE */}

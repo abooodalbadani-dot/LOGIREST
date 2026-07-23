@@ -42,7 +42,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
       <div className="sticky top-0 z-50 w-full glass-header">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex flex-col">
             <Breadcrumb
               items={[

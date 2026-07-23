@@ -100,14 +100,16 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
       {/* Sticky Glass Header */}
       <StickyGlassHeader
         title={
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
             <Breadcrumb
               items={[
                 { label: t('title'), href: `/stocktake` },
                 { label: session.sessionName },
               ]}
             />
-            <span>{session.sessionName}</span>
+            <span dir="ltr" className="text-base sm:text-2xl font-extrabold text-foreground tracking-tight uppercase truncate max-w-full text-start">
+              {session.sessionName}
+            </span>
           </div>
         }
         statusBadge={

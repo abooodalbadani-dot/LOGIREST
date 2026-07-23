@@ -25,12 +25,12 @@ export function StickyGlassHeader({
  return (
   <div
    className={cn(
-    'flex flex-col md:flex-row justify-between items-start md:items-center p-4 gap-4 bg-white dark:bg-card rounded-none sm:rounded-xl border-y border-x-0 sm:border border-gray-100 dark:border-gray-800 overflow-hidden print:hidden',
+    'flex flex-col md:flex-row justify-between items-start md:items-center p-4 gap-4 bg-card rounded-none sm:rounded-xl border-y border-x-0 sm:border border-border overflow-hidden print:hidden max-w-full min-w-0',
     isEditing && 'border-s-4 border-s-primary',
     className,
    )}
   >
-   <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto min-w-0">
+   <div className="flex items-center gap-3 sm:gap-4 overflow-hidden w-full md:w-auto min-w-0 max-w-full">
     {onBack && (
      <Button
       variant="ghost"
@@ -41,12 +41,18 @@ export function StickyGlassHeader({
       <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
      </Button>
     )}
-    <div className="flex flex-col min-w-0 flex-1">
-     <h1 className="text-2xl font-extrabold text-foreground tracking-tight uppercase truncate">
-      {title}
-     </h1>
+    <div className="flex flex-col min-w-0 flex-1 overflow-hidden max-w-full">
+     {React.isValidElement(title) ? (
+      <div className="min-w-0 max-w-full overflow-hidden text-foreground">
+       {title}
+      </div>
+     ) : (
+      <h1 className="text-base sm:text-2xl font-extrabold text-foreground tracking-tight uppercase truncate break-all max-w-full">
+       {title}
+      </h1>
+     )}
      {statusBadge && (
-      <div className="flex items-center gap-2 mt-0.5">
+      <div className="flex items-center gap-2 mt-0.5 min-w-0 max-w-full">
        {statusBadge}
       </div>
      )}

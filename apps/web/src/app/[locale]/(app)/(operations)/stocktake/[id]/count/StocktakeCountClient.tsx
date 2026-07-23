@@ -333,7 +333,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                 <h1 className="text-2xl font-black text-[#0B1220] dark:text-white uppercase tracking-tight">
                   STOCKTAKE
                 </h1>
-                <span dir="ltr" className="font-mono text-sm font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg w-fit">
+                <span dir="ltr" className="font-mono text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg w-fit truncate max-w-full break-all">
                   {session.sessionName}
                 </span>
               </div>
