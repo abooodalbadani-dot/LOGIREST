@@ -18,7 +18,7 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
-import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History, RotateCcw, X } from 'lucide-react';
+import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History, RotateCcw, X, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 import { PageHeader } from '@/components/shared/PageHeader';

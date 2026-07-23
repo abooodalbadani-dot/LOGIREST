@@ -431,10 +431,10 @@ export function DocumentLineItemTable<T extends LineItem>({
                     data-index={virtualRow.index}
                     className={cn(
                       layoutMode === 'two-tier'
-                        ? "flex flex-col md:grid md:grid-cols-12 gap-4 p-5 mb-4 border border-[#b48e67]/20 hover:border-[#b48e67]/40 bg-[#0B1220] rounded-2xl shadow-lg transition-all w-full items-center"
+                        ? "flex flex-col md:grid md:grid-cols-12 gap-4 p-5 mb-4 border border-brand-gold/20 hover:border-brand-gold/40 bg-card rounded-2xl shadow-lg transition-all w-full items-center"
                         : noCollapse
                           ? "border-b border-border last:border-0 hover:bg-muted/50 transition-colors group table-row"
-                          : "border-b border-border last:border-0 hover:bg-muted/50 transition-colors group flex flex-col border-b border-[#b48e67]/10 w-full md:table-row md:border-b md:border-border/50 md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none",
+                          : "border-b border-border last:border-0 hover:bg-muted/50 transition-colors group flex flex-col border-b border-brand-gold/10 w-full md:table-row md:border-b md:border-border/50 md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none",
                       rowClassName?.(line, idx)
                     )}
                     style={layoutMode === 'two-tier' ? {} : { minHeight: `${dense ? 48 : 64}px` }}
@@ -447,7 +447,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                             {line.item.image ? (
                               <img src={line.item.image} alt="Product" className="w-12 h-12 object-cover rounded-lg border border-gray-750 shrink-0" />
                             ) : (
-                              <div className="w-12 h-12 bg-surface-container flex items-center justify-center rounded-lg border border-gray-750 text-xs text-muted-foreground font-mono shrink-0">
+                              <div className="w-15 h-15 bg-surface-container flex items-center justify-center rounded-lg border border-gray-750 text-xs text-muted-foreground font-mono shrink-0">
                                 N/A
                               </div>
                             )}
@@ -460,7 +460,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                   {line.item.code}
                                 </span>
                                 {hideUomColumn && (
-                                  <span className="text-[10px] bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
+                                  <span className="text-[10px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
                                     {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
                                   </span>
                                 )}
@@ -578,6 +578,11 @@ export function DocumentLineItemTable<T extends LineItem>({
                                     </span>
                                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0">
                                       <span className="font-mono tracking-wider uppercase" dir="ltr">{line.item.code}</span>
+                                      {hideUomColumn && (
+                                        <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                                          {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                        </span>
+                                      )}
                                     </div>
                                     {renderItemDescription && (
                                       <div className="mt-1">
@@ -1050,23 +1055,33 @@ export function DocumentLineItemTable<T extends LineItem>({
                                     </span>
                                     {renderItemDescription?.(line as T)}
                                   </div>
+                                  {mobileLayoutPattern === 'elegant' && (
+                                    <div className="flex flex-col items-end justify-center shrink-0 ms-3">
+                                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{h.qty}</span>
+                                      {renderQty ? renderQty(line) : (
+                                        <div className="text-xl font-black text-foreground font-mono leading-none" dir="ltr">{line.qty}</div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* The Inner Sunken Box (Inputs & Lots) */}
                                 <div className="bg-slate-50 dark:bg-slate-900/40 border border-border/50 rounded-lg p-3 mb-4 flex flex-col gap-3">
                                   {/* QTY Row */}
-                                  <div className="flex flex-col gap-1.5 w-full">
-                                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{h.qty}</span>
-                                    <div className="w-full">
-                                      {renderQty ? renderQty(line) : (
-                                        <div className="text-sm font-black text-foreground font-mono" dir="ltr">{line.qty}</div>
-                                      )}
+                                  {mobileLayoutPattern !== 'elegant' && (
+                                    <div className="flex flex-col gap-1.5 w-full">
+                                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{h.qty}</span>
+                                      <div className="w-full">
+                                        {renderQty ? renderQty(line) : (
+                                          <div className="text-sm font-black text-foreground font-mono" dir="ltr">{line.qty}</div>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
+                                  )}
 
                                   {/* Extra Columns (if any that are not actions) */}
                                   {extraColumns.filter(col => !col.header.toLowerCase().includes('action') && !col.header.toLowerCase().includes('sync') && !col.header.toLowerCase().includes('print')).length > 0 && (
-                                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/30 mt-1">
+                                    <div className={cn("grid grid-cols-2 gap-3", mobileLayoutPattern !== 'elegant' && "pt-3 border-t border-border/30 mt-1")}>
                                       {extraColumns.filter(col => !col.header.toLowerCase().includes('action') && !col.header.toLowerCase().includes('sync') && !col.header.toLowerCase().includes('print')).map((col, i) => (
                                         <div key={i} className={cn("flex flex-col gap-1.5 w-full", col.header.toLowerCase().includes('status') ? "col-span-2" : "col-span-1")}>
                                           <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{col.header}</span>
@@ -1238,7 +1253,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   rowClassName?.(line, idx),
                   noCollapse
                     ? "table-row"
-                    : "flex flex-col border-b border-[#b48e67]/10 w-full md:table-row md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none"
+                    : "flex flex-col border-b border-brand-gold/10 w-full md:table-row md:bg-transparent md:p-0 md:mb-0 md:rounded-none shadow-none"
                 )}
               >
                 {/* Mobile card layout */}
@@ -1710,7 +1725,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                         <div className="flex justify-between items-start mb-2">
                           <span className="text-[11px] font-mono text-muted-foreground tracking-wider uppercase" dir="ltr">{line.item.code}</span>
                           {!hideUomColumn && (
-                            <span className="text-[10px] bg-secondary/50 text-secondary-foreground px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
+                            <span className="text-[10px] bg-accent text-accent-foreground px-2 py-0.5 rounded font-semibold uppercase tracking-wider">
                               {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
                             </span>
                           )}
@@ -1731,23 +1746,33 @@ export function DocumentLineItemTable<T extends LineItem>({
                             </span>
                             {renderItemDescription?.(line as T)}
                           </div>
+                          {mobileLayoutPattern === 'elegant' && (
+                            <div className="flex flex-col items-end justify-center shrink-0 ms-3">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{h.qty}</span>
+                              {renderQty ? renderQty(line) : (
+                                <div className="text-xl font-black text-primary font-mono leading-none" dir="ltr">{line.qty}</div>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* The Inner Sunken Box (Inputs & Lots) */}
                         <div className="bg-slate-50 dark:bg-slate-900/40 border border-border/50 rounded-lg p-3 mb-4 flex flex-col gap-3">
                           {/* QTY Row */}
-                          <div className="flex flex-col gap-1.5 w-full">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{h.qty}</span>
-                            <div className="w-full">
-                              {renderQty ? renderQty(line) : (
-                                <div className="text-sm font-black text-foreground font-mono" dir="ltr">{line.qty}</div>
-                              )}
+                          {mobileLayoutPattern !== 'elegant' && (
+                            <div className="flex flex-col gap-1.5 w-full">
+                              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{h.qty}</span>
+                              <div className="w-full">
+                                {renderQty ? renderQty(line) : (
+                                  <div className="text-sm font-black text-foreground font-mono" dir="ltr">{line.qty}</div>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          )}
 
                           {/* Extra Columns (if any that are not actions) */}
                           {extraColumns.filter(col => !col.header.toLowerCase().includes('action') && !col.header.toLowerCase().includes('sync') && !col.header.toLowerCase().includes('print')).length > 0 && (
-                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/30 mt-1">
+                            <div className={cn("grid grid-cols-2 gap-3", mobileLayoutPattern !== 'elegant' && "pt-3 border-t border-border/30 mt-1")}>
                               {extraColumns.filter(col => !col.header.toLowerCase().includes('action') && !col.header.toLowerCase().includes('sync') && !col.header.toLowerCase().includes('print')).map((col, i) => (
                                 <div key={i} className={cn("flex flex-col gap-1.5 w-full", col.header.toLowerCase().includes('status') ? "col-span-2" : "col-span-1")}>
                                   <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{col.header}</span>
@@ -1763,13 +1788,13 @@ export function DocumentLineItemTable<T extends LineItem>({
                           {!hideLotColumns && (line.lot || line.lotAllocations?.length ? (
                             <div className="flex flex-col gap-1.5 pt-3 border-t border-border/30 mt-1">
                               <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{h.lot}</span>
-                              <div className="font-mono text-sm text-foreground">
+                              <div className="font-mono text-sm text-primary">
                                 {line.lot ? (
                                   <span dir="ltr">{line.lot.lotNumber}</span>
                                 ) : line.lotAllocations?.[0]?.lotNumber ? (
                                   <span dir="ltr">{line.lotAllocations.map(a => a.lotNumber).join(', ')}</span>
                                 ) : (
-                                  <span className="text-muted-foreground/50">{tc('no_lot')}</span>
+                                  <span className="text-primary">{tc('no_lot')}</span>
                                 )}
                               </div>
                             </div>

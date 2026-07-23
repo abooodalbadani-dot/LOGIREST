@@ -21,6 +21,7 @@ interface ScanInputProps<T extends ComboboxItem = ComboboxItem> {
     className?: string;
     onCameraActivate?: () => void;
     enableCameraScan?: boolean;
+    actions?: React.ReactNode;
     scanStatus?: "idle" | "success" | "error";
     statusMessage?: string;
     isScanning?: boolean;
@@ -66,6 +67,7 @@ export const ScanInput = forwardRef(
             onCameraActivate,
             enableCameraScan = true,
             size = "md",
+            actions,
             label,
             autoFocus = true,
             latencyThreshold,
@@ -255,6 +257,7 @@ export const ScanInput = forwardRef(
                                 ref={inputRef}
                                 type="text"
                                 dir="ltr"
+                                value={value !== undefined ? value : undefined}
                                 disabled={disabled || isScanning}
                                 readOnly={readOnly}
                                 placeholder={placeholder || tc('scan_placeholder')}
@@ -275,6 +278,7 @@ export const ScanInput = forwardRef(
                                 {(!readOnly) && (items || onManualTrigger) && (
                                     <button
                                         type="button"
+                                        disabled={disabled}
                                         onClick={() => {
                                             if (items) {
                                                 setIsManual(prev => !prev);
@@ -283,8 +287,10 @@ export const ScanInput = forwardRef(
                                             }
                                         }}
                                         className={cn(
-                                            "transition-all whitespace-nowrap flex items-center gap-2 active:scale-95 group/btn",
+                                            "transition-all whitespace-nowrap flex items-center gap-2 group/btn",
                                             "bg-operational-cyan/10 border-2 border-operational-cyan/30 hover:border-operational-cyan hover:bg-operational-cyan text-operational-cyan hover:text-white rounded-sm font-black uppercase shadow-sm",
+                                            !disabled && "active:scale-95",
+                                            disabled && "opacity-50 cursor-not-allowed hover:bg-operational-cyan/10 hover:border-operational-cyan/30 hover:text-operational-cyan",
                                             config.button
                                         )}
                                     >
@@ -305,10 +311,13 @@ export const ScanInput = forwardRef(
                                 {enableCameraScan && !readOnly && (
                                     <button
                                         type="button"
+                                        disabled={disabled}
                                         onClick={handleCameraClick}
                                         className={cn(
-                                            "transition-all active:scale-95",
-                                            "p-2 w-10 h-10 flex items-center justify-center text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-sm",
+                                            "transition-all",
+                                            "p-2 w-10 h-10 flex items-center justify-center rounded-sm",
+                                            !disabled && "active:scale-95 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10",
+                                            disabled && "opacity-50 cursor-not-allowed text-muted-foreground/60"
                                         )}
                                     >
                                         <Camera className={cn("transition-transform", config.buttonIcon)} />
@@ -331,6 +340,7 @@ export const ScanInput = forwardRef(
                                 {(!readOnly) && (items || onManualTrigger) && (
                                     <button
                                         type="button"
+                                        disabled={disabled}
                                         onClick={() => {
                                             if (items) {
                                                 setIsManual(prev => !prev);
@@ -338,7 +348,11 @@ export const ScanInput = forwardRef(
                                                 onManualTrigger();
                                             }
                                         }}
-                                        className="h-8 px-2.5 bg-transparent hover:bg-gray-200/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-semibold rounded-md transition-colors text-xs flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 group/btn"
+                                        className={cn(
+                                            "h-8 px-2.5 bg-transparent font-semibold rounded-md transition-colors text-xs flex items-center justify-center gap-1.5 whitespace-nowrap group/btn",
+                                            !disabled && "hover:bg-gray-200/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95",
+                                            disabled && "opacity-50 cursor-not-allowed text-gray-600 dark:text-gray-400"
+                                        )}
                                     >
                                         {isManual ? (
                                             <>
@@ -357,13 +371,19 @@ export const ScanInput = forwardRef(
                                 {enableCameraScan && !readOnly && (
                                     <button
                                         type="button"
+                                        disabled={disabled}
                                         onClick={handleCameraClick}
-                                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary dark:text-gray-500 dark:hover:text-primary hover:bg-gray-200/50 dark:hover:bg-gray-800/50 rounded-md transition-all active:scale-95"
+                                        className={cn(
+                                            "w-8 h-8 flex items-center justify-center rounded-md transition-all",
+                                            !disabled && "text-gray-400 hover:text-primary dark:text-gray-500 dark:hover:text-primary hover:bg-gray-200/50 dark:hover:bg-gray-800/50 active:scale-95",
+                                            disabled && "opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-500"
+                                        )}
                                         title={locale === 'ar' ? 'مسح بالكاميرا' : 'Camera Scan'}
                                     >
                                         <Camera className="w-4.5 h-4.5" />
                                     </button>
                                 )}
+                                {actions}
                             </div>
                         )}
 

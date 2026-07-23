@@ -14,11 +14,16 @@ import {
   History,
   AlertCircle,
   Database,
-  Printer
+  Printer,
+  Camera,
+  ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CameraBarcodeScanner } from '@/components/shared/CameraBarcodeScanner';
+import { audioAlerts } from '@/utils/audio';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useItems } from '@/features/items/hooks/useItems';
@@ -31,6 +36,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ClientDate } from '@/components/shared/ClientDate';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useRouter } from '@/i18n/navigation';
 
 interface MappingEntry {
   id: string;
@@ -42,12 +48,14 @@ interface MappingEntry {
 export function BarcodeMappingClient({ locale }: { locale: string }) {
   const tc = useTranslations('common');
   const t = useTranslations('master_data.barcode_mapping');
+  const router = useRouter();
 
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [scannedCode, setScannedCode] = useState('');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [mappingHistory, setMappingHistory] = useState<MappingEntry[]>([]);
 
   const { data: itemsData, isLoading: isLoadingItems } = useItems({ search: debouncedSearch || undefined });
@@ -156,6 +164,9 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
         className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
       >
         <div className="space-y-1">
+          <button type="button" onClick={() => router.push('/master-data/barcodes')} className="w-10 h-10 flex items-center justify-center bg-card hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 border border-border/60 shadow-sm">
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+          </button>
           <Breadcrumb
             items={[
               { label: tc('home'), href: `/dashboard` },
@@ -261,13 +272,13 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                     placeholder={t('placeholders.scan_here')}
                     value={scannedCode}
                     onChange={(e) => setScannedCode(e.target.value)}
-                    className="w-full h-12 px-12 text-lg tracking-widest text-start font-mono bg-background border border-border text-foreground focus:border-brand-gold shadow-sm"
+                    className="w-full h-12 px-12 text-lg tracking-widest text-start font-mono bg-background border border-border text-foreground focus:border-brand-gold shadow-sm pr-[50px]"
                     autoFocus
                   />
                   <BarcodeIcon className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/30 group-focus-within:text-operational-cyan transition-colors" />
 
                   <AnimatePresence>
-                    {scannedCode && (
+                    {scannedCode ? (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -276,6 +287,17 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                         className="absolute end-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-red-500 transition-colors"
                       >
                         <XCircle className="w-5 h-5" />
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        onClick={() => setIsCameraOpen(true)}
+                        className="absolute end-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-foreground transition-colors"
+                        title={locale === 'ar' ? 'مسح بالكاميرا' : 'Camera Scan'}
+                      >
+                        <Camera className="w-5 h-5" />
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -539,6 +561,28 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
           </motion.div>
         </div>
       </div>
+
+      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+        <DialogContent className="w-[min(440px,95vw)] bg-card border border-border shadow-lg p-0 rounded-2xl overflow-hidden">
+          <DialogHeader className="px-6 pt-5 pb-4 border-b border-border">
+            <DialogTitle className="text-label-sm font-bold uppercase text-foreground flex items-center gap-2">
+              <ScanLine className="w-5 h-5 text-primary shrink-0" />
+              {locale === 'ar' ? 'مسح الباركود بالكاميرا' : 'Camera Barcode Scan'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="w-full">
+            {isCameraOpen && (
+              <CameraBarcodeScanner
+                onScanSuccess={(barcode) => {
+                  audioAlerts.playScanSuccess();
+                  setScannedCode(barcode);
+                  setIsCameraOpen(false);
+                }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

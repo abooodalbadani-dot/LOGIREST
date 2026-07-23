@@ -185,7 +185,7 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
                   .then(result => {
                     if (active) stableOnScanSuccess(result);
                   })
-                  .catch(() => {})
+                  .catch(() => { })
                   .finally(() => {
                     scanning = false;
                   });
@@ -215,7 +215,7 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
   }, [stableOnScanSuccess]);
 
   return (
-    <div className={cn('w-full bg-black overflow-hidden relative', className || 'h-72')}>
+    <div className={cn('w-full bg-card overflow-hidden relative', className || 'h-72')}>
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
@@ -225,7 +225,7 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
       />
 
       {isInitializing && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 z-20 text-white gap-3 p-4">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-card z-20 text-foreground gap-3 p-4">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-xs font-semibold tracking-wider animate-pulse">
             {translateSafe('loading_camera', 'Initializing Camera Feed...')}
@@ -234,19 +234,19 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
       )}
 
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 z-20 text-white gap-4 p-6 text-center">
-          <div className="p-3 bg-red-500/10 text-red-500 rounded-full border border-red-500/20">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-container-high/95 z-20 gap-4 p-6 text-center backdrop-blur-sm">
+          <div className="p-3 bg-destructive/10 text-destructive rounded-full border border-destructive/20">
             <AlertTriangle className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-bold text-sm text-red-500">{translateSafe('camera_error', 'Camera Connection Failed')}</h4>
-            <p className="text-[11px] text-gray-400 max-w-2xl">{error}</p>
+            <h4 className="font-bold text-sm text-destructive">{translateSafe('camera_error', 'Camera Connection Failed')}</h4>
+            <p className="text-[11px] text-muted-foreground max-w-2xl">{error}</p>
           </div>
         </div>
       )}
 
       {!isInitializing && !error && (
-        <div className="absolute inset-0 pointer-events-none border border-white/5 z-10 flex items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none border border-border z-10 flex items-center justify-center">
           <div className="absolute w-[250px] h-[250px] max-w-[70%] max-h-[70%] border border-primary/20 rounded-xl flex items-center justify-center pointer-events-none">
             <div className="w-full h-0.5 bg-primary/70 shadow-[0_0_12px_rgba(202,174,133,0.8)] animate-[scan-line_2.2s_infinite]" />
             <div className="absolute left-0 top-0 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />

@@ -18,6 +18,7 @@ import { useUoMs } from '@/features/uoms/hooks/useUoMs';
 import { BarcodeFormSchema, type BarcodeFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Cpu, Link as LinkIcon, Hash, Barcode as BarcodeIcon, Settings2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { apiClient } from '@/infrastructure/api/client';
@@ -222,19 +223,38 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
                 <Label htmlFor="bc-val" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
                   {tb('fields.code')}
                 </Label>
-                <ScanInput
-                  onScan={(val) => setValue('code', val, { shouldValidate: true })}
-                  placeholder={isReadOnly ? "" : tb('scan_or_type')}
-                  disabled={isReadOnly}
-                  size="md"
-                />
+                <div className="relative w-full flex flex-col sm:flex-row items-stretch gap-2">
+                  <div className="flex-1 min-w-0">
+                    <ScanInput
+                      value={currentCode}
+                      onScan={(val) => setValue('code', val, { shouldValidate: true })}
+                      placeholder={isReadOnly ? "" : tb('scan_or_type')}
+                      disabled={isReadOnly}
+                      size="md"
+                      actions={
+                        !isReadOnly && (
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              const generated = 'BAR' + Math.floor(10000000 + Math.random() * 90000000);
+                              setValue('code', generated, { shouldDirty: true, shouldValidate: true });
+                            }}
+                            className="h-8 px-4 text-[10px] sm:text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold uppercase tracking-wider ml-2"
+                          >
+                            {locale === 'ar' ? 'توليد' : 'Generate'}
+                          </Button>
+                        )
+                      }
+                    />
+                  </div>
+                </div>
                 <Input type="hidden" {...register('code')} />
                 {errors.code && <p className="text-xs text-red-500 mt-1">{tv(errors.code.message as never)}</p>}
               </div>
             </div>
 
             {currentCode && (
-              <div className="p-4 bg-surface-container-highest/20 rounded-md border border-status-secondary/10 flex items-center justify-between group max-w-md">
+              <div className="p-4 bg-surface-container-highest/20 rounded-md border border-status-secondary/10 flex items-center justify-between group max-w-full">
                 <div className="flex items-center gap-3">
                   <BarcodeIcon className="w-5 h-5 text-status-secondary/50" />
                   <div>

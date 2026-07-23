@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
-import { Save, Warehouse, PackagePlus, Sparkles } from 'lucide-react';
+import { Save, Warehouse, PackagePlus, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -79,11 +79,13 @@ function TransferLineNotesCell({ locale, lineId, notes, onChange }: TransferLine
 interface TransferLineQtyCellProps {
   lineId: string;
   qty: number;
+  availableQty: number;
   isExceeded: boolean;
   onChange: (val: number) => void;
+  locale: string;
 }
 
-function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLineQtyCellProps) {
+function TransferLineQtyCell({ lineId, qty, availableQty, isExceeded, onChange, locale }: TransferLineQtyCellProps) {
   const [localQty, setLocalQty] = useState(qty !== undefined && qty !== null ? String(qty) : '1');
 
   useEffect(() => {
@@ -120,7 +122,7 @@ function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLine
   };
 
   return (
-    <div className="w-28 sm:w-32 mx-auto">
+    <div className="w-28 sm:w-32 mx-auto relative flex flex-col justify-center h-[52px]">
       <Input
         dir="ltr"
         type="text"
@@ -129,10 +131,15 @@ function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLine
         onChange={handleChange}
         onBlur={handleBlur}
         className={cn(
-          "w-full text-center font-black text-lg bg-white dark:bg-card border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all h-10",
-          isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
+          "w-full text-center font-black text-lg bg-white dark:bg-card border border-brand-gold/40 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-lg outline-none transition-all h-10 mt-1",
+          isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error text-status-error"
         )}
       />
+      <div className="absolute -bottom-4 inset-x-0 flex justify-center pointer-events-none">
+        <span className={cn("text-[10px] font-semibold tracking-wide whitespace-nowrap", isExceeded ? "text-status-error font-bold animate-pulse" : "text-muted-foreground/70")}>
+          {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
+        </span>
+      </div>
     </div>
   );
 }
@@ -408,17 +415,19 @@ export function TransferNewClient() {
       <TransferLineQtyCell
         lineId={line.id}
         qty={line.qty}
+        availableQty={availableQty}
         isExceeded={isExceeded}
         onChange={(val) => handleQtyChange(line.id, val)}
+        locale={locale}
       />
     );
-  }, [inventoryBalances?.data, handleQtyChange]);
+  }, [inventoryBalances?.data, handleQtyChange, locale]);
 
   const extraColumns = useMemo(() => [
     {
       header: tCommon('notes'),
-      headerClassName: "w-full min-w-[280px] md:min-w-[380px] text-start",
-      cellClassName: "w-full min-w-[280px] md:min-w-[380px] text-start",
+      headerClassName: "w-full min-w-[200px] text-start",
+      cellClassName: "w-full min-w-[200px] text-start",
       cell: (line: NewTransferLine) => (
         <TransferLineNotesCell
           locale={locale as 'ar' | 'en'}
@@ -459,18 +468,36 @@ export function TransferNewClient() {
       }}
       className="px-0 py-6 sm:p-8 pt-6 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-32"
     >
-      <div className="px-4 sm:px-0 space-y-4">
-        <Breadcrumb
-          items={[
-            { label: tCommon('modules.operations'), href: `/transfers` },
-            { label: t('title'), href: `/transfers` },
-            { label: t('create_new') }
-          ]}
-        />
+      <div className="px-4 sm:px-0 space-y-6 max-w-4xl mx-auto w-full">
+        <div className="flex items-center gap-4">
+            <button type="button" onClick={() => router.push('/transfers')} className="w-10 h-10 flex items-center justify-center bg-card hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 border border-border/60 shadow-sm">
+                <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+            </button>
+            <div className="flex-1">
+                <Breadcrumb
+                items={[
+                    { label: tCommon('modules.operations'), href: `/transfers` },
+                    { label: t('title'), href: `/transfers` },
+                    { label: t('create_new') }
+                ]}
+                />
+            </div>
+        </div>
 
         <PageHeader
           title={t('create_new')}
           subtitle={t('description')}
+          actions={
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={createTransfer.isPending || !isValid || isEitherLocked}
+              className="bg-brand-gold hover:bg-brand-gold/90 text-slate-950 font-bold px-8 h-12 rounded-xl flex items-center gap-2 transition-all shadow-sm"
+            >
+              {createTransfer.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {t('save_transfer')}
+            </Button>
+          }
         />
       </div>
 
@@ -481,22 +508,22 @@ export function TransferNewClient() {
         )}
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        <div className="w-full lg:w-[320px] shrink-0 space-y-8">
-          <div className="bg-card px-4 py-6 sm:p-8 rounded-none sm:rounded-[2.5rem] relative overflow-visible shadow-sm border-y border-x-0 sm:border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-col max-w-4xl mx-auto w-full bg-card rounded-none sm:rounded-2xl relative shadow-lg border border-border/60 overflow-hidden mb-10">
+        
+        {/* Top Section: Parameters */}
+        <div className="p-4 sm:p-8 border-b border-border/40 bg-surface-container-highest/10">
+          <div className="flex items-center gap-3 mb-6">
+            <Warehouse className="w-4 h-4 text-brand-gold" />
+            <h3 className="text-sm font-bold text-foreground">
+              {t('transfer_parameters')}
+            </h3>
+          </div>
 
-            <div className="flex items-center gap-3 mb-6">
-              <Warehouse className="w-4 h-4 text-foreground" />
-              <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
-                {t('transfer_parameters')}
-              </h3>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="from-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
-                  {t('from_warehouse')}
-                </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="space-y-2">
+                  <label htmlFor="from-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
+                    {t('from_warehouse')}
+                  </label>
                 <SmartCombobox
                   items={sourceWarehouseItems}
                   value={fromWarehouseId}
@@ -534,146 +561,102 @@ export function TransferNewClient() {
                   placeholder={t('select_warehouse') || 'Select warehouse...'}
                   triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
                 />
-                {fromWarehouseId && toWarehouseId && fromWarehouseId === toWarehouseId && (
-                  <p className="text-label-xxs font-bold text-status-error uppercase px-1 mt-1">
-                    {t('warehouse_match_error')}
-                  </p>
-                )}
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
+            <div className="space-y-2 mt-6">
+              <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
                   {tCommon('notes')}
                 </label>
-                <textarea
+                <Input
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   placeholder={t('notes_placeholder')}
-                  className="w-full bg-surface-container-highest/40 border border-white/5 rounded-2xl p-4 font-medium text-body-md focus:ring-2 focus:ring-cyan-500/30 transition-all outline-none resize-none min-h-[120px] hover:bg-surface-container-highest/60"
+                  className="w-full bg-surface-container-highest/40 border-none h-11 px-4 text-sm font-medium rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-brand-gold/30 transition-all outline-none hover:bg-surface-container-highest/60"
                 />
+            </div>
+          </div>
+
+        {/* Bottom Section: Line Items */}
+        <div className="p-4 sm:p-8 bg-card">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <PackagePlus className="w-4 h-4 text-brand-gold" />
+              <h3 className="text-sm font-bold text-foreground">
+                {t('items_to_transfer')}
+              </h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSuggestFIFO}
+                disabled={!fromWarehouseId || lines.length === 0 || isSuggestingFIFO}
+                className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 rounded-full border border-amber-500/20 text-amber-500 text-label-xxs font-semibold uppercase transition-all disabled:opacity-30"
+              >
+                <Sparkles className="w-3 h-3" />
+                {isSuggestingFIFO ? (locale === 'ar' ? 'جاري...' : 'Loading...') : (locale === 'ar' ? 'اقتراح FIFO' : 'Suggest FIFO')}
+              </button>
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 rounded-full border border-emerald-500/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-label-xxs font-semibold uppercase text-foreground">
+                  {lines.length} {tCommon('items')}
+                </span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex-1 min-w-0 space-y-6">
-          <div className="bg-card px-4 py-6 sm:p-8 rounded-none sm:rounded-[2.5rem] relative overflow-visible shadow-sm border-y border-x-0 sm:border border-gray-200 dark:border-gray-800">
-
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <PackagePlus className="w-5 h-5 text-foreground" />
-                <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
-                  {t('items_to_transfer')}
-                </h3>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleSuggestFIFO}
-                  disabled={!fromWarehouseId || lines.length === 0 || isSuggestingFIFO}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 rounded-full border border-amber-500/20 text-amber-500 text-label-xxs font-semibold uppercase transition-all disabled:opacity-30"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  {isSuggestingFIFO ? (locale === 'ar' ? 'جاري...' : 'Loading...') : (locale === 'ar' ? 'اقتراح FIFO' : 'Suggest FIFO')}
-                </button>
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 rounded-full border border-emerald-500/20">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-label-xxs font-semibold uppercase text-foreground">
-                    {lines.length} {tCommon('items')}
-                  </span>
-                </div>
-              </div>
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">
+                {locale === 'ar' ? 'مسح الباركود' : 'Barcode Scanner'}
+              </label>
+              <ScanInput
+                onScan={handleAddItem}
+                placeholder={!fromWarehouseId ? (locale === 'ar' ? 'يرجى تحديد مستودع...' : 'Select warehouse...') : (t('scan_item_placeholder') || "Scan barcode...")}
+                className="w-full"
+                variant="standard"
+                scannerMode={true}
+                disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
+              />
             </div>
-
-            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              <div className="space-y-2">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">
-                  {locale === 'ar' ? 'مسح الباركود' : 'Barcode Scanner'}
-                </label>
-                <ScanInput
-                  onScan={handleAddItem}
-                  placeholder={
-                    !fromWarehouseId
-                      ? (locale === 'ar' ? 'يرجى تحديد مستودع المصدر أولاً...' : 'Please select a Source Warehouse first...')
-                      : (t('scan_item_placeholder') || "Scan item barcode...")
-                  }
-                  className="w-full"
-                  variant="standard"
-                  scannerMode={true}
-                  disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">
-                  {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
-                </label>
-                <SmartCombobox
-                  items={allItems}
-                  onSelect={(item) => handleAddItem(item.code)}
-                  getPrimaryLabel={(item) => item.name || ''}
-                  getSecondaryLabel={(item) => {
-                    if (typeof item.qtyAvailable === 'number') {
-                      const uom = typeof item.primaryUom === 'object' && item.primaryUom !== null && 'code' in item.primaryUom ? String(item.primaryUom.code) : '';
-                      return locale === 'ar' ? `المتوفر: ${item.qtyAvailable} ${uom}` : `Available: ${item.qtyAvailable} ${uom}`;
-                    }
-                    return undefined;
-                  }}
-                  placeholder={
-                    !fromWarehouseId
-                      ? (locale === 'ar' ? 'يرجى تحديد مستودع المصدر أولاً...' : 'Please select a Source Warehouse first...')
-                      : (locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...')
-                  }
-                  disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
-                  triggerClassName="bg-background border border-border shadow-sm h-11 px-4 rounded-md text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
-                />
-              </div>
-            </div>
-
-            <div className="bg-card border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 shadow-sm rounded-none sm:rounded-[2rem] overflow-hidden">
-              <DocumentLineItemTable
-                lines={lines}
-                locale={locale}
-                isReadOnly={false}
-                onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
-                hideLotColumns={true}
-                hideUomColumn={true}
-                noCollapse={false}
-                dense={true}
-                mobileLayoutPattern="transfer-form"
-                headers={{
-                  code: tCommon('table_headers.code'),
-                  name: tCommon('table_headers.name'),
-                  qty: tCommon('table_headers.qty'),
-                  uom: tCommon('table_headers.uom'),
-                }}
-                renderItemDescription={(line) => {
-                  const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
-                  const availableQty = balance ? balance.qtyAvailable : 0;
-                  const isExceeded = balance ? line.qty > availableQty : false;
-                  return (
-                    <span className={cn("text-[10px] font-medium tracking-wide block mt-1", isExceeded ? "text-status-error font-bold animate-pulse" : "text-gray-400")}>
-                      {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
-                    </span>
-                  );
-                }}
-                renderQty={renderQty}
-                extraColumns={extraColumns}
+            <div className="space-y-2">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">
+                {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
+              </label>
+              <SmartCombobox
+                items={allItems}
+                onSelect={(item) => handleAddItem(item.code)}
+                getPrimaryLabel={(item) => item.name || ''}
+                placeholder={!fromWarehouseId ? (locale === 'ar' ? 'يرجى تحديد مستودع...' : 'Select warehouse...') : (locale === 'ar' ? 'ابحث عن صنف...' : 'Search item...')}
+                disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
+                triggerClassName="bg-surface-container-highest/40 border-none h-11 px-4 rounded-2xl text-label-xs font-semibold shadow-inner w-full"
               />
             </div>
           </div>
+
+          <div className="border border-border/60 shadow-sm rounded-xl overflow-hidden mt-4">
+            <DocumentLineItemTable
+              lines={lines}
+              locale={locale}
+              isReadOnly={false}
+              onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
+              hideLotColumns={true}
+              hideUomColumn={true}
+              noCollapse={false}
+              dense={false}
+              mobileLayoutPattern="transfer-form"
+              headers={{
+                code: tCommon('table_headers.code'),
+                name: tCommon('table_headers.name'),
+                qty: tCommon('table_headers.qty'),
+                uom: tCommon('table_headers.uom'),
+              }}
+              renderQty={renderQty}
+              extraColumns={extraColumns}
+            />
+          </div>
         </div>
       </div>
-
-      <FormFooter
-        onCancel={() => router.push('/transfers', { skipGuard: true })}
-        onSubmit={handleSave}
-        isSaving={createTransfer.isPending}
-        isDirty={isDirty}
-        isValid={isValid}
-        isLocked={isEitherLocked}
-        saveLabel={t('save_transfer')}
-      />
-
     </form>
   );
 }

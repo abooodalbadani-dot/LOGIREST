@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Camera, ScanLine } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem, useDeleteItem, useNextItemCode } from '@/features/items/hooks/useItems';
@@ -19,6 +20,9 @@ import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
+import { CameraBarcodeScanner } from '@/components/shared/CameraBarcodeScanner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { audioAlerts } from '@/utils/audio';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -59,6 +63,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isAutoPopulated, setIsAutoPopulated] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<ItemFormValues>({
@@ -93,6 +98,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   }, [data, reset]);
 
   const codeValue = useWatch({ control, name: 'code' });
+  const currentBarcode = useWatch({ control, name: 'barcode' });
 
   useEffect(() => {
     if (!id && nextCodeData?.nextCode && !isDirty) {
@@ -318,28 +324,29 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
               <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.barcode')}</Label>
-                <div className="relative w-full min-w-0" dir="ltr">
-                  <Input
-                    id="item-barcode"
-                    dir="ltr"
-                    {...register('barcode')}
+                <div className="relative w-full min-w-0">
+                  <ScanInput
+                    value={currentBarcode}
+                    onScan={(val) => setValue('barcode', val, { shouldValidate: true })}
+                    placeholder={isReadOnly ? "" : ti('fields.barcode')}
                     disabled={isReadOnly}
-                    className="w-full text-start pr-[95px] pl-3 h-10 font-mono"
-                    placeholder={ti('fields.barcode')}
+                    size="md"
+                    actions={
+                      !isReadOnly && (
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const generated = 'BAR' + Math.floor(10000000 + Math.random() * 90000000);
+                            setValue('barcode', generated, { shouldDirty: true, shouldValidate: true });
+                          }}
+                          className="h-8 px-4 text-[10px] sm:text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold uppercase tracking-wider ml-2"
+                        >
+                          {locale === 'ar' ? 'توليد' : 'Generate'}
+                        </Button>
+                      )
+                    }
                   />
-                  {!isReadOnly && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => {
-                        const generated = 'BAR' + Math.floor(10000000 + Math.random() * 90000000);
-                        setValue('barcode', generated, { shouldDirty: true, shouldValidate: true });
-                      }}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10 h-7 px-3 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold"
-                    >
-                      {locale === 'ar' ? 'توليد' : 'Generate'}
-                    </Button>
-                  )}
+                  <Input type="hidden" {...register('barcode')} />
                 </div>
                 {errors.barcode?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.barcode.message as never)}</p>}
               </div>
@@ -635,13 +642,34 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         onConfirm={handleDelete}
-        isLoading={deleteMutation.isPending}
         title={ti('delete_confirm_title')}
         description={ti('delete_confirm_desc')}
         confirmText={t('actions.delete')}
-        variant="destructive"
-        icon="delete"
+        cancelText={t('actions.cancel')}
+        isLoading={deleteMutation.isPending}
       />
+
+      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+        <DialogContent className="w-[min(440px,95vw)] bg-card border border-border shadow-lg p-0 rounded-2xl overflow-hidden">
+          <DialogHeader className="px-6 pt-5 pb-4 border-b border-border">
+            <DialogTitle className="text-label-sm font-bold uppercase text-foreground flex items-center gap-2">
+              <ScanLine className="w-5 h-5 text-primary shrink-0" />
+              {locale === 'ar' ? 'مسح الباركود بالكاميرا' : 'Camera Barcode Scan'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="w-full">
+            {isCameraOpen && (
+              <CameraBarcodeScanner
+                onScanSuccess={(barcode) => {
+                  audioAlerts.playScanSuccess();
+                  setValue('barcode', barcode, { shouldDirty: true, shouldValidate: true });
+                  setIsCameraOpen(false);
+                }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

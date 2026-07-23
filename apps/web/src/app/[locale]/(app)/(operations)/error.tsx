@@ -23,12 +23,12 @@ export default function OperationsError({
 
   return (
     <div className="w-full min-h-[60vh] flex items-center justify-center py-12 px-4 md:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="w-full max-w-3xl mx-auto p-6 md:p-10 flex flex-col items-center justify-center text-center bg-[#1A2234] border border-red-500/30 rounded-xl shadow-lg">
+      <div className="w-full max-w-3xl mx-auto p-6 md:p-10 flex flex-col items-center justify-center text-center bg-card border border-red-500/30 rounded-xl shadow-lg">
         <div className="flex items-center justify-center h-16 w-16 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 mb-4 animate-pulse">
           <AlertCircle className="h-8 w-8" />
         </div>
 
-        <h2 className="text-xl font-bold text-white uppercase tracking-tight">
+        <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">
           {t('operations_title')}
         </h2>
         <p className="w-full text-gray-400 text-sm mt-4 leading-relaxed max-w-3xl">
