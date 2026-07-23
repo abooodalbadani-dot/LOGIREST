@@ -37,6 +37,9 @@ import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Pagination } from '@/components/shared/DataTable/Pagination';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
 
 export function KitchenRequestsListClient({
   initialStatus,
@@ -116,14 +119,32 @@ export function KitchenRequestsListClient({
     { id: KITCHEN_REQUEST_STATUS.FULFILLED, name_en: tc('statuses.fulfilled'), name_ar: tc('statuses.fulfilled') },
   ], [tc]);
 
-  const prevCount = useRef(data?.data?.length ?? 0);
-  useEffect(() => {
-    const currentCount = data?.data?.length ?? 0;
-    if (prevCount.current > 0 && currentCount > prevCount.current) {
-      audioAlerts.playScanSuccess();
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+      if (statusVal) params.set('status', statusVal);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const res = await apiClient.get(`/operations/kitchen-requests?${params.toString()}`, paginatedSchema(z.object({
+        requestNumber: z.string(),
+        status: z.string(),
+        departmentName: z.string().optional().nullable(),
+      })));
+      return (res?.data ?? data?.data ?? []).map(kr => ({
+        requestNumber: kr.requestNumber,
+        status: kr.status,
+        departmentName: kr.departmentName ?? '',
+      }));
+    } catch {
+      return (data?.data ?? []).map(kr => ({
+        requestNumber: kr.requestNumber,
+        status: kr.status,
+        departmentName: kr.departmentName ?? '',
+      }));
     }
-    prevCount.current = currentCount;
-  }, [data?.data?.length]);
+  };
 
   const columns = useMemo<ColumnDef<KitchenRequestSummary>[]>(() => [
     {
@@ -285,6 +306,7 @@ export function KitchenRequestsListClient({
                   ]}
                   filename="kitchen_requests"
                   title={t('title')}
+                  onExportAll={handleExportAll}
                 />
               </div>
             </PermissionGate>

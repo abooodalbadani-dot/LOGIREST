@@ -129,7 +129,7 @@ export const AuditLogEntrySchema = z.object({
   id: z.string(),
   entityType: z.string().nullable().optional().transform((v) => v || 'SYSTEM'),
   entityId: z.string().nullable().optional().transform((v) => v || 'N/A'),
-  action: z.enum(['CREATE', 'UPDATE', 'DELETE', 'POST', 'APPROVE', 'LOGIN', 'LOGOUT']),
+  action: z.string().catch('UPDATE'),
   userId: z.string().nullable().optional().transform((v) => v || 'system'),
   userName: z.string().nullable().optional().transform((v) => v || 'System'),
   changes: z.array(
@@ -138,8 +138,8 @@ export const AuditLogEntrySchema = z.object({
       oldValue: z.unknown().optional(),
       newValue: z.unknown().optional(),
     })
-  ).default([]),
-  createdAt: z.union([z.string(), z.date()]).transform((v) => typeof v === 'string' ? v : v.toISOString()),
+  ).nullable().optional().transform((v) => v || []),
+  createdAt: z.union([z.string(), z.date()]).transform((v) => typeof v === 'string' ? v : (v ? v.toISOString() : new Date().toISOString())),
 });
 
 export const NotificationLogSchema = z.object({

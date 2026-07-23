@@ -13,6 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Plus, ClipboardList, CheckCircle2, Clock, ArrowUpRight, Search, Trash2, X, Building2, User } from 'lucide-react';
 import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
+
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
@@ -39,6 +43,33 @@ export function PRListClient() {
   const debouncedSearch = useDebounce(search, 500);
 
   const { data, isLoading } = usePRList({ status, search: debouncedSearch, page });
+
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+      if (status) params.set('status', status);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const res = await apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(z.object({
+        documentNumber: z.string(),
+        status: z.string(),
+        departmentName: z.string().optional().nullable(),
+      })));
+      return (res?.data ?? data?.data ?? []).map(p => ({
+        requestNumber: p.documentNumber,
+        status: p.status,
+        departmentName: (p as Record<string, unknown>).departmentName ?? '',
+      }));
+    } catch {
+      return (data?.data ?? []).map(p => ({
+        requestNumber: p.documentNumber,
+        status: p.status,
+        departmentName: (p as Record<string, unknown>).departmentName ?? '',
+      }));
+    }
+  };
 
   const statusItems = useMemo(() => [
     { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
@@ -240,6 +271,7 @@ export function PRListClient() {
                   ]}
                   filename="purchase_requests"
                   title={t('title')}
+                  onExportAll={handleExportAll}
                 />
               </div>
             </PermissionGate>

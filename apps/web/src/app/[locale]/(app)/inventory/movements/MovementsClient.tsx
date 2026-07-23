@@ -10,7 +10,9 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { useInventoryMovements } from '@/features/inventory/hooks/useInventoryMovements';
 import { generateExcel } from '@/utils/export';
-import { InventoryMovement } from '@/types/inventory';
+import { InventoryMovement, InventoryMovementSchema } from '@/types/inventory';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 
 import { formatQuantity } from '@/lib/utils';
 import { formatNumber, formatDate } from '@/utils/currency';
@@ -23,19 +25,20 @@ import { ExportMenu } from '@/components/shared/ExportMenu';
 
 const getTypeStyle = (docType: string) => {
  const normalized = docType.toUpperCase();
- if (normalized === 'GRN' || normalized === 'GOODS_RECEIVED_NOTE') {
-  return 'bg-status-success/10 text-status-success';
+ switch (normalized) {
+  case 'RECEIPT':
+  case 'GOODS_RECEIVED_NOTE':
+   return 'bg-status-success/10 text-status-success border-status-success/20';
+  case 'ISSUE':
+  case 'INVENTORY_ISSUE':
+   return 'bg-status-error/10 text-status-error border-status-error/20';
+  case 'TRANSFER':
+   return 'bg-status-info/10 text-status-info border-status-info/20';
+  case 'ADJUSTMENT':
+   return 'bg-status-warning/10 text-status-warning border-status-warning/20';
+  default:
+   return 'bg-muted/50 text-foreground border-border';
  }
- if (normalized === 'ISSUE' || normalized === 'INVENTORY_ISSUE') {
-  return 'bg-status-warning/10 text-status-warning';
- }
- if (normalized === 'TRANSFER') {
-  return 'bg-operational-cyan/10 text-operational-cyan';
- }
- if (normalized === 'ADJUSTMENT') {
-  return 'bg-indigo-500/10 text-indigo-400';
- }
- return 'bg-muted/10 text-muted-foreground';
 };
 
 export default function MovementsClient() {
@@ -44,59 +47,46 @@ export default function MovementsClient() {
  const currentLocale = useLocale();
  const isRtl = currentLocale === 'ar';
 
- const [searchFilter, setSearchFilter] = useState('');
- const [typeFilter, setTypeFilter] = useState('');
  const [page, setPage] = useState(1);
+ const [typeFilter, setTypeFilter] = useState<string>('ALL');
+ const [searchFilter, setSearchFilter] = useState<string>('');
  const debouncedSearch = useDebounce(searchFilter, 300);
 
  const { data, isLoading, isError, error } = useInventoryMovements({
+  page,
+  documentType: typeFilter !== 'ALL' ? typeFilter : undefined,
   search: debouncedSearch || undefined,
-  documentType: typeFilter || undefined,
-  page
  });
 
- const getDocumentPath = useMemo(() => (movement: InventoryMovement): string => {
-  const type = movement.transactionType.toUpperCase();
-  if (type === 'GRN' || type === 'GOODS_RECEIVED_NOTE') {
-   return `/goods-received/${movement.documentId || movement.documentReference}`;
-  }
-  if (type === 'ISSUE' || type === 'INVENTORY_ISSUE') {
-   return `/issues/${movement.documentId || movement.documentReference}`;
-  }
-  if (type === 'TRANSFER') {
-   return `/transfers/${movement.documentId || movement.documentReference}`;
-  }
-  if (type === 'ADJUSTMENT') {
-   return movement.documentReference === 'INITIAL_BALANCE'
-    ? '/adjustments/new?type=INITIAL_BALANCE'
-    : `/adjustments/${movement.documentId || movement.documentReference}`;
-  }
-  if (type === 'STOCKTAKE') {
-   return `/stocktake/${movement.documentId || movement.documentReference}`;
-  }
-  return '#';
+ const getDocumentPath = useMemo(() => {
+  return (type: string, id: string | null) => {
+   if (!id) return '#';
+   const norm = type.toUpperCase();
+   switch (norm) {
+    case 'RECEIPT':
+    case 'GOODS_RECEIVED_NOTE':
+     return `/goods-received/${id}`;
+    case 'ISSUE':
+    case 'INVENTORY_ISSUE':
+     return `/issues/${id}`;
+    case 'TRANSFER':
+     return `/transfers/${id}`;
+    case 'ADJUSTMENT':
+     return `/adjustments/${id}`;
+    default:
+     return '#';
+   }
+  };
  }, []);
 
- const columns = useMemo<ColumnDef<InventoryMovement, unknown>[]>(() => [
+ const columns = useMemo<ColumnDef<InventoryMovement>[]>(() => [
   {
    accessorKey: 'timestamp',
    header: t('posted_at'),
    cell: ({ row }) => (
-    <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/60 tabular-nums">
+    <span dir="ltr" className="text-body-sm font-semibold text-foreground/90 font-mono tracking-tight block text-right rtl:text-right ltr:text-left">
      {formatDate(row.original.timestamp, currentLocale as 'ar' | 'en')}
     </span>
-   ),
-  },
-  {
-   accessorKey: 'documentReference',
-   header: t('document_number'),
-   cell: ({ row }) => (
-    <Link
-     href={getDocumentPath(row.original)}
-     className="text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)] block"
-    >
-     <span dir="ltr">{row.original.documentReference}</span>
-    </Link>
    ),
   },
   {
@@ -155,6 +145,30 @@ export default function MovementsClient() {
    },
   },
  ], [t, currentLocale, getDocumentPath]);
+
+ const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+  try {
+   const params = new URLSearchParams();
+   params.set('page', '1');
+   params.set('limit', '10000');
+   if (searchFilter) params.set('search', searchFilter);
+   if (typeFilter && typeFilter !== 'ALL') params.set('documentType', typeFilter);
+
+   const res = await apiClient.get(`/inventory/movements?${params.toString()}`, paginatedSchema(InventoryMovementSchema));
+   const allMovements = res?.data ?? data?.data ?? [];
+
+   return allMovements.map((item) => ({
+    ...item,
+    createdAt: formatDate(item.timestamp, currentLocale as 'ar' | 'en'),
+   }));
+  } catch (err) {
+   console.error('Failed to fetch all movements for export:', err);
+   return (data?.data ?? []).map((item) => ({
+    ...item,
+    createdAt: formatDate(item.timestamp, currentLocale as 'ar' | 'en'),
+   }));
+  }
+ };
 
  const handleExport = () => {
   if (!data?.data) return;
@@ -301,6 +315,7 @@ export default function MovementsClient() {
         ]}
         filename="inventory_movements"
         title={t('title') || 'Stock Movements'}
+        onExportAll={handleExportAll}
        />
       </div>
      </PermissionGate>
@@ -385,10 +400,10 @@ export default function MovementsClient() {
            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground tabular-nums">
              <span dir="ltr">{formatDate(movement.timestamp, currentLocale as 'ar' | 'en')}</span>
            </div>
-           <Link
-            href={getDocumentPath(movement)}
-            className="text-[10px] font-mono font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
-           >
+            <Link
+             href={getDocumentPath(movement.transactionType, movement.documentId ?? null)}
+             className="text-[10px] font-mono font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
+            >
             <span dir="ltr">{movement.documentReference}</span>
            </Link>
          </div>

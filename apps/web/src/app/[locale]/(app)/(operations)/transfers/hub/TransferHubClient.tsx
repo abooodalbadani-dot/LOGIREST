@@ -23,6 +23,9 @@ import { useLocale } from 'next-intl';
 import { useTransferList, type TransferSummary } from '@/features/operations/hooks/useTransferList';
 import { ExportMenu } from '@/components/shared/ExportMenu';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
 
 export function TransferHubClient() {
   const t = useTranslations('transfers');
@@ -32,6 +35,37 @@ export function TransferHubClient() {
 
   const { data: transfersData, isLoading } = useTransferList();
   const transfers = transfersData?.data || [];
+
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+
+      const res = await apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(z.object({
+        documentNumber: z.string(),
+        transferStatus: z.string().optional(),
+        fromWarehouseName: z.string().optional().nullable(),
+        toWarehouseName: z.string().optional().nullable(),
+        createdAt: z.string().optional(),
+      })));
+      return (res?.data ?? transfers ?? []).map(tr => ({
+        documentNumber: tr.documentNumber,
+        transferStatus: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
+        fromWarehouseName: (tr as Record<string, unknown>).fromWarehouseName ?? '',
+        toWarehouseName: (tr as Record<string, unknown>).toWarehouseName ?? '',
+        createdAt: (tr as Record<string, unknown>).createdAt ?? '',
+      }));
+    } catch {
+      return (transfers ?? []).map(tr => ({
+        documentNumber: tr.documentNumber,
+        transferStatus: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
+        fromWarehouseName: (tr as Record<string, unknown>).fromWarehouseName ?? '',
+        toWarehouseName: (tr as Record<string, unknown>).toWarehouseName ?? '',
+        createdAt: (tr as Record<string, unknown>).createdAt ?? '',
+      }));
+    }
+  };
 
   const exportColumns = useMemo(() => [
     { header: t('doc_number') || 'Doc #', key: 'documentNumber' },
@@ -135,21 +169,20 @@ export function TransferHubClient() {
         title={t('title')}
         subtitle={t('subtitle')}
         children={
-          <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
-            <div className="flex flex-col items-end gap-1  w-full md:w-auto">
-              <PermissionGate action="export" resource="transfer">
-                <ExportMenu
-                  data={(transfers as unknown as Record<string, unknown>[]) || []}
-                  columns={exportColumns}
-                  filename="internal_transfers_hub"
-                  title={t('title') || 'Internal Transfer Hub'}
-                  isCompactMobile={true}
-                />
-              </PermissionGate>
-            </div>
+          <div className="flex items-center gap-3 flex-wrap shrink-0">
+            <PermissionGate action="export" resource="transfer">
+              <ExportMenu
+                data={(transfers as unknown as Record<string, unknown>[]) || []}
+                columns={exportColumns}
+                filename="internal_transfers_hub"
+                title={t('title') || 'Internal Transfer Hub'}
+                isCompactMobile={true}
+                onExportAll={handleExportAll}
+              />
+            </PermissionGate>
             <Button
               onClick={() => router.push('/transfers/new')}
-              className="h-10 w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-bold uppercase rounded-md transition-all shadow-sm shrink-0"
+              className="h-10 w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-bold uppercase rounded-md transition-all shadow-sm shrink-0"
             >
               <ArrowLeftRight className="w-3.5 h-3.5 me-2" />
               <span className="hidden sm:inline">{t('new_transfer')}</span>

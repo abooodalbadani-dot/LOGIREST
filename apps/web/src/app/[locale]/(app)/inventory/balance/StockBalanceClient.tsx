@@ -11,6 +11,10 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBalance';
 import { generateExcel } from '@/utils/export';
 import type { StockBalanceItem } from '@/types/inventory';
+import { StockBalanceItemSchema } from '@/types/inventory';
+import { ExportMenu } from '@/components/shared/ExportMenu';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 
 import { formatNumber, formatCurrency, getCurrencyDisplayName } from '@/utils/currency';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -209,6 +213,27 @@ export default function StockBalanceClient() {
   },
  ], [t, tc, isRtl, currentLocale]);
 
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      if (warehouseFilter && warehouseFilter !== 'all') params.set('warehouse_id', warehouseFilter);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      params.set('page', '1');
+      params.set('limit', '10000');
+
+      const res = await apiClient.get(`/inventory/balance?${params.toString()}`, paginatedSchema(StockBalanceItemSchema));
+      const allRows = res?.data ?? data?.data ?? [];
+      return allRows.map((item) => ({
+        ...item,
+      }));
+    } catch (err) {
+      console.error('Failed to export stock balances:', err);
+      return (data?.data ?? []).map((item) => ({
+        ...item,
+      }));
+    }
+  };
+
  const handleExport = () => {
   if (!data?.data) return;
   const exportColumns = [
@@ -269,14 +294,19 @@ export default function StockBalanceClient() {
          </Button>
         </Link>
        </PermissionGate>
-       <Button 
-        variant="default" 
-        onClick={handleExport}
-        className="px-6 py-2.5 bg-foreground text-background font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-       >
-        <Download className="w-4 h-4 text-background me-3 transition-transform group-hover:-translate-y-0.5" />
-        <span className="text-label-xs font-semibold uppercase">{t('export')}</span>
-       </Button>
+       <ExportMenu
+        data={data?.data as unknown as Record<string, unknown>[] ?? []}
+        columns={[
+         { header: tc('table_headers.code'), key: 'itemCode' },
+         { header: tc('table_headers.name'), key: 'itemName' },
+         { header: tc('warehouse'), key: 'warehouseName' },
+         { header: tc('table_headers.qty'), key: 'qtyOnHand' },
+         { header: tc('table_headers.available'), key: 'qtyAvailable' },
+        ]}
+        filename="stock_balances"
+        title={isRtl ? 'رصيد المخزون' : 'Stock Balances'}
+        onExportAll={handleExportAll}
+       />
       </div>
      </div>
     </div>

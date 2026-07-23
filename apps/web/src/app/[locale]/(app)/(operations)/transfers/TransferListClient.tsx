@@ -25,6 +25,9 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { getStatusConfig } from '@/domain/status-ui-map';
 import { TRANSFER_STATUS, type TransferStatus } from '@logirest/shared-types';
 import { ExportMenu } from '@/components/shared/ExportMenu';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
 
 export function TransferListClient() {
   const t = useTranslations('operations.transfer');
@@ -47,6 +50,36 @@ export function TransferListClient() {
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+      if (status) params.set('status', status);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const res = await apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(z.object({
+        documentNumber: z.string(),
+        transferStatus: z.string().optional(),
+        fromWarehouseName: z.string().optional().nullable(),
+        toWarehouseName: z.string().optional().nullable(),
+      })));
+      return (res?.data ?? data?.data ?? []).map(tr => ({
+        transferNumber: tr.documentNumber,
+        status: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
+        sourceWarehouse: (tr as Record<string, unknown>).fromWarehouseName ?? '',
+        targetWarehouse: (tr as Record<string, unknown>).toWarehouseName ?? '',
+      }));
+    } catch {
+      return (data?.data ?? []).map(tr => ({
+        transferNumber: tr.documentNumber,
+        status: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
+        sourceWarehouse: (tr as Record<string, unknown>).fromWarehouseName ?? '',
+        targetWarehouse: (tr as Record<string, unknown>).toWarehouseName ?? '',
+      }));
+    }
+  };
 
   const sortBy = sorting[0]?.id || undefined;
   const sortDir = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
@@ -303,6 +336,7 @@ export function TransferListClient() {
                   ]}
                   filename="stock_transfers"
                   title={t('title')}
+                  onExportAll={handleExportAll}
                 />
               </div>
             </PermissionGate>

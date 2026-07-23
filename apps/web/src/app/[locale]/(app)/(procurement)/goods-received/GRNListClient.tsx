@@ -24,6 +24,9 @@ import { GRN_STATUS } from '@logirest/shared-types';
 import { ExportMenu } from '@/components/shared/ExportMenu';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
 
 export function GRNListClient({
  initialStatus,
@@ -62,6 +65,33 @@ export function GRNListClient({
 
  const activeStatusQuery = status === 'ALL' || !status ? undefined : status;
  const { data, isLoading } = useGRNList({ status: activeStatusQuery, page, search: debouncedSearch, sortField, sortOrder });
+
+ const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+      if (activeStatusQuery) params.set('status', activeStatusQuery);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const res = await apiClient.get(`/procurement/grns?${params.toString()}`, paginatedSchema(z.object({
+        documentNumber: z.string(),
+        status: z.string(),
+        supplierName: z.string().optional().nullable(),
+      })));
+      return (res?.data ?? data?.data ?? []).map(g => ({
+        documentNumber: g.documentNumber,
+        status: g.status,
+        supplierName: g.supplierName ?? '',
+      }));
+    } catch {
+      return (data?.data ?? []).map(g => ({
+        documentNumber: g.documentNumber,
+        status: g.status,
+        supplierName: g.supplierName ?? '',
+      }));
+    }
+  };
 
  const toggleSort = (field: string) => {
   setSortField(prev => {
@@ -283,6 +313,7 @@ export function GRNListClient({
           ]}
           filename="goods_received"
           title={t('title')}
+          onExportAll={handleExportAll}
          />
         </div>
        </PermissionGate>

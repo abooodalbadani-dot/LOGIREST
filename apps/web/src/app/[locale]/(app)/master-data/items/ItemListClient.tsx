@@ -21,6 +21,9 @@ import { ExportMenu } from '@/components/shared/ExportMenu';
 import { Input } from '@/components/ui/input';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
 
 export function ItemListClient({ locale }: { locale: string }) {
  const t = useTranslations('common');
@@ -31,6 +34,35 @@ export function ItemListClient({ locale }: { locale: string }) {
  const debouncedSearch = useDebounce(search, 300);
 
  const { data, isLoading, isError, refetch } = useItems({ search: debouncedSearch || undefined, page });
+
+ const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+  try {
+   const params = new URLSearchParams();
+   params.set('page', '1');
+   params.set('limit', '10000');
+   if (debouncedSearch) params.set('search', debouncedSearch);
+
+   const res = await apiClient.get(`/master-data/items?${params.toString()}`, paginatedSchema(z.object({
+    code: z.string(),
+    name: z.string(),
+    barcode: z.string().optional().nullable(),
+    isActive: z.boolean().optional(),
+   })));
+   return (res?.data ?? data?.data ?? []).map(item => ({
+    code: item.code,
+    name: item.name,
+    barcode: item.barcode ?? '',
+    isActive: item.isActive ? 'Active' : 'Inactive',
+   }));
+  } catch {
+   return (data?.data ?? []).map(item => ({
+    code: item.code,
+    name: item.name,
+    barcode: item.barcode ?? '',
+    isActive: item.isActive ? 'Active' : 'Inactive',
+   }));
+  }
+ };
 
  const itemExportColumns = useMemo(() => [
   { header: 'Code', key: 'code' },
@@ -229,6 +261,7 @@ export function ItemListClient({ locale }: { locale: string }) {
          columns={itemExportColumns}
          filename="master_data_items"
          title={ti('title')}
+         onExportAll={handleExportAll}
         />
        </div>
       </PermissionGate>

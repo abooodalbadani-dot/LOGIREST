@@ -334,6 +334,9 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             <h2 style={{ margin: 0, fontSize: '14pt', fontWeight: 700, color: '#0B1220', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{displayTitle}</h2>
             <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '4px' }}>{labels.date}: {dateStr}</span>
             {hasValidScope && <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '2px' }}>{labels.scope}: {options.scope}</span>}
+            <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '2px', fontWeight: 600 }}>
+              {lang === 'ar' ? `إجمالي الصفوف: ${rows.length}` : `Total Rows: ${rows.length}`}
+            </span>
           </div>
         </div>
 

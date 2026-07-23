@@ -16,6 +16,11 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
+import { ExportMenu } from '@/components/shared/ExportMenu';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { AuditLogEntrySchema } from '@/types/notifications';
+
 const actionColors: Record<string, string> = {
   CREATE: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
   UPDATE: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
@@ -42,25 +47,41 @@ export function AuditLogsClient() {
  };
  }, [data, t]);
 
- const handleExport = () => {
- if (!data?.data) return;
- generateExcel(
- [
- { header: t('entity_type'), key: 'type', width: 15 },
- { header: t('entity_id'), key: 'id', width: 20 },
- { header: t('action'), key: 'action', width: 15 },
- { header: t('user_name'), key: 'user', width: 20 },
- { header: t('created_at'), key: 'date', width: 20 },
- ],
- data.data.map((entry) => ({
- type: entry.entityType,
- id: entry.entityId,
- action: entry.action,
- user: entry.userName,
- date: format(new Date(entry.createdAt), 'yyyy-MM-dd HH:mm'),
- })),
- tc('actions.audit_log_filename')
- );
+ const formatDateSafe = (dateVal: unknown): string => {
+  if (!dateVal) return '';
+  try {
+    const d = typeof dateVal === 'string' || dateVal instanceof Date ? new Date(dateVal) : null;
+    return d && !isNaN(d.getTime()) ? format(d, 'yyyy-MM-dd HH:mm') : String(dateVal);
+  } catch {
+    return String(dateVal);
+  }
+ };
+
+ const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+  try {
+   const params = new URLSearchParams();
+   params.set('page', '1');
+   params.set('limit', '10000');
+   const res = await apiClient.get(`/admin/audit-logs?${params.toString()}`, paginatedSchema(AuditLogEntrySchema));
+   const allLogs = res?.data ?? data?.data ?? [];
+   return allLogs.map((entry) => ({
+    type: entry.entityType,
+    id: entry.entityId,
+    action: entry.action,
+    user: entry.userName,
+    date: formatDateSafe(entry.createdAt),
+   }));
+  } catch (err) {
+   const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
+   console.error('Failed to export audit logs:', errorMsg);
+   return (data?.data ?? []).map((entry) => ({
+    type: entry.entityType,
+    id: entry.entityId,
+    action: entry.action,
+    user: entry.userName,
+    date: formatDateSafe(entry.createdAt),
+   }));
+  }
  };
 
  const columns = useMemo((): ColumnDef<AuditLogRow, unknown>[] => [
@@ -136,15 +157,21 @@ export function AuditLogsClient() {
  <PageHeader 
  title={t('audit_logs.title')} subtitle={t('audit_logs.client_description')}
  children={
- <PermissionGate action="export" resource="admin_audit_logs">
- <Button 
- onClick={handleExport}
- className="h-11 px-8 bg-surface-container-high hover:bg-surface-container-highest text-white text-label-xs font-semibold uppercase rounded-sm transition-all border border-white/5"
- >
- <Download className="w-3.5 h-3.5 me-2" />
- {t('export')}
- </Button>
- </PermissionGate>
+  <PermissionGate action="export" resource="admin_audit_logs">
+  <ExportMenu
+    data={data?.data as unknown as Record<string, unknown>[] ?? []}
+    columns={[
+      { header: t('entity_type'), key: 'type' },
+      { header: t('entity_id'), key: 'id' },
+      { header: t('action'), key: 'action' },
+      { header: t('user_name'), key: 'user' },
+      { header: t('created_at'), key: 'date' },
+    ]}
+    filename="audit_logs"
+    title={t('audit_logs.title')}
+    onExportAll={handleExportAll}
+  />
+  </PermissionGate>
  }
  />
 

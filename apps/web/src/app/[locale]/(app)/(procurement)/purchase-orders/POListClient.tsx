@@ -14,6 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Plus, ClipboardList, CheckCircle2, Clock, ArrowUpRight, Search, AlertTriangle, Trash2, X } from 'lucide-react';
 import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
 
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
+
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
@@ -21,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 import { type DocumentStatus, isApprovedStatus, isPendingStatus } from '@logirest/shared-types';
 import { PO_STATUS } from '@logirest/shared-types';
@@ -28,7 +33,6 @@ import { formatCurrency } from '@/utils/currency';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';
 import { cn } from '@/lib/utils';
-import { ExportMenu } from '@/components/shared/ExportMenu';
 
 export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
@@ -177,6 +181,33 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const approvedCount = data?.data?.filter(p => isApprovedStatus('PO', p.status as DocumentStatus)).length || 0;
   const pendingCount = data?.data?.filter(p => isPendingStatus('PO', p.status as DocumentStatus)).length || 0;
 
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+      if (status) params.set('status', status);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const res = await apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(z.object({
+        documentNumber: z.string(),
+        status: z.string(),
+        supplierName: z.string().optional().nullable(),
+      })));
+      return (res?.data ?? data?.data ?? []).map(p => ({
+        orderNumber: p.documentNumber,
+        status: p.status,
+        supplierName: p.supplierName ?? '',
+      }));
+    } catch {
+      return (data?.data ?? []).map(p => ({
+        orderNumber: p.documentNumber,
+        status: p.status,
+        supplierName: p.supplierName ?? '',
+      }));
+    }
+  };
+
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div className="space-y-4">
@@ -267,6 +298,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
                   ]}
                   filename="purchase_orders"
                   title={t('title')}
+                  onExportAll={handleExportAll}
                 />
               </div>
             </PermissionGate>

@@ -21,6 +21,9 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Search, ArrowUpRight, Activity, FileText, ClipboardCheck, ChevronRight } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ExportMenu } from '@/components/shared/ExportMenu';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
 
 import { Input } from '@/components/ui/input';
 import { isIssueDraft, isIssuePosted } from '@/domain/status-guards';
@@ -61,6 +64,33 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
         page: initialPage,
         search: debouncedSearch || undefined,
     });
+
+    const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+        try {
+            const params = new URLSearchParams();
+            params.set('page', '1');
+            params.set('limit', '10000');
+            if (initialStatus) params.set('status', initialStatus);
+            if (debouncedSearch) params.set('search', debouncedSearch);
+
+            const res = await apiClient.get(`/operations/issues?${params.toString()}`, paginatedSchema(z.object({
+                documentNumber: z.string(),
+                status: z.string(),
+                warehouseName: z.string().optional().nullable(),
+            })));
+            return (res?.data ?? data?.data ?? []).map(iss => ({
+                documentNumber: iss.documentNumber,
+                status: iss.status,
+                warehouseName: iss.warehouseName ?? '',
+            }));
+        } catch {
+            return (data?.data ?? []).map(iss => ({
+                documentNumber: iss.documentNumber,
+                status: iss.status,
+                warehouseName: iss.warehouseName ?? '',
+            }));
+        }
+    };
 
     const handleStatusChange = (val: string | null) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -272,6 +302,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                             filename="operations_issues"
                             title="Stock Issues Report"
                             isCompactMobile={true}
+                            onExportAll={handleExportAll}
                         />
                     </PermissionGate>
                 </div>

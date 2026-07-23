@@ -23,6 +23,10 @@ import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
+import { ExportMenu } from '@/components/shared/ExportMenu';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
 import { isStocktakeInProgress, isStocktakePosted } from '@/domain/status-guards';
 import { STOCKTAKE_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
@@ -91,15 +95,42 @@ export function StocktakeListClient({
   }, [tc]);
 
   const { data, isLoading } = useStocktakeList({
-    status: initialStatus,
-    warehouse_id: initialWarehouseId,
-    search: debouncedSearch || undefined,
+    status: initialStatus === 'ALL' ? undefined : initialStatus,
     page: initialPage,
+    search: debouncedSearch || undefined,
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
     sort_by: sortBy,
-    sort_dir: sortDir
+    sort_dir: sortDir,
   });
+
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+      if (initialStatus && initialStatus !== 'ALL') params.set('status', initialStatus);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const res = await apiClient.get(`/stocktake/sessions?${params.toString()}`, paginatedSchema(z.object({
+        sessionNumber: z.string().optional().nullable(),
+        status: z.string(),
+        warehouseName: z.string().optional().nullable(),
+      })));
+      return (res?.data ?? data?.data ?? []).map(st => ({
+        sessionNumber: st.sessionNumber ?? '',
+        status: st.status,
+        warehouseName: (st as Record<string, unknown>).warehouseName ?? '',
+      }));
+    } catch {
+      return (data?.data ?? []).map(st => ({
+        sessionNumber: st.sessionNumber ?? '',
+        status: st.status,
+        warehouseName: (st as Record<string, unknown>).warehouseName ?? '',
+      }));
+    }
+  };
+
   const { data: summaryData } = useStocktakeSummary();
   const { warehouseId } = useOperationalScope();
 
@@ -243,8 +274,8 @@ export function StocktakeListClient({
         <PageHeader
           title={t('title')}
           subtitle={t('description') || 'Physical inventory verification and variance auditing'} children={
-            <div className="flex items-center gap-8">
-              <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-8 hidden md:flex min-w-0">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 shrink-0">
+              <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-4 hidden lg:flex shrink-0">
                 <div className="text-label-xs font-semibold uppercase text-foreground flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_rgba(6,182,212,1)]" />
                   {tc('statuses.live_updates')}
@@ -254,14 +285,16 @@ export function StocktakeListClient({
                   <ClientOnlyTime locale={locale as 'ar' | 'en'} className="text-label-xxs font-bold text-muted-foreground/30 flex items-center gap-1.5" fallback={`${tc('statuses.last_sync')}: ...`} />
                 </div>
               </div>
+
               <PermissionGate action="create" resource="stocktake">
                 <Link href={`/stocktake/new`} className="shrink-0 w-full sm:w-auto">
-                  <Button className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                  <Button className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg shadow-sm transition-opacity flex items-center justify-center gap-2">
                     <Plus className="w-4 h-4 me-2 group-hover:rotate-90 transition-transform" />
                     {t('create_new')}
                   </Button>
                 </Link>
               </PermissionGate>
+
             </div>
           }
         />
@@ -378,8 +411,8 @@ export function StocktakeListClient({
               );
             }}
             filters={
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                <div className="w-full sm:w-64">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full mb-6">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-1">
                   <div className="relative w-full">
                     <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     <Input
@@ -389,8 +422,6 @@ export function StocktakeListClient({
                       className="w-full h-11 ps-10 bg-background border border-border text-foreground focus:border-brand-gold rounded-xl transition-all shadow-sm"
                     />
                   </div>
-                </div>
-                <div className="w-full sm:w-48 relative group">
                   <SmartCombobox
                     items={statusItems}
                     value={initialStatus || 'ALL'}
@@ -408,6 +439,22 @@ export function StocktakeListClient({
                       <X className="h-4 w-4" />
                     </Button>
                   )}
+                </div>
+                <div className="flex items-center justify-end shrink-0 gap-3 w-full sm:w-auto">
+                  <PermissionGate action="export" resource="stocktake">
+                    <ExportMenu
+                      data={(data?.data as unknown as Record<string, unknown>[]) || []}
+                      columns={[
+                        { header: 'Session #', key: 'sessionNumber' },
+                        { header: 'Status', key: 'status' },
+                        { header: 'Warehouse', key: 'warehouseName' },
+                      ]}
+                      filename="operations_stocktake"
+                      title={t('title')}
+                      isCompactMobile={true}
+                      onExportAll={handleExportAll}
+                    />
+                  </PermissionGate>
                 </div>
               </div>
             }

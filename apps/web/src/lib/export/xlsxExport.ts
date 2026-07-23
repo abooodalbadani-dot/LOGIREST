@@ -41,12 +41,13 @@ export function generateExcelWithBranding(
 ) {
   const dateStr = format(new Date(), 'yyyy-MM-dd HH:mm');
   
-  // Metadata Rows (Rows 1-3)
+  // Metadata Rows (Rows 1-4)
   const metadata = [
     [title],
     [options?.scope ? `Scope: ${options.scope}` : 'Scope: Global'],
     [`Generated: ${dateStr}`],
-    [] // Row 4: Empty spacer
+    [`Total Rows: ${rows.length}`],
+    [] // Row 5: Empty spacer
   ];
   
   const headers = columns.map(col => col.header);

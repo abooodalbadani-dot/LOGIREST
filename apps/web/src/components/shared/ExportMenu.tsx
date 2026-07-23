@@ -24,9 +24,10 @@ interface ExportMenuProps {
     title: string;
     triggerClassName?: string;
     isCompactMobile?: boolean;
+    onExportAll?: () => Promise<Record<string, unknown>[]>;
 }
 
-export function ExportMenu({ data, columns, filename, title, triggerClassName, isCompactMobile }: ExportMenuProps) {
+export function ExportMenu({ data, columns, filename, title, triggerClassName, isCompactMobile, onExportAll }: ExportMenuProps) {
     const { user, activeScope } = useAuth();
     const { locale } = useLocale();
     const [isExporting, setIsExporting] = useState(false);
@@ -83,9 +84,10 @@ export function ExportMenu({ data, columns, filename, title, triggerClassName, i
         setIsExporting(true);
 
         try {
+            const exportData = onExportAll ? await onExportAll() : data;
             await dispatchPrintJob({
                 columns,
-                data,
+                data: exportData,
                 filename,
                 title,
                 scope: getScopeLabel(),
@@ -106,12 +108,13 @@ export function ExportMenu({ data, columns, filename, title, triggerClassName, i
         setIsExporting(true);
 
         try {
+            const exportData = onExportAll ? await onExportAll() : data;
             const excelCols: ExcelColumn[] = columns.map(c => ({
                 header: c.header,
                 key: c.key,
             }));
 
-            generateExcelWithBranding(excelCols, data, filename, title, {
+            generateExcelWithBranding(excelCols, exportData, filename, title, {
                 scope: getScopeLabel(),
             });
         } catch (err) {
