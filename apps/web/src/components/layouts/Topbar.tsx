@@ -57,7 +57,7 @@ export function Topbar({ locale: _locale, onMenuClick, isSidebarOpen }: TopbarPr
   const tc = useTranslations('common');
 
   return (
-    <header className="min-h-[72px] py-2 bg-card border-b border-border shadow-sm flex items-center justify-between gap-2 md:gap-4 lg:gap-6 px-4 sticky top-0 z-40">
+    <header className="min-h-[72px] py-2 bg-background border-b border-border shadow-sm flex items-center justify-between gap-2 md:gap-4 lg:gap-6 px-4 sticky top-0 z-40">
       <div className="flex items-center gap-2 md:gap-4 lg:gap-6 shrink min-w-0">
         {/* Mobile Menu Button */}
         <button
