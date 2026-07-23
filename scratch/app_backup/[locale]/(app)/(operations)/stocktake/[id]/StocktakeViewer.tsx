@@ -4,11 +4,11 @@ import * as React from "react";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { 
-  Clock, 
-  Warehouse, 
-  User, 
-  ClipboardList, 
+import {
+  Clock,
+  Warehouse,
+  User,
+  ClipboardList,
   History,
   Printer,
   ArrowLeft
@@ -33,7 +33,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   const t = useTranslations('operations.stocktake')
   const common = useTranslations('common')
   const router = useRouter()
-  
+
   const { data: warehouses } = useWarehouses();
   const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouse_name || session.warehouse_id);
@@ -42,7 +42,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
       <div className="sticky top-0 z-50 w-full glass-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex flex-col">
             <Breadcrumb
               items={[
@@ -62,7 +62,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
 
           <div className="flex items-center gap-3">
             {actions}
-             <Button
+            <Button
               variant="outline"
               size="sm"
               className="h-9 rounded-xl"
@@ -130,7 +130,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
                 {session.items.map((item: StocktakeItem) => {
                   const hasCounted = item.counted_qty !== null
                   const variance = item.variance ?? 0
-                  
+
                   return (
                     <TableRow key={item.id} className="hover:bg-surface-container-low/50 transition-colors border-none group">
                       <TableCell className="px-6 py-4">
@@ -149,8 +149,8 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
                         {hasCounted && item.snapshot_qty !== null ? (
                           <div className={cn(
                             "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
-                            variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
-                            variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
+                            variance === 0 ? "bg-emerald-500/10 text-emerald-500" :
+                              variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
                           )} dir="ltr">
                             {variance > 0 ? '+' : ''}{variance}
                           </div>
@@ -181,21 +181,21 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
             </Table>
           </div>
         </Card>
-        
+
         {/* Status Timeline */}
         <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm transition-all hover:bg-surface-container-low/50">
           <div className="flex items-center gap-3 mb-10">
             <History className="w-4 h-4 text-primary opacity-20" />
             <h3 className="text-label-xs font-semibold uppercase text-primary/30">{common('audit_trail') || 'Audit Trail'}</h3>
           </div>
-          <StatusTimeline 
+          <StatusTimeline
             entries={[
-              { 
-                status: session.status.toLowerCase() as Status, 
-                at: session.updated_at ?? session.snapshot_at, 
-                by: session.posted_by || common('system') 
+              {
+                status: session.status.toLowerCase() as Status,
+                at: session.updated_at ?? session.snapshot_at,
+                by: session.posted_by || common('system')
               }
-            ]} 
+            ]}
           />
         </div>
       </div>

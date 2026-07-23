@@ -143,10 +143,10 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="flex flex-col lg:flex-row w-full min-h-screen bg-[#f7f9ff] dark:bg-[#050505] selection:bg-operational-cyan/30 text-[#181c20] dark:text-white overflow-x-hidden">
+        <div className="flex flex-col lg:flex-row w-full min-h-screen bg-[#f7f9ff] dark:bg-[#06070a] selection:bg-brand-gold/30 text-[#181c20] dark:text-white overflow-x-hidden">
             {/* Left Panel: Brand Experience (Right in RTL) */}
             <div className="hidden lg:flex lg:basis-1/2 relative w-full h-screen bg-cover bg-center overflow-hidden flex-col justify-between shrink-0">
-                {/* Background Image with sophisticated overlays */}
+                {/* Background Image with sophisticated Obsidian Midnight Gold overlays */}
                 <Image
                     src="/kitchen-bg.png"
                     alt={t('login.professional_kitchen_alt')}
@@ -155,7 +155,12 @@ export default function LoginPage() {
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover scale-105 z-0"
                 />
-                <div className="absolute inset-0 bg-black/60 md:bg-gradient-to-t md:from-[#111827] md:via-[#111827]/80 md:to-transparent z-10"></div>
+                {/* Vertical & Horizontal Vignette Gradients */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#06070a] via-[#06070a]/65 to-black/40 z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#06070a]/40 to-[#06070a] rtl:bg-gradient-to-l rtl:from-transparent rtl:via-[#06070a]/40 rtl:to-[#06070a] z-10 pointer-events-none" />
+                
+                {/* Ambient Gold Glow */}
+                <div className="absolute bottom-10 start-10 w-96 h-96 bg-brand-gold/15 blur-[140px] rounded-full pointer-events-none z-10" />
 
                 {/* Top Navigation Overlay */}
                 <div className="w-full flex justify-between absolute top-0 p-6 z-20 start-0">
@@ -201,11 +206,11 @@ export default function LoginPage() {
 
                         <div className="flex">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="-me-3 w-10 h-10 rounded-full border-2 border-[#111827] bg-black/40 backdrop-blur-md flex items-center justify-center text-[11px] font-bold text-white relative z-10">
+                                <div key={i} className="-me-3 w-10 h-10 rounded-full border-2 border-[#06070a] bg-black/40 backdrop-blur-md flex items-center justify-center text-[11px] font-bold text-white relative z-10">
                                     OP
                                 </div>
                             ))}
-                            <div className="w-10 h-10 rounded-full border-2 border-[#111827] bg-brand-gold/20 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-brand-gold">
+                            <div className="w-10 h-10 rounded-full border-2 border-[#06070a] bg-brand-gold/20 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-brand-gold">
                                 +12
                             </div>
                         </div>
@@ -215,7 +220,7 @@ export default function LoginPage() {
             </div>
 
             {/* Right Panel: Functional Core (Left in RTL) */}
-            <div className="flex-1 min-w-[300px] flex flex-col items-stretch justify-center p-4 sm:p-6 lg:p-8 relative lg:overflow-y-auto bg-[#f7f9ff] dark:bg-[#050505] overflow-x-hidden">
+            <div className="flex-1 min-w-[300px] flex flex-col items-stretch justify-center p-4 sm:p-6 lg:p-8 relative lg:overflow-y-auto bg-[#f7f9ff] dark:bg-[#06070a] overflow-x-hidden">
                 {/* Background decorative elements */}
                 <div className="absolute top-1/4 end-1/4 w-[300px] h-[300px] bg-operational-cyan/5 blur-[100px] rounded-full pointer-events-none" />
                 <div className="w-full max-w-4xl mx-auto relative z-10">

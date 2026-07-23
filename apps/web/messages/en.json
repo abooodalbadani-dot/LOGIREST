@@ -3305,7 +3305,11 @@
       "export_audit": "Export Audit",
       "elevated_approval_title": "Elevated Approval Required",
       "elevated_approval_desc": "The net variance impact exceeds the {threshold} threshold. Only ADMIN users can approve this session.",
-      "workflow_state": "Workflow State"
+      "workflow_state": "Workflow State",
+      "table_headers": {
+        "session_number": "Session #",
+        "counted_items": "Counted Items"
+      }
     },
     "transfer": {
       "action_accept_received": "Accept Received Qty",
@@ -3404,7 +3408,8 @@
       "search_placeholder": "Search by document number or warehouse",
       "transfer": "Transfer",
       "overdue_transfer": "overdue",
-      "resolve_overdue_transfers": "Resolve overdue transfers"
+      "resolve_overdue_transfers": "Resolve overdue transfers",
+      "target_warehouse": "To Warehouse"
     }
   },
   "procurement": {

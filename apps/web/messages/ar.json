@@ -3305,7 +3305,11 @@
       "export_audit": "تصدير التدقيق",
       "elevated_approval_title": "مطلوب موافقة رفيعة المستوى",
       "elevated_approval_desc": "تتجاوز تأثيرات الفروقات حد {threshold}. يمكن للمستخدمين من نوع ADMIN فقط الموافقة على هذه الجلسة.",
-      "workflow_state": "حالة سير العمل"
+      "workflow_state": "حالة سير العمل",
+      "table_headers": {
+        "session_number": "رقم الجلسة",
+        "counted_items": "الأصناف المعدودة"
+      }
     },
     "transfer": {
       "action_accept_received": "قبول الكمية المستلمة",
@@ -3404,7 +3408,8 @@
       "search_placeholder": "بحث برقم المستند أو المستودع",
       "transfer": "نقل",
       "overdue_transfer": "متأخرة",
-      "resolve_overdue_transfers": "تسوية التحويلات المتأخرة"
+      "resolve_overdue_transfers": "تسوية التحويلات المتأخرة",
+      "target_warehouse": "إلى مستودع"
     }
   },
   "procurement": {

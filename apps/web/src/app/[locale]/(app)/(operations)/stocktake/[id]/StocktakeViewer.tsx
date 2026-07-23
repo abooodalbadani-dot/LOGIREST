@@ -80,10 +80,10 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   return (
     <div className="min-h-screen pb-12 animate-in fade-in duration-500 print:bg-card print:pb-0">
       {/* Print-Only Report Header */}
-      <div className="print-only print-header p-6 border-b-2 border-gray-300 mb-6">
+      <div className="print-only print-header p-6  border border-border mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold uppercase">{tp('stocktake_report_title')}</h1>
+            <h1 className="text-xl font-bold uppercase">{tp('stocktake_report_title')}</h1>
             <p className="text-sm text-muted-foreground mt-1">{session.sessionName}</p>
           </div>
           <div className="text-end text-sm text-muted-foreground">

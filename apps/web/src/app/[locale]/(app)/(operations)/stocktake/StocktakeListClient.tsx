@@ -486,9 +486,9 @@ export function StocktakeListClient({
                     <ExportMenu
                       data={(data?.data as unknown as Record<string, unknown>[]) || []}
                       columns={[
-                        { header: t('table_headers.session_number') || 'Session #', key: 'sessionNumber' },
+                        { header: t('session_number') || 'Session #', key: 'sessionNumber' },
                         { header: tc('warehouse') || 'Warehouse', key: 'warehouseName' },
-                        { header: t('table_headers.counted_items') || 'Counted Items', key: 'countedItems' },
+                        { header: t('items_counted') || t('items_count') || 'Counted Items', key: 'countedItems' },
                         { header: tc('status_label') || 'Status', key: 'status' },
                         { header: tc('created_at') || 'Date', key: 'snapshotAt' },
                       ]}
