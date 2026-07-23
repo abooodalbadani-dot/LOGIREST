@@ -26,11 +26,14 @@ import { AllRoles } from './decorators/all-roles.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
+import { PrismaService } from '../database/prisma.service';
+
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly rtrService: RtrService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Public()
@@ -79,7 +82,24 @@ export class AuthController {
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies?.logirest_refresh as string | undefined;
     if (refreshToken) {
-      await this.rtrService.revokeSessionByToken(refreshToken);
+      const tokenUser = await this.rtrService.revokeSessionByToken(refreshToken);
+      if (tokenUser?.userId) {
+        try {
+          await this.prisma.auditLog.create({
+            data: {
+              userId: tokenUser.userId,
+              action: 'LOGOUT',
+              targetTable: 'users',
+              targetId: tokenUser.userId,
+              ipAddress: req.ip || null,
+              beforeStateJson: '{}',
+              afterStateJson: '{}',
+            },
+          });
+        } catch (e) {
+          // ignore audit log failure on logout
+        }
+      }
     }
     this.rtrService.clearRefreshCookie(res);
 

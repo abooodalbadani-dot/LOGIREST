@@ -114,32 +114,32 @@ export interface AuditLogEntry {
   id: string;
   entityType: string;
   entityId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'POST' | 'APPROVE';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'POST' | 'APPROVE' | 'LOGIN' | 'LOGOUT';
   userId: string;
   userName: string;
   changes: {
     field: string;
-    oldValue: unknown;
-    newValue: unknown;
+    oldValue?: unknown;
+    newValue?: unknown;
   }[];
   createdAt: string;
 }
 
 export const AuditLogEntrySchema = z.object({
   id: z.string(),
-  entityType: z.string(),
-  entityId: z.string(),
-  action: z.enum(['CREATE', 'UPDATE', 'DELETE', 'POST', 'APPROVE']),
-  userId: z.string(),
-  userName: z.string(),
+  entityType: z.string().nullable().optional().transform((v) => v || 'SYSTEM'),
+  entityId: z.string().nullable().optional().transform((v) => v || 'N/A'),
+  action: z.enum(['CREATE', 'UPDATE', 'DELETE', 'POST', 'APPROVE', 'LOGIN', 'LOGOUT']),
+  userId: z.string().nullable().optional().transform((v) => v || 'system'),
+  userName: z.string().nullable().optional().transform((v) => v || 'System'),
   changes: z.array(
     z.object({
       field: z.string(),
-      oldValue: z.unknown(),
-      newValue: z.unknown(),
+      oldValue: z.unknown().optional(),
+      newValue: z.unknown().optional(),
     })
-  ),
-  createdAt: z.string(),
+  ).default([]),
+  createdAt: z.union([z.string(), z.date()]).transform((v) => typeof v === 'string' ? v : v.toISOString()),
 });
 
 export const NotificationLogSchema = z.object({

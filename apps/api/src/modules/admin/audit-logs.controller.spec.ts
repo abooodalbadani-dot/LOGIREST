@@ -116,4 +116,25 @@ describe('AuditLogsController', () => {
 
     expect(result.data[0].userName).toBe('Auditor User');
   });
+
+  it('should correctly map action strings containing keywords like _CREATED, _DELETED, _POSTED, _APPROVED, LOGIN, LOGOUT', async () => {
+    mockPrismaService.auditLog.count.mockResolvedValue(6);
+    mockPrismaService.auditLog.findMany.mockResolvedValue([
+      { id: '1', action: 'CATEGORY_CREATED', targetTable: 'categories', targetId: 'c1', createdAt: new Date() },
+      { id: '2', action: 'ITEM_DELETED', targetTable: 'items', targetId: 'i1', createdAt: new Date() },
+      { id: '3', action: 'WORKFLOW_POST_SUCCESS', targetTable: 'stocktake', targetId: 's1', createdAt: new Date() },
+      { id: '4', action: 'GRN_APPROVED', targetTable: 'grn', targetId: 'g1', createdAt: new Date() },
+      { id: '5', action: 'LOGIN_SUCCESS', targetTable: 'users', targetId: 'u1', createdAt: new Date() },
+      { id: '6', action: 'LOGOUT', targetTable: 'users', targetId: 'u1', createdAt: new Date() },
+    ]);
+
+    const result = await controller.getAuditLogs({ page: 1, limit: 50 });
+
+    expect(result.data[0].action).toBe('CREATE');
+    expect(result.data[1].action).toBe('DELETE');
+    expect(result.data[2].action).toBe('POST');
+    expect(result.data[3].action).toBe('APPROVE');
+    expect(result.data[4].action).toBe('LOGIN');
+    expect(result.data[5].action).toBe('LOGOUT');
+  });
 });

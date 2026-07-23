@@ -375,13 +375,19 @@ export class RtrService {
     return { accessToken };
   }
 
-  async revokeSessionByToken(refreshTokenCookie: string): Promise<void> {
+  async revokeSessionByToken(refreshTokenCookie: string): Promise<{ userId: string } | null> {
     const hash = this.hashToken(refreshTokenCookie);
+    const existing = await this.prisma.refreshToken.findUnique({
+      where: { tokenHash: hash },
+      select: { userId: true },
+    });
 
     await this.prisma.refreshToken.updateMany({
       where: { tokenHash: hash },
       data: { isRevoked: true },
     });
+
+    return existing;
   }
 
   clearRefreshCookie(res: Response) {

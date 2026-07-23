@@ -94,19 +94,22 @@ export class AuditLogsController {
       }
 
       const rawAction = log.action.toUpperCase();
-      const actionMap: Record<
-        string,
-        'CREATE' | 'UPDATE' | 'DELETE' | 'POST' | 'APPROVE'
-      > = {
-        CREATE: 'CREATE',
-        UPDATE: 'UPDATE',
-        DELETE: 'DELETE',
-        POST: 'POST',
-        APPROVE: 'APPROVE',
-        PATCH: 'UPDATE',
-        PUT: 'UPDATE',
-      };
-      const action = actionMap[rawAction] || 'UPDATE';
+      let action: 'CREATE' | 'UPDATE' | 'DELETE' | 'POST' | 'APPROVE' | 'LOGIN' | 'LOGOUT' = 'UPDATE';
+      if (rawAction.includes('LOGIN') || rawAction.includes('AUTHENTICAT')) {
+        action = 'LOGIN';
+      } else if (rawAction.includes('LOGOUT') || rawAction.includes('SIGNOUT')) {
+        action = 'LOGOUT';
+      } else if (rawAction.includes('CREATE') || rawAction.includes('ADD')) {
+        action = 'CREATE';
+      } else if (rawAction.includes('DELETE') || rawAction.includes('REMOVE') || rawAction.includes('VOID')) {
+        action = 'DELETE';
+      } else if (rawAction.includes('POST')) {
+        action = 'POST';
+      } else if (rawAction.includes('APPROVE')) {
+        action = 'APPROVE';
+      } else {
+        action = 'UPDATE';
+      }
 
       return {
         id: log.id,
