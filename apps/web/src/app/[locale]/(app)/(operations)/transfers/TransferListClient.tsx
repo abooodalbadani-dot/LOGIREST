@@ -9,6 +9,7 @@ import { ColumnDef, SortingState } from '@tanstack/react-table';
 import { useTransferList, TransferSummary } from '@/features/operations/hooks/useTransferList';
 import { useTransferSummary } from '@/features/operations/hooks/useTransferSummary';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
+import { format } from 'date-fns';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
@@ -32,6 +33,7 @@ import { z } from 'zod';
 export function TransferListClient() {
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
+  const tc = tCommon;
   const tFilters = useTranslations('filters');
   const locale = useLocale() as 'ar' | 'en';
   const router = useRouter();
@@ -62,22 +64,51 @@ export function TransferListClient() {
       const res = await apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(z.object({
         documentNumber: z.string(),
         transferStatus: z.string().optional(),
+        status: z.string().optional(),
         fromWarehouseName: z.string().optional().nullable(),
         toWarehouseName: z.string().optional().nullable(),
+        sourceWarehouseName: z.string().optional().nullable(),
+        targetWarehouseName: z.string().optional().nullable(),
+        createdAt: z.string().optional().nullable(),
       })));
-      return (res?.data ?? data?.data ?? []).map(tr => ({
-        transferNumber: tr.documentNumber,
-        status: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
-        sourceWarehouse: (tr as Record<string, unknown>).fromWarehouseName ?? '',
-        targetWarehouse: (tr as Record<string, unknown>).toWarehouseName ?? '',
-      }));
+
+      const mapTransferRows = (rows: unknown[]) => rows.map(tr => {
+        const itemObj = tr as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          transferNumber: itemObj.documentNumber || '—',
+          fromWarehouseName: itemObj.fromWarehouseName || itemObj.sourceWarehouseName || '—',
+          toWarehouseName: itemObj.toWarehouseName || itemObj.targetWarehouseName || '—',
+          status: itemObj.transferStatus || itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
+
+      return mapTransferRows((res?.data ?? data?.data ?? []) as unknown[]);
     } catch {
-      return (data?.data ?? []).map(tr => ({
-        transferNumber: tr.documentNumber,
-        status: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
-        sourceWarehouse: (tr as Record<string, unknown>).fromWarehouseName ?? '',
-        targetWarehouse: (tr as Record<string, unknown>).toWarehouseName ?? '',
-      }));
+      return ((data?.data ?? []) as unknown[]).map(tr => {
+        const itemObj = tr as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          transferNumber: itemObj.documentNumber || '—',
+          fromWarehouseName: itemObj.fromWarehouseName || itemObj.sourceWarehouseName || '—',
+          toWarehouseName: itemObj.toWarehouseName || itemObj.targetWarehouseName || '—',
+          status: itemObj.transferStatus || itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
     }
   };
 
@@ -330,9 +361,11 @@ export function TransferListClient() {
                 <ExportMenu
                   data={data.data as unknown as Record<string, unknown>[]}
                   columns={[
-                    { header: 'Doc #', key: 'transferNumber' },
-                    { header: 'Status', key: 'status' },
-                    { header: 'Type', key: 'type' },
+                    { header: t('doc_number') || 'Doc #', key: 'transferNumber' },
+                    { header: t('source_warehouse') || 'From Warehouse', key: 'fromWarehouseName' },
+                    { header: t('target_warehouse') || 'To Warehouse', key: 'toWarehouseName' },
+                    { header: tc('status_label') || 'Status', key: 'status' },
+                    { header: tc('created_at') || 'Date', key: 'createdAt' },
                   ]}
                   filename="stock_transfers"
                   title={t('title')}

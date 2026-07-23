@@ -128,21 +128,54 @@ export function KitchenRequestsListClient({
       if (debouncedSearch) params.set('search', debouncedSearch);
 
       const res = await apiClient.get(`/operations/kitchen-requests?${params.toString()}`, paginatedSchema(z.object({
-        requestNumber: z.string(),
-        status: z.string(),
+        documentNumber: z.string().optional(),
+        requestNumber: z.string().optional(),
+        status: z.string().optional(),
         departmentName: z.string().optional().nullable(),
+        warehouseName: z.string().optional().nullable(),
+        requestedBy: z.string().optional().nullable(),
+        createdAt: z.string().optional().nullable(),
       })));
-      return (res?.data ?? data?.data ?? []).map(kr => ({
-        requestNumber: kr.requestNumber,
-        status: kr.status,
-        departmentName: kr.departmentName ?? '',
-      }));
+
+      const mapKRRows = (rows: unknown[]) => rows.map(kr => {
+        const itemObj = kr as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          requestNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
+          departmentName: itemObj.departmentName || '—',
+          warehouseName: itemObj.warehouseName || '—',
+          requestedBy: itemObj.requestedBy || '—',
+          status: itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
+
+      return mapKRRows((res?.data ?? data?.data ?? []) as unknown[]);
     } catch {
-      return (data?.data ?? []).map(kr => ({
-        requestNumber: kr.requestNumber,
-        status: kr.status,
-        departmentName: kr.departmentName ?? '',
-      }));
+      return ((data?.data ?? []) as unknown[]).map(kr => {
+        const itemObj = kr as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          requestNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
+          departmentName: itemObj.departmentName || '—',
+          warehouseName: itemObj.warehouseName || '—',
+          requestedBy: itemObj.requestedBy || '—',
+          status: itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
     }
   };
 
@@ -298,11 +331,12 @@ export function KitchenRequestsListClient({
                 <ExportMenu
                   data={data.data as unknown as Record<string, unknown>[]}
                   columns={[
-                    { header: t('doc_number'), key: 'requestNumber' },
-                    { header: t('department'), key: 'departmentName' },
-                    { header: t('warehouse'), key: 'warehouseName' },
-                    { header: t('requested_by'), key: 'requestedBy' },
-                    { header: t('status'), key: 'status' },
+                    { header: t('doc_number') || 'Doc #', key: 'requestNumber' },
+                    { header: t('department') || 'Department', key: 'departmentName' },
+                    { header: t('warehouse') || 'Warehouse', key: 'warehouseName' },
+                    { header: t('requested_by') || 'Requested By', key: 'requestedBy' },
+                    { header: tc('status_label') || 'Status', key: 'status' },
+                    { header: tc('created_at') || 'Date', key: 'createdAt' },
                   ]}
                   filename="kitchen_requests"
                   title={t('title')}

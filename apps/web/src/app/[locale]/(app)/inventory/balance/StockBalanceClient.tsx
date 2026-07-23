@@ -15,6 +15,8 @@ import { StockBalanceItemSchema } from '@/types/inventory';
 import { ExportMenu } from '@/components/shared/ExportMenu';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
+import { format } from 'date-fns';
 
 import { formatNumber, formatCurrency, getCurrencyDisplayName } from '@/utils/currency';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -69,6 +71,51 @@ export default function StockBalanceClient() {
   search: debouncedSearch || undefined,
   page,
  });
+
+ const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+  try {
+   const params = new URLSearchParams();
+   params.set('page', '1');
+   params.set('limit', '10000');
+   if (debouncedSearch) params.set('search', debouncedSearch);
+   if (warehouseFilter && warehouseFilter !== 'all') params.set('warehouse_id', warehouseFilter);
+
+   const res = await apiClient.get(`/inventory/balance?${params.toString()}`, paginatedSchema(z.object({
+    itemCode: z.string().optional(),
+    itemName: z.string().optional(),
+    warehouseName: z.string().optional().nullable(),
+    qtyOnHand: z.number().optional(),
+    qtyAvailable: z.number().optional(),
+    uomCode: z.string().optional().nullable(),
+   })));
+
+   const mapRows = (rows: unknown[]) => rows.map(item => {
+    const itemObj = item as Record<string, unknown>;
+    return {
+     itemCode: itemObj.itemCode || '—',
+     itemName: itemObj.itemName || '—',
+     warehouseName: itemObj.warehouseName || '—',
+     qtyOnHand: itemObj.qtyOnHand ?? 0,
+     qtyAvailable: itemObj.qtyAvailable ?? 0,
+     uomCode: itemObj.uomCode || '—',
+    };
+   });
+
+   return mapRows((res?.data ?? data?.data ?? []) as unknown[]);
+  } catch {
+   return ((data?.data ?? []) as unknown[]).map(item => {
+    const itemObj = item as Record<string, unknown>;
+    return {
+     itemCode: itemObj.itemCode || '—',
+     itemName: itemObj.itemName || '—',
+     warehouseName: itemObj.warehouseName || '—',
+     qtyOnHand: itemObj.qtyOnHand ?? 0,
+     qtyAvailable: itemObj.qtyAvailable ?? 0,
+     uomCode: itemObj.uomCode || '—',
+    };
+   });
+  }
+ };
 
  const filteredItems = useMemo(() => {
   if (!data?.data) return [];
@@ -213,27 +260,6 @@ export default function StockBalanceClient() {
   },
  ], [t, tc, isRtl, currentLocale]);
 
-  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
-    try {
-      const params = new URLSearchParams();
-      if (warehouseFilter && warehouseFilter !== 'all') params.set('warehouse_id', warehouseFilter);
-      if (debouncedSearch) params.set('search', debouncedSearch);
-      params.set('page', '1');
-      params.set('limit', '10000');
-
-      const res = await apiClient.get(`/inventory/balance?${params.toString()}`, paginatedSchema(StockBalanceItemSchema));
-      const allRows = res?.data ?? data?.data ?? [];
-      return allRows.map((item) => ({
-        ...item,
-      }));
-    } catch (err) {
-      console.error('Failed to export stock balances:', err);
-      return (data?.data ?? []).map((item) => ({
-        ...item,
-      }));
-    }
-  };
-
  const handleExport = () => {
   if (!data?.data) return;
   const exportColumns = [
@@ -296,13 +322,14 @@ export default function StockBalanceClient() {
        </PermissionGate>
        <ExportMenu
         data={data?.data as unknown as Record<string, unknown>[] ?? []}
-        columns={[
-         { header: tc('table_headers.code'), key: 'itemCode' },
-         { header: tc('table_headers.name'), key: 'itemName' },
-         { header: tc('warehouse'), key: 'warehouseName' },
-         { header: tc('table_headers.qty'), key: 'qtyOnHand' },
-         { header: tc('table_headers.available'), key: 'qtyAvailable' },
-        ]}
+         columns={[
+          { header: tc('table_headers.code') || 'Item Code', key: 'itemCode' },
+          { header: tc('table_headers.name') || 'Item Name', key: 'itemName' },
+          { header: tc('warehouse') || 'Warehouse', key: 'warehouseName' },
+          { header: tc('table_headers.qty') || 'Qty On Hand', key: 'qtyOnHand' },
+          { header: tc('table_headers.available') || 'Qty Available', key: 'qtyAvailable' },
+          { header: tc('table_headers.uom') || 'UOM', key: 'uomCode' },
+         ]}
         filename="stock_balances"
         title={isRtl ? 'رصيد المخزون' : 'Stock Balances'}
         onExportAll={handleExportAll}

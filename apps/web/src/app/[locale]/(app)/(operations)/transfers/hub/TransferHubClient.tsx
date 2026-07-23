@@ -21,6 +21,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { useRouter } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
 import { useTransferList, type TransferSummary } from '@/features/operations/hooks/useTransferList';
+import { format } from 'date-fns';
 import { ExportMenu } from '@/components/shared/ExportMenu';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { apiClient } from '@/lib/api/client';
@@ -45,25 +46,51 @@ export function TransferHubClient() {
       const res = await apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(z.object({
         documentNumber: z.string(),
         transferStatus: z.string().optional(),
+        status: z.string().optional(),
         fromWarehouseName: z.string().optional().nullable(),
         toWarehouseName: z.string().optional().nullable(),
-        createdAt: z.string().optional(),
+        sourceWarehouseName: z.string().optional().nullable(),
+        targetWarehouseName: z.string().optional().nullable(),
+        createdAt: z.string().optional().nullable(),
       })));
-      return (res?.data ?? transfers ?? []).map(tr => ({
-        documentNumber: tr.documentNumber,
-        transferStatus: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
-        fromWarehouseName: (tr as Record<string, unknown>).fromWarehouseName ?? '',
-        toWarehouseName: (tr as Record<string, unknown>).toWarehouseName ?? '',
-        createdAt: (tr as Record<string, unknown>).createdAt ?? '',
-      }));
+
+      const mapRows = (rows: unknown[]) => rows.map(tr => {
+        const itemObj = tr as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          documentNumber: itemObj.documentNumber || '—',
+          transferStatus: itemObj.transferStatus || itemObj.status || '—',
+          fromWarehouseName: itemObj.fromWarehouseName || itemObj.sourceWarehouseName || '—',
+          toWarehouseName: itemObj.toWarehouseName || itemObj.targetWarehouseName || '—',
+          createdAt: dateStr,
+        };
+      });
+
+      return mapRows((res?.data ?? transfers ?? []) as unknown[]);
     } catch {
-      return (transfers ?? []).map(tr => ({
-        documentNumber: tr.documentNumber,
-        transferStatus: (tr as Record<string, unknown>).transferStatus ?? (tr as Record<string, unknown>).status ?? '',
-        fromWarehouseName: (tr as Record<string, unknown>).fromWarehouseName ?? '',
-        toWarehouseName: (tr as Record<string, unknown>).toWarehouseName ?? '',
-        createdAt: (tr as Record<string, unknown>).createdAt ?? '',
-      }));
+      return (transfers as unknown[]).map(tr => {
+        const itemObj = tr as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          documentNumber: itemObj.documentNumber || '—',
+          transferStatus: itemObj.transferStatus || itemObj.status || '—',
+          fromWarehouseName: itemObj.fromWarehouseName || itemObj.sourceWarehouseName || '—',
+          toWarehouseName: itemObj.toWarehouseName || itemObj.targetWarehouseName || '—',
+          createdAt: dateStr,
+        };
+      });
     }
   };
 

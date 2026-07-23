@@ -10,6 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import { useStocktakeList, StocktakeSummary } from '@/features/operations/hooks/useStocktakeList';
 import { useStocktakeSummary } from '@/features/operations/hooks/useStocktakeSummary';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
+import { format } from 'date-fns';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -113,21 +114,61 @@ export function StocktakeListClient({
       if (debouncedSearch) params.set('search', debouncedSearch);
 
       const res = await apiClient.get(`/stocktake/sessions?${params.toString()}`, paginatedSchema(z.object({
+        id: z.string().optional(),
         sessionNumber: z.string().optional().nullable(),
         status: z.string(),
+        warehouseId: z.string().optional(),
         warehouseName: z.string().optional().nullable(),
+        snapshotAt: z.string().optional().nullable(),
+        totalItems: z.number().optional(),
+        countedItems: z.number().optional(),
       })));
-      return (res?.data ?? data?.data ?? []).map(st => ({
-        sessionNumber: st.sessionNumber ?? '',
-        status: st.status,
-        warehouseName: (st as Record<string, unknown>).warehouseName ?? '',
-      }));
+
+      const mapRows = (rows: unknown[]) => rows.map(st => {
+        const itemObj = st as Record<string, unknown>;
+        const total = Number(itemObj.totalItems || 0);
+        const counted = Number(itemObj.countedItems || 0);
+        let snapshotStr = '—';
+        try {
+          const rawDate = itemObj.snapshotAt || itemObj.createdAt;
+          if (rawDate) snapshotStr = format(new Date(String(rawDate)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          snapshotStr = String(itemObj.snapshotAt || '—');
+        }
+        const whName = (itemObj.warehouseName as string) || (warehouseMap.get(itemObj.warehouseId as string)) || '—';
+
+        return {
+          sessionNumber: itemObj.sessionNumber || itemObj.id || '—',
+          warehouseName: whName,
+          countedItems: total > 0 ? `${counted} / ${total}` : String(counted),
+          status: itemObj.status || '—',
+          snapshotAt: snapshotStr,
+        };
+      });
+
+      return mapRows((res?.data ?? data?.data ?? []) as unknown[]);
     } catch {
-      return (data?.data ?? []).map(st => ({
-        sessionNumber: st.sessionNumber ?? '',
-        status: st.status,
-        warehouseName: (st as Record<string, unknown>).warehouseName ?? '',
-      }));
+      return ((data?.data ?? []) as unknown[]).map(st => {
+        const itemObj = st as Record<string, unknown>;
+        const total = Number(itemObj.totalItems || 0);
+        const counted = Number(itemObj.countedItems || 0);
+        let snapshotStr = '—';
+        try {
+          const rawDate = itemObj.snapshotAt || itemObj.createdAt;
+          if (rawDate) snapshotStr = format(new Date(String(rawDate)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          snapshotStr = String(itemObj.snapshotAt || '—');
+        }
+        const whName = (itemObj.warehouseName as string) || (warehouseMap.get(itemObj.warehouseId as string)) || '—';
+
+        return {
+          sessionNumber: itemObj.sessionNumber || itemObj.id || '—',
+          warehouseName: whName,
+          countedItems: total > 0 ? `${counted} / ${total}` : String(counted),
+          status: itemObj.status || '—',
+          snapshotAt: snapshotStr,
+        };
+      });
     }
   };
 
@@ -445,9 +486,11 @@ export function StocktakeListClient({
                     <ExportMenu
                       data={(data?.data as unknown as Record<string, unknown>[]) || []}
                       columns={[
-                        { header: 'Session #', key: 'sessionNumber' },
-                        { header: 'Status', key: 'status' },
-                        { header: 'Warehouse', key: 'warehouseName' },
+                        { header: t('table_headers.session_number') || 'Session #', key: 'sessionNumber' },
+                        { header: tc('warehouse') || 'Warehouse', key: 'warehouseName' },
+                        { header: t('table_headers.counted_items') || 'Counted Items', key: 'countedItems' },
+                        { header: tc('status_label') || 'Status', key: 'status' },
+                        { header: tc('created_at') || 'Date', key: 'snapshotAt' },
                       ]}
                       filename="operations_stocktake"
                       title={t('title')}

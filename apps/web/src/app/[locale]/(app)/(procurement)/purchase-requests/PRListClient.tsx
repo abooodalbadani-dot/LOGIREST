@@ -16,6 +16,7 @@ import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
+import { format } from 'date-fns';
 
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -53,21 +54,48 @@ export function PRListClient() {
       if (debouncedSearch) params.set('search', debouncedSearch);
 
       const res = await apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(z.object({
-        documentNumber: z.string(),
-        status: z.string(),
+        documentNumber: z.string().optional(),
+        requestNumber: z.string().optional(),
+        status: z.string().optional(),
         departmentName: z.string().optional().nullable(),
+        createdAt: z.string().optional().nullable(),
       })));
-      return (res?.data ?? data?.data ?? []).map(p => ({
-        requestNumber: p.documentNumber,
-        status: p.status,
-        departmentName: (p as Record<string, unknown>).departmentName ?? '',
-      }));
+
+      const mapPRRows = (rows: unknown[]) => rows.map(p => {
+        const itemObj = p as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          requestNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
+          departmentName: itemObj.departmentName || '—',
+          status: itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
+
+      return mapPRRows((res?.data ?? data?.data ?? []) as unknown[]);
     } catch {
-      return (data?.data ?? []).map(p => ({
-        requestNumber: p.documentNumber,
-        status: p.status,
-        departmentName: (p as Record<string, unknown>).departmentName ?? '',
-      }));
+      return ((data?.data ?? []) as unknown[]).map(p => {
+        const itemObj = p as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          requestNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
+          departmentName: itemObj.departmentName || '—',
+          status: itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
     }
   };
 
@@ -265,9 +293,10 @@ export function PRListClient() {
                 <ExportMenu
                   data={data.data as unknown as Record<string, unknown>[]}
                   columns={[
-                    { header: 'Doc #', key: 'requestNumber' },
-                    { header: 'Status', key: 'status' },
-                    { header: 'Department', key: 'departmentName' },
+                    { header: t('doc_number') || 'Doc #', key: 'requestNumber' },
+                    { header: t('department') || 'Department', key: 'departmentName' },
+                    { header: tc('status_label') || 'Status', key: 'status' },
+                    { header: tc('created_at') || 'Date', key: 'createdAt' },
                   ]}
                   filename="purchase_requests"
                   title={t('title')}

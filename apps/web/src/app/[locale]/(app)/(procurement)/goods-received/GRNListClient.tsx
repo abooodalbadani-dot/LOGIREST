@@ -7,6 +7,7 @@ import { useGRNList, type GRNSummary } from '@/features/purchasing/hooks/useGRNL
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { ColumnDef } from '@tanstack/react-table';
+import { format } from 'date-fns';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -78,18 +79,47 @@ export function GRNListClient({
         documentNumber: z.string(),
         status: z.string(),
         supplierName: z.string().optional().nullable(),
+        warehouseName: z.string().optional().nullable(),
+        createdAt: z.string().optional().nullable(),
       })));
-      return (res?.data ?? data?.data ?? []).map(g => ({
-        documentNumber: g.documentNumber,
-        status: g.status,
-        supplierName: g.supplierName ?? '',
-      }));
+
+      const mapGRNRows = (rows: unknown[]) => rows.map(g => {
+        const itemObj = g as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          documentNumber: itemObj.documentNumber || '—',
+          supplierName: itemObj.supplierName || '—',
+          warehouseName: itemObj.warehouseName || '—',
+          status: itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
+
+      return mapGRNRows((res?.data ?? data?.data ?? []) as unknown[]);
     } catch {
-      return (data?.data ?? []).map(g => ({
-        documentNumber: g.documentNumber,
-        status: g.status,
-        supplierName: g.supplierName ?? '',
-      }));
+      return ((data?.data ?? []) as unknown[]).map(g => {
+        const itemObj = g as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          documentNumber: itemObj.documentNumber || '—',
+          supplierName: itemObj.supplierName || '—',
+          warehouseName: itemObj.warehouseName || '—',
+          status: itemObj.status || '—',
+          createdAt: dateStr,
+        };
+      });
     }
   };
 
@@ -307,9 +337,11 @@ export function GRNListClient({
          <ExportMenu
           data={data.data as unknown as Record<string, unknown>[]}
           columns={[
-           { header: 'Doc #', key: 'documentNumber' },
-           { header: 'Status', key: 'status' },
-           { header: 'Supplier', key: 'supplierName' },
+           { header: t('doc_number') || 'Doc #', key: 'documentNumber' },
+           { header: t('supplier') || 'Supplier', key: 'supplierName' },
+           { header: tc('warehouse') || 'Warehouse', key: 'warehouseName' },
+           { header: tc('status_label') || 'Status', key: 'status' },
+           { header: tc('created_at') || 'Date', key: 'createdAt' },
           ]}
           filename="goods_received"
           title={t('title')}

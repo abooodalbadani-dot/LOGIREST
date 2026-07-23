@@ -7,6 +7,7 @@ import { useRouter, usePathname, Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useIssueList, IssueSummary } from '@/features/operations/hooks/useIssueList';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
+import { format } from 'date-fns';
 import { useAuth } from '@/providers/AuthProvider';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -77,18 +78,48 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                 documentNumber: z.string(),
                 status: z.string(),
                 warehouseName: z.string().optional().nullable(),
+                destinationDepartmentName: z.string().optional().nullable(),
+                departmentName: z.string().optional().nullable(),
+                createdAt: z.string().optional().nullable(),
             })));
-            return (res?.data ?? data?.data ?? []).map(iss => ({
-                documentNumber: iss.documentNumber,
-                status: iss.status,
-                warehouseName: iss.warehouseName ?? '',
-            }));
+
+            const mapIssueRows = (rows: unknown[]) => rows.map(iss => {
+                const itemObj = iss as Record<string, unknown>;
+                let dateStr = '—';
+                try {
+                    if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+                } catch {
+                    dateStr = String(itemObj.createdAt || '—');
+                }
+
+                return {
+                    documentNumber: itemObj.documentNumber || '—',
+                    destinationDepartmentName: itemObj.destinationDepartmentName || itemObj.departmentName || '—',
+                    warehouseName: itemObj.warehouseName || '—',
+                    createdAt: dateStr,
+                    status: itemObj.status || '—',
+                };
+            });
+
+            return mapIssueRows((res?.data ?? data?.data ?? []) as unknown[]);
         } catch {
-            return (data?.data ?? []).map(iss => ({
-                documentNumber: iss.documentNumber,
-                status: iss.status,
-                warehouseName: iss.warehouseName ?? '',
-            }));
+            return ((data?.data ?? []) as unknown[]).map(iss => {
+                const itemObj = iss as Record<string, unknown>;
+                let dateStr = '—';
+                try {
+                    if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+                } catch {
+                    dateStr = String(itemObj.createdAt || '—');
+                }
+
+                return {
+                    documentNumber: itemObj.documentNumber || '—',
+                    destinationDepartmentName: itemObj.destinationDepartmentName || itemObj.departmentName || '—',
+                    warehouseName: itemObj.warehouseName || '—',
+                    createdAt: dateStr,
+                    status: itemObj.status || '—',
+                };
+            });
         }
     };
 

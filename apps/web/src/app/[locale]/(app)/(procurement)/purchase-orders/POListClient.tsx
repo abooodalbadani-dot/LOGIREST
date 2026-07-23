@@ -17,6 +17,7 @@ import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
+import { format } from 'date-fns';
 
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -47,6 +48,63 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const debouncedSearch = useDebounce(search, 500);
 
   const { data, isLoading } = usePOList({ status, supplierId, search: debouncedSearch, page });
+
+  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('limit', '10000');
+      if (status) params.set('status', status);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const res = await apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(z.object({
+        documentNumber: z.string().optional(),
+        poNumber: z.string().optional(),
+        status: z.string().optional(),
+        supplierName: z.string().optional().nullable(),
+        totalAmount: z.number().optional().nullable(),
+        createdAt: z.string().optional().nullable(),
+      })));
+
+      const mapPORows = (rows: unknown[]) => rows.map(p => {
+        const itemObj = p as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          orderNumber: itemObj.documentNumber || itemObj.poNumber || '—',
+          supplierName: itemObj.supplierName || '—',
+          status: itemObj.status || '—',
+          totalAmount: typeof itemObj.totalAmount === 'number' ? itemObj.totalAmount.toFixed(2) : (itemObj.totalAmount ? String(itemObj.totalAmount) : '—'),
+          createdAt: dateStr,
+        };
+      });
+
+      return mapPORows((res?.data ?? data?.data ?? []) as unknown[]);
+    } catch {
+      return ((data?.data ?? []) as unknown[]).map(p => {
+        const itemObj = p as Record<string, unknown>;
+        let dateStr = '—';
+        try {
+          if (itemObj.createdAt) dateStr = format(new Date(String(itemObj.createdAt)), 'yyyy-MM-dd HH:mm');
+        } catch {
+          dateStr = String(itemObj.createdAt || '—');
+        }
+
+        return {
+          orderNumber: itemObj.documentNumber || itemObj.poNumber || '—',
+          supplierName: itemObj.supplierName || '—',
+          status: itemObj.status || '—',
+          totalAmount: typeof itemObj.totalAmount === 'number' ? itemObj.totalAmount.toFixed(2) : (itemObj.totalAmount ? String(itemObj.totalAmount) : '—'),
+          createdAt: dateStr,
+        };
+      });
+    }
+  };
 
   const statusItems = useMemo(() => [
     { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
@@ -181,33 +239,6 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const approvedCount = data?.data?.filter(p => isApprovedStatus('PO', p.status as DocumentStatus)).length || 0;
   const pendingCount = data?.data?.filter(p => isPendingStatus('PO', p.status as DocumentStatus)).length || 0;
 
-  const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
-    try {
-      const params = new URLSearchParams();
-      params.set('page', '1');
-      params.set('limit', '10000');
-      if (status) params.set('status', status);
-      if (debouncedSearch) params.set('search', debouncedSearch);
-
-      const res = await apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(z.object({
-        documentNumber: z.string(),
-        status: z.string(),
-        supplierName: z.string().optional().nullable(),
-      })));
-      return (res?.data ?? data?.data ?? []).map(p => ({
-        orderNumber: p.documentNumber,
-        status: p.status,
-        supplierName: p.supplierName ?? '',
-      }));
-    } catch {
-      return (data?.data ?? []).map(p => ({
-        orderNumber: p.documentNumber,
-        status: p.status,
-        supplierName: p.supplierName ?? '',
-      }));
-    }
-  };
-
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div className="space-y-4">
@@ -292,9 +323,11 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
                 <ExportMenu
                   data={data.data as unknown as Record<string, unknown>[]}
                   columns={[
-                    { header: 'Doc #', key: 'orderNumber' },
-                    { header: 'Status', key: 'status' },
-                    { header: 'Supplier', key: 'supplierName' },
+                    { header: t('order_number') || 'PO #', key: 'orderNumber' },
+                    { header: t('supplier') || 'Supplier', key: 'supplierName' },
+                    { header: tc('status_label') || 'Status', key: 'status' },
+                    { header: t('total_amount') || 'Total Amount', key: 'totalAmount' },
+                    { header: tc('created_at') || 'Date', key: 'createdAt' },
                   ]}
                   filename="purchase_orders"
                   title={t('title')}

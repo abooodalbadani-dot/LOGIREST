@@ -13,6 +13,8 @@ import { generateExcel } from '@/utils/export';
 import { InventoryMovement, InventoryMovementSchema } from '@/types/inventory';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
+import { format } from 'date-fns';
 
 import { formatQuantity } from '@/lib/utils';
 import { formatNumber, formatDate } from '@/utils/currency';
@@ -57,6 +59,71 @@ export default function MovementsClient() {
   documentType: typeFilter !== 'ALL' ? typeFilter : undefined,
   search: debouncedSearch || undefined,
  });
+
+ const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
+  try {
+   const params = new URLSearchParams();
+   params.set('page', '1');
+   params.set('limit', '10000');
+   if (typeFilter && typeFilter !== 'ALL') params.set('documentType', typeFilter);
+   if (debouncedSearch) params.set('search', debouncedSearch);
+
+   const res = await apiClient.get(`/inventory/movements?${params.toString()}`, paginatedSchema(z.object({
+    timestamp: z.string().optional().nullable(),
+    createdAt: z.string().optional().nullable(),
+    documentReference: z.string().optional().nullable(),
+    transactionType: z.string().optional().nullable(),
+    itemCode: z.string().optional().nullable(),
+    itemName: z.string().optional().nullable(),
+    quantity: z.number().optional().nullable(),
+    warehouseName: z.string().optional().nullable(),
+   })));
+
+   const mapRows = (rows: unknown[]) => rows.map(m => {
+    const itemObj = m as Record<string, unknown>;
+    let dateStr = '—';
+    try {
+     const rawDate = itemObj.timestamp || itemObj.createdAt;
+     if (rawDate) dateStr = format(new Date(String(rawDate)), 'yyyy-MM-dd HH:mm');
+    } catch {
+     dateStr = String(itemObj.timestamp || itemObj.createdAt || '—');
+    }
+
+    return {
+     createdAt: dateStr,
+     documentReference: itemObj.documentReference || '—',
+     transactionType: itemObj.transactionType || '—',
+     itemCode: itemObj.itemCode || '—',
+     itemName: itemObj.itemName || '—',
+     quantity: itemObj.quantity ?? 0,
+     warehouseName: itemObj.warehouseName || '—',
+    };
+   });
+
+   return mapRows((res?.data ?? data?.data ?? []) as unknown[]);
+  } catch {
+   return ((data?.data ?? []) as unknown[]).map(m => {
+    const itemObj = m as Record<string, unknown>;
+    let dateStr = '—';
+    try {
+     const rawDate = itemObj.timestamp || itemObj.createdAt;
+     if (rawDate) dateStr = format(new Date(String(rawDate)), 'yyyy-MM-dd HH:mm');
+    } catch {
+     dateStr = String(itemObj.timestamp || itemObj.createdAt || '—');
+    }
+
+    return {
+     createdAt: dateStr,
+     documentReference: itemObj.documentReference || '—',
+     transactionType: itemObj.transactionType || '—',
+     itemCode: itemObj.itemCode || '—',
+     itemName: itemObj.itemName || '—',
+     quantity: itemObj.quantity ?? 0,
+     warehouseName: itemObj.warehouseName || '—',
+    };
+   });
+  }
+ };
 
  const getDocumentPath = useMemo(() => {
   return (type: string, id: string | null) => {
@@ -145,49 +212,6 @@ export default function MovementsClient() {
    },
   },
  ], [t, currentLocale, getDocumentPath]);
-
- const handleExportAll = async (): Promise<Record<string, unknown>[]> => {
-  try {
-   const params = new URLSearchParams();
-   params.set('page', '1');
-   params.set('limit', '10000');
-   if (searchFilter) params.set('search', searchFilter);
-   if (typeFilter && typeFilter !== 'ALL') params.set('documentType', typeFilter);
-
-   const res = await apiClient.get(`/inventory/movements?${params.toString()}`, paginatedSchema(InventoryMovementSchema));
-   const allMovements = res?.data ?? data?.data ?? [];
-
-   return allMovements.map((item) => ({
-    ...item,
-    createdAt: formatDate(item.timestamp, currentLocale as 'ar' | 'en'),
-   }));
-  } catch (err) {
-   console.error('Failed to fetch all movements for export:', err);
-   return (data?.data ?? []).map((item) => ({
-    ...item,
-    createdAt: formatDate(item.timestamp, currentLocale as 'ar' | 'en'),
-   }));
-  }
- };
-
- const handleExport = () => {
-  if (!data?.data) return;
-  const exportCols = [
-   { header: t('posted_at'), key: 'timestamp', width: 20 },
-   { header: t('document_number'), key: 'documentReference', width: 20 },
-   { header: t('document_type'), key: 'transactionType', width: 15 },
-   { header: t('item_code'), key: 'itemId', width: 15 },
-   { header: t('item_name'), key: 'itemName', width: 30 },
-   { header: t('qty'), key: 'quantity', width: 10 },
-  ];
-
-  const rows = data.data.map(item => ({
-   ...item,
-   timestamp: formatDate(item.timestamp, currentLocale as 'ar' | 'en'),
-  }));
-
-  generateExcel(exportCols, rows, 'Stock_Movements');
- };
 
  const stats = useMemo(() => ({
   total: data?.meta?.total ?? 0,
@@ -307,11 +331,12 @@ export default function MovementsClient() {
        <ExportMenu
         data={data.data as unknown as Record<string, unknown>[]}
         columns={[
-         { header: 'Date', key: 'createdAt' },
-         { header: 'Document Reference', key: 'documentReference' },
-         { header: 'Type', key: 'transactionType' },
-         { header: 'Item Name', key: 'itemName' },
-         { header: 'Quantity', key: 'quantity' },
+         { header: tc('created_at') || 'Date', key: 'createdAt' },
+         { header: t('document_number') || 'Doc Reference', key: 'documentReference' },
+         { header: t('document_class') || 'Type', key: 'transactionType' },
+         { header: t('item_code') || 'Item Code', key: 'itemCode' },
+         { header: t('item_name') || 'Item Name', key: 'itemName' },
+         { header: t('qty') || 'Quantity', key: 'quantity' },
         ]}
         filename="inventory_movements"
         title={t('title') || 'Stock Movements'}
