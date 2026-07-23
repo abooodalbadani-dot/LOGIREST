@@ -1111,7 +1111,8 @@
       "low": "Low",
       "normal": "Normal"
     },
-    "monthly_spend": "Monthly Spend"
+    "monthly_spend": "Monthly Spend",
+    "total_amount": "Total Amount"
   },
   "communications": {
     "notifications": {
@@ -3528,7 +3529,9 @@
       "warehouse_locked": "Cannot post: Warehouse is locked due to an active stocktake.",
       "expiry_date_in_past": "Expiry date cannot be in the past",
       "expiry_date_in_past_warning": "This expiry date is in the past. Provide a reason to override.",
-      "override_reason": "Override reason"
+      "override_reason": "Override reason",
+      "doc_number": "GRN #",
+      "supplier": "Supplier"
     },
     "po": {
       "actions": {
@@ -3664,7 +3667,8 @@
       "import_from_pr": "Import from Purchase Request",
       "import_lines": "Import Lines",
       "no_approved_prs": "No approved purchase requests found",
-      "warning_irreversible": "This action will post the order to the ledger and cannot be reversed."
+      "warning_irreversible": "This action will post the order to the ledger and cannot be reversed.",
+      "order_number": "PO #"
     },
     "pr": {
       "approval": {

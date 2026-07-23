@@ -1111,7 +1111,8 @@
       "low": "منخفض",
       "normal": "عادي"
     },
-    "monthly_spend": "الإنفاق الشهري"
+    "monthly_spend": "الإنفاق الشهري",
+    "total_amount": "إجمالي المبلغ"
   },
   "communications": {
     "notifications": {
@@ -3528,7 +3529,9 @@
       "warehouse_locked": "المستودع مقفل",
       "expiry_date_in_past": "لا يمكن أن يكون تاريخ الصلاحية في الماضي",
       "expiry_date_in_past_warning": "تاريخ الصلاحية هذا في الماضي. قدم سبباً للتجاوز.",
-      "override_reason": "سبب التجاوز"
+      "override_reason": "سبب التجاوز",
+      "doc_number": "رقم السند",
+      "supplier": "المورد"
     },
     "po": {
       "actions": {
@@ -3664,7 +3667,8 @@
       "import_from_pr": "استيراد من طلب شراء",
       "import_lines": "استيراد البنود",
       "no_approved_prs": "لم يتم العثور على طلبات شراء معتمدة",
-      "warning_irreversible": "سيؤدي هذا الإجراء إلى ترحيل الطلب إلى السجل ولا يمكن التراجع عنه."
+      "warning_irreversible": "سيؤدي هذا الإجراء إلى ترحيل الطلب إلى السجل ولا يمكن التراجع عنه.",
+      "order_number": "رقم أمر الشراء"
     },
     "pr": {
       "approval": {
