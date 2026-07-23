@@ -197,7 +197,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
           {/* Mobile Cards View */}
           <div className="flex flex-col gap-3 md:hidden w-full">
             {document?.lines?.map((line, idx) => (
-              <div key={line.id || idx} className="bg-white dark:bg-[#1A2234] border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 rounded-none sm:rounded-xl p-3 shadow-sm flex flex-col gap-3">
+              <div key={line.id || idx} className="bg-white dark:bg-card border-y border-x-0 sm:border border-gray-200 dark:border-gray-800 rounded-none sm:rounded-xl p-3 shadow-sm flex flex-col gap-3">
 
                 <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-2">
                   <div className="flex flex-col">
@@ -209,7 +209,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">REQ QTY</span>
                     <span className="text-xs font-black text-[#0B1220] dark:text-white" dir="ltr">{line.qty}</span>
                   </div>
@@ -217,7 +217,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
                     <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-1">RECEIVED</span>
                     <span className="text-xs font-black text-cyan-700 dark:text-cyan-300" dir="ltr">{line.receivedQty}</span>
                   </div>
-                  <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">UOM</span>
                     <span className="text-xs font-bold text-[#0B1220] dark:text-gray-300 uppercase"> {line.item.primaryUom?.code || 'PCS'}</span>
                   </div>

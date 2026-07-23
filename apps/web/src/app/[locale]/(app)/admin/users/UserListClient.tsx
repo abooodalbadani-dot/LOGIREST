@@ -201,7 +201,7 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
       {(data?.data ?? []).map((user) => (
        <div 
         key={user.id} 
-        className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
+        className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
         onClick={() => router.push(`/admin/users/${user.id}`)}
        >
         
@@ -238,7 +238,7 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
            <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors uppercase"
+            className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-card border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors uppercase"
             onClick={(e) => { e.stopPropagation(); router.push(`/admin/users/${user.id}`); }}
            >
             <Eye className="w-3.5 h-3.5 me-1.5" />

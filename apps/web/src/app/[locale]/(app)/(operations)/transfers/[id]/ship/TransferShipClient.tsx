@@ -292,7 +292,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
            }}
            renderQty={(line) => (
             <div className="flex justify-center">
-             <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+             <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-card rounded-lg">
               {line.qty}
              </div>
             </div>
@@ -311,7 +311,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
                  ? "bg-muted/50 text-foreground border border-emerald-500/20" 
                  : scanned > 0 
                  ? "bg-muted/50 text-foreground border border-cyan-500/20"
-                 : "border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]"
+                 : "border border-gray-300 dark:border-gray-600 bg-white dark:bg-card"
                 )}>
                  {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
                 </div>
@@ -330,7 +330,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
            const isFullyScanned = scanned >= line.qty;
            const itemImage = (line.item as unknown as { image?: string | null }).image;
            return (
-            <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3.5 shadow-sm flex flex-col gap-3">
+            <div key={line.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3.5 shadow-sm flex flex-col gap-3">
              {/* Item Identity */}
              <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
               <div className="flex flex-col text-start">
@@ -350,7 +350,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
 
              {/* Qty & Status Grid */}
              <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+              <div className="flex flex-col bg-gray-50 dark:bg-card p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
                <span className="text-[9px] font-bold text-gray-500 uppercase">{t('transfer_qty')}</span>
                <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
                 {line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
@@ -362,7 +362,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
                ? "bg-emerald-50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-800/30" 
                : scanned > 0 
                ? "bg-cyan-50 dark:bg-cyan-950/10 border-cyan-100 dark:border-cyan-800/30" 
-               : "bg-gray-50 dark:bg-[#0B1220] border-gray-100 dark:border-gray-800"
+               : "bg-gray-50 dark:bg-card border-gray-100 dark:border-gray-800"
               )}>
                <span className={cn(
                 "text-[9px] font-bold uppercase",

@@ -255,7 +255,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                   return (
                     <div
                       key={line.id}
-                      className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3 text-start"
+                      className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3 text-start"
                     >
                       {/* TOP TIER: Item Identity & Status */}
                       <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-2">
@@ -284,7 +284,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                       {/* BOTTOM TIER: The Audit Grid (Snapshot vs Counted vs Variance) */}
                       <div className="grid grid-cols-3 gap-2">
                         {/* System Snapshot */}
-                        <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                        <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800">
                           <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">SNAPSHOT</span>
                           <span className="text-xs font-bold text-gray-500 dark:text-gray-400 tabular-nums" dir="ltr">
                             {snapshotVal !== null ? (
@@ -308,7 +308,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                         </div>
 
                         {/* Variance */}
-                        <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                        <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800">
                           <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">VARIANCE</span>
                           <span
                             className={cn(

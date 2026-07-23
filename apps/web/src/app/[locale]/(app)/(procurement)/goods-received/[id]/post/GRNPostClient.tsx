@@ -213,7 +213,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  {/* FX Panel (PART 2) */}
  <div className="lg:col-span-2 space-y-8">
- <div className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 p-8 rounded-xl shadow-sm relative overflow-hidden group">
+ <div className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 p-8 rounded-xl shadow-sm relative overflow-hidden group">
  <div className="absolute top-0 end-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-all duration-700">
  <TrendingUp className="w-40 h-40" />
  </div>
@@ -229,14 +229,14 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="space-y-2">
  <Label className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">{tc('order_currency')}</Label>
- <div className="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white">
+ <div className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white">
  <span className="font-mono">{supplierCurrency}</span>
  </div>
  </div>
 
  <div className="space-y-2">
  <Label className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">{tc('base_currency')}</Label>
- <div className="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white">
+ <div className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white">
  <span className="font-mono">{baseCurrency}</span>
  </div>
  </div>
@@ -248,7 +248,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
          type="number"
          step="0.0001"
          dir="ltr"
-         className="w-full bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-mono h-11"
+         className="w-full bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-mono h-11"
          {...form.register('fx_rate', { valueAsNumber: true })}
         />
  <div className="absolute inset-y-0 end-3 flex items-center pointer-events-none">

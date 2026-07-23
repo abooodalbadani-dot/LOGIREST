@@ -389,7 +389,7 @@ export function StocktakeListClient({
               return (
                 <div
                   key={session.id}
-                  className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-brand-gold/50 rounded-xl p-4 shadow-sm flex flex-col gap-4 text-start"
+                  className="bg-white dark:bg-card border border-gray-200 dark:border-brand-gold/50 rounded-xl p-4 shadow-sm flex flex-col gap-4 text-start"
                 >
                   {/* TOP TIER: Session ID & Status */}
                   <div className="flex justify-between items-start border-b border-brand-gold/50 dark:border-brand-gold/50 pb-3">
@@ -443,7 +443,7 @@ export function StocktakeListClient({
                     {/* Full-width View Button for easy tapping */}
                     <button
                       onClick={() => router.push(`/stocktake/${session.id}`)}
-                      className="w-full py-2 bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white text-xs font-bold rounded-lg hover:bg-gray-100 transition-colors flex justify-center items-center gap-2"
+                      className="w-full py-2 bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white text-xs font-bold rounded-lg hover:bg-gray-100 transition-colors flex justify-center items-center gap-2"
                     >
                       {tc('view') || 'VIEW SESSION'} <span className="text-lg leading-none">+</span>
                     </button>

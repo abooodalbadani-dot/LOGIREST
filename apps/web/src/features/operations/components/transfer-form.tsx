@@ -182,7 +182,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
            }}
            renderQty={(line) => (
             <div className="flex justify-center">
-             <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+             <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-card rounded-lg">
               {line.qty}
              </div>
             </div>
@@ -192,7 +192,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
              header: t('shipped_qty'),
              cell: (line: TransferLine) => (
               <div className="flex justify-center">
-               <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] px-3 py-1 rounded-lg">
+               <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-card px-3 py-1 rounded-lg">
                 {line.shippedQty ?? line.qty}
                </span>
               </div>
@@ -202,7 +202,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
              header: t('received_qty'),
              cell: (line: TransferLine) => (
               <div className="flex justify-center">
-               <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]'}`}>
+               <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-card'}`}>
                 {line.receivedQty ?? '—'}
                </span>
               </div>
@@ -215,7 +215,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
          {/* Mobile View (Matches Transfer Details style) */}
          <div className="flex flex-col gap-3 md:hidden mt-4">
           {(transfer?.lines ?? []).map((line) => (
-           <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
+           <div key={line.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
             {/* Item Identity */}
             <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
              <div className="flex flex-col text-start">
@@ -235,13 +235,13 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
             
             {/* Qty Grid */}
             <div className="grid grid-cols-3 gap-2">
-             <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+             <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
               <span className="text-[9px] font-bold text-gray-500 uppercase">{t('transfer_qty')}</span>
               <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
                {line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
               </span>
              </div>
-             <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+             <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
               <span className="text-[9px] font-bold text-gray-500 uppercase">{t('shipped_qty')}</span>
               <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
                {line.shippedQty ?? line.qty}

@@ -558,7 +558,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
               const itemImage = (line.item as unknown as { image?: string | null }).image;
               const hasLots = line.lotAllocations && line.lotAllocations.length > 0;
               return (
-                <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3.5 shadow-sm flex flex-col gap-3">
+                <div key={line.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3.5 shadow-sm flex flex-col gap-3">
                   {/* Item Identity */}
                   <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
                     <div className="flex flex-col text-start">
@@ -579,7 +579,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                   {/* Qty & Lot Allocation Grid */}
                   <div className={cn("grid gap-3", hasLots ? "grid-cols-3" : "grid-cols-2")}>
                     {/* Shipped Qty */}
-                    <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center justify-center">
+                    <div className="flex flex-col bg-gray-50 dark:bg-card p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center justify-center">
                       <span className="text-[9px] font-bold text-gray-500 uppercase">{t('shipped_qty')}</span>
                       <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
                         {line.shippedQty ?? line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
@@ -587,7 +587,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                     </div>
 
                     {/* Received Qty */}
-                    <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center justify-center items-center">
+                    <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center justify-center items-center">
                       <span className="text-[9px] font-bold text-gray-500 uppercase mb-1">{t('received_qty')}</span>
                       <TransferReceiveQtyCell
                         line={line}
@@ -599,7 +599,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
                     {/* Lot Allocation Button (if lot allocations exist) */}
                     {hasLots && (
-                      <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center justify-center items-center">
+                      <div className="flex flex-col bg-gray-50 dark:bg-card p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center justify-center items-center">
                         <span className="text-[9px] font-bold text-gray-500 uppercase mb-1">{t('lot') || 'Lots'}</span>
                         <button
                           type="button"

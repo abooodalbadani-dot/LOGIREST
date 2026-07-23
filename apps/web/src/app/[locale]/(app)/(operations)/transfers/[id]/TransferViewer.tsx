@@ -150,7 +150,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
       }}
       renderQty={(line) => (
        <div className="flex justify-center">
-        <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] rounded-lg">
+        <div className="px-3 py-1 font-mono font-bold text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-card rounded-lg">
          {line.qty}
         </div>
        </div>
@@ -160,7 +160,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
         header: t('shipped_qty'),
         cell: (line: TransferLine) => (
          <div className="flex justify-center">
-          <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234] px-3 py-1 rounded-lg">
+          <span dir="ltr" className="font-mono text-xs font-bold border border-gray-300 dark:border-gray-600 bg-white dark:bg-card px-3 py-1 rounded-lg">
            {line.shippedQty ?? line.qty}
           </span>
          </div>
@@ -170,7 +170,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
         header: t('received_qty'),
         cell: (line: TransferLine) => (
          <div className="flex justify-center">
-          <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2234]'}`}>
+          <span dir="ltr" className={`font-mono text-xs font-bold px-3 py-1 rounded-lg border ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-card'}`}>
            {line.receivedQty ?? '—'}
           </span>
          </div>

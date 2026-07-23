@@ -543,7 +543,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           value={field.value}
                           onSelect={(item) => field.onChange(item.id)}
                           placeholder={t('select_supplier')}
-                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
+                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -563,7 +563,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           <Input
                             placeholder={t('linked_pr_placeholder')}
                             disabled={isLocked}
-                            className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-11 rounded-md flex-1 focus:border-[#b48e67] focus:ring-[#b48e67]"
+                            className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-11 rounded-md flex-1 focus:border-[#b48e67] focus:ring-[#b48e67]"
                             value={loadingSelectedPR ? tc('loading') : (selectedPR?.documentNumber || field.value || '')}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
@@ -590,7 +590,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 />
 
                 <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-                  <DialogContent className="max-w-2xl w-full inset-x-0 bottom-0 mb-0 sm:mb-auto sm:bottom-auto rounded-b-none sm:rounded-b-xl bg-white dark:bg-[#1A2234] shadow-2xl z-50 border border-gray-200 dark:border-gray-800">
+                  <DialogContent className="max-w-2xl w-full inset-x-0 bottom-0 mb-0 sm:mb-auto sm:bottom-auto rounded-b-none sm:rounded-b-xl bg-white dark:bg-card shadow-2xl z-50 border border-gray-200 dark:border-gray-800">
                     <DialogHeader>
                       <DialogTitle>{t('import_from_pr') || 'Import from Purchase Request'}</DialogTitle>
                     </DialogHeader>
@@ -651,7 +651,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('expected_date')}</FormLabel>
                       <FormControl>
-                        <Input type="date" disabled={isLocked} className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
+                        <Input type="date" disabled={isLocked} className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -670,7 +670,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           value={field.value}
                           onSelect={(item) => field.onChange(item.id)}
                           placeholder={t('select_warehouse')}
-                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
+                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -691,7 +691,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           value={field.value}
                           onSelect={(item) => field.onChange(item.id)}
                           placeholder={t('currency_placeholder')}
-                          className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase font-mono focus:border-[#b48e67] focus:ring-[#b48e67]"
+                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase font-mono focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -718,8 +718,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                             disabled={isLocked}
                             readOnly={selectedCurrencyCode === baseCurrency}
                             className={cn(
-                              "bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 ps-10 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]",
-                              selectedCurrencyCode === baseCurrency && "opacity-80 cursor-not-allowed bg-gray-100 dark:bg-[#1A2234]"
+                              "bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 ps-10 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]",
+                              selectedCurrencyCode === baseCurrency && "opacity-80 cursor-not-allowed bg-gray-100 dark:bg-card"
                             )}
                             dir="ltr"
                             {...field}
@@ -746,7 +746,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <FormItem className="md:col-span-2 text-start">
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('general_notes')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
+                        <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -755,7 +755,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               </div>
 
               <div className="pt-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 shadow-sm p-4 md:p-6 rounded-2xl">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-sm p-4 md:p-6 rounded-2xl">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-operational-cyan/10 rounded-2xl flex items-center justify-center text-operational-cyan">
                       <Package className="w-6 h-6" />
@@ -797,7 +797,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
 
                 <div className="mt-10 flex flex-col md:flex-row justify-end gap-6">
-                  <div className="bg-gray-50 dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 px-6 sm:px-8 py-5 rounded-2xl flex items-center justify-between gap-4 sm:gap-10 w-full md:w-auto md:min-w-[300px]">
+                  <div className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 px-6 sm:px-8 py-5 rounded-2xl flex items-center justify-between gap-4 sm:gap-10 w-full md:w-auto md:min-w-[300px]">
                     <span className="text-label-xs uppercase font-semibold text-muted-foreground/40">{t('supplier_total')}</span>
                     <span className="text-title-lg font-mono font-semibold text-foreground" dir="ltr">
                       {formatCurrency(supplierTotalAmount, selectedCurrencyCode, locale as 'ar' | 'en')}

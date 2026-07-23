@@ -382,7 +382,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
               {Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
-                  className="bg-white dark:bg-[#1A2234] border border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm animate-pulse space-y-4"
+                  className="bg-white dark:bg-card border border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm animate-pulse space-y-4"
                 >
                   <div className="flex justify-between items-center">
                     <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
@@ -441,7 +441,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
                   return (
                     <div
                       key={po.id}
-                      className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm hover:border-gray-300 dark:hover:border-gray-700 transition-all cursor-pointer"
+                      className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm hover:border-gray-300 dark:hover:border-gray-700 transition-all cursor-pointer"
                       onClick={() => router.push(`/purchase-orders/${po.id}`)}
                     >
                       {/* TOP TIER: Identity */}

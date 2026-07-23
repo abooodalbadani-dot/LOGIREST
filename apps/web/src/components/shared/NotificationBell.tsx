@@ -115,7 +115,7 @@ export function NotificationBell() {
 
    <DropdownMenuContent
     align={isAr ? 'start' : 'end'}
-    className="w-[350px] max-w-[95vw] p-0 z-50 rounded-2xl border border-border shadow-xl bg-white dark:bg-[#1A2234]"
+    className="w-[350px] max-w-[95vw] p-0 z-50 rounded-2xl border border-border shadow-xl bg-white dark:bg-card"
    >
      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
       <span className="text-body-md font-bold text-foreground">

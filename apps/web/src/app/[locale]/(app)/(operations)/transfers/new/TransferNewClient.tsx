@@ -129,7 +129,7 @@ function TransferLineQtyCell({ lineId, qty, isExceeded, onChange }: TransferLine
         onChange={handleChange}
         onBlur={handleBlur}
         className={cn(
-          "w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all h-10",
+          "w-full text-center font-black text-lg bg-white dark:bg-card border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all h-10",
           isExceeded && "border-status-error focus:ring-1 focus:ring-status-error/30 focus:border-status-error"
         )}
       />

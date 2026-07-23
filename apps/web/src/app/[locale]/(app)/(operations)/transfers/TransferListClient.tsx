@@ -411,7 +411,7 @@ export function TransferListClient() {
             maxHeight={600}
             className="mt-4 pb-10"
             renderCard={(item) => (
-              <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+              <div key={item.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
                 <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
                   <div><StatusBadge status={item.transferStatus} /></div>
                   <span className="text-[10px] text-gray-500 font-mono" dir="ltr">
@@ -424,7 +424,7 @@ export function TransferListClient() {
                     {tCommon('view')} <ArrowLeft className="w-3 h-3 rtl:rotate-180" />
                   </button>
                 </div>
-                <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 mt-1">
+                <div className="bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 mt-1">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-[9px] text-gray-400 font-bold uppercase">{t('from_warehouse')}</span>
                     <span className="font-bold text-gray-700 dark:text-gray-300">{warehouseMap.get(item.fromWarehouseId) || item.fromWarehouseName || '—'}</span>

@@ -76,7 +76,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
-   <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:max-w-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-2xl p-0 overflow-hidden rounded-t-2xl rounded-b-none sm:rounded-b-2xl">
+   <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:max-w-2xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-2xl p-0 overflow-hidden rounded-t-2xl rounded-b-none sm:rounded-b-2xl">
     <div className="bg-muted/10 p-8 border-b">
      <DialogHeader>
       <div className="flex items-center gap-4 mb-2">

@@ -73,7 +73,7 @@ export function ConvertToPOModal({ pr, open, onOpenChange }: ConvertToPOModalPro
               value={supplierId}
               onSelect={(item) => setSupplierId(item.id)}
               placeholder={tc('select_supplier')}
-              triggerClassName="bg-gray-50 dark:bg-[#0B1220] border-gray-300 dark:border-gray-700"
+              triggerClassName="bg-gray-50 dark:bg-card border-gray-300 dark:border-gray-700"
             />
           </div>
           <div className="space-y-2">
@@ -83,7 +83,7 @@ export function ConvertToPOModal({ pr, open, onOpenChange }: ConvertToPOModalPro
               value={currencyId}
               onSelect={(item) => setCurrencyId(item.id)}
               placeholder={tc('select_currency')}
-              triggerClassName="bg-gray-50 dark:bg-[#0B1220] border-gray-300 dark:border-gray-700"
+              triggerClassName="bg-gray-50 dark:bg-card border-gray-300 dark:border-gray-700"
             />
           </div>
         </div>

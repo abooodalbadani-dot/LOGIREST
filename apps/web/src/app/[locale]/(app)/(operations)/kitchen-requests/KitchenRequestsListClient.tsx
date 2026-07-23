@@ -355,7 +355,7 @@ export function KitchenRequestsListClient({
           exportTitle={t('title')}
           exportFilename="operational_requisitions"
           renderMobileCard={(item: KitchenRequestSummary) => (
-            <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 text-start">
+            <div key={item.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 text-start">
               <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
                 <div><StatusBadge status={item.status} /></div>
                 <span className="text-[10px] text-gray-500 font-mono" dir="ltr">
@@ -381,7 +381,7 @@ export function KitchenRequestsListClient({
                 </Link>
               </div>
 
-              <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 mt-1">
+              <div className="bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 mt-1">
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-[9px] text-gray-400 font-bold uppercase min-w-[50px]">{locale === 'ar' ? 'القسم' : 'DEPT'}</span>
                   <span className="font-bold text-gray-700 dark:text-gray-300 truncate">{item.departmentName || '—'}</span>

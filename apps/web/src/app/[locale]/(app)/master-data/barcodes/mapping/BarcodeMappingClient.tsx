@@ -384,7 +384,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                       <div
                         key={item.id}
                         className={cn(
-                          "bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer transition-colors",
+                          "bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer transition-colors",
                           isSelected ? "border-amber-500/50 bg-amber-500/5 dark:bg-amber-500/10" : "hover:bg-gray-50 dark:hover:bg-[#1A2234]/80"
                         )}
                         onClick={() => setSelectedItem(item)}
@@ -411,7 +411,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                               "h-8 px-4 flex items-center justify-center rounded-md text-xs font-bold transition-colors uppercase w-full",
                               isSelected
                                 ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20"
-                                : "bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-operational-cyan dark:text-operational-cyan hover:bg-gray-200 dark:hover:bg-gray-800"
+                                : "bg-gray-100 dark:bg-card border border-gray-200 dark:border-gray-700 text-operational-cyan dark:text-operational-cyan hover:bg-gray-200 dark:hover:bg-gray-800"
                             )}
                             onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }}
                           >

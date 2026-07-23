@@ -207,13 +207,13 @@ export default async function LocaleLayout({
 
     const direction = locale === 'ar' ? 'rtl' : 'ltr';
     const cookieStore = await cookies();
-    const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'light';
+    const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'dark';
 
 
     return (
         <html lang={locale} dir={direction} className="force-latin-numbers" suppressHydrationWarning>
             <body
-                className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${beVietnamPro.variable} font-sans antialiased text-text-main dark:text-white bg-bg-light dark:bg-brand-black transition-colors duration-300 min-h-screen custom-scrollbar`}
+                className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${beVietnamPro.variable} font-sans antialiased text-foreground bg-background transition-colors duration-300 min-h-screen custom-scrollbar`}
                 suppressHydrationWarning
             >
                 <NextTopLoader

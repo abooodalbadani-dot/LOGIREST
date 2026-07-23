@@ -115,7 +115,7 @@ export default function SearchClient() {
  ];
 
  return (
-  <div className="flex flex-col min-h-screen w-full bg-gray-50 dark:bg-[#0B1220] md:bg-white md:dark:bg-[#0B1220] text-[#0B1220] dark:text-white selection:bg-[#b48e67]/30">
+  <div className="flex flex-col min-h-screen w-full bg-gray-50 dark:bg-card md:bg-white md:dark:bg-card text-[#0B1220] dark:text-white selection:bg-[#b48e67]/30">
    <div className="max-w-[1400px] mx-auto w-full pt-12 pb-8 px-6 lg:px-12">
     
     {/* Header & Global Search */}
@@ -148,7 +148,7 @@ export default function SearchClient() {
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
       placeholder={t('placeholder') || 'Find item, supplier, lot, or document...'}
-      className="h-14 w-full ps-12 pe-40 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-lg text-sm font-bold text-[#0B1220] dark:text-white placeholder:text-gray-500 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] transition-all outline-none"
+      className="h-14 w-full ps-12 pe-40 rounded-2xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-lg text-sm font-bold text-[#0B1220] dark:text-white placeholder:text-gray-500 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] transition-all outline-none"
      />
      <div className="absolute inset-y-0 end-0 pe-2 flex items-center">
       <button type="submit" className="h-10 px-5 rounded-xl bg-[#0B1220] dark:bg-white text-white dark:text-[#0B1220] hover:bg-gray-800 dark:hover:bg-gray-100 font-bold text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm">
@@ -163,7 +163,7 @@ export default function SearchClient() {
      
      {/* Filter Sidebar */}
      <div className="w-full lg:w-[320px] space-y-6 shrink-0">
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-xl">
+      <div className="p-6 rounded-3xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-xl">
        <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
          <Filter className="w-4 h-4 text-[#b48e67]" />
@@ -178,7 +178,7 @@ export default function SearchClient() {
         <div className="space-y-4">
          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t('main_category') || 'MAIN CATEGORY'}</span>
           <div className="flex flex-col gap-2">
-           <button onClick={() => setActiveCategory('ALL')} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${'ALL' === activeCategory ? 'border-[#b48e67]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
+           <button onClick={() => setActiveCategory('ALL')} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-card border ${'ALL' === activeCategory ? 'border-[#b48e67]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
             <span className={`text-xs font-bold uppercase transition-colors ${'ALL' === activeCategory ? 'text-[#0B1220] dark:text-white' : 'text-gray-800 dark:text-gray-400 group-hover:text-[#0B1220] dark:group-hover:text-white'}`}>ALL</span>
             <div className={`w-2 h-2 rounded-full transition-colors ${'ALL' === activeCategory ? 'bg-[#b48e67]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#b48e67]/50'}`} />
            </button>
@@ -193,7 +193,7 @@ export default function SearchClient() {
             dbCategories.map((category) => {
              const isActive = category.id === activeCategory;
              return (
-              <button key={category.id} onClick={() => setActiveCategory(category.id)} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#0B1220] border ${isActive ? 'border-[#b48e67]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
+              <button key={category.id} onClick={() => setActiveCategory(category.id)} className={`flex items-center justify-between px-5 py-4 rounded-2xl bg-gray-50 dark:bg-card border ${isActive ? 'border-[#b48e67]' : 'border-gray-200 dark:border-gray-800 hover:border-[#b48e67]'} transition-colors group`}>
                <span className={`text-xs font-bold uppercase transition-colors ${isActive ? 'text-[#0B1220] dark:text-white' : 'text-gray-800 dark:text-gray-400 group-hover:text-[#0B1220] dark:group-hover:text-white'}`}>{category.name}</span>
                <div className={`w-2 h-2 rounded-full transition-colors ${isActive ? 'bg-[#b48e67]' : 'bg-gray-300 dark:bg-gray-700 group-hover:bg-[#b48e67]/50'}`} />
               </button>
@@ -220,7 +220,7 @@ export default function SearchClient() {
       </div>
 
       {/* Recent Searches */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-xl">
+      <div className="p-6 rounded-3xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-xl">
        <div className="flex items-center gap-3 mb-6">
         <Clock className="w-4 h-4 text-[#b48e67]" />
         <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#0B1220] dark:text-white">{t('recent_searches') || 'RECENT SEARCHES'}</h4>
@@ -249,7 +249,7 @@ export default function SearchClient() {
         return (
          <div key={section.id} className="space-y-6">
           <div className="flex items-center gap-4 px-2">
-           <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 flex items-center justify-center">
+           <div className="w-10 h-10 rounded-xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 flex items-center justify-center">
             <section.icon className={`w-4 h-4 ${section.color}`} />
            </div>
            <div className="flex flex-col gap-0.5">
@@ -261,13 +261,13 @@ export default function SearchClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
            {sectionResults.map(result => (
-            <Link key={result.id} href={result.link} className="group flex flex-col p-6 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-2xl hover:scale-[0.98] active:scale-95 transition-all duration-300 relative overflow-hidden">
+            <Link key={result.id} href={result.link} className="group flex flex-col p-6 rounded-2xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-2xl hover:scale-[0.98] active:scale-95 transition-all duration-300 relative overflow-hidden">
              <div className="flex items-start justify-between mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-[#0B1220] flex items-center justify-center border border-gray-200 dark:border-gray-800 group-hover:border-[#b48e67]/30 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-card flex items-center justify-center border border-gray-200 dark:border-gray-800 group-hover:border-[#b48e67]/30 transition-colors">
                {result.type === 'item' ? <Package className="w-5 h-5 text-[#b48e67]" /> : <Database className="w-5 h-5 text-gray-400" />}
               </div>
               {result.status && (
-               <div className="bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-[9px] font-bold px-3 py-1.5 rounded-md uppercase tracking-widest">
+               <div className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-[9px] font-bold px-3 py-1.5 rounded-md uppercase tracking-widest">
                 {result.status}
                </div>
               )}
@@ -296,7 +296,7 @@ export default function SearchClient() {
        })
       ) : query ? (
        <div className="flex flex-col items-center justify-center py-32 gap-6 text-center max-w-md mx-auto">
-        <div className="w-20 h-20 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-2xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 flex items-center justify-center">
          <AlertCircle className="w-8 h-8 text-red-500/50" />
         </div>
         <div className="space-y-2">
@@ -316,8 +316,8 @@ export default function SearchClient() {
          { title: t('tips.transactions') || 'TRANSACTIONS', icon: FileText, desc: t('tips.transactions_desc') || 'Search POs, GRNs, or Adjustments.' },
          { title: t('tips.suppliers') || 'SUPPLIERS', icon: Truck, desc: t('tips.suppliers_desc') || 'Find vendors by name or code.' },
         ].map((tip, i) => (
-         <div key={i} className="p-8 rounded-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 space-y-4 text-center hover:border-gray-300 dark:hover:border-gray-700 transition-colors group">
-          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 flex items-center justify-center mx-auto group-hover:border-[#b48e67]/50 transition-colors">
+         <div key={i} className="p-8 rounded-2xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 space-y-4 text-center hover:border-gray-300 dark:hover:border-gray-700 transition-colors group">
+          <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 flex items-center justify-center mx-auto group-hover:border-[#b48e67]/50 transition-colors">
            <tip.icon className="w-5 h-5 text-gray-500 group-hover:text-[#b48e67] transition-colors" />
           </div>
           <div className="space-y-1">

@@ -294,7 +294,7 @@ export function TransferHubClient() {
               const colorClass = colors[s as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
 
               return (
-                <div key={item.id} className="bg-white dark:bg-[#111827] border border-gray-200 dark:border-white/5 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                <div key={item.id} className="bg-white dark:bg-card border border-gray-200 dark:border-white/5 rounded-xl p-4 shadow-sm flex flex-col gap-3">
                   {/* Top Row: Status badge and Date */}
                   <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800/80 pb-2">
                     <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${colorClass}`}>

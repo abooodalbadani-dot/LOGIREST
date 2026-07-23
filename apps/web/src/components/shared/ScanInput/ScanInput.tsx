@@ -204,7 +204,7 @@ export const ScanInput = forwardRef(
                 <div className="w-full">
                     <div className={cn(
                         "relative flex items-center transition-all duration-200 overflow-hidden flex-1 min-w-[200px] w-full",
-                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : className ? className : "flex items-center w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden flex-1 min-w-[200px]",
+                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : className ? className : "flex items-center w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden flex-1 min-w-[200px]",
                         variant === 'retro' && config.container,
                         variant === 'retro' ? (
                             scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :

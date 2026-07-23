@@ -226,7 +226,7 @@ export function AuditLogsClient() {
       {(data?.data ?? []).map((log) => (
        <div 
         key={log.id} 
-        className={`bg-white dark:bg-[#1A2234] border rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer transition-colors ${expandedId === log.id ? 'border-brand-gold dark:border-brand-gold bg-brand-gold/5' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#1A2234]/80'}`}
+        className={`bg-white dark:bg-card border rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer transition-colors ${expandedId === log.id ? 'border-brand-gold dark:border-brand-gold bg-brand-gold/5' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#1A2234]/80'}`}
         onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
        >
         

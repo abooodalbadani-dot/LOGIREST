@@ -25,7 +25,7 @@ export function StickyGlassHeader({
  return (
   <div
    className={cn(
-    'flex flex-col md:flex-row justify-between items-start md:items-center p-4 gap-4 bg-white dark:bg-[#1A2234] rounded-none sm:rounded-xl border-y border-x-0 sm:border border-gray-100 dark:border-gray-800 overflow-hidden print:hidden',
+    'flex flex-col md:flex-row justify-between items-start md:items-center p-4 gap-4 bg-white dark:bg-card rounded-none sm:rounded-xl border-y border-x-0 sm:border border-gray-100 dark:border-gray-800 overflow-hidden print:hidden',
     isEditing && 'border-s-4 border-s-primary',
     className,
    )}

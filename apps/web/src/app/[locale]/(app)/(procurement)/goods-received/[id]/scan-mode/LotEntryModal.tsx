@@ -97,7 +97,7 @@ export function LotEntryModal({
 
  return (
  <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
- <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:max-w-[425px] bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-t-[2rem] sm:rounded-b-[2rem] rounded-b-none shadow-2xl p-4 sm:p-8">
+ <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:max-w-[425px] bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-t-[2rem] sm:rounded-b-[2rem] rounded-b-none shadow-2xl p-4 sm:p-8">
  <DialogHeader>
  <DialogTitle className="text-title-lg font-semibold">{t("lot_entry_title")}</DialogTitle>
  <DialogDescription className="text-muted-foreground/60">

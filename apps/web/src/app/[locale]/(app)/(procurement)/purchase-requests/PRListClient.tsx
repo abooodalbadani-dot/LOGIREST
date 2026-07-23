@@ -351,7 +351,7 @@ export function PRListClient() {
               <div
                 key={pr.id}
                 onClick={() => router.push(`/purchase-requests/${pr.id}`)}
-                className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer"
+                className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer"
               >
                 {/* TOP TIER: Document ID & Status */}
                 <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
@@ -386,7 +386,7 @@ export function PRListClient() {
                   </div>
 
                   {/* Standardized Touch-Friendly Action Button */}
-                  <button className="h-8 px-4 flex items-center justify-center bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-[#b48e67] rounded-md text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <button className="h-8 px-4 flex items-center justify-center bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-[#b48e67] rounded-md text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     {tc('view') || 'عرض'}
                   </button>
                 </div>

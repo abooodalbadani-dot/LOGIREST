@@ -209,7 +209,7 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
     {/* Mobile Card Protocol */}
     <div className="flex flex-col gap-3 md:hidden mt-4">
      {(transfer?.lines ?? []).map((line) => (
-      <div key={line.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
+      <div key={line.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
        {/* Item Identity */}
        <div className="flex flex-col border-b border-gray-100 dark:border-gray-800 pb-2">
         <span className="text-sm font-black text-[#0B1220] dark:text-white">{line.item?.name}</span>
@@ -218,11 +218,11 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
        
        {/* Qty Grid */}
        <div className="grid grid-cols-3 gap-2">
-        <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+        <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
          <span className="text-[9px] font-bold text-gray-500 uppercase">{t('transfer_qty')}</span>
          <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200" dir="ltr">{line.qty} {line.item?.primaryUom?.code}</span>
         </div>
-        <div className="flex flex-col bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
+        <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
          <span className="text-[9px] font-bold text-gray-500 uppercase">{t('shipped_qty')}</span>
          <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200" dir="ltr">{line.shippedQty ?? line.qty}</span>
         </div>

@@ -314,7 +314,7 @@ export function IssueForm() {
             form.setValue(`lines.${line.index}.requestedQty`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
           }}
           disabled={form.formState.isSubmitting}
-          className="w-full text-center font-black text-lg bg-white dark:bg-[#1A2234] border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+          className="w-full text-center font-black text-lg bg-white dark:bg-card border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
         />
       </div>
       {form.formState.errors.lines?.[line.index]?.requestedQty && (
@@ -413,7 +413,7 @@ export function IssueForm() {
 
         {/* Fulfillment Orchestration Header */}
         <div className={cn(
-          "bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-700 shadow-sm px-4 py-6 sm:p-10 rounded-none sm:rounded-[2.5rem] shadow-2xl shadow-primary/5 flex flex-col w-full text-left items-start",
+          "bg-white dark:bg-card border-y border-x-0 sm:border border-gray-200 dark:border-gray-700 shadow-sm px-4 py-6 sm:p-10 rounded-none sm:rounded-[2.5rem] shadow-2xl shadow-primary/5 flex flex-col w-full text-left items-start",
           isAr && "text-right items-start"
         )}>
           <div className={cn(
@@ -438,7 +438,7 @@ export function IssueForm() {
               "ms-auto flex items-center gap-2",
               isAr ? "mr-auto ms-0" : "ms-auto mr-0"
             )}>
-              <Badge className="bg-surface-container-high dark:bg-[#1A2234] text-muted-foreground/60 dark:text-gray-400 border-none font-semibold text-label-xxs uppercase px-4 h-9 rounded-xl">{tc('warehouses.main')}</Badge>
+              <Badge className="bg-surface-container-high dark:bg-card text-muted-foreground/60 dark:text-gray-400 border-none font-semibold text-label-xxs uppercase px-4 h-9 rounded-xl">{tc('warehouses.main')}</Badge>
             </div>
           </div>
 
@@ -463,7 +463,7 @@ export function IssueForm() {
                   value={selectedKitchenRequestId || ""}
                   onSelect={(item) => setSelectedKitchenRequestId(item.id)}
                   placeholder={t('select_kitchen_request') || "Select Kitchen Request"}
-                  triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                  triggerClassName="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
                 />
               </FormControl>
             </FormItem>
@@ -484,7 +484,7 @@ export function IssueForm() {
                       onSelect={(item) => field.onChange(item.id)}
                       placeholder={tc('warehouse') || "Select Warehouse"}
                       disabled={!!selectedKitchenRequestId}
-                      triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                      triggerClassName="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
                     />
                   </FormControl>
                   <FormMessage className="text-label-xxs font-semibold uppercase" />
@@ -508,7 +508,7 @@ export function IssueForm() {
                       onSelect={(item) => field.onChange(item.id)}
                       placeholder={t('select_department')}
                       disabled={!!selectedKitchenRequestId}
-                      triggerClassName="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                      triggerClassName="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
                     />
                   </FormControl>
                   <FormMessage className="text-label-xxs font-semibold uppercase" />
@@ -526,7 +526,7 @@ export function IssueForm() {
                     {t('operational_notes')}
                   </FormLabel>
                   <FormControl>
-                    <Textarea placeholder={t('notes_placeholder')} className="w-full bg-gray-50 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all min-h-[100px]" {...field} />
+                    <Textarea placeholder={t('notes_placeholder')} className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all min-h-[100px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -625,7 +625,7 @@ export function IssueForm() {
         </div>
 
         {/* Global Fulfillment Summary */}
-        <div className="px-4 py-6 sm:p-10 bg-white dark:bg-[#0B1220] border-y border-x-0 sm:border border-gray-200 dark:border-gray-700 shadow-sm rounded-none sm:rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 shadow-inner w-full">
+        <div className="px-4 py-6 sm:p-10 bg-white dark:bg-card border-y border-x-0 sm:border border-gray-200 dark:border-gray-700 shadow-sm rounded-none sm:rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 shadow-inner w-full">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 rounded-[1.75rem] bg-[#b48e67]/10 flex items-center justify-center border border-[#b48e67]/20 shadow-sm text-[#b48e67]">
               <PackageCheck className="w-8 h-8" />

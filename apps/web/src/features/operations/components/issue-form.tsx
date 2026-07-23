@@ -761,7 +761,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           setFefoOpen(true);
         }
       }}>
-        <DialogContent className="max-h-[85vh] max-w-2xl bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-2xl p-0 overflow-hidden">
+        <DialogContent className="max-h-[85vh] max-w-2xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-2xl rounded-2xl p-0 overflow-hidden">
           <div className="p-8 bg-primary/[0.02]">
             <DialogHeader>
               <DialogTitle className="text-title-lg font-semibold uppercase italic text-foreground">

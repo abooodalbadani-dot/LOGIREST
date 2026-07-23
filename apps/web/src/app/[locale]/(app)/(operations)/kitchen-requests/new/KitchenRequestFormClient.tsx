@@ -552,7 +552,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                     const selectedItem = items?.find(i => i.id === selectedItemId);
                     if (!selectedItem) return null;
                     return (
-                      <div key={field.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm relative animate-in fade-in duration-200 hover:border-brand-gold/30">
+                      <div key={field.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm relative animate-in fade-in duration-200 hover:border-brand-gold/30">
                         {/* Header: Image + Item Name + Code + UOM Badge on Start side, Delete Button on End side (opposite side) */}
                         <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
                           <div className="flex items-center gap-3 min-w-0 flex-1">

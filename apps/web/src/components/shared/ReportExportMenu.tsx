@@ -289,7 +289,7 @@ export function ReportExportMenu({
       size="sm"
       disabled={exportDisabled}
       className={cn(
-       'h-10 px-6 flex items-center gap-2 rounded-xl bg-white dark:bg-[#1A2234] border border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 font-bold uppercase shadow-sm transition-all text-xs',
+       'h-10 px-6 flex items-center gap-2 rounded-xl bg-white dark:bg-card border border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 font-bold uppercase shadow-sm transition-all text-xs',
        exportDisabled && 'opacity-50 cursor-not-allowed',
       )}
      >
@@ -299,7 +299,7 @@ export function ReportExportMenu({
     </DropdownMenuTrigger>
     <DropdownMenuContent
      align="end"
-     className="w-48 bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 shadow-lg z-50 rounded-2xl p-1 animate-in fade-in zoom-in-95 duration-200"
+     className="w-48 bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-lg z-50 rounded-2xl p-1 animate-in fade-in zoom-in-95 duration-200"
     >
      <DropdownMenuItem
       onClick={handleExportCSV}

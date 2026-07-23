@@ -29,7 +29,7 @@ const statusBadgeVariants = cva(
   error:
   "bg-red-500/10 text-red-500 border-none hover:bg-red-500/20",
   success:
-  "bg-slate-100 dark:bg-[#1A2234] text-[#0B1220] dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-[#232d44]",
+  "bg-slate-100 dark:bg-card text-[#0B1220] dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-[#232d44]",
   outline: 
   "text-muted-foreground bg-transparent border border-border/50",
   info: 

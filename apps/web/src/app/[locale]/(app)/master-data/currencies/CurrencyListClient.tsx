@@ -246,7 +246,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
     {filteredCurrencies.map((currency: Currency) => (
      <div 
       key={currency.id} 
-      className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
+      className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1A2234]/80 transition-colors"
       onClick={() => router.push(`/master-data/currencies/${currency.id}`)}
      >
       
@@ -277,7 +277,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
         <div className="flex gap-2 shrink-0">
          <PermissionGate action="view" resource="master_data_currencies">
           <button 
-           className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors uppercase"
+           className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-card border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors uppercase"
            onClick={(e) => { e.stopPropagation(); router.push(`/master-data/currencies/${currency.id}`); }}
           >
            {tc('view')}

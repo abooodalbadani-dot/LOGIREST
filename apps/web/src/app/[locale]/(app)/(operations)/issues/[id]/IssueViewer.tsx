@@ -193,7 +193,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       </div>
 
       {/* 3. The Line Items Table */}
-       <div className="w-full bg-card dark:bg-[#0B1220] border-y border-x-0 sm:border border-border dark:border-[#b48e67]/40 shadow-sm rounded-none sm:rounded-xl overflow-hidden mt-0 sm:mt-6">
+       <div className="w-full bg-card dark:bg-card border-y border-x-0 sm:border border-border dark:border-[#b48e67]/40 shadow-sm rounded-none sm:rounded-xl overflow-hidden mt-0 sm:mt-6">
        <div className="p-4 md:p-6 flex justify-between items-center border-b border-border dark:border-[#b48e67]/20">
         <div className="flex items-center gap-3">
          <div className="w-1 h-5 bg-primary dark:bg-[#b48e67] rounded-sm" />

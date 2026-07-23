@@ -453,7 +453,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                 return (
                   <div
                     key={line.id}
-                    className="bg-white dark:bg-[#1A2234] border-2 border-transparent focus-within:border-[#0B1220] dark:focus-within:border-[#b48e67] rounded-xl p-4 shadow-md flex flex-col gap-3 transition-all relative text-start"
+                    className="bg-white dark:bg-card border-2 border-transparent focus-within:border-[#0B1220] dark:focus-within:border-[#b48e67] rounded-xl p-4 shadow-md flex flex-col gap-3 transition-all relative text-start"
                   >
                     {/* TOP TIER: Item Info & UOM */}
                     <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
@@ -473,7 +473,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                     </div>
 
                     {/* MIDDLE TIER: Tracing (LOT & Expiry) */}
-                    <div className="flex flex-col gap-1 bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                    <div className="flex flex-col gap-1 bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800">
                       <div className="flex justify-between items-center text-[10px]">
                         <span className="text-gray-500 uppercase font-bold">LOT:</span>
                         <span className="font-mono text-[#0B1220] dark:text-gray-200" dir="ltr">

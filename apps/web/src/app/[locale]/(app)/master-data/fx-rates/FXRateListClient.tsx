@@ -301,7 +301,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
        return (
        <div 
         key={rate.id} 
-        className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+        className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
        >
         
         {/* TOP TIER: Currency Pair & Status */}
@@ -339,7 +339,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
         <div className="flex justify-end items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
           <Button 
            disabled={isAuditor}
-           className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-[#0B1220] border border-gray-200 dark:border-gray-700 text-operational-cyan dark:text-operational-cyan hover:bg-gray-200 dark:hover:bg-gray-800 rounded-md text-xs font-bold transition-colors uppercase"
+           className="h-8 px-4 flex items-center justify-center bg-gray-100 dark:bg-card border border-gray-200 dark:border-gray-700 text-operational-cyan dark:text-operational-cyan hover:bg-gray-200 dark:hover:bg-gray-800 rounded-md text-xs font-bold transition-colors uppercase"
            onClick={(e) => { 
             if (isAuditor) return;
             e.stopPropagation(); 

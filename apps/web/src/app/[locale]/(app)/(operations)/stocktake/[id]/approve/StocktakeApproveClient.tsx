@@ -350,7 +350,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
       const varianceValue = variance * item.unitCost;
       
       return (
-        <div key={item.id} className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+        <div key={item.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
           
           {/* TOP: Item Identity */}
           <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-2">
@@ -364,7 +364,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
 
           {/* MIDDLE: Variance Metrics (The Audit Grid) */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 dark:bg-[#0B1220] p-2 rounded-lg border border-gray-100 dark:border-gray-800">
+            <div className="bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800">
               <span className="text-xs font-black text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">{t('snapshot_qty') || 'SYS QTY'}</span>
               <p className="text-xs font-bold text-[#0B1220] dark:text-gray-200 font-mono tabular-nums" dir="ltr">
                 {formatNumber(item.snapshotQty, locale, 3)} {item.uom}
@@ -403,7 +403,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
             </div>
             {/* Variance Reason Display */}
             {variance !== 0 && (
-              <div className="w-full mt-2 text-xs p-2 bg-white dark:bg-[#0B1220] border border-gray-300 dark:border-gray-700 rounded-md text-muted-foreground/80 outline-none block text-start min-h-[36px]">
+              <div className="w-full mt-2 text-xs p-2 bg-white dark:bg-card border border-gray-300 dark:border-gray-700 rounded-md text-muted-foreground/80 outline-none block text-start min-h-[36px]">
                 {item.varianceReason || "—"}
               </div>
             )}

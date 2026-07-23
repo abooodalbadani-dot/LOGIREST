@@ -189,7 +189,7 @@ export function EmailOutboxClient() {
       const config = statusConfig[entry.status] || { color: 'text-muted-foreground', icon: Clock };
       const Icon = config.icon;
       return (
-       <div key={entry.id} className="flex flex-col gap-2 p-4 bg-card dark:bg-[#1A2234] border border-border dark:border-gray-800 shadow-sm rounded-lg">
+       <div key={entry.id} className="flex flex-col gap-2 p-4 bg-card dark:bg-card border border-border dark:border-gray-800 shadow-sm rounded-lg">
         <div className="flex justify-between items-center">
          <div className={`flex items-center gap-2 ${config.color} font-semibold text-label-xs uppercase`}>
           <Icon className="w-3 h-3" />

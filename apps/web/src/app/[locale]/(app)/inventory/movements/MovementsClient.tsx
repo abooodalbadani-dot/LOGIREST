@@ -388,7 +388,7 @@ export default function MovementsClient() {
         return (
         <div 
          key={movement.id} 
-         className="bg-white dark:bg-[#1A2234] border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+         className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
         >
          {/* TOP TIER: Identity */}
          <div className="flex justify-between items-start">

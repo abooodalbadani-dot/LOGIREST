@@ -131,7 +131,7 @@ export function PostConfirmDialog({
  return (
   <AlertDialog open={open} onOpenChange={handleOpenChange}>
    {trigger && <AlertDialogTrigger render={trigger} />}
-   <AlertDialogContent className={cn("sm:max-w-2xl w-[95vw] sm:w-full p-8 bg-white dark:bg-[#1A2234] shadow-2xl border border-gray-200 dark:border-gray-800 rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
+   <AlertDialogContent className={cn("sm:max-w-2xl w-[95vw] sm:w-full p-8 bg-white dark:bg-card shadow-2xl border border-gray-200 dark:border-gray-800 rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
     <AlertDialogHeader className="space-y-4">
      <div className={cn(
       "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-200 hover:scale-110",
