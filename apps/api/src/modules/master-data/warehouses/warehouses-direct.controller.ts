@@ -246,9 +246,7 @@ export class WarehousesDirectController {
       },
     });
 
-    const totalStock = stockAggregation._sum.qtyOnHand
-      ? Number(stockAggregation._sum.qtyOnHand)
-      : 0;
+    const totalStock = Number(stockAggregation?._sum?.qtyOnHand ?? 0);
 
     if (totalStock > 0) {
       throw new BadRequestException(

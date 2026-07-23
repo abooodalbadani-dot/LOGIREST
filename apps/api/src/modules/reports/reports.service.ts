@@ -1656,7 +1656,7 @@ export class ReportsService {
         ? parseFloat((totalDays / fulfilledCount).toFixed(1))
         : 0;
     const throughputWeek = Math.abs(
-      Number(ledgerAggregation?._sum?.quantity || 0),
+      Number(ledgerAggregation?._sum?.quantity ?? 0),
     );
 
     // Parallelized query generation for monthly charts
@@ -2276,7 +2276,7 @@ export class ReportsService {
         ? parseFloat((totalDays / fulfilledCount).toFixed(1))
         : 0;
     const throughputWeek = Math.abs(
-      Number(ledgerAggregation._sum.quantity || 0),
+      Number(ledgerAggregation?._sum?.quantity ?? 0),
     );
 
     // Parallelized query generation for scoped monthly charts
