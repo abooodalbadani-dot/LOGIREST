@@ -235,7 +235,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   }
 
   return (
-    <aside className="w-full bg-card border-e border-border flex flex-col h-full">
+    <aside className="w-full bg-background border-e border-border flex flex-col h-full">
       <div className="flex flex-col h-full w-full">
         <div className="p-4 flex items-center justify-between md:hidden mb-2 shrink-0">
           <span className="font-bold text-foreground">{tCommon('system.name')}</span>

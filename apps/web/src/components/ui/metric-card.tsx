@@ -100,7 +100,7 @@ export function MetricCard({
 
     return (
         <Card className={cn(
-            "bg-card border border-border shadow-sm rounded-xl p-3 sm:p-4 md:p-5 flex flex-row items-center justify-between overflow-hidden relative group transition-all isolate min-w-0",
+            "bg-card border border-border shadow-sm dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)] dark:hover:border-brand-gold/40 dark:hover:shadow-[0_0_20px_rgba(180,142,103,0.1)] rounded-xl p-3 sm:p-4 md:p-5 flex flex-row items-center justify-between overflow-hidden relative group transition-all isolate min-w-0",
             className
         )}>
             {/* Background Icon Decoration */}

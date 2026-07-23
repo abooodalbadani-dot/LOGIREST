@@ -260,16 +260,16 @@
   /* Client proposed semantic variables */
   --background: #06070a;
   /* sidebar-dark */
-  --card-bg: #06070a;
-  /* card-dark */
+  --card-bg: #0e121b;
+  /* card-dark elevated surface */
   --text-main: #F9FAFB;
   /* text-main reverse */
   --muted-bg: #131722;
   /* muted-bg */
-  --border-color: rgba(180, 142, 103, 0.15);
+  --border-color: rgba(180, 142, 103, 0.22);
   /* border-color */
 
-  --surface: #06070a;
+  --surface: #0e121b;
   --foreground: #F9FAFB;
 
   --primary: #b48e67;
@@ -294,24 +294,24 @@
   --destructive-foreground: #690005;
   --error-container: #93000a;
 
-  --card: #06070a;
+  --card: #0e121b;
   --card-foreground: #F9FAFB;
 
-  --popover: #06070a;
+  --popover: #121723;
   --popover-foreground: #F9FAFB;
 
   --surface-container-lowest: #06070a;
   --surface-container-low: #090c13;
-  --surface-container: #06070a;
-  --surface-container-high: #0f131f;
-  --surface-container-highest: #131722;
-  --surface-variant: #06070a;
+  --surface-container: #0e121b;
+  --surface-container-high: #131824;
+  --surface-container-highest: #181f2e;
+  --surface-variant: #0e121b;
   --on-surface-variant: #fcfbf8;
 
-  --border: rgba(180, 142, 103, 0.15);
-  --border-surface: rgba(180, 142, 103, 0.15);
-  --border-muted: rgba(180, 142, 103, 0.08);
-  --input: rgba(180, 142, 103, 0.15);
+  --border: rgba(180, 142, 103, 0.22);
+  --border-surface: rgba(180, 142, 103, 0.22);
+  --border-muted: rgba(180, 142, 103, 0.12);
+  --input: rgba(180, 142, 103, 0.22);
   --ring: #b48e67;
 
   --outline-low: rgba(180, 142, 103, 0.05);
