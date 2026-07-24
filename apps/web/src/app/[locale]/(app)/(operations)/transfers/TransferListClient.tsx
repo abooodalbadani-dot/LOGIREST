@@ -82,10 +82,12 @@ export function TransferListClient() {
         }
 
         return {
-          transferNumber: itemObj.documentNumber || '—',
+          transferNumber: itemObj.documentNumber || itemObj.transferNumber || '—',
+          documentNumber: itemObj.documentNumber || itemObj.transferNumber || '—',
           fromWarehouseName: itemObj.fromWarehouseName || itemObj.sourceWarehouseName || '—',
           toWarehouseName: itemObj.toWarehouseName || itemObj.targetWarehouseName || '—',
           status: itemObj.transferStatus || itemObj.status || '—',
+          transferStatus: itemObj.transferStatus || itemObj.status || '—',
           createdAt: dateStr,
         };
       });
@@ -102,10 +104,12 @@ export function TransferListClient() {
         }
 
         return {
-          transferNumber: itemObj.documentNumber || '—',
+          transferNumber: itemObj.documentNumber || itemObj.transferNumber || '—',
+          documentNumber: itemObj.documentNumber || itemObj.transferNumber || '—',
           fromWarehouseName: itemObj.fromWarehouseName || itemObj.sourceWarehouseName || '—',
           toWarehouseName: itemObj.toWarehouseName || itemObj.targetWarehouseName || '—',
           status: itemObj.transferStatus || itemObj.status || '—',
+          transferStatus: itemObj.transferStatus || itemObj.status || '—',
           createdAt: dateStr,
         };
       });
@@ -364,7 +368,7 @@ export function TransferListClient() {
                     { header: t('doc_number') || 'Doc #', key: 'transferNumber' },
                     { header: t('source_warehouse') || 'From Warehouse', key: 'fromWarehouseName' },
                     { header: t('target_warehouse') || 'To Warehouse', key: 'toWarehouseName' },
-                    { header: tc('status_label') || 'Status', key: 'status' },
+                    { header: tc('status_label') || 'Status', key: 'transferStatus' },
                     { header: tc('created_at') || 'Date', key: 'createdAt' },
                   ]}
                   filename="stock_transfers"

@@ -1,6 +1,8 @@
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 
+import { getExportRowValue } from './exportValueResolver';
+
 export interface ExcelColumn {
   header: string;
   key: string;
@@ -54,7 +56,7 @@ export function generateExcelWithBranding(
   
   // Map rows based on keys while preserving numeric data types
   const data = rows.map(row => 
-    columns.map(col => parseNumericValue(row[col.key]))
+    columns.map(col => parseNumericValue(getExportRowValue(row, col.key)))
   );
   
   // Construct spreadsheet data (Headers on Row 5, Data on Row 6+)

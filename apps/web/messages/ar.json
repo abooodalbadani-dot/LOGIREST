@@ -440,6 +440,7 @@
     "sign_in": "دخول"
   },
   "common": {
+    "scan_placeholder": "امسح أو اكتب الباركود...",
     "no_results": "لم يتم العثور على نتائج.",
     "loading_camera": "تهيئة الكاميرا...",
     "camera_error": "فشل الاتصال بالكاميرا",

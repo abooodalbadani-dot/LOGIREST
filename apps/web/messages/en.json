@@ -440,6 +440,7 @@
     "sign_in": "Sign In"
   },
   "common": {
+    "scan_placeholder": "Scan or type barcode...",
     "no_results": "No results found.",
     "loading_camera": "Initializing Camera Feed...",
     "camera_error": "Camera Connection Failed",

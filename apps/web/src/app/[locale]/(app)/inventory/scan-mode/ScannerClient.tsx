@@ -245,107 +245,113 @@ export default function ScannerClient() {
       <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-6 my-auto">
 
         {/* Top Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary mb-1">
-            <Scan className="w-4 h-4" />
-            <span className="text-label-xs font-bold uppercase tracking-wider">
-              {status === 'scanning' ? (t('scanner.active') || 'Awaiting scan...') : (t('barcode_scanner') || 'Barcode Scanner')}
+        <div className="text-center space-y-3 mb-4 mt-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold mb-2 shadow-[0_0_15px_rgba(196,162,118,0.15)]">
+            <Scan className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">
+              {status === 'scanning' ? (t('scanner.active') || 'Scanner Active') : (t('barcode_scanner') || 'Barcode Scanner')}
             </span>
           </div>
-          <h1 className="text-headline-md font-extrabold text-foreground tracking-tight">
-            {t('barcode_scanner') || 'Barcode & QR Scanner'}
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight drop-shadow-sm">
+            {t('barcode_scanner') || 'Scanner'}
           </h1>
-          <p className="text-body-sm font-medium text-muted-foreground max-w-full mx-auto">
-            {t('scanner.description') || 'Align code within viewfinder or use hardware USB barcode scanner'}
+          <p className="text-[11px] font-bold text-muted-foreground/80 max-w-2xl mx-auto uppercase tracking-wider">
+            {t('scanner.description') || 'Scan barcode or use external device'}
           </p>
         </div>
 
-        {/* Dynamic Viewport Container (Scanning Mode = Camera Box, Success Mode = Padded Expandable Card) */}
+        {/* Dynamic Viewport Container */}
         {(status === 'scanning' || status === 'searching') ? (
-          <div className="w-full relative aspect-square max-w-[420px] rounded-3xl border border-border/80 bg-black shadow-2xl overflow-hidden flex flex-col items-center justify-between group">
-            {/* Unobstructed Camera Feed */}
-            <div className="absolute inset-0 w-full h-full z-0">
-              <CameraBarcodeScanner
-                onScanSuccess={(barcode) => {
-                  if (status === 'scanning') {
-                    setBarcodeInput(barcode);
-                    executeLookup(barcode);
-                  }
-                }}
-                className="h-full w-full object-cover"
-              />
-            </div>
-
-            {/* Viewfinder Target & Laser Line (ONLY 4 Golden Reticle Corners & Laser Line) */}
-            <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
-              <div className="relative w-[75%] h-[75%] border border-primary/20 rounded-3xl flex items-center justify-center">
-                {/* Laser Line */}
-                <div className="w-full h-0.5 bg-primary/90 shadow-[0_0_15px_rgba(202,174,133,0.9)] animate-[scan_2.2s_infinite]" />
-                {/* Golden Reticle Corners */}
-                <div className="absolute left-0 top-0 w-7 h-7 border-t-4 border-l-4 border-primary rounded-tl-2xl shadow-sm" />
-                <div className="absolute right-0 top-0 w-7 h-7 border-t-4 border-r-4 border-primary rounded-tr-2xl shadow-sm" />
-                <div className="absolute left-0 bottom-0 w-7 h-7 border-b-4 border-l-4 border-primary rounded-bl-2xl shadow-sm" />
-                <div className="absolute right-0 bottom-0 w-7 h-7 border-b-4 border-r-4 border-primary rounded-br-2xl shadow-sm" />
+          <div className="w-full max-w-[380px] flex flex-col gap-6">
+            <div className="w-full relative aspect-square rounded-3xl border border-brand-gold/20 bg-surface-container shadow-[0_0_40px_rgba(196,162,118,0.05)] overflow-hidden flex flex-col items-center justify-center group">
+              {/* Unobstructed Camera Feed */}
+              <div className="absolute inset-0 w-full h-full z-0 mix-blend-screen">
+                <CameraBarcodeScanner
+                  onScanSuccess={(barcode) => {
+                    if (status === 'scanning') {
+                      setBarcodeInput(barcode);
+                      executeLookup(barcode);
+                    }
+                  }}
+                  className="h-full w-full object-cover"
+                />
               </div>
-            </div>
 
-            {/* Searching Loading Overlay */}
-            {status === 'searching' && (
-              <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-30 flex flex-col items-center justify-center gap-3 text-white">
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-label-sm font-bold animate-pulse">{tc('loading') || 'Searching Master Data...'}</p>
-              </div>
-            )}
+              {/* Viewfinder Target & Laser Line */}
+              <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+                <div className="relative w-[70%] h-[70%] flex items-center justify-center">
+                  {/* Laser Line */}
+                  <div className="absolute w-full h-[2px] bg-brand-gold shadow-[0_0_20px_2px_rgba(196,162,118,0.8)] animate-[scan_2.5s_ease-in-out_infinite] z-20" />
 
-            {/* Docked Bottom Sheet / Toolbar (Auto-Recognizes Barcode Automatically) */}
-            <div className="relative z-20 w-full p-4 bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-12 mt-auto">
-              <form onSubmit={handleManualSearch} className="w-full">
-                <div className="relative w-full">
-                  <Keyboard className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-white/70 pointer-events-none" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={barcodeInput}
-                    onChange={(e) => setBarcodeInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={locale === 'ar' ? 'امسح بالماسح الضوئي اليدوي أو اكتب الباركوود...' : 'Scan with USB device or type barcode...'}
-                    className="h-11 w-full ps-9 pe-4 bg-black/90 border border-white/30 text-white placeholder:text-white/60 text-label-xs font-mono rounded-xl focus:border-primary focus:ring-1 focus:ring-primary shadow-inner outline-none transition-all"
-                  />
+                  {/* Tech Reticle Corners (Cyan) */}
+                  <div className="absolute left-0 top-0 w-8 h-8 border-t-[3px] border-l-[3px] border-brand-gold/80 rounded-tl-xl shadow-[0_0_15px_rgba(196,162,118,0.4)]" />
+                  <div className="absolute right-0 top-0 w-8 h-8 border-t-[3px] border-r-[3px] border-brand-gold/80 rounded-tr-xl shadow-[0_0_15px_rgba(196,162,118,0.4)]" />
+                  <div className="absolute left-0 bottom-0 w-8 h-8 border-b-[3px] border-l-[3px] border-brand-gold/80 rounded-bl-xl shadow-[0_0_15px_rgba(196,162,118,0.4)]" />
+                  <div className="absolute right-0 bottom-0 w-8 h-8 border-b-[3px] border-r-[3px] border-brand-gold/80 rounded-br-xl shadow-[0_0_15px_rgba(196,162,118,0.4)]" />
                 </div>
-              </form>
+              </div>
+
+              {/* Searching Loading Overlay */}
+              {status === 'searching' && (
+                <div className="absolute inset-0 bg-surface-lowest/90 backdrop-blur-md z-30 flex flex-col items-center justify-center gap-4 text-foreground">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-brand-gold/20 rounded-full blur-xl animate-pulse" />
+                    <Loader2 className="w-12 h-12 text-brand-gold animate-spin relative z-10" />
+                  </div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-brand-gold animate-pulse">{tc('loading') || 'Searching...'}</p>
+                </div>
+              )}
             </div>
+
+            {/* Manual Input Field (Outside Camera Box) */}
+            <form onSubmit={handleManualSearch} className="w-full relative z-20">
+              <div className="relative w-full group/input">
+                <Keyboard className="w-5 h-5 absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/input:text-brand-gold transition-colors" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={locale === 'ar' ? 'اكتب الباركود يدوياً...' : 'Type barcode manually...'}
+                  className="h-14 w-full ps-12 pe-4 bg-surface-lowest border border-border/80 hover:border-brand-gold/40 text-foreground placeholder:text-muted-foreground/50 text-sm font-mono font-bold rounded-2xl focus:border-brand-gold focus:ring-1 focus:ring-brand-gold shadow-sm outline-none transition-all"
+                />
+              </div>
+            </form>
           </div>
         ) : (
-          /* Success / Error Card Container (Expands naturally, zero height truncation) */
-          <div className="w-full max-w-[460px] bg-card border border-border/80 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col justify-between space-y-5 animate-in zoom-in-95 duration-300">
+          /* Success / Error Card Container */
+          <div className="w-full max-w-[400px] bg-surface-lowest border border-border/60 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-6 animate-in zoom-in-95 duration-300 relative overflow-hidden">
+            {/* Background Glows */}
+            {status === 'success' && <div className="absolute -top-20 -right-20 w-40 h-40 bg-status-success/10 rounded-full blur-3xl pointer-events-none" />}
+            {status === 'error' && <div className="absolute -top-20 -right-20 w-40 h-40 bg-status-error/10 rounded-full blur-3xl pointer-events-none" />}
+
             {status === 'success' && scannedItem && (
               <>
                 {/* Header Status */}
-                <div className="w-full flex items-start justify-between">
-                  <div className="flex-1 flex flex-col items-center text-center space-y-1.5">
-                    <div className="w-14 h-14 rounded-2xl bg-status-success/10 border border-status-success/20 flex items-center justify-center text-status-success shadow-lg shadow-status-success/10 mb-1">
-                      <CheckCircle2 className="w-7 h-7" />
-                    </div>
-                    <span className="text-label-xs font-extrabold uppercase tracking-widest text-status-success">
-                      {t('scanner.identified_record') || 'Record Identified'}
-                    </span>
-                    <h2 className="text-headline-sm font-bold text-foreground">
-                      {scannedItem.name}
-                    </h2>
+                <div className="w-full flex flex-col items-center text-center space-y-2 relative z-10">
+                  <div className="w-14 h-14 rounded-full bg-status-success/10 border border-status-success/20 flex items-center justify-center text-status-success shadow-[0_0_15px_rgba(34,197,94,0.15)] mb-2">
+                    <CheckCircle2 className="w-7 h-7" />
                   </div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-status-success">
+                    {t('scanner.identified_record') || 'Record Identified'}
+                  </span>
+                  <h2 className="text-xl font-extrabold text-foreground line-clamp-2">
+                    {scannedItem.name}
+                  </h2>
                 </div>
 
                 {/* Item Info Summary Card with Top-Right Details Link */}
-                <div className="w-full bg-surface-container-low/40 border border-border rounded-2xl p-4 shadow-sm relative space-y-0 divide-y divide-border/60">
-                  <div className="flex justify-between items-center pb-2.5">
-                    <span className="text-label-xs font-bold uppercase text-muted-foreground">
+                <div className="w-full bg-surface-container/50 border border-border rounded-2xl p-4 shadow-sm relative space-y-0 divide-y divide-border/60 z-10">
+                  <div className="flex justify-between items-center pb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       {locale === 'ar' ? 'ملخص الصنف' : 'Item Summary'}
                     </span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleViewItemDetails}
-                      className="text-label-xs font-bold text-primary hover:text-primary/80 hover:bg-primary/10 gap-1.5 rounded-lg h-7 px-2"
+                      className="text-[10px] font-bold text-brand-gold hover:text-brand-gold hover:bg-brand-gold/10 gap-1.5 rounded-lg h-7 px-2.5 transition-all"
                     >
                       <Package className="w-3.5 h-3.5" />
                       <span>{locale === 'ar' ? 'تفاصيل الصنف' : 'Item Details'}</span>
@@ -353,58 +359,46 @@ export default function ScannerClient() {
                     </Button>
                   </div>
 
-                  <div className="flex justify-between items-center text-label-xs py-2.5">
+                  <div className="flex justify-between items-center text-xs py-3">
                     <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-                      <Barcode className="w-3.5 h-3.5 text-primary" />
+                      <Barcode className="w-3.5 h-3.5 text-brand-gold" />
                       {locale === 'ar' ? 'كود الصنف' : 'Item Code'}:
                     </span>
-                    <span className="font-mono font-bold text-foreground bg-muted px-2.5 py-0.5 rounded-md border border-border">
+                    <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded-md border border-border/60">
                       {scannedItem.code}
                     </span>
                   </div>
 
                   {scannedItem.barcode && (
-                    <div className="flex justify-between items-center text-label-xs py-2.5">
+                    <div className="flex justify-between items-center text-xs py-3">
                       <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-                        <Scan className="w-3.5 h-3.5 text-primary" />
+                        <Scan className="w-3.5 h-3.5 text-brand-gold" />
                         {locale === 'ar' ? 'الباركوود' : 'Barcode'}:
                       </span>
-                      <span className="font-mono font-medium text-muted-foreground">
+                      <span className="font-mono font-bold text-foreground">
                         {scannedItem.barcode}
                       </span>
                     </div>
                   )}
 
                   {scannedItem.primaryUom && (
-                    <div className="flex justify-between items-center text-label-xs py-2.5">
+                    <div className="flex justify-between items-center text-xs py-3">
                       <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-                        <Package className="w-3.5 h-3.5 text-primary" />
+                        <Package className="w-3.5 h-3.5 text-brand-gold" />
                         {locale === 'ar' ? 'وحدة القياس' : 'Unit of Measure'}:
                       </span>
-                      <span className="font-bold text-foreground">
+                      <span className="font-bold text-foreground bg-surface-container-highest px-2 py-0.5 rounded-md text-[10px] uppercase">
                         {scannedItem.primaryUom.name || scannedItem.primaryUom.code || scannedItem.primaryUom.id}
-                      </span>
-                    </div>
-                  )}
-
-                  {scannedItem.category && (
-                    <div className="flex justify-between items-center text-label-xs py-2.5">
-                      <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5 text-primary" />
-                        {locale === 'ar' ? 'التصنيف' : 'Category'}:
-                      </span>
-                      <span className="font-semibold text-foreground">
-                        {scannedItem.category.name}
                       </span>
                     </div>
                   )}
                 </div>
 
                 {/* Clean Action Buttons Hierarchy */}
-                <div className="flex flex-col gap-2.5 w-full pt-1">
+                <div className="flex flex-col gap-3 w-full pt-2 relative z-10">
                   <Button
                     onClick={handleLoadStockLots}
-                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-label-xs uppercase tracking-wider rounded-xl gap-2 shadow-lg shadow-primary/20 transition-all"
+                    className="w-full h-12 bg-brand-gold hover:bg-brand-gold/90 text-black font-extrabold text-[11px] uppercase tracking-wider rounded-xl gap-2 shadow-[0_0_15px_rgba(196,162,118,0.25)] transition-all"
                   >
                     <Sparkles className="w-4 h-4" />
                     <span>{locale === 'ar' ? 'متابعة وأرصدة المخزون' : 'CONFIRM & VIEW STOCK LOTS'}</span>
@@ -414,9 +408,9 @@ export default function ScannerClient() {
                   <Button
                     variant="outline"
                     onClick={resetScanner}
-                    className="w-full h-11 border-border/80 hover:bg-muted text-foreground font-bold text-label-xs rounded-xl gap-2 transition-all"
+                    className="w-full h-11 border-border/60 hover:bg-surface-container text-foreground font-bold text-[11px] uppercase tracking-wider rounded-xl gap-2 transition-all"
                   >
-                    <RotateCcw className="w-4 h-4 text-primary" />
+                    <RotateCcw className="w-3.5 h-3.5 text-brand-gold" />
                     <span>{locale === 'ar' ? 'إعادة المسح الضوئي' : 'RESCAN MATRIX'}</span>
                   </Button>
                 </div>
@@ -424,19 +418,19 @@ export default function ScannerClient() {
             )}
 
             {status === 'error' && (
-              <div className="flex flex-col items-center justify-between space-y-6 text-foreground">
-                <div className="flex flex-col items-center text-center space-y-2 mt-2">
-                  <div className="w-16 h-16 rounded-2xl bg-status-error/10 border border-status-error/20 flex items-center justify-center text-status-error shadow-lg shadow-status-error/10">
+              <div className="flex flex-col items-center justify-between space-y-6 text-foreground relative z-10">
+                <div className="flex flex-col items-center text-center space-y-3 mt-4">
+                  <div className="w-16 h-16 rounded-full bg-status-error/10 border border-status-error/20 flex items-center justify-center text-status-error shadow-[0_0_15px_rgba(239,68,68,0.15)] mb-2">
                     <AlertCircle className="w-8 h-8" />
                   </div>
-                  <h3 className="text-headline-sm font-bold text-status-error">
+                  <h3 className="text-xl font-extrabold text-status-error tracking-tight">
                     {te('not_found') || 'Item Not Found'}
                   </h3>
-                  <p className="text-body-xs font-medium text-muted-foreground max-w-3xl text-center">
+                  <p className="text-xs font-medium text-muted-foreground max-w-sm text-center">
                     {errorMessage}
                   </p>
                   {resultCode && (
-                    <span className="font-mono text-label-sm font-bold bg-status-error/10 text-status-error px-3 py-1 rounded-lg border border-status-error/20 mt-2">
+                    <span className="font-mono text-sm font-bold bg-status-error/10 text-status-error px-3 py-1 rounded-lg border border-status-error/20 mt-2">
                       {resultCode}
                     </span>
                   )}
@@ -445,9 +439,9 @@ export default function ScannerClient() {
                 <Button
                   variant="outline"
                   onClick={resetScanner}
-                  className="w-full h-12 border-border/80 hover:bg-muted text-foreground font-bold text-label-xs rounded-xl gap-2 transition-all"
+                  className="w-full h-12 border-border/60 hover:bg-surface-container text-foreground font-bold text-[11px] uppercase tracking-wider rounded-xl gap-2 transition-all mt-4"
                 >
-                  <RotateCcw className="w-4 h-4 text-primary" />
+                  <RotateCcw className="w-4 h-4 text-brand-gold" />
                   <span>{locale === 'ar' ? 'إعادة المسح الضوئي' : 'RESCAN MATRIX'}</span>
                 </Button>
               </div>
@@ -456,14 +450,14 @@ export default function ScannerClient() {
         )}
 
         {/* Bottom Exit Action */}
-        <div className="flex justify-center mt-2">
+        <div className="flex justify-center mt-8">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => window.history.back()}
-            className="rounded-full h-11 px-6 bg-card border border-border hover:bg-status-error/10 hover:border-status-error/30 hover:text-status-error transition-all shadow-sm gap-2"
+            className="rounded-xl h-11 px-6 bg-surface-container/50 hover:bg-status-error/10 text-muted-foreground hover:text-status-error border border-border/50 hover:border-status-error/30 transition-all gap-2"
           >
             <X className="w-4 h-4" />
-            <span className="text-label-xs font-bold">{locale === 'ar' ? 'إغلاق الماسح الضوئي' : 'Close Scanner'}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{locale === 'ar' ? 'إغلاق الماسح الضوئي' : 'Close Scanner'}</span>
           </Button>
         </div>
 

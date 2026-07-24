@@ -6,12 +6,12 @@ import { useSearchParams } from 'next/navigation';
 import { useInventoryLots } from '@/features/inventory/hooks/useInventoryLots';
 import { useAuth } from '@/providers/AuthProvider';
 import { useDebounce } from '@/hooks/useDebounce';
-import { 
-  ShieldAlert, 
-  ShieldCheck, 
-  Calendar, 
-  Clock, 
-  Database, 
+import {
+  ShieldAlert,
+  ShieldCheck,
+  Calendar,
+  Clock,
+  Database,
   Search,
   RefreshCw,
   Loader2,
@@ -211,7 +211,7 @@ export default function LotBalanceClient() {
   return (
     <div className="min-h-screen bg-surface text-foreground space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="max-w-[1600px] mx-auto space-y-8">
-        
+
         {/* Premium Header */}
         <div data-slot="page-header" className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
           <div className="space-y-4">
@@ -254,7 +254,7 @@ export default function LotBalanceClient() {
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 px-4 h-12 bg-black/5 dark:bg-white/5 border border-border/50 rounded-2xl shrink-0">
                 <Switch
                   id="expired-switch"
@@ -288,7 +288,7 @@ export default function LotBalanceClient() {
                       columns={[
                         { header: 'Lot #', key: 'lotNumber' },
                         { header: 'Item', key: 'itemName' },
-                        { header: 'Quantity', key: 'quantity' },
+                        { header: 'Quantity', key: 'qtyAvailable' },
                         { header: 'Status', key: 'status' },
                       ]}
                       filename="inventory_lots"
@@ -309,88 +309,106 @@ export default function LotBalanceClient() {
             renderCard={(lot) => {
               const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
               return (
-                <div key={lot.id} className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
-                  <div className="flex justify-between items-center w-full">
-                    <span className="text-xs font-mono font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded">
-                      {lot.lotNumber}
-                    </span>
-                    <div>
-                      {status === 'QUARANTINE' ? (
-                        <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                          <ShieldAlert className="w-3 h-3" />
-                          Quarantined
-                        </Badge>
-                      ) : status === 'EXPIRED' ? (
-                        <Badge className="bg-amber-500/15 text-amber-500 hover:bg-amber-500/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                          <Clock className="w-3 h-3" />
-                          Expired
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-status-active/15 text-status-active hover:bg-status-active/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-2.5 py-1 rounded-full">
-                          <ShieldCheck className="w-3 h-3" />
-                          Active
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 overflow-hidden shrink-0">
+                <div key={lot.id} className="bg-surface-lowest dark:bg-surface-container rounded-xl p-3 flex flex-col gap-3 shadow-sm border border-border group hover:border-operational-cyan/30 transition-colors">
+                  
+                  <div className="flex gap-3 items-start">
+                    {/* Image / Icon */}
+                    <div className="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center border border-border shrink-0 overflow-hidden">
                       {lot.image ? (
-                        <img src={lot.image} alt={lot.itemName} className="w-full h-full object-cover" />
+                        <img src={lot.image} alt={lot.itemName || ''} className="w-full h-full object-cover" />
                       ) : (
-                        <Package className="w-4 h-4 text-muted-foreground/60" />
+                        <Package className="w-5 h-5 text-muted-foreground/40" />
                       )}
                     </div>
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] font-mono text-muted-foreground">{lot.itemCode}</span>
-                      <p className="text-xs font-bold text-foreground">{lot.itemName}</p>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 w-full pt-2 border-t border-border/50">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Available Stock</span>
-                      <span className="text-xs font-bold font-mono text-foreground">
-                        {Number(lot.qtyAvailable ?? 0).toLocaleString('en-US')} {lot.uomCode || ''}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1 text-end">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Expiration Date</span>
-                      <div className="inline-flex items-center justify-end gap-1.5 text-xs font-medium text-muted-foreground">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
+                    {/* Info */}
+                    <div className="flex flex-col min-w-0 flex-1 gap-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-sm font-bold text-foreground line-clamp-1 group-hover:text-operational-cyan transition-colors">
+                          {lot.itemName}
+                        </span>
+                        {status === 'QUARANTINE' ? (
+                          <Badge className="bg-status-error/15 text-status-error hover:bg-status-error/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-1.5 py-0.5 rounded-md h-auto shrink-0">
+                            <ShieldAlert className="w-3 h-3" />
+                            Quarantined
+                          </Badge>
+                        ) : status === 'EXPIRED' ? (
+                          <Badge className="bg-amber-500/15 text-amber-500 hover:bg-amber-500/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-1.5 py-0.5 rounded-md h-auto shrink-0">
+                            <Clock className="w-3 h-3" />
+                            Expired
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-status-active/15 text-status-active hover:bg-status-active/20 border-none uppercase font-bold tracking-widest text-[9px] gap-1 px-1.5 py-0.5 rounded-md h-auto shrink-0">
+                            <ShieldCheck className="w-3 h-3" />
+                            Active
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-mono font-bold text-operational-cyan uppercase bg-operational-cyan/10 px-1.5 py-0.5 rounded-md border border-operational-cyan/20">
+                            {lot.itemCode}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-foreground bg-muted border border-border px-1.5 py-0.5 rounded-md">
+                            {lot.lotNumber}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 shrink-0 pl-1">
+                           <Calendar className="w-3 h-3 text-muted-foreground" />
+                           <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[90px]">
+                             {lot.expiryDate ? formatDate(lot.expiryDate, locale as 'ar' | 'en') : '—'}
+                           </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {canManageLots && (
-                    <div className="flex justify-end w-full pt-2 border-t border-border/50">
-                      {status === 'QUARANTINE' ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRelease(lot.id)}
-                          disabled={actionLoadingMap[lot.id]}
-                          className="h-8 px-3 border-outline-low hover:bg-status-active/10 hover:border-status-active/20 text-status-active text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
-                        >
-                          {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
-                          Release
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleQuarantine(lot.id)}
-                          disabled={actionLoadingMap[lot.id] || status === 'EXPIRED'}
-                          className="h-8 px-3 border-outline-low hover:bg-status-error/10 hover:border-status-error/20 text-status-error text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all"
-                        >
-                          {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />}
-                          Quarantine
-                        </Button>
-                      )}
+                  {/* Bottom Row: Qty + Actions (Compact) */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border/40 mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-muted-foreground font-bold tracking-wider uppercase mb-0.5">
+                         Available Stock
+                      </span>
+                      <div className="flex items-baseline gap-1">
+                        <span dir="ltr" className="font-mono text-base leading-none font-bold text-foreground">
+                          {Number(lot.qtyAvailable ?? 0).toLocaleString('en-US')}
+                        </span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                          {lot.uomCode || ''}
+                        </span>
+                      </div>
                     </div>
-                  )}
+
+                    {canManageLots && (
+                      <div className="flex gap-1.5">
+                        {status === 'QUARANTINE' ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRelease(lot.id)}
+                            disabled={actionLoadingMap[lot.id]}
+                            className="h-8 px-3 bg-status-active/10 hover:bg-status-active/20 text-status-active text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all shrink-0"
+                          >
+                            {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
+                            Release
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleQuarantine(lot.id)}
+                            disabled={actionLoadingMap[lot.id] || status === 'EXPIRED'}
+                            className="h-8 px-3 bg-status-error/10 hover:bg-status-error/20 text-status-error text-[10px] uppercase tracking-wider font-bold gap-1 rounded-lg transition-all shrink-0"
+                          >
+                            {actionLoadingMap[lot.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />}
+                            Quarantine
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             }}

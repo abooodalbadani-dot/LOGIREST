@@ -329,21 +329,24 @@ export function TransferNewClient() {
     }
     setIsSuggestingFIFO(true);
     try {
-      const qs = new URLSearchParams();
-      qs.append('warehouse_id', fromWarehouseId);
-      lines.forEach(l => qs.append('item_id', l.itemId));
+      const fetchPromises = lines.map(l => {
+        const qs = new URLSearchParams();
+        qs.append('warehouseId', fromWarehouseId);
+        qs.append('itemId', l.itemId);
 
-      const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          item_id: z.string(),
-          lot_number: z.string(),
-          expiry_date: z.string().nullable().optional(),
-          qty_available: z.number().optional(),
-        }))
-      }));
+        return apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
+          data: z.array(z.object({
+            id: z.string(),
+            item_id: z.string(),
+            lot_number: z.string(),
+            expiry_date: z.string().nullable().optional(),
+            qty_available: z.number().optional(),
+          }))
+        })).then(res => res.data);
+      });
 
-      const lots = res.data;
+      const results = await Promise.all(fetchPromises);
+      const lots = results.flat();
       const expiredLots = lots.filter(l => l.expiry_date && new Date(l.expiry_date) < new Date());
       const nearExpiry = lots.filter(l => {
         if (!l.expiry_date) return false;
@@ -470,18 +473,18 @@ export function TransferNewClient() {
     >
       <div className="px-4 sm:px-0 space-y-6 max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-4">
-            <button type="button" onClick={() => router.push('/transfers')} className="w-10 h-10 flex items-center justify-center bg-card hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 border border-border/60 shadow-sm">
-                <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
-            </button>
-            <div className="flex-1">
-                <Breadcrumb
-                items={[
-                    { label: tCommon('modules.operations'), href: `/transfers` },
-                    { label: t('title'), href: `/transfers` },
-                    { label: t('create_new') }
-                ]}
-                />
-            </div>
+          <button type="button" onClick={() => router.push('/transfers')} className="w-10 h-10 flex items-center justify-center bg-card hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 border border-border/60 shadow-sm">
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+          </button>
+          <div className="flex-1">
+            <Breadcrumb
+              items={[
+                { label: tCommon('modules.operations'), href: `/transfers` },
+                { label: t('title'), href: `/transfers` },
+                { label: t('create_new') }
+              ]}
+            />
+          </div>
         </div>
 
         <PageHeader
@@ -509,7 +512,7 @@ export function TransferNewClient() {
       </div>
 
       <div className="flex flex-col max-w-4xl mx-auto w-full bg-card rounded-none sm:rounded-2xl relative shadow-lg border border-border/60 overflow-hidden mb-10">
-        
+
         {/* Top Section: Parameters */}
         <div className="p-4 sm:p-8 border-b border-border/40 bg-surface-container-highest/10">
           <div className="flex items-center gap-3 mb-6">
@@ -520,62 +523,62 @@ export function TransferNewClient() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="space-y-2">
-                  <label htmlFor="from-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
-                    {t('from_warehouse')}
-                  </label>
-                <SmartCombobox
-                  items={sourceWarehouseItems}
-                  value={fromWarehouseId}
-                  onSelect={(item) => {
-                    const value = item ? String(item.id) : '';
-                    if (value && value === toWarehouseId) {
-                      toast.error(t('warehouse_match_error'));
-                      setToWarehouseId('');
-                    }
-                    setFromWarehouseId(value);
-                    setLines([]); // Clear lines to prevent validation conflicts
-                  }}
-                  getPrimaryLabel={(item) => item.name}
-                  placeholder={t('select_warehouse') || 'Select warehouse...'}
-                  triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="to-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
-                  {t('to_warehouse')}
-                </label>
-                <SmartCombobox
-                  items={destinationWarehouseItems}
-                  value={toWarehouseId}
-                  onSelect={(item) => {
-                    const value = item ? String(item.id) : '';
-                    if (value && value === fromWarehouseId) {
-                      toast.error(t('warehouse_match_error'));
-                      return;
-                    }
-                    setToWarehouseId(value);
-                  }}
-                  getPrimaryLabel={(item) => item.name}
-                  placeholder={t('select_warehouse') || 'Select warehouse...'}
-                  triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
-                />
-              </div>
+            <div className="space-y-2">
+              <label htmlFor="from-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
+                {t('from_warehouse')}
+              </label>
+              <SmartCombobox
+                items={sourceWarehouseItems}
+                value={fromWarehouseId}
+                onSelect={(item) => {
+                  const value = item ? String(item.id) : '';
+                  if (value && value === toWarehouseId) {
+                    toast.error(t('warehouse_match_error'));
+                    setToWarehouseId('');
+                  }
+                  setFromWarehouseId(value);
+                  setLines([]); // Clear lines to prevent validation conflicts
+                }}
+                getPrimaryLabel={(item) => item.name}
+                placeholder={t('select_warehouse') || 'Select warehouse...'}
+                triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
+              />
             </div>
 
-            <div className="space-y-2 mt-6">
-              <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
-                  {tCommon('notes')}
-                </label>
-                <Input
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder={t('notes_placeholder')}
-                  className="w-full bg-surface-container-highest/40 border-none h-11 px-4 text-sm font-medium rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-brand-gold/30 transition-all outline-none hover:bg-surface-container-highest/60"
-                />
+            <div className="space-y-2">
+              <label htmlFor="to-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
+                {t('to_warehouse')}
+              </label>
+              <SmartCombobox
+                items={destinationWarehouseItems}
+                value={toWarehouseId}
+                onSelect={(item) => {
+                  const value = item ? String(item.id) : '';
+                  if (value && value === fromWarehouseId) {
+                    toast.error(t('warehouse_match_error'));
+                    return;
+                  }
+                  setToWarehouseId(value);
+                }}
+                getPrimaryLabel={(item) => item.name}
+                placeholder={t('select_warehouse') || 'Select warehouse...'}
+                triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all truncate pr-8"
+              />
             </div>
           </div>
+
+          <div className="space-y-2 mt-6">
+            <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
+              {tCommon('notes')}
+            </label>
+            <Input
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder={t('notes_placeholder')}
+              className="w-full bg-surface-container-highest/40 border-none h-11 px-4 text-sm font-medium rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-brand-gold/30 transition-all outline-none hover:bg-surface-container-highest/60"
+            />
+          </div>
+        </div>
 
         {/* Bottom Section: Line Items */}
         <div className="p-4 sm:p-8 bg-card">

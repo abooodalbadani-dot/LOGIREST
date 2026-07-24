@@ -413,24 +413,24 @@ export function IssueForm() {
 
         {/* Fulfillment Orchestration Header */}
         <div className={cn(
-          "bg-white dark:bg-card border-y border-x-0 sm:border border-gray-200 dark:border-gray-700 shadow-sm px-4 py-6 sm:p-10 rounded-none sm:rounded-[2.5rem] shadow-2xl shadow-primary/5 flex flex-col w-full text-left items-start",
+          "bg-surface-lowest dark:bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm p-4 sm:p-6 rounded-none sm:rounded-2xl flex flex-col w-full text-left items-start",
           isAr && "text-right items-start"
         )}>
           <div className={cn(
-            "flex items-center gap-6 mb-10 border-b border-border/20 pb-8 w-full",
+            "flex items-center gap-4 mb-6 border-b border-border/20 pb-4 w-full",
             isAr ? "flex-row-reverse" : "flex-row"
           )}>
-            <div className="p-4 rounded-2xl bg-operational-cyan/10 text-operational-cyan transition-all duration-300">
-              <Settings2 className="w-8 h-8" />
+            <div className="p-2.5 rounded-xl bg-operational-cyan/10 text-operational-cyan transition-all duration-300">
+              <Settings2 className="w-5 h-5" />
             </div>
             <div className={cn(
               "flex flex-col",
               isAr ? "items-end" : "items-start"
             )}>
-              <h2 className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase truncate">
+              <h2 className="text-base md:text-lg font-bold text-foreground tracking-wide uppercase truncate">
                 {t('title')}
               </h2>
-              <p className="text-xs text-gray-400 mt-1 uppercase italic">
+              <p className="text-[10px] text-muted-foreground uppercase italic mt-0.5">
                 {t('new_description')}
               </p>
             </div>
@@ -438,19 +438,19 @@ export function IssueForm() {
               "ms-auto flex items-center gap-2",
               isAr ? "mr-auto ms-0" : "ms-auto mr-0"
             )}>
-              <Badge className="bg-surface-container-high dark:bg-card text-muted-foreground/60 dark:text-gray-400 border-none font-semibold text-label-xxs uppercase px-4 h-9 rounded-xl">{tc('warehouses.main')}</Badge>
+              <Badge className="bg-surface-container-high dark:bg-card text-muted-foreground border-none font-semibold text-[10px] uppercase px-3 py-1 rounded-lg">{tc('warehouses.main')}</Badge>
             </div>
           </div>
 
           {isWarehouseLocked && (
-            <div className="mb-10 animate-in zoom-in-95 duration-300 w-full">
+            <div className="mb-6 animate-in zoom-in-95 duration-300 w-full">
               <LockBanner message={t('validation.warehouse_locked')} />
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full">
             <FormItem>
-              <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+              <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5" />
                 {t('kitchen_request') || "Kitchen Request"}
               </FormLabel>
@@ -463,7 +463,7 @@ export function IssueForm() {
                   value={selectedKitchenRequestId || ""}
                   onSelect={(item) => setSelectedKitchenRequestId(item.id)}
                   placeholder={t('select_kitchen_request') || "Select Kitchen Request"}
-                  triggerClassName="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                  triggerClassName="w-full bg-slate-50 dark:bg-surface-container border border-border/50 text-foreground placeholder-muted-foreground rounded-lg px-3 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold outline-none transition-all shadow-sm h-11 text-xs font-bold"
                 />
               </FormControl>
             </FormItem>
@@ -473,7 +473,7 @@ export function IssueForm() {
               name="warehouseId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
                     <Warehouse className="w-3.5 h-3.5" />
                     {tc('warehouse')}
                   </FormLabel>
@@ -484,10 +484,10 @@ export function IssueForm() {
                       onSelect={(item) => field.onChange(item.id)}
                       placeholder={tc('warehouse') || "Select Warehouse"}
                       disabled={!!selectedKitchenRequestId}
-                      triggerClassName="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                      triggerClassName="w-full bg-slate-50 dark:bg-surface-container border border-border/50 text-foreground placeholder-muted-foreground rounded-lg px-3 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold outline-none transition-all shadow-sm h-11 text-xs font-bold"
                     />
                   </FormControl>
-                  <FormMessage className="text-label-xxs font-semibold uppercase" />
+                  <FormMessage className="text-[10px] font-semibold uppercase" />
                 </FormItem>
               )}
             />
@@ -497,7 +497,7 @@ export function IssueForm() {
               name="destinationDeptId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5" />
                     {t('destination')}
                   </FormLabel>
@@ -508,10 +508,10 @@ export function IssueForm() {
                       onSelect={(item) => field.onChange(item.id)}
                       placeholder={t('select_department')}
                       disabled={!!selectedKitchenRequestId}
-                      triggerClassName="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all shadow-none h-14 text-label-xs font-bold"
+                      triggerClassName="w-full bg-slate-50 dark:bg-surface-container border border-border/50 text-foreground placeholder-muted-foreground rounded-lg px-3 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold outline-none transition-all shadow-sm h-11 text-xs font-bold"
                     />
                   </FormControl>
-                  <FormMessage className="text-label-xxs font-semibold uppercase" />
+                  <FormMessage className="text-[10px] font-semibold uppercase" />
                 </FormItem>
               )}
             />
@@ -521,12 +521,12 @@ export function IssueForm() {
               name="notes"
               render={({ field }) => (
                 <FormItem className="lg:col-span-3">
-                  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5" />
                     {t('operational_notes')}
                   </FormLabel>
                   <FormControl>
-                    <Textarea placeholder={t('notes_placeholder')} className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-600 rounded-md p-3 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] outline-none transition-all min-h-[100px]" {...field} />
+                    <Textarea placeholder={t('notes_placeholder')} className="w-full bg-slate-50 dark:bg-surface-container border border-border/50 text-foreground placeholder-muted-foreground rounded-lg p-3 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold outline-none transition-all min-h-[80px] text-xs font-bold" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -536,15 +536,15 @@ export function IssueForm() {
         </div>
 
         {/* Fulfillment Manifest Section */}
-        <div className="col-span-1 md:col-span-12 space-y-8 w-full">
-          <div className="flex items-center justify-between px-6">
-            <div className="flex items-center gap-5">
-              <div className="bg-[#b48e67]/10 text-[#b48e67] border border-[#b48e67]/20 rounded-lg p-2">
-                <Calculator className="w-5 h-5" />
+        <div className="col-span-1 md:col-span-12 space-y-5 w-full mt-2">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-4">
+              <div className="bg-brand-gold/10 text-brand-gold border border-brand-gold/20 rounded-lg p-2">
+                <Calculator className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-body-md font-semibold uppercase text-[#b48e67]">{t('ledger_title')}</h3>
-                <p className="text-label-xxs font-semibold text-muted-foreground/60/20 uppercase mt-1">{t('ledger_subtitle')}</p>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-brand-gold">{t('ledger_title')}</h3>
+                <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase mt-0.5">{t('ledger_subtitle')}</p>
               </div>
             </div>
           </div>

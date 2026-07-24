@@ -72,8 +72,10 @@ export function PRListClient() {
 
         return {
           requestNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
+          documentNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
           departmentName: itemObj.departmentName || '—',
-          status: itemObj.status || '—',
+          status: itemObj.status || itemObj.prStatus || '—',
+          prStatus: itemObj.status || itemObj.prStatus || '—',
           createdAt: dateStr,
         };
       });
@@ -91,8 +93,10 @@ export function PRListClient() {
 
         return {
           requestNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
+          documentNumber: itemObj.documentNumber || itemObj.requestNumber || '—',
           departmentName: itemObj.departmentName || '—',
-          status: itemObj.status || '—',
+          status: itemObj.status || itemObj.prStatus || '—',
+          prStatus: itemObj.status || itemObj.prStatus || '—',
           createdAt: dateStr,
         };
       });
@@ -293,9 +297,9 @@ export function PRListClient() {
                 <ExportMenu
                   data={data.data as unknown as Record<string, unknown>[]}
                   columns={[
-                    { header: t('doc_number') || 'Doc #', key: 'requestNumber' },
+                    { header: t('doc_number') || 'Doc #', key: 'documentNumber' },
                     { header: t('department') || 'Department', key: 'departmentName' },
-                    { header: tc('status_label') || 'Status', key: 'status' },
+                    { header: tc('status_label') || 'Status', key: 'prStatus' },
                     { header: tc('created_at') || 'Date', key: 'createdAt' },
                   ]}
                   filename="purchase_requests"

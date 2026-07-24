@@ -22,6 +22,7 @@ export const TransferLineSchema = z.object({
   name: z.string().optional(),
   nameAr: z.string().optional(),
   nameEn: z.string().optional(),
+  image: z.string().nullable().optional(),
   primaryUom: z.object({
    id: z.string(),
    code: z.string(),

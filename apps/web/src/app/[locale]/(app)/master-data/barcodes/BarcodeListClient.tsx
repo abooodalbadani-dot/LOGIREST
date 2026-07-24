@@ -41,6 +41,19 @@ export function BarcodeListClient({ locale }: { locale: string }) {
   const items = itemsData?.data || [];
   const uoms = uomsData?.data || [];
 
+  const filteredBarcodes = useMemo(() => {
+    if (!debouncedSearch) return barcodes;
+    const lowerSearch = debouncedSearch.toLowerCase();
+    return barcodes.filter(b => {
+      const item = items.find(i => i.id === b.itemId);
+      return (
+        b.code.toLowerCase().includes(lowerSearch) ||
+        (item?.name || '').toLowerCase().includes(lowerSearch) ||
+        (item?.code || '').toLowerCase().includes(lowerSearch)
+      );
+    });
+  }, [barcodes, debouncedSearch, items]);
+
   const stats = useMemo(() => {
     return {
       total: barcodes.length,
@@ -184,14 +197,14 @@ export function BarcodeListClient({ locale }: { locale: string }) {
             </Button>
           </div>
 
-          {barcodes && barcodes.length > 0 && (
+          {filteredBarcodes && filteredBarcodes.length > 0 && (
             <PermissionGate action="export" resource="master_data_barcodes">
               <div className="flex items-center gap-2 shrink-0">
                 <ExportMenu
-                  data={barcodes as unknown as Record<string, unknown>[]}
+                  data={filteredBarcodes as unknown as Record<string, unknown>[]}
                   columns={[
-                    { header: 'Barcode', key: 'value' },
-                    { header: 'Type', key: 'type' },
+                    { header: tc('fields.code') || 'Barcode', key: 'code' },
+                    { header: t('fields.item') || 'Item', key: 'itemName' },
                   ]}
                   filename="barcodes"
                   title={t('title') || 'Barcodes'}
@@ -204,7 +217,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         <div className="hidden md:block w-full">
           <DataTable
             columns={columns}
-            data={barcodes}
+            data={filteredBarcodes}
             isLoading={isLoadingBarcodes}
             collectionName="master_data_barcodes"
             enableVirtualization={true}
@@ -218,9 +231,9 @@ export function BarcodeListClient({ locale }: { locale: string }) {
           />
         </div>
 
-        {!isLoadingBarcodes && barcodes.length > 0 && (
+        {!isLoadingBarcodes && filteredBarcodes.length > 0 && (
           <div className="flex flex-col gap-3 md:hidden mt-4">
-            {barcodes.map((barcode) => {
+            {filteredBarcodes.map((barcode) => {
               const item = items.find(i => i.id === barcode.itemId);
               return (
                 <div

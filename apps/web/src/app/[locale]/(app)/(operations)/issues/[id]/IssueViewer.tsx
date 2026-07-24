@@ -153,43 +153,48 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
        </div>
       </div>
 
-      {/* 2. The Summary Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 sm:gap-4 w-full">
-       <div className="bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-lg space-y-3">
-        <div className="flex items-center gap-2 text-primary">
-         <MapPin className="w-4 h-4" />
-         <span className="text-xs font-bold uppercase">{t('destination')}</span>
+      {/* 2. The Summary Info */}
+      <div className="bg-surface-lowest dark:bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm p-4 sm:p-5 rounded-none sm:rounded-xl w-full">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 sm:divide-x rtl:sm:divide-x-reverse divide-border/50">
+          
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <MapPin className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{t('destination')}</span>
+            </div>
+            <p className="font-bold text-sm text-foreground">
+              <RelationalName 
+                name={issue.destinationDeptId === 'dep-1' ? tCommon('departments.kitchen_1') : 
+                      issue.destinationDeptId === 'dep-2' ? tCommon('departments.pastry') : 
+                      issue.destinationDepartmentName || issue.departmentName} 
+                rawId={issue.destinationDeptId} 
+                fallback="—"
+              />
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:px-4 lg:px-6">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <User className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{t('requested_by')}</span>
+            </div>
+            <p className="font-bold text-sm text-foreground">{issue.requestedBy || '—'}</p>
+          </div>
+
+          <div className="flex flex-col gap-1.5 col-span-2 md:col-span-1 md:px-4 lg:px-6 mt-2 md:mt-0 pt-3 md:pt-0 border-t md:border-t-0 border-border/50">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Warehouse className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{tCommon('warehouse')}</span>
+            </div>
+            <p className="font-bold text-sm text-foreground">
+              <RelationalName 
+                name={issue.warehouseId === 'wh-1' ? tCommon('warehouses.main') : issue.warehouseName} 
+                rawId={issue.warehouseId} 
+                fallback={tCommon('dash')}
+              />
+            </p>
+          </div>
         </div>
-         <p className="font-bold text-body-md">
-          <RelationalName 
-           name={issue.destinationDeptId === 'dep-1' ? tCommon('departments.kitchen_1') : 
-                 issue.destinationDeptId === 'dep-2' ? tCommon('departments.pastry') : 
-                 issue.destinationDepartmentName || issue.departmentName} 
-           rawId={issue.destinationDeptId} 
-           fallback="—"
-          />
-         </p>
-       </div>
-       <div className="bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-lg space-y-3">
-        <div className="flex items-center gap-2 text-primary">
-         <User className="w-4 h-4" />
-         <span className="text-xs font-bold uppercase">{t('requested_by')}</span>
-        </div>
-        <p className="font-bold text-body-md">{issue.requestedBy || '—'}</p>
-       </div>
-       <div className="bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-lg space-y-3">
-        <div className="flex items-center gap-2 text-primary">
-         <Warehouse className="w-4 h-4" />
-         <span className="text-xs font-bold uppercase">{tCommon('warehouse')}</span>
-        </div>
-         <p className="font-bold text-body-md">
-          <RelationalName 
-           name={issue.warehouseId === 'wh-1' ? tCommon('warehouses.main') : issue.warehouseName} 
-           rawId={issue.warehouseId} 
-           fallback={tCommon('dash')}
-          />
-         </p>
-       </div>
       </div>
 
       {/* 3. The Line Items Table */}
@@ -239,13 +244,13 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
 
       {/* Notes Section */}
       {issue.notes && (
-        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-lg space-y-4">
+        <div className="bg-surface-lowest dark:bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm p-4 sm:p-5 rounded-none sm:rounded-xl space-y-3">
         <div className="flex items-center gap-3 text-primary">
          <FileText className="w-4 h-4" />
-         <h3 className="text-xs font-bold uppercase">{t('operational_notes')}</h3>
+         <h3 className="text-[10px] tracking-widest font-bold uppercase">{t('operational_notes')}</h3>
         </div>
-        <div className="bg-card border border-border shadow-sm p-6 rounded-xl border border-outline-variant/5">
-         <p className="text-body-md text-foreground font-bold not-italic leading-relaxed">
+        <div className="bg-slate-50 dark:bg-surface-container border border-border/50 shadow-sm p-4 rounded-lg">
+         <p className="text-sm text-foreground font-bold not-italic leading-relaxed">
           {issue.notes}
          </p>
         </div>
@@ -256,14 +261,14 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
      {/* Right Column */}
      <div className="lg:col-span-1 space-y-6">
       {/* History Section */}
-       <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-lg relative overflow-hidden group">
+       <div className="bg-surface-lowest dark:bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm p-4 sm:p-5 rounded-none sm:rounded-xl relative overflow-hidden group">
        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
-       <div className="relative space-y-8">
-        <div className="flex items-center gap-4">
-         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <History className="w-5 h-5 text-primary" />
+       <div className="relative space-y-6">
+        <div className="flex items-center gap-3">
+         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <History className="w-4 h-4 text-primary" />
          </div>
-         <h4 className="text-label-xs font-semibold uppercase">{t('status_history')}</h4>
+         <h4 className="text-[10px] font-bold uppercase tracking-widest">{t('status_history')}</h4>
         </div>
         <div className="ps-2">
          <StatusTimeline entries={timelineEntries} />
@@ -272,12 +277,12 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       </div>
 
       {/* Audit Info */}
-       <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-lg space-y-6">
-       <div className="flex items-center gap-4 border-b border-outline-variant/5 pb-4">
-        <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-         <Info className="w-5 h-5 text-foreground" />
+       <div className="bg-surface-lowest dark:bg-card border-y border-x-0 sm:border border-border shadow-none sm:shadow-sm p-4 sm:p-5 rounded-none sm:rounded-xl space-y-5">
+       <div className="flex items-center gap-3 border-b border-border/50 pb-3">
+        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+         <Info className="w-4 h-4 text-foreground" />
         </div>
-        <h4 className="text-xs font-bold uppercase">{tCommon('audit_trail')}</h4>
+        <h4 className="text-[10px] font-bold uppercase tracking-widest">{tCommon('audit_trail')}</h4>
        </div>
        <div className="space-y-4">
         <div className="flex justify-between items-center py-2">

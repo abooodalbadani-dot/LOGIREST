@@ -158,6 +158,8 @@ const formatReportValue = (colKey: string, val: unknown, lang: 'ar' | 'en') => {
   return valStr;
 };
 
+import { getExportRowValue } from './exportValueResolver';
+
 export const PrintableReport: React.FC<PrintableReportProps> = ({
   columns,
   rows,
@@ -466,7 +468,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
           {rows.map((row, rIdx) => (
             <tr key={rIdx}>
               {columns.map((col, cIdx) => {
-                const val = row[col.key];
+                const val = getExportRowValue(row, col.key);
                 let displayVal = formatReportValue(col.key, val, lang);
 
                 // Truncate raw UUIDs

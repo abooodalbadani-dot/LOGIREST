@@ -77,9 +77,12 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
 
         return {
           orderNumber: itemObj.documentNumber || itemObj.poNumber || '—',
+          documentNumber: itemObj.documentNumber || itemObj.poNumber || '—',
           supplierName: itemObj.supplierName || '—',
-          status: itemObj.status || '—',
+          status: itemObj.status || itemObj.poStatus || '—',
+          poStatus: itemObj.status || itemObj.poStatus || '—',
           totalAmount: typeof itemObj.totalAmount === 'number' ? itemObj.totalAmount.toFixed(2) : (itemObj.totalAmount ? String(itemObj.totalAmount) : '—'),
+          supplierTotalAmount: typeof itemObj.totalAmount === 'number' ? itemObj.totalAmount.toFixed(2) : (itemObj.totalAmount ? String(itemObj.totalAmount) : '—'),
           createdAt: dateStr,
         };
       });
@@ -97,9 +100,12 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
 
         return {
           orderNumber: itemObj.documentNumber || itemObj.poNumber || '—',
+          documentNumber: itemObj.documentNumber || itemObj.poNumber || '—',
           supplierName: itemObj.supplierName || '—',
-          status: itemObj.status || '—',
+          status: itemObj.status || itemObj.poStatus || '—',
+          poStatus: itemObj.status || itemObj.poStatus || '—',
           totalAmount: typeof itemObj.totalAmount === 'number' ? itemObj.totalAmount.toFixed(2) : (itemObj.totalAmount ? String(itemObj.totalAmount) : '—'),
+          supplierTotalAmount: typeof itemObj.totalAmount === 'number' ? itemObj.totalAmount.toFixed(2) : (itemObj.totalAmount ? String(itemObj.totalAmount) : '—'),
           createdAt: dateStr,
         };
       });
@@ -323,10 +329,10 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
                 <ExportMenu
                   data={data.data as unknown as Record<string, unknown>[]}
                   columns={[
-                    { header: t('order_number') || 'PO #', key: 'orderNumber' },
+                    { header: t('order_number') || 'PO #', key: 'documentNumber' },
                     { header: t('supplier') || 'Supplier', key: 'supplierName' },
-                    { header: tc('status_label') || 'Status', key: 'status' },
-                    { header: t('total_amount') || 'Total Amount', key: 'totalAmount' },
+                    { header: tc('status_label') || 'Status', key: 'poStatus' },
+                    { header: t('total_amount') || 'Total Amount', key: 'supplierTotalAmount' },
                     { header: tc('created_at') || 'Date', key: 'createdAt' },
                   ]}
                   filename="purchase_orders"

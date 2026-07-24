@@ -105,61 +105,62 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-5 sm:p-6 rounded-none sm:rounded-2xl relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500/50 via-cyan-500/20 to-transparent" />
 
-                <div className="col-span-1 bg-card border border-border/60 shadow-sm p-4 sm:p-5 rounded-xl flex flex-col gap-1 group">
-                    <span className="text-[10px] sm:text-xs font-bold uppercase text-primary tracking-widest">{t('from_warehouse')}</span>
-                    <div className="font-bold text-sm md:text-body-md text-foreground break-words not-italic mt-1 sm:mt-2 truncate">
+                <div className="col-span-1 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{t('from_warehouse')}</label>
+                    <div className="font-bold text-sm text-foreground break-words not-italic ms-0.5">
                         {transfer?.fromWarehouseName}
                     </div>
                 </div>
 
-                <div className="col-span-1 bg-card border border-border/60 shadow-sm p-4 sm:p-5 rounded-xl flex flex-col gap-1 group">
-                    <span className="text-[10px] sm:text-xs font-bold uppercase text-primary tracking-widest">{t('to_warehouse')}</span>
-                    <div className="font-bold text-sm md:text-body-md text-foreground break-words not-italic mt-1 sm:mt-2 truncate">
+                <div className="col-span-1 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{t('to_warehouse')}</label>
+                    <div className="font-bold text-sm text-foreground break-words not-italic ms-0.5">
                         {transfer?.toWarehouseName}
                     </div>
                 </div>
 
                 {transfer?.shippedAt && (
-                    <div className="col-span-1 bg-card border border-border/60 shadow-sm p-4 sm:p-5 rounded-xl flex flex-col gap-1 group relative overflow-hidden">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase text-primary tracking-widest">{t('shipped_at')}</span>
-                        <div className="font-medium text-sm md:text-body-md text-foreground flex items-center justify-between mt-1 sm:mt-2 min-w-0">
+                    <div className="col-span-1 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20 relative overflow-hidden group">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{t('shipped_at')}</label>
+                        <div className="font-semibold text-sm text-foreground flex items-center justify-between ms-0.5">
                             <ClientOnlyTime
                                 date={transfer.shippedAt}
                                 mode="datetime"
-                                className="font-mono text-cyan-500/80 truncate"
+                                className="font-mono text-xs truncate"
                             />
-                            <Truck className="w-4 h-4 text-cyan-500/40 shrink-0 absolute bottom-3 end-3 group-hover:text-cyan-500/60 transition-colors" />
+                            <Truck className="w-3.5 h-3.5 shrink-0 text-foreground/20 absolute bottom-3 end-3 group-hover:text-foreground/40 transition-colors" />
                         </div>
                     </div>
                 )}
 
                 {transfer?.receivedAt && (
-                    <div className="col-span-1 bg-card border border-border/60 shadow-sm p-4 sm:p-5 rounded-xl flex flex-col gap-1 group relative overflow-hidden">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase text-primary tracking-widest">{t('received_at')}</span>
-                        <div className="font-medium text-sm md:text-body-md text-foreground flex items-center justify-between mt-1 sm:mt-2 min-w-0">
+                    <div className="col-span-1 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20 relative overflow-hidden group">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{t('received_at')}</label>
+                        <div className="font-semibold text-sm text-foreground flex items-center justify-between ms-0.5">
                             <ClientOnlyTime
                                 date={transfer.receivedAt}
                                 mode="datetime"
-                                className="font-mono text-emerald-500/80 truncate"
+                                className="font-mono text-xs truncate"
                             />
-                            <PackageCheck className="w-4 h-4 text-emerald-500/40 shrink-0 absolute bottom-3 end-3 group-hover:text-emerald-500/60 transition-colors" />
+                            <PackageCheck className="w-3.5 h-3.5 shrink-0 text-foreground/20 absolute bottom-3 end-3 group-hover:text-foreground/40 transition-colors" />
                         </div>
                     </div>
                 )}
 
-                <div className="col-span-2 lg:col-span-4 bg-card border border-border/60 shadow-sm p-4 sm:p-5 rounded-xl flex flex-col gap-1 group">
-                    <span className="text-[10px] sm:text-xs font-bold uppercase text-primary tracking-widest">{tCommon('notes')}</span>
-                    <div className="font-bold text-sm md:text-body-md text-foreground min-h-[20px] break-words not-italic mt-1 sm:mt-2 whitespace-pre-wrap">
+                <div className="col-span-2 md:col-span-4 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{tCommon('notes')}</label>
+                    <div className="font-semibold text-sm text-foreground break-words not-italic ms-0.5">
                         {transfer?.notes || '—'}
                     </div>
                 </div>
 
                 {transfer?.varianceReason && (
-                    <div className="col-span-2 lg:col-span-4 bg-status-warning/5 border border-status-warning/20 shadow-sm p-4 sm:p-5 rounded-xl flex flex-col gap-1 group">
-                        <span className="text-[10px] sm:text-xs font-bold text-status-warning/80 uppercase tracking-widest">{t('variance_reason')}</span>
-                        <div className="font-bold text-sm md:text-body-md text-status-warning break-words not-italic mt-1 sm:mt-2 whitespace-pre-wrap">
+                    <div className="col-span-2 md:col-span-4 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-status-warning/10 border border-status-warning/20">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-status-warning ms-0.5">{t('variance_reason')}</label>
+                        <div className="font-bold text-sm text-status-warning break-words not-italic ms-0.5">
                             {transfer.varianceReason}
                         </div>
                     </div>

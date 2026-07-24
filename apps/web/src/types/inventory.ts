@@ -47,6 +47,8 @@ export const InventoryMovementSchema = z.object({
   quantity: z.number(),
   balanceAfter: z.number(),
   performedByUserName: z.string().nullable().optional(),
+  image: z.string().optional().nullable(),
+  uomCode: z.string().optional().nullable(),
 });
 
 export type InventoryMovement = z.infer<typeof InventoryMovementSchema>;

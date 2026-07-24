@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 
 import { formatQuantity } from '@/lib/utils';
 import { formatNumber, formatDate } from '@/utils/currency';
-import { Activity, ArrowUpRight, ArrowDownRight, Search, Download, History } from 'lucide-react';
+import { Activity, ArrowUpRight, ArrowDownRight, Search, Download, History, Package, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -91,6 +91,7 @@ export default function MovementsClient() {
 
     return {
      createdAt: dateStr,
+     timestamp: dateStr,
      documentReference: itemObj.documentReference || '—',
      transactionType: itemObj.transactionType || '—',
      itemCode: itemObj.itemCode || '—',
@@ -114,6 +115,7 @@ export default function MovementsClient() {
 
     return {
      createdAt: dateStr,
+     timestamp: dateStr,
      documentReference: itemObj.documentReference || '—',
      transactionType: itemObj.transactionType || '—',
      itemCode: itemObj.itemCode || '—',
@@ -331,7 +333,7 @@ export default function MovementsClient() {
        <ExportMenu
         data={data.data as unknown as Record<string, unknown>[]}
         columns={[
-         { header: tc('created_at') || 'Date', key: 'createdAt' },
+         { header: tc('created_at') || 'Date', key: 'timestamp' },
          { header: t('document_number') || 'Doc Reference', key: 'documentReference' },
          { header: t('document_class') || 'Type', key: 'transactionType' },
          { header: t('item_code') || 'Item Code', key: 'itemCode' },
@@ -388,49 +390,76 @@ export default function MovementsClient() {
         return (
         <div 
          key={movement.id} 
-         className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+         className="bg-surface-lowest dark:bg-surface-container rounded-xl p-3 flex flex-col gap-3 shadow-sm border border-border group hover:border-operational-cyan/30 transition-colors"
         >
-         {/* TOP TIER: Identity */}
-         <div className="flex justify-between items-start">
-           <div className="flex flex-col gap-1 w-full">
-             <div className="flex justify-between items-start gap-2">
-               <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{movement.itemCode}#</span>
-               <Badge variant="secondary" className={`${getTypeStyle(movement.transactionType)} text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-sm h-auto shrink-0 border-transparent`}>
-                {t(`types.${movement.transactionType.toLowerCase()}` as 'types.grn' | 'types.issue' | 'types.transfer' | 'types.adjustment')}
-              </Badge>
-             </div>
-             <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{movement.itemName}</span>
-           </div>
-         </div>
+          <div className="flex gap-3 items-start">
+            {/* Image / Icon */}
+            <div className="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center border border-border shrink-0 overflow-hidden">
+              {movement.image ? (
+                <img src={movement.image} alt={movement.itemName || ''} className="w-full h-full object-cover" />
+              ) : (
+                <Package className="w-5 h-5 text-muted-foreground/40" />
+              )}
+            </div>
 
-         {/* MIDDLE TIER: Financial/Qty */}
-         <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
+            {/* Info */}
+            <div className="flex flex-col min-w-0 flex-1 gap-1">
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-sm font-bold text-foreground line-clamp-1 group-hover:text-operational-cyan transition-colors">
+                  {movement.itemName}
+                </span>
+                <Badge variant="secondary" className={`${getTypeStyle(movement.transactionType)} text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-md h-auto shrink-0 border-transparent`}>
+                  {t(`types.${movement.transactionType.toLowerCase()}` as 'types.grn' | 'types.issue' | 'types.transfer' | 'types.adjustment')}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 mt-0.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-mono font-bold text-operational-cyan uppercase bg-operational-cyan/10 px-1.5 py-0.5 rounded-md border border-operational-cyan/20">
+                    {movement.itemCode}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-1.5 shrink-0 pl-1">
+                   <div className={`flex items-center gap-1 font-bold text-[9px] uppercase tracking-wider ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
+                    {isEntry ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                    {isEntry ? t('in') : t('out')}
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+         {/* Bottom Row: Qty + Actions (Compact) */}
+         <div className="flex items-center justify-between pt-2 border-t border-border/40 mt-auto">
            <div className="flex flex-col">
-             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{t('qty')}</span>
-             <span dir="ltr" className={`font-mono text-sm font-bold ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
-               {isEntry ? '+' : '-'}{formatQuantity(Math.abs(movement.quantity), currentLocale as 'ar' | 'en')}
+             <span className="text-[9px] text-muted-foreground font-bold tracking-wider uppercase mb-0.5">
+               {t('qty')}
              </span>
-           </div>
-           <div className="flex flex-col items-end">
-             <span className="text-[10px] text-muted-foreground font-semibold uppercase">{t('direction')}</span>
-             <div className={`flex items-center gap-1 font-semibold text-[10px] uppercase ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
-              {isEntry ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {isEntry ? t('in') : t('out')}
+             <div className="flex items-baseline gap-1">
+               <span dir="ltr" className={`font-mono text-base leading-none font-bold ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
+                 {isEntry ? '+' : '-'}{formatQuantity(Math.abs(movement.quantity), currentLocale as 'ar' | 'en')}
+               </span>
+               {movement.uomCode && (
+                 <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                   {movement.uomCode}
+                 </span>
+               )}
              </div>
            </div>
-         </div>
 
-         {/* BOTTOM TIER: Meta */}
-         <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
-           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground tabular-nums">
-             <span dir="ltr">{formatDate(movement.timestamp, currentLocale as 'ar' | 'en')}</span>
+           <div className="flex flex-col items-end gap-1">
+             <Link
+              href={getDocumentPath(movement.transactionType, movement.documentId ?? null)}
+              className="text-[10px] font-mono font-bold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)] bg-operational-cyan/10 px-1.5 py-0.5 rounded-md border border-operational-cyan/20"
+             >
+              <span dir="ltr">{movement.documentReference}</span>
+             </Link>
+             <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground tabular-nums">
+               <Calendar className="w-2.5 h-2.5" />
+               <span dir="ltr">{formatDate(movement.timestamp, currentLocale as 'ar' | 'en')}</span>
+             </div>
            </div>
-            <Link
-             href={getDocumentPath(movement.transactionType, movement.documentId ?? null)}
-             className="text-[10px] font-mono font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
-            >
-            <span dir="ltr">{movement.documentReference}</span>
-           </Link>
          </div>
         </div>
        );

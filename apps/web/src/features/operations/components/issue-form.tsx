@@ -427,280 +427,240 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         {isWarehouseLocked && <div className="px-6 lg:px-10 pt-4"><LockBanner lockState={lockState} /></div>}
 
         <DocumentLockWrapper isLocked={effectiveIsLocked} className="flex-1 flex flex-col">
-          <div className="flex-1 w-full min-h-[calc(100vh-280px)] bg-card text-card-foreground border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl mb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-              {/* Left side (Table) */}
-              <div className="lg:col-span-2 flex flex-col gap-6 w-full">
-                <div className="flex items-center gap-6 mb-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => guardedRouter.back()}
-                    className="rounded-xl shrink-0 hover:bg-primary/5 transition-colors"
-                  >
-                    <ArrowLeft className={cn("w-5 h-5 text-primary", locale === 'ar' && "rotate-180")} />
-                  </Button>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-3xl font-extrabold text-foreground tracking-tight uppercase">
-                        {isNew ? t('create_new') : t('detail_title')}
-                      </h1>
-                      {!isNew && (
-                        <div className="px-2 py-0.5 bg-primary/10 rounded-xl flex items-center gap-1.5">
-                          <span className="text-label-xxs font-semibold uppercase text-primary leading-none">
-                            {issue?.documentNumber || '—'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {!isDocLocked && (
-                  <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
-                    <div className="relative space-y-4 sm:space-y-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                          <Package className="w-4 h-4 text-primary" />
-                        </div>
-                        <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('scan_and_add')}</h3>
-                      </div>
-                      <ScanInput
-                        onScan={handleScan}
-                        disabled={effectiveIsLocked || fefoOpen || !warehouseId}
-                        placeholder={!warehouseId ? (locale === 'ar' ? 'يرجى تحديد المستودع أولاً...' : 'Please select a Warehouse first...') : t('scan_placeholder')}
-                        onError={(bc) => {
-                          audioAlerts.playScanInvalid();
-                          setScanError(t('not_found_prefix') + bc);
-                        }}
-                        size="lg"
-                        scannerMode={true}
-                        items={items}
-                        getPrimaryLabel={(item) => typeof item.name === 'string' ? item.name : ''}
-                        getSecondaryLabel={(item) => {
-                          const availText = locale === 'ar' ? 'المتاح' : 'Available';
-                          const qty = typeof item.qtyAvailable === 'number' ? item.qtyAvailable : 0;
-                          const uom = typeof item.uomCode === 'string' ? item.uomCode : '';
-                          return `${item.code || ''} | ${availText}: ${qty} ${uom}`;
-                        }}
-                      />
-
-                      {scanError && (
-                        <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-200">
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          <span className="break-words">{scanError}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
-                  <div className="p-4 sm:p-6 md:p-8 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <div className="w-1 h-6 bg-primary/20 rounded-full" />
-                      <h3 className="text-label-xs font-semibold uppercase text-primary/30">{t('line_items')}</h3>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {!isNew && !effectiveIsLocked && (
-                        <Button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            guardedRouter.push(`/issues/${id}/scan-mode`, { skipGuard: true });
-                          }}
-                          variant="outline"
-                          className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
-                        >
-                          <Scan className="w-4 h-4" />
-                          {t('scan_mode.breadcrumb_scan')}
-                        </Button>
-                      )}
-                      <div className="px-4 py-2 bg-card border border-border shadow-sm rounded-xl text-label-xs font-mono text-primary/40">
-                        {lines.length} {t('entries').toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
-                  <DocumentLineItemTable
-                    lines={lines}
-                    locale={locale as 'ar' | 'en'}
-                    isReadOnly={isDocLocked}
-                    onRemoveLine={removeLine}
-                    dense={true}
-                    hideUomColumn={true}
-                    noCollapse={false}
-                    mobileLayoutPattern="issue-form"
-                    extraColumns={[
-                      {
-                        header: t('qty'),
-                        cell: (line) => (
-                          <div className="flex items-center justify-center w-full">
-                            <Input
-                              type="number"
-                              disabled={effectiveIsLocked}
-                              className="w-16 md:w-20 h-7 rounded-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800/50 text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-primary focus:border-primary shadow-none"
-                              value={line.qty as number}
-                              onChange={e => {
-                                const val = Number(e.target.value);
-                                setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
-                              }}
-                            />
-                          </div>
-                        )
-                      },
-                      {
-                        header: t('allocate'),
-                        cell: (line: LineItem) => {
-                          const isTracked = isItemBatchTracked(line.item);
-                          if (!isTracked) {
-                            return (
-                              <div className="flex justify-center w-full">
-                                <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">—</span>
-                              </div>
-                            );
-                          }
-                          const lineAllocations = line.lotAllocations || [];
-                          const totalAllocated = lineAllocations.reduce((sum: number, a: LotAllocation) => sum + a.allocatedQty, 0);
-                          const isFullyAllocated = totalAllocated >= line.qty;
-
-                          if (effectiveIsLocked) {
-                            return (
-                              <div className="flex flex-wrap gap-1.5 max-w-[200px]">
-                                {lineAllocations.map((alloc: LotAllocation, idx: number) => (
-                                  <div key={idx} className="px-2.5 py-1 bg-emerald-500/10 rounded-xl flex items-center gap-1.5">
-                                    <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lotNumber}</span>
-                                    <div className="w-1 h-1 rounded-full bg-emerald-500/30" />
-                                    <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocatedQty}</span>
-                                  </div>
-                                ))}
-                                {lineAllocations.length === 0 && (
-                                  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">—</span>
-                                )}
-                              </div>
-                            );
-                          }
-
-                          return (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={`h-7 px-2.5 text-[10px] font-bold uppercase rounded-sm border transition-all ${isFullyAllocated ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20'}`}
-                              onClick={() => handleLotClick(line)}
-                            >
-                              {lineAllocations.length > 0
-                                ? <div className="flex items-center gap-1.5" dir="ltr">
-                                  <span>{totalAllocated}</span>
-                                  <div className="w-1 h-1 rounded-full bg-current/30" />
-                                  <span>{line.qty}</span>
-                                </div>
-                                : t('allocate')}
-                            </Button>
-                          );
-                        }
-                      }
-                    ]}
-                  />
-                </div>
-              </div>
-
-              {/* Right side (Sidebar) */}
-              <div className="h-fit flex flex-col gap-6">
-                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
-                  <div className="relative space-y-6 sm:space-y-10">
-                    <div className="flex items-center gap-4 pb-4 sm:pb-6">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <FileText className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('document_manifest')}</h3>
-                        <p className="text-label-xs text-primary/20 font-bold">{t('operational_parameters')}</p>
-                      </div>
-                    </div>
-
-                    <div className="col-span-1 md:col-span-12 space-y-6 sm:space-y-8">
-                      <div className="space-y-3 group">
-                        <div className="flex items-center gap-2">
-                          <ArrowRight className={cn("w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity shrink-0", locale === 'ar' ? "rotate-180" : "")} />
-                          <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('destination')}</label>
-                        </div>
-                        <SmartCombobox
-                          items={departments.map((dept) => ({
-                            id: dept.id,
-                            name: dept.name || '',
-                            name_en: dept.name || '',
-                            name_ar: dept.name || '',
-                          }))}
-                          value={destinationId}
-                          onSelect={(item: ComboboxItem) => setDestinationId(item.id as string)}
-                          disabled={effectiveIsLocked}
-                          placeholder={t('select_department')}
-                          triggerClassName="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10"
-                        />
-                      </div>
-
-                      <div className="space-y-3 group">
-                        <div className="flex items-center gap-2">
-                          <User className="w-3 h-3 text-cyan-500/50 shrink-0" />
-                          <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('requested_by')}</label>
-                        </div>
-                        <Input
-                          type="text"
-                          value={requestedBy}
-                          onChange={e => setRequestedBy(e.target.value)}
-                          disabled={effectiveIsLocked}
-                          placeholder={t('requested_by_placeholder')}
-                          className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all placeholder:text-muted-foreground/20 shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
-                        />
-                      </div>
-
-                      <div className="space-y-3 group pt-4">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-cyan-500/50 shrink-0" />
-                          <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('operational_notes')}</label>
-                        </div>
-                        <Textarea
-                          value={notes}
-                          onChange={e => setNotes(e.target.value)}
-                          disabled={effectiveIsLocked}
-                          placeholder={t('notes_placeholder')}
-                          className="w-full bg-surface-container-highest border-none rounded-xl p-5 text-label-sm font-medium transition-all min-h-[140px] resize-none placeholder:text-muted-foreground/20 leading-relaxed shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
-                  <div className="flex items-center gap-4 mb-6 sm:mb-8">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <History className="w-5 h-5 text-primary" />
-                    </div>
-                    <h4 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('status_history')}</h4>
-                  </div>
-
-                  <div className="relative ps-2">
-                    <StatusTimeline entries={history} />
-                  </div>
-
+          <div className="flex-1 w-full min-h-[calc(100vh-280px)] mb-6 flex flex-col gap-6">
+            {/* Title Header */}
+            <div className="flex items-center gap-6 mb-2 px-4 sm:px-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => guardedRouter.back()}
+                className="rounded-xl shrink-0 hover:bg-primary/5 transition-colors"
+              >
+                <ArrowLeft className={cn("w-5 h-5 text-primary", locale === 'ar' && "rotate-180")} />
+              </Button>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-extrabold text-foreground tracking-tight uppercase">
+                    {isNew ? t('create_new') : t('detail_title')}
+                  </h1>
                   {!isNew && (
-                    <div className="mt-10 pt-8 space-y-4">
-                      <div className="flex justify-between items-center group">
-                        <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_by')}</span>
-                        <div className="px-3 py-1 bg-card border border-border shadow-sm rounded-xl transition-colors group-hover:bg-primary/5">
-                          <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">{user?.name || 'System'}</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center group">
-                        <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_at')}</span>
-                        <div className="px-3 py-1 bg-card border border-border shadow-sm rounded-xl transition-colors group-hover:bg-primary/5">
-                          <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">
-                            {formatDate(issue?.createdAt, locale as 'ar' | 'en')}
-                          </span>
-                        </div>
-                      </div>
+                    <div className="px-2 py-0.5 bg-primary/10 rounded-xl flex items-center gap-1.5">
+                      <span className="text-label-xxs font-semibold uppercase text-primary leading-none">
+                        {issue?.documentNumber || '—'}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Document Manifest - Compact Style */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-5 sm:p-6 rounded-none sm:rounded-2xl relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500/50 via-cyan-500/20 to-transparent" />
+
+              <div className="col-span-1 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{t('destination')}</label>
+                <SmartCombobox
+                  items={departments.map((dept) => ({
+                    id: dept.id,
+                    name: dept.name || '',
+                    name_en: dept.name || '',
+                    name_ar: dept.name || '',
+                  }))}
+                  value={destinationId}
+                  onSelect={(item: ComboboxItem) => setDestinationId(item.id as string)}
+                  disabled={effectiveIsLocked}
+                  placeholder={t('select_department')}
+                  triggerClassName="w-full h-10 bg-card border border-border/50 rounded-lg px-3 font-bold text-sm transition-all shadow-sm focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="col-span-1 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{t('requested_by')}</label>
+                <Input
+                  type="text"
+                  value={requestedBy}
+                  onChange={e => setRequestedBy(e.target.value)}
+                  disabled={effectiveIsLocked}
+                  placeholder={t('requested_by_placeholder')}
+                  className="w-full h-10 bg-card border border-border/50 rounded-lg px-3 font-bold text-sm transition-all shadow-sm focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="col-span-2 md:col-span-4 flex flex-col gap-1 px-3 py-2.5 rounded-xl bg-surface-container-highest/20">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ms-0.5">{t('operational_notes')}</label>
+                <Textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  disabled={effectiveIsLocked}
+                  placeholder={t('notes_placeholder')}
+                  className="w-full min-h-[60px] bg-card border border-border/50 rounded-lg px-3 py-2 font-bold text-sm transition-all shadow-sm focus:ring-1 focus:ring-primary resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Scan Box */}
+            {!isDocLocked && (
+              <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
+                <div className="relative space-y-4 sm:space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Package className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('scan_and_add')}</h3>
+                  </div>
+                  <ScanInput
+                    onScan={handleScan}
+                    disabled={effectiveIsLocked || fefoOpen || !warehouseId}
+                    placeholder={!warehouseId ? (locale === 'ar' ? 'يرجى تحديد المستودع أولاً...' : 'Please select a Warehouse first...') : t('scan_placeholder')}
+                    onError={(bc) => {
+                      audioAlerts.playScanInvalid();
+                      setScanError(t('not_found_prefix') + bc);
+                    }}
+                    size="lg"
+                    scannerMode={true}
+                    items={items}
+                    getPrimaryLabel={(item) => typeof item.name === 'string' ? item.name : ''}
+                    getSecondaryLabel={(item) => {
+                      const availText = locale === 'ar' ? 'المتاح' : 'Available';
+                      const qty = typeof item.qtyAvailable === 'number' ? item.qtyAvailable : 0;
+                      const uom = typeof item.uomCode === 'string' ? item.uomCode : '';
+                      return `${item.code || ''} | ${availText}: ${qty} ${uom}`;
+                    }}
+                  />
+
+                  {scanError && (
+                    <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-200">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span className="break-words">{scanError}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Table */}
+            <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
+              <div className="p-4 sm:p-6 md:p-8 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-1 h-6 bg-primary/20 rounded-full" />
+                  <h3 className="text-label-xs font-semibold uppercase text-primary/30">{t('line_items')}</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  {!isNew && !effectiveIsLocked && (
+                    <Button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        guardedRouter.push(`/issues/${id}/scan-mode`, { skipGuard: true });
+                      }}
+                      variant="outline"
+                      className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
+                    >
+                      <Scan className="w-4 h-4" />
+                      {t('scan_mode.breadcrumb_scan')}
+                    </Button>
+                  )}
+                  <div className="px-4 py-2 bg-card border border-border shadow-sm rounded-xl text-label-xs font-mono text-primary/40">
+                    {lines.length} {t('entries').toUpperCase()}
+                  </div>
+                </div>
+              </div>
+              <DocumentLineItemTable
+                lines={lines}
+                locale={locale as 'ar' | 'en'}
+                isReadOnly={isDocLocked}
+                onRemoveLine={removeLine}
+                dense={true}
+                hideUomColumn={true}
+                noCollapse={false}
+                mobileLayoutPattern="issue-form"
+                extraColumns={[
+                  {
+                    header: t('allocate'),
+                    cell: (line: LineItem) => {
+                      const isTracked = isItemBatchTracked(line.item);
+                      if (!isTracked) {
+                        return (
+                          <div className="flex justify-center w-full">
+                            <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">—</span>
+                          </div>
+                        );
+                      }
+                      const lineAllocations = line.lotAllocations || [];
+                      const totalAllocated = lineAllocations.reduce((sum: number, a: LotAllocation) => sum + a.allocatedQty, 0);
+                      const isFullyAllocated = totalAllocated >= line.qty;
+
+                      if (effectiveIsLocked) {
+                        return (
+                          <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                            {lineAllocations.map((alloc: LotAllocation, idx: number) => (
+                              <div key={idx} className="px-2.5 py-1 bg-emerald-500/10 rounded-xl flex items-center gap-1.5">
+                                <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lotNumber}</span>
+                                <div className="w-1 h-1 rounded-full bg-emerald-500/30" />
+                                <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocatedQty}</span>
+                              </div>
+                            ))}
+                            {lineAllocations.length === 0 && (
+                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">—</span>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-7 px-2.5 text-[10px] font-bold uppercase rounded-sm border transition-all ${isFullyAllocated ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20'}`}
+                          onClick={() => handleLotClick(line)}
+                        >
+                          {lineAllocations.length > 0
+                            ? <div className="flex items-center gap-1.5" dir="ltr">
+                              <span>{totalAllocated}</span>
+                              <div className="w-1 h-1 rounded-full bg-current/30" />
+                              <span>{line.qty}</span>
+                            </div>
+                            : t('allocate')}
+                        </Button>
+                      );
+                    }
+                  }
+                ]}
+              />
+            </div>
+
+            {/* Status History */}
+            <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative overflow-hidden group transition-all hover:shadow-md">
+              <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <History className="w-5 h-5 text-primary" />
+                </div>
+                <h4 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('status_history')}</h4>
+              </div>
+
+              <div className="relative ps-2">
+                <StatusTimeline entries={history} />
+              </div>
+
+              {!isNew && (
+                <div className="mt-10 pt-8 space-y-4">
+                  <div className="flex justify-between items-center group">
+                    <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_by')}</span>
+                    <div className="px-3 py-1 bg-card border border-border shadow-sm rounded-xl transition-colors group-hover:bg-primary/5">
+                      <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">{user?.name || 'System'}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center group">
+                    <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_at')}</span>
+                    <div className="px-3 py-1 bg-card border border-border shadow-sm rounded-xl transition-colors group-hover:bg-primary/5">
+                      <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">
+                        {formatDate(issue?.createdAt, locale as 'ar' | 'en')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </DocumentLockWrapper>

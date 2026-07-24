@@ -12,7 +12,7 @@ import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
+import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown, Trash2, ArrowUpRight, Package, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
@@ -96,7 +96,8 @@ export function GRNListClient({
           documentNumber: itemObj.documentNumber || '—',
           supplierName: itemObj.supplierName || '—',
           warehouseName: itemObj.warehouseName || '—',
-          status: itemObj.status || '—',
+          status: itemObj.status || itemObj.grnStatus || '—',
+          grnStatus: itemObj.status || itemObj.grnStatus || '—',
           createdAt: dateStr,
         };
       });
@@ -116,7 +117,8 @@ export function GRNListClient({
           documentNumber: itemObj.documentNumber || '—',
           supplierName: itemObj.supplierName || '—',
           warehouseName: itemObj.warehouseName || '—',
-          status: itemObj.status || '—',
+          status: itemObj.status || itemObj.grnStatus || '—',
+          grnStatus: itemObj.status || itemObj.grnStatus || '—',
           createdAt: dateStr,
         };
       });
@@ -340,7 +342,7 @@ export function GRNListClient({
            { header: t('doc_number') || 'Doc #', key: 'documentNumber' },
            { header: t('supplier') || 'Supplier', key: 'supplierName' },
            { header: tc('warehouse') || 'Warehouse', key: 'warehouseName' },
-           { header: tc('status_label') || 'Status', key: 'status' },
+           { header: tc('status_label') || 'Status', key: 'grnStatus' },
            { header: tc('created_at') || 'Date', key: 'createdAt' },
           ]}
           filename="goods_received"
@@ -398,56 +400,62 @@ export function GRNListClient({
         return (
          <div 
           key={grn.id} 
-          className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 flex flex-col gap-2 shadow-sm"
+          className="bg-surface-lowest dark:bg-card rounded-xl p-3 flex flex-col gap-3 shadow-sm border border-border group hover:border-brand-gold/30 transition-colors cursor-pointer"
           onClick={() => router.push(`/goods-received/${grn.id}`)}
          >
-          {/* TOP TIER: Identity */}
-          <div className="flex justify-between items-start">
-           <div className="flex flex-col gap-1 w-full">
-            <div className="flex justify-between items-start gap-2">
-             <span className="text-[11px] font-mono font-bold text-[#b48e67] uppercase">{grn.documentNumber}</span>
+          <div className="flex justify-between items-start w-full">
+           <div className="flex flex-col gap-1.5 w-full min-w-0 pr-2">
+            <div className="flex items-center justify-between w-full">
+             <span className="text-[11px] font-mono font-extrabold text-foreground bg-surface-container-highest px-2 py-0.5 rounded-md border border-border/50 uppercase truncate">{grn.documentNumber}</span>
              <StatusBadge status={grn.status as BadgeStatus} className="px-1.5 py-0.5 text-[9px] rounded-md h-auto shrink-0" />
             </div>
-            <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{grn.supplierName || '—'}</span>
-           </div>
-          </div>
-
-          {/* MIDDLE TIER: Meta */}
-          <div className="flex items-center justify-between mt-1 p-2 bg-gray-50 dark:bg-black/20 rounded-md">
-           <div className="flex flex-col">
-            <span className="text-[10px] text-muted-foreground font-semibold uppercase">{tc('warehouse')}</span>
-            <span className="text-sm font-bold text-foreground">
-             {grn.warehouseName || grn.warehouseId || '-'}
+            <span className="text-sm font-bold text-foreground line-clamp-1 flex items-center gap-1.5 mt-0.5">
+             <Inbox className="w-4 h-4 text-brand-gold shrink-0" />
+             {grn.supplierName || '—'}
             </span>
            </div>
           </div>
 
-          {/* BOTTOM TIER: Actions */}
-          <div className="flex justify-between items-end pt-2 mt-1 border-t border-gray-100 dark:border-gray-800/50">
-           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            {grn.postedAt ? (
-             <ClientOnlyTime 
-              date={grn.postedAt} 
-              mode="date" 
-              className="font-mono font-medium" 
-             />
-            ) : <span className="opacity-50 italic">{t('pending_label')}</span>}
+          <div className="flex items-center justify-between mt-1 pt-3 border-t border-border/40">
+           <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-1.5">
+             <div className="w-7 h-7 rounded-md bg-surface-container-highest flex items-center justify-center shrink-0 border border-border/50">
+              <Package className="w-3.5 h-3.5 text-muted-foreground" />
+             </div>
+             <div className="flex flex-col min-w-0">
+              <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">{tc('warehouse')}</span>
+              <span className="text-[11px] font-bold text-foreground truncate max-w-[120px]">
+               {grn.warehouseName || grn.warehouseId || '-'}
+              </span>
+             </div>
+            </div>
            </div>
            
-           <div className="flex gap-2 shrink-0">
+           <div className="flex gap-1.5 shrink-0 items-center">
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-surface-container px-2 py-1.5 rounded-md border border-border/50 me-1">
+             <Calendar className="w-3.5 h-3.5 text-brand-gold" />
+             {grn.postedAt ? (
+              <ClientOnlyTime 
+               date={grn.postedAt} 
+               mode="date" 
+               className="font-mono font-bold" 
+              />
+             ) : <span className="opacity-50 italic">{t('pending_label')}</span>}
+            </div>
+
             <PermissionGate action="view" resource="grn">
-             <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20"
+             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md text-brand-gold bg-brand-gold/5 border border-brand-gold/10 hover:bg-brand-gold/15 hover:text-brand-gold transition-colors shrink-0"
               onClick={(e) => {
                e.stopPropagation();
                router.push(`/goods-received/${grn.id}`);
               }}
              >
-              {tc('view')}
+              <ArrowUpRight className="w-4 h-4 rtl:rotate-[-90deg]" />
              </Button>
             </PermissionGate>
             {isDraft && (
              <PermissionGate action="delete" resource="grn">
-              <Button variant="ghost" size="sm" className="h-8 px-3 rounded-md text-xs font-bold text-status-error bg-status-error/10 hover:bg-status-error/20"
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md text-status-error bg-status-error/5 border border-status-error/10 hover:bg-status-error/15 hover:text-status-error transition-colors shrink-0"
                onClick={async (e) => {
                 e.stopPropagation();
                 const confirmed = window.confirm('Are you sure you want to delete this draft goods received note?');
