@@ -79,8 +79,28 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
     const h = [
       { status: 'draft' as Status, at: issue.createdAt ?? '', by: issue.createdBy ?? tCommon('system_user') }
     ];
-    if (issue.postedAt) {
-      h.push({ status: 'posted' as Status, at: issue.postedAt, by: issue.postedBy ?? tCommon('system_user') });
+
+    const currentStatusNorm = (issue.status || '').toLowerCase();
+    if (currentStatusNorm !== 'draft' && currentStatusNorm !== 'posted') {
+      const statusTime = (issueAny.submittedAt as string) || (issueAny.updatedAt as string) || issue.createdAt || '';
+      const statusUser = (issueAny.submittedBy as string) || issue.createdBy || tCommon('system_user');
+      const normalizedStatus = (currentStatusNorm.includes('submitted') ? 'submitted' : currentStatusNorm) as Status;
+      h.push({
+        status: normalizedStatus,
+        at: statusTime,
+        by: statusUser
+      });
+    }
+
+    // Final posted status (checks both status string and postedAt timestamp)
+    if (currentStatusNorm === 'posted' || issue.postedAt) {
+      const postedTime = issue.postedAt || (issueAny.updatedAt as string) || issue.createdAt || '';
+      const postedUser = issue.postedBy || issue.createdBy || tCommon('system_user');
+      h.push({
+        status: 'posted' as Status,
+        at: postedTime,
+        by: postedUser
+      });
     }
     return h;
   }, [issue, tCommon]);
@@ -91,6 +111,9 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
    id: l.item.id,
    code: l.item.code,
    name: l.item.name,
+   nameAr: l.item.nameAr,
+   nameEn: l.item.nameEn,
+   image: l.item.image,
    primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
   },
   lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
@@ -223,8 +246,8 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
             const lineAllocations = line.lotAllocations || [];
             return (
              <div className="flex flex-wrap gap-1.5 max-w-[200px]">
-              {lineAllocations.map((alloc: LotAllocation) => (
-               <div key={alloc.lotId} className="px-2.5 py-1 bg-muted/50 rounded-lg flex items-center gap-1.5">
+              {lineAllocations.map((alloc: LotAllocation, idx: number) => (
+               <div key={`${alloc.lotId || alloc.lotNumber || 'alloc'}-${idx}`} className="px-2.5 py-1 bg-muted/50 rounded-lg flex items-center gap-1.5">
                 <span className="text-label-xxs font-mono text-foreground/80">{alloc.lotNumber}</span>
                 <div className="w-1 h-1 rounded-full bg-muted/50" />
                 <span className="text-label-xxs font-semibold text-foreground">{alloc.allocatedQty}</span>

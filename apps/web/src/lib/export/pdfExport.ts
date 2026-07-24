@@ -36,43 +36,48 @@ export async function generatePDF(
   title: string,
   options?: PDFExportOptions
 ) {
-  // Create a container element
+  // Create a container element for PDF rendering
   const container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.top = '-99999px';
-  container.style.left = '-99999px';
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '-9999';
+  container.style.opacity = '1';
+  container.style.backgroundColor = '#ffffff';
+  container.style.width = '210mm';
   document.body.appendChild(container);
 
   let branding = getExportBranding();
 
   try {
-    // Override with fresh DB data directly
-    const [profile, settings] = await Promise.all([
-      apiClient.get('/admin/restaurant-profile', RestaurantProfileSchema.partial()),
-      apiClient.get('/admin/settings', PrintSettingsSchema.partial()),
-    ]);
-    const isFallbackLogo = !profile.logoUrl && !profile.logo && !branding?.logo;
-    const finalLogo = profile.logoUrl || profile.logo || branding?.logo;
+    if (typeof window !== 'undefined') {
+      const [profile, settings] = await Promise.all([
+        apiClient.get('/admin/restaurant-profile', RestaurantProfileSchema.partial()).catch(() => null),
+        apiClient.get('/admin/settings', PrintSettingsSchema.partial()).catch(() => null),
+      ]);
 
-    branding = {
-      name: profile.name || branding?.name || 'Otantik Restaurant Enterprise',
-      address: profile.address || '',
-      phone: profile.phone || '',
-      email: profile.email || '',
-      logo: profile.logoUrl || profile.logo || '',
-      taxNumber: profile.taxNumber || '',
-      commercialRegistration: profile.commercialRegistration || '',
-    };
+      if (profile) {
+        const isFallbackLogo = !profile.logoUrl && !profile.logo && !branding?.logo;
+        branding = {
+          name: profile.name || branding?.name || 'Otantik Restaurant Enterprise',
+          address: profile.address || '',
+          phone: profile.phone || '',
+          email: profile.email || '',
+          logo: profile.logoUrl || profile.logo || '',
+          taxNumber: profile.taxNumber || '',
+          commercialRegistration: profile.commercialRegistration || '',
+        };
 
-    // Inject dynamic branding config
-    const showSystemName = settings.printSettings?.showSystemName ?? true;
-    options = {
-      ...options,
-      brandingConfig: {
-        logoType: profile.brandingConfig?.logoType || branding?.brandingConfig?.logoType || (isFallbackLogo ? 'BANNER' : 'MARK'),
-        systemName: showSystemName ? (settings.systemName || branding.name) : '',
+        const showSystemName = settings?.printSettings?.showSystemName ?? true;
+        options = {
+          ...options,
+          brandingConfig: {
+            logoType: profile.brandingConfig?.logoType || branding?.brandingConfig?.logoType || (isFallbackLogo ? 'BANNER' : 'MARK'),
+            systemName: showSystemName ? (settings?.systemName || branding.name) : '',
+          }
+        };
       }
-    };
+    }
   } catch (err) {
     console.warn('Failed to fetch live profile/settings from DB for PDF, using cached or fallback', err);
   }

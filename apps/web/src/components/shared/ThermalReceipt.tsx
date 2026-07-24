@@ -122,10 +122,19 @@ export function ThermalReceipt({
        overflow: visible !important;
       }
       /* Hide absolute everything except the receipt wrapper */
-      body > * {
-       display: none !important;
+      body {
+       visibility: hidden !important;
+       background: white !important;
+       color: black !important;
+      }
+      .thermal-receipt-root, .thermal-receipt-root * {
+       visibility: visible !important;
       }
       .thermal-receipt-root {
+       position: absolute !important;
+       left: 0 !important;
+       top: 0 !important;
+       width: ${paperSize} !important;
        display: block !important;
       }
      }

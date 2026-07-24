@@ -593,6 +593,7 @@
       "close": "إغلاق"
     },
     "doc_number": "رقم المستند",
+    "details_section": "تفاصيل المستند",
     "doc_types": {
       "adj": "تسوية",
       "grn": "إشعار استلام",
@@ -837,7 +838,7 @@
       "import": "استيراد البيانات",
       "issue": "صرف البضائع",
       "items": "الأصناف",
-      "kitchen_requests": "الطلبات التشغيلية",
+      "kitchen_requests": "طلبات توريد المطبخ",
       "landed_cost": "التكلفة الواصلة",
       "lots": "الدفعات",
       "mail_settings": "إعدادات خادم البريد",
@@ -2773,6 +2774,7 @@
       "direction_increase": "زيادة",
       "doc_number": "رقم التعديل",
       "document_info": "معلومات الوثيقة",
+      "document_locked": "هذا المستند مقفل",
       "errors": {
         "approve_failed": "فشلت الموافقة على التعديل",
         "create_failed": "فشل إنشاء التعديل",
@@ -3015,6 +3017,7 @@
         "pending_lots_status": "دفعات معلقة",
         "qty": "الكمية",
         "ready_for_barcode": "جاهز لمسح الباركود...",
+        "scanned_items": "الأصناف الممسوحة",
         "scanned_items_count": "الأصناف الممسوحة ({count})",
         "subtitle": "امسح الباركود لإضافة المنتجات بسرعة.",
         "title": "وضع المسح السريع",

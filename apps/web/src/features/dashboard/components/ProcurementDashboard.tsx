@@ -42,10 +42,7 @@ export function ProcurementDashboard() {
     subtitle={
      <>
       <span className="text-label-xs font-semibold uppercase text-operational-cyan block mb-2 opacity-80">{t('procurement.supply_chain')}</span>
-      <div className="flex items-center gap-3">
-       <div className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" />
-       <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('procurement.central_procurement_unit')}</p>
-      </div>
+      <p className="text-label-xs text-muted-foreground font-semibold uppercase">{t('procurement.central_procurement_unit')}</p>
      </>
     }
    >

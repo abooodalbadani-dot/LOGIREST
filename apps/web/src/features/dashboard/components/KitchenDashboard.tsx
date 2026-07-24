@@ -176,15 +176,26 @@ export function KitchenDashboard() {
        <CardTitle id="daily-activity-title" className="text-title-sm font-semibold uppercase">{t('kitchen.consumption_log')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-       {stats.activityLog.map((log, i) => (
-        <div key={i} className="flex items-center justify-between group">
-         <div className="flex flex-col">
-          <span className="text-label-xs font-bold text-foreground group-hover:text-cyan-500 transition-colors">{log.itemName}</span>
-          <span className="text-label-xxs font-medium text-muted-foreground/40">{log.qty} {log.uom} {t('kitchen.recorded')}</span>
-         </div>
-         <span className="text-label-xs font-semibold text-muted-foreground/30 font-mono">{log.time}</span>
-        </div>
-       ))}
+       {stats.activityLog.map((log, i) => {
+        let formattedTime = log.time;
+        try {
+          const d = new Date(log.time);
+          if (!isNaN(d.getTime())) {
+            formattedTime = d.toLocaleTimeString(locale === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+          }
+        } catch {
+          // keep original if parsing fails
+        }
+        return (
+          <div key={i} className="flex items-center justify-between group">
+           <div className="flex flex-col">
+            <span className="text-label-xs font-bold text-foreground group-hover:text-cyan-500 transition-colors">{log.itemName}</span>
+            <span className="text-label-xxs font-medium text-muted-foreground/40">{log.qty} {log.uom} {t('kitchen.recorded')}</span>
+           </div>
+           <span className="text-label-xs font-semibold text-muted-foreground/50 font-mono" dir="ltr">{formattedTime}</span>
+          </div>
+        );
+       })}
        <PermissionGate action="create" resource="operations_kitchen_requests">
         <Link href="/kitchen-requests/new" className="w-full">
          <Button variant="outline" className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">

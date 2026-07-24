@@ -13,6 +13,7 @@ export interface LineItem {
   item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; image?: string | null; primaryUom?: { code: string; name?: string } | null; category?: { id: string; name: string } | null };
   lot?: { lotNumber: string; expiryDate: string | null } | null;
   qty: number;
+  requestedQty?: number;
   uomId: string;
   unitCost?: number | null;
   lotAllocations?: LotAllocation[];
@@ -1620,37 +1621,53 @@ export function DocumentLineItemTable<T extends LineItem>({
                         </div>
                       </div>
                     ) : mobileLayoutPattern === 'issue-form' ? (
-                      <div className="flex flex-col bg-surface-lowest dark:bg-card border border-border shadow-sm rounded-xl p-3 transition-all mb-3 group hover:border-brand-gold/30">
-                        {/* Header: Identity + Actions (FEFO Allocate / Sync / Actions Button beside Item Name + Delete Button) */}
-                        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 mb-2.5 pb-2.5 border-b border-border/40">
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            {line.item.image ? (
-                              <img src={line.item.image} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
-                            ) : (
-                              <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
-                            )}
-                            <div className="flex flex-col min-w-0 flex-1 text-start items-start">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-sm font-bold text-foreground leading-tight truncate">
-                                  {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                      <div className="flex flex-col bg-surface-lowest dark:bg-card border border-border shadow-sm rounded-xl p-3 transition-all mb-2.5 group hover:border-brand-gold/30">
+                        {/* Main Header: Image + Item Details + Inline Luxury QTY Pill + Actions */}
+                        <div className="flex items-center justify-between gap-3 min-w-0">
+                          {/* Item Image */}
+                          {line.item.image ? (
+                            <img src={line.item.image} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
+                          ) : (
+                            <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
+                          )}
+
+                          {/* Item Identity + Luxury QTY Badge */}
+                          <div className="flex flex-col min-w-0 flex-1 text-start items-start justify-center">
+                            <div className="flex items-center gap-2 flex-wrap w-full">
+                              <span className="text-sm font-bold text-foreground leading-tight truncate">
+                                {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                              </span>
+                              {line.item.primaryUom && (
+                                <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0">
+                                  {line.item.primaryUom.code || line.item.primaryUom.name}
                                 </span>
-                                {line.item.primaryUom && (
-                                  <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0">
-                                    {line.item.primaryUom.code || line.item.primaryUom.name}
+                              )}
+
+                              {/* Luxurious QTY Pill */}
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-brand-gold/15 dark:bg-brand-gold/20 border border-brand-gold/40 rounded-full shadow-inner shrink-0 ms-auto">
+                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-brand-gold">{h.qty}:</span>
+                                {renderQty ? (
+                                  <div className="min-w-[50px]">
+                                    {renderQty(line)}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs font-black font-mono text-foreground dark:text-brand-gold" dir="ltr">
+                                    {line.qty ?? line.requestedQty ?? 0}
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[10px] font-mono font-extrabold text-foreground bg-surface-container-highest px-2 py-0.5 rounded-md border border-border/50 uppercase truncate mt-1" dir="ltr">{line.item.code}</span>
-                              {renderItemDescription && (
-                                <div className="mt-1">
-                                  {renderItemDescription(line as T)}
-                                </div>
-                              )}
                             </div>
+
+                            <span className="text-[10px] font-mono font-extrabold text-foreground bg-surface-container-highest px-2 py-0.5 rounded-md border border-border/50 uppercase truncate mt-1" dir="ltr">{line.item.code}</span>
+                            {renderItemDescription && (
+                              <div className="mt-1">
+                                {renderItemDescription(line as T)}
+                              </div>
+                            )}
                           </div>
 
-                          {/* Actions: FEFO Allocate / Sync / Actions Button + Delete Button */}
-                          <div className="flex items-center gap-2 shrink-0 sm:self-center ms-auto">
+                          {/* Action Buttons (FEFO Sync / Remove) */}
+                          <div className="flex items-center gap-2 shrink-0 ms-1">
                             {extraColumns.filter(col =>
                               col.header.toLowerCase().includes('sync') ||
                               col.header.toLowerCase().includes('action') ||
@@ -1659,20 +1676,19 @@ export function DocumentLineItemTable<T extends LineItem>({
                               col.header.includes('تخصيص') ||
                               col.header.includes('إجراء')
                             ).map((col, i) => (
-                              <div key={i} className="shrink-0 flex items-center [&_button]:h-9 [&_button]:px-3 [&_button]:text-xs [&_button]:font-bold [&_button]:rounded-xl [&_button]:shadow-sm">
+                              <div key={i} className="shrink-0 flex items-center [&_button]:h-8 [&_button]:px-2.5 [&_button]:text-[11px] [&_button]:font-bold [&_button]:rounded-lg [&_button]:shadow-sm">
                                 {col.cell(line)}
                               </div>
                             ))}
 
-                            {/* Delete Button */}
                             {!isReadOnly && onRemoveLine && (
                               <button
                                 type="button"
                                 onClick={() => onRemoveLine(line.id)}
-                                className="h-9 w-9 text-destructive hover:bg-destructive/10 border border-transparent rounded-xl transition-colors flex items-center justify-center shrink-0 ms-1"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10 border border-transparent rounded-lg transition-colors flex items-center justify-center shrink-0"
                                 aria-label={tc('actions.remove_line')}
                               >
-                                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                               </button>
@@ -1680,51 +1696,49 @@ export function DocumentLineItemTable<T extends LineItem>({
                           </div>
                         </div>
 
-                        {/* Body: Inputs side by side */}
-                        <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-surface-container border border-border/50 rounded-lg p-2.5">
-                          {/* QTY */}
-                          <div className="flex flex-col gap-1 w-full text-center">
-                            <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest text-center truncate">{h.qty}</span>
-                            <div className="w-full flex items-center justify-center">
-                              {renderQty ? renderQty(line) : (
-                                <div className="text-sm font-black text-foreground font-mono bg-background border border-border rounded-lg px-2 h-9 flex items-center justify-center w-full shadow-sm" dir="ltr">{line.qty}</div>
+                        {/* Non-action Extra Columns (e.g. Fulfillment Ratio Status 0/1) */}
+                        {extraColumns.filter(col =>
+                          !col.header.toLowerCase().includes('sync') &&
+                          !col.header.toLowerCase().includes('action') &&
+                          !col.header.toLowerCase().includes('print') &&
+                          !col.header.toLowerCase().includes('allocat') &&
+                          !col.header.includes('تخصيص') &&
+                          !col.header.includes('إجراء')
+                        ).length > 0 && (
+                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border/30">
+                            {extraColumns.filter(col =>
+                              !col.header.toLowerCase().includes('sync') &&
+                              !col.header.toLowerCase().includes('action') &&
+                              !col.header.toLowerCase().includes('print') &&
+                              !col.header.toLowerCase().includes('allocat') &&
+                              !col.header.includes('تخصيص') &&
+                              !col.header.includes('إجراء')
+                            ).map((col, i) => (
+                              <div key={i} className="flex items-center justify-between w-full">
+                                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{col.header}</span>
+                                <div className="flex items-center">
+                                  {col.cell(line)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Lot Allocation Row (if present) */}
+                        {!hideLotColumns && (line.lot || line.lotAllocations?.length ? (
+                          <div className="flex items-center justify-between gap-3 px-1 pt-2 border-t border-border/30 mt-1.5 text-[10px]">
+                            <span className="uppercase font-bold text-muted-foreground tracking-widest">{h.lot}</span>
+                            <div className="font-mono text-xs text-foreground">
+                              {line.lot ? (
+                                <span dir="ltr">{line.lot.lotNumber}</span>
+                              ) : line.lotAllocations?.[0]?.lotNumber ? (
+                                <span dir="ltr">{line.lotAllocations.map(a => a.lotNumber).join(', ')}</span>
+                              ) : (
+                                <span className="text-muted-foreground/50">{tc('no_lot')}</span>
                               )}
                             </div>
                           </div>
-
-                          {/* Fulfillment Status / Other non-action columns */}
-                          {extraColumns.filter(col =>
-                            !col.header.toLowerCase().includes('sync') &&
-                            !col.header.toLowerCase().includes('action') &&
-                            !col.header.toLowerCase().includes('print') &&
-                            !col.header.toLowerCase().includes('allocat') &&
-                            !col.header.includes('تخصيص') &&
-                            !col.header.includes('إجراء')
-                          ).map((col, i) => (
-                            <div key={i} className="flex flex-col gap-1 w-full text-center">
-                              <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest text-center truncate">{col.header}</span>
-                              <div className="w-full flex items-center justify-center h-9">
-                                {col.cell(line)}
-                              </div>
-                            </div>
-                          ))}
-
-                          {/* Lot Allocation */}
-                          {!hideLotColumns && (line.lot || line.lotAllocations?.length ? (
-                            <div className="col-span-2 flex items-center justify-between gap-3 px-1 pt-2 border-t border-border/30 mt-1">
-                              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{h.lot}</span>
-                              <div className="font-mono text-xs text-foreground">
-                                {line.lot ? (
-                                  <span dir="ltr">{line.lot.lotNumber}</span>
-                                ) : line.lotAllocations?.[0]?.lotNumber ? (
-                                  <span dir="ltr">{line.lotAllocations.map(a => a.lotNumber).join(', ')}</span>
-                                ) : (
-                                  <span className="text-muted-foreground/50">{tc('no_lot')}</span>
-                                )}
-                              </div>
-                            </div>
-                          ) : null)}
-                        </div>
+                        ) : null)}
                       </div>
                     ) : (
                       <div className={cn("flex flex-col bg-surface-lowest dark:bg-card border border-border shadow-sm transition-all group hover:border-brand-gold/30", mobileLayoutPattern === 'elegant' ? "rounded-lg p-2.5" : "rounded-xl p-3")}>

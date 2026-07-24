@@ -576,7 +576,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
               <button
                 type="button"
                 onClick={() => setCreatingLotForLineId(line.id)}
-                className="px-4 h-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 border-l-0 text-slate-700 dark:text-brand-gold rounded-r-xl text-xs font-bold whitespace-nowrap hover:bg-slate-200 dark:hover:bg-brand-gold/10 transition-colors"
+                className="px-4 h-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 border-l-0 text-slate-700 dark:text-brand-gold rounded-r-xl text-xs font-bold whitespace-nowrap hover:bg-brand-gold/10 transition-colors"
               >
                 + {t('new') || 'NEW'}
               </button>
@@ -624,193 +624,208 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
       <LockBanner lockState={lockState} />
 
-      <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-6 w-full flex-1", createAdjustment.isPending && "opacity-60 pointer-events-none transition-opacity")}>
-        {/* Left Sidebar Panel - Metadata settings */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-visible shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-slate-200/60 dark:border-white/5 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:border-white/10 group">
+      <div className={cn("grid grid-cols-1 w-full flex-1", createAdjustment.isPending && "opacity-60 pointer-events-none transition-opacity")}>
+        {/* Unified Master Deck Container - Document Details + Items Section */}
+        <div className="lg:col-span-12 flex flex-col gap-6">
+          <div className="bg-card backdrop-blur-3xl p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-border/80 space-y-8 transition-all duration-500 hover:border-brand-gold/30 group">
+            {/* Decorative ambient background glow */}
+            <div className="absolute top-0 end-0 w-96 h-96 bg-brand-gold/5 blur-[100px] pointer-events-none rounded-full" />
+            <div className="absolute bottom-0 start-0 w-80 h-80 bg-brand-gold/5 blur-[90px] pointer-events-none rounded-full" />
 
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/5 flex items-center justify-center border border-brand-gold/20">
-                <Warehouse className="w-5 h-5 text-brand-gold" />
-              </div>
-              <h3 className="text-body-lg font-bold uppercase tracking-widest text-slate-800 dark:text-white/90">
-                {t('details_section')}
-              </h3>
-            </div>
-
-            <div className="space-y-6">
-              {/* Warehouse selection */}
-              <div className="space-y-2">
-                <label htmlFor="warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
-                  {tCommon('warehouse')}
-                </label>
-                <SmartCombobox
-                  items={warehouseItems}
-                  value={warehouseId}
-                  onSelect={(item) => setWarehouseId(item.id)}
-                  placeholder={tCommon('select_warehouse') || "Select Warehouse"}
-                  triggerClassName="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-12 px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              {/* Reason Category */}
-              <div className="space-y-2">
-                <label htmlFor="reason-select" className="flex gap-1 items-center text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
-                  {t('reason')} <span className="text-destructive font-bold">*</span>
-                </label>
-                <SmartCombobox
-                  items={reasonItems}
-                  value={reasonCategory}
-                  onSelect={(item) => setReasonCategory(item.id)}
-                  placeholder={t('reason') || "Select Reason"}
-                  triggerClassName="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-12 px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              {/* Reason details / notes */}
-              <div className="space-y-2">
-                <label htmlFor="notes-area" className="flex gap-1 items-center text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
-                  {tCommon('notes')} <span className="text-destructive font-bold">*</span>
-                </label>
-                <Textarea
-                  id="notes-area"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder={t('notes_placeholder')}
-                  className="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm rounded-2xl p-5 font-medium text-body-md transition-all outline-none resize-none min-h-[140px] focus:ring-2 focus:ring-brand-gold/30 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                />
-                {showNotesError && (
-                  <p className="text-[10px] font-bold text-status-error uppercase px-1 mt-1">
-                    {t('validation.notes_min_length') || 'Reason details must be at least 10 characters'}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Operations Deck Panel - Scanning and lines table */}
-        <div className="lg:col-span-9 flex flex-col gap-4">
-          <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-visible shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-slate-200/60 dark:border-white/5 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:border-white/10 group">
-
-            <div className="flex items-center justify-between mb-8">
+            {/* SECTION 1: Document Details (تفاصيل المستند) */}
+            <div className="relative border-b border-border/60 pb-8 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/5 flex items-center justify-center border border-brand-gold/20">
-                  <PackagePlus className="w-5 h-5 text-brand-gold" />
+                <div className="w-11 h-11 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/15 flex items-center justify-center border border-brand-gold/30 shadow-sm">
+                  <Warehouse className="w-5.5 h-5.5 text-brand-gold" />
                 </div>
-                <h3 className="text-body-lg font-bold uppercase tracking-widest text-slate-800 dark:text-white/90">
-                  {t('lines_section')}
-                </h3>
+                <div>
+                  <h3 className="text-body-lg font-black uppercase tracking-widest text-foreground">
+                    {t('details_section')}
+                  </h3>
+                  <p className="text-xs text-muted-foreground/70 font-semibold mt-0.5">
+                    {locale === 'ar' ? 'حدد المستودع والسبب والتفاصيل' : 'Warehouse & Document Specification'}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleSuggestFIFO}
-                  disabled={isSuggestingFIFO || lines.length === 0}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-gold/10 to-brand-gold/5 hover:from-brand-gold/20 hover:to-brand-gold/10 border border-brand-gold/30 rounded-full transition-all duration-300 group disabled:opacity-50 disabled:grayscale shadow-sm hover:shadow-brand-gold/20"
-                >
-                  <Zap className="w-4 h-4 text-brand-gold group-hover:scale-110 transition-transform" />
-                  <span className="text-label-xs font-bold uppercase text-brand-gold tracking-wider">
-                    {isSuggestingFIFO ? t('fetching_lots') : t('suggest_fifo')}
-                  </span>
-                </button>
-                <div className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full border border-emerald-500/20 backdrop-blur-sm">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                  <span className="text-label-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
-                    {lines.length} {tCommon('items') || 'Items'}
-                  </span>
+
+              {/* 3-Column Responsive Header Inputs */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* Warehouse Selection */}
+                <div className="space-y-2">
+                  <label htmlFor="warehouse-select" className="text-label-xs font-bold uppercase tracking-wider text-muted-foreground/70 ms-1 flex items-center gap-1">
+                    {tCommon('warehouse')} <span className="text-destructive font-bold">*</span>
+                  </label>
+                  <SmartCombobox
+                    items={warehouseItems}
+                    value={warehouseId}
+                    onSelect={(item) => setWarehouseId(item.id)}
+                    placeholder={tCommon('select_warehouse') || "Select Warehouse"}
+                    triggerClassName="w-full bg-surface-container-highest/30 backdrop-blur-md border border-border/70 shadow-sm h-12 px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-2 focus-visible:ring-brand-gold/30 transition-all hover:bg-surface-container-highest/60 text-foreground"
+                  />
+                </div>
+
+                {/* Reason Category */}
+                <div className="space-y-2">
+                  <label htmlFor="reason-select" className="text-label-xs font-bold uppercase tracking-wider text-muted-foreground/70 ms-1 flex items-center gap-1">
+                    {t('reason')} <span className="text-destructive font-bold">*</span>
+                  </label>
+                  <SmartCombobox
+                    items={reasonItems}
+                    value={reasonCategory}
+                    onSelect={(item) => setReasonCategory(item.id)}
+                    placeholder={t('reason') || "Select Reason"}
+                    triggerClassName="w-full bg-surface-container-highest/30 backdrop-blur-md border border-border/70 shadow-sm h-12 px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-2 focus-visible:ring-brand-gold/30 transition-all hover:bg-surface-container-highest/60 text-foreground"
+                  />
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <label htmlFor="notes-area" className="text-label-xs font-bold uppercase tracking-wider text-muted-foreground/70 ms-1 flex items-center gap-1">
+                    {tCommon('notes')} <span className="text-destructive font-bold">*</span>
+                  </label>
+                  <Textarea
+                    id="notes-area"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder={t('notes_placeholder')}
+                    className="w-full bg-surface-container-highest/30 backdrop-blur-md border border-border/70 shadow-sm rounded-xl p-3 text-body-sm transition-all outline-none resize-none h-12 leading-snug focus:ring-2 focus:ring-brand-gold/30 text-foreground placeholder:text-muted-foreground/50"
+                  />
+                  {showNotesError && (
+                    <p className="text-[10px] font-bold text-status-error uppercase px-1 mt-1">
+                      {t('validation.notes_min_length') || 'Reason details must be at least 10 characters'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Input Bars (Scanning + Combobox) */}
-            <div className="mb-8 flex flex-col md:flex-row items-end gap-4 w-full">
-              <div className="flex-1 space-y-2 w-full text-center md:text-start">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-center md:text-start">
-                  {locale === 'ar' ? 'مسح الباركود' : 'Barcode Scanner'}
-                </label>
-                <ScanInput
-                  onScan={handleAddItem}
-                  placeholder={t('scan_item_placeholder') || 'Scan item barcode...'}
-                  className="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-within:ring-2 focus-within:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white"
-                />
+            {/* SECTION 2: Items Table & Scanning Section */}
+            <div className="relative space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/15 flex items-center justify-center border border-brand-gold/30 shadow-sm">
+                    <PackagePlus className="w-5.5 h-5.5 text-brand-gold" />
+                  </div>
+                  <div>
+                    <h3 className="text-body-lg font-black uppercase tracking-widest text-foreground">
+                      {t('lines_section')}
+                    </h3>
+                    <span className="text-xs font-mono font-bold text-brand-gold">
+                      {lines.length} {tCommon('items') || 'Items'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSuggestFIFO}
+                    disabled={isSuggestingFIFO || lines.length === 0}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-gold/10 to-brand-gold/5 hover:from-brand-gold/20 hover:to-brand-gold/10 border border-brand-gold/30 rounded-full transition-all duration-300 group disabled:opacity-50 disabled:grayscale shadow-sm hover:shadow-brand-gold/20"
+                  >
+                    <Zap className="w-4 h-4 text-brand-gold group-hover:scale-110 transition-transform" />
+                    <span className="text-label-xs font-bold uppercase text-brand-gold tracking-wider">
+                      {isSuggestingFIFO ? t('fetching_lots') : t('suggest_fifo')}
+                    </span>
+                  </button>
+                  <div className="flex items-center gap-2 px-5 py-2.5 bg-surface-container-highest/30 rounded-full border border-brand-gold/30 backdrop-blur-sm">
+                    <div className="w-2 h-2 rounded-full bg-brand-gold animate-pulse shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
+                    <span className="text-label-xs font-bold uppercase text-brand-gold tracking-wider">
+                      {lines.length} {tCommon('items') || 'Items'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 space-y-2 w-full text-center md:text-start">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-center md:text-start">
-                  {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
-                </label>
-                <SmartCombobox
-                  items={allItems}
-                  onSelect={(item: ItemOption) => handleAddItem(item.code)}
-                  placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
-                  disabled={isLoadingItems}
-                  triggerClassName="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-brand-gold/30 transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-900 dark:text-white text-center md:text-start justify-center md:justify-start"
-                  onAddCustomItem={(query) => {
-                    setCustomItemNameQuery(query);
-                    setIsCustomItemDialogOpen(true);
+
+              {/* Input Bars (Scanning + Combobox) */}
+              <div className="flex flex-col md:flex-row items-end gap-4 w-full">
+                <div className="flex-1 space-y-2 w-full text-center md:text-start">
+                  <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-center md:text-start">
+                    {locale === 'ar' ? 'مسح الباركود' : 'Barcode Scanner'}
+                  </label>
+                  <ScanInput
+                    onScan={handleAddItem}
+                    placeholder={t('scan_item_placeholder') || 'Scan item barcode...'}
+                    className="w-full bg-surface-container-highest/30 backdrop-blur-md border border-border/70 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-within:ring-2 focus-within:ring-brand-gold/30 transition-all hover:bg-surface-container-highest/60 text-foreground"
+                  />
+                </div>
+                <div className="flex-1 space-y-2 w-full text-center md:text-start">
+                  <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block text-center md:text-start">
+                    {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
+                  </label>
+                  <SmartCombobox
+                    items={allItems}
+                    onSelect={(item: ItemOption) => handleAddItem(item.code)}
+                    placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
+                    disabled={isLoadingItems}
+                    triggerClassName="w-full bg-surface-container-highest/30 backdrop-blur-md border border-border/70 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-2 focus-visible:ring-brand-gold/30 transition-all hover:bg-surface-container-highest/60 text-foreground text-center md:text-start justify-center md:justify-start"
+                    onAddCustomItem={(query) => {
+                      setCustomItemNameQuery(query);
+                      setIsCustomItemDialogOpen(true);
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* High-density interactive virtualized table */}
+              <div className="bg-card backdrop-blur-xl shadow-xl rounded-[2rem] border border-border/70 overflow-hidden mt-4">
+                <DocumentLineItemTable<NewAdjustmentLine>
+                  lines={lines}
+                  locale={locale}
+                  isReadOnly={false}
+                  onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
+                  hideLotColumns={true}
+                  dense={true}
+                  noCollapse={false}
+                  mobileLayoutPattern="adjustment-form"
+                  extraColumns={extraColumns}
+                  headers={{
+                    code: tCommon('table_headers.code'),
+                    name: tCommon('table_headers.name'),
+                    qty: tCommon('table_headers.qty'),
+                    uom: tCommon('table_headers.uom'),
+                  }}
+                  renderQty={(line) => (
+                    <div className="flex justify-center w-full">
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*"
+                        value={line.qty}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: isNaN(val) ? 0 : val } : l));
+                        }}
+                        className="w-full text-center font-black text-lg h-11 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm"
+                      />
+                    </div>
+                  )}
+                  renderUom={(line) => {
+                    return (
+                      <div className="flex items-center justify-center w-full">
+                        <SmartCombobox
+                          items={activeUoMs}
+                          value={line.uomId}
+                          onSelect={(uom) => {
+                            setLines(prev => prev.map(l => l.id === line.id ? { ...l, uomId: uom.id } : l));
+                          }}
+                          placeholder="PCS" // i18n-ignore
+                          triggerClassName="h-11 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
+                        />
+                      </div>
+                    );
                   }}
                 />
               </div>
-            </div>
-
-            {/* High-density interactive virtualized table */}
-            <div className="bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.15)] rounded-[2rem] border border-slate-200/60 dark:border-white/5 overflow-hidden mt-4">
-              <DocumentLineItemTable<NewAdjustmentLine>
-                lines={lines}
-                locale={locale}
-                isReadOnly={false}
-                onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
-                hideLotColumns={true}
-                dense={true}
-                noCollapse={false}
-                mobileLayoutPattern="adjustment-form"
-                extraColumns={extraColumns}
-                headers={{
-                  code: tCommon('table_headers.code'),
-                  name: tCommon('table_headers.name'),
-                  qty: tCommon('table_headers.qty'),
-                  uom: tCommon('table_headers.uom'),
-                }}
-                renderQty={(line) => (
-                  <div className="flex justify-center w-full">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      pattern="[0-9]*"
-                      value={line.qty}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: isNaN(val) ? 0 : val } : l));
-                      }}
-                      className="w-full text-center font-black text-lg h-11 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm"
-                    />
-                  </div>
-                )}
-                renderUom={(line) => {
-                  return (
-                    <div className="flex items-center justify-center w-full">
-                      <SmartCombobox
-                        items={activeUoMs}
-                        value={line.uomId}
-                        onSelect={(uom) => {
-                          setLines(prev => prev.map(l => l.id === line.id ? { ...l, uomId: uom.id } : l));
-                        }}
-                        placeholder="PCS" // i18n-ignore
-                        triggerClassName="h-11 px-3 text-sm border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-900 dark:text-white text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
-                      />
-                    </div>
-                  );
-                }}
-              />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-t border-slate-200/60 dark:border-slate-800/60 p-4 md:px-8 md:py-5 mt-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full shadow-[0_-10px_40px_rgb(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgb(0,0,0,0.3)]">
+      <div className="sticky bottom-0 z-50 bg-card/95 backdrop-blur-2xl border-t border-border p-4 md:px-8 md:py-5 mt-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full shadow-2xl">
         {/* 1. The Dynamic Warning Message */}
         {!isValid && (
-          <div className="flex items-center gap-3 text-sm font-bold text-amber-700 dark:text-brand-gold bg-amber-500/10 dark:bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-amber-500/20 dark:border-brand-gold/20">
+          <div className="flex items-center gap-3 text-sm font-bold text-brand-gold bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-brand-gold/20">
             <Info className="w-5 h-5 shrink-0" />
             <span>{locale === 'ar' ? 'يرجى كتابة الملاحظات لتفعيل زر الحفظ' : 'Please write notes to enable saving'}</span>
           </div>
@@ -824,7 +839,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             type="button"
             onClick={() => router.push('/adjustments')}
             disabled={createAdjustment.isPending}
-            className="px-6 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
+            className="px-6 py-3 rounded-2xl border border-border bg-surface-container-highest/40 hover:bg-surface-container-highest text-foreground font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
           >
             {locale === "ar" ? "إلغاء" : "Cancel"}
           </button>

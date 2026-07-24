@@ -1368,7 +1368,7 @@ export class ReportsService {
           documentType: true,
           postedAt: true,
           item: {
-            select: { name: true, unitOfMeasure: { select: { code: true } } },
+            select: { name: true, sku: true, unitOfMeasure: { select: { code: true } } },
           },
         },
       }),
@@ -1514,40 +1514,78 @@ export class ReportsService {
       0,
     );
 
-    // Build recentRequests from issues + transfers combined
-    const recentRequests = [
-      ...recentIssues.map((i) => ({
-        id: i.id,
-        documentNumber: i.issueNumber,
-        type: 'ISSUE' as const,
-        status: i.status,
-        priority: 'NORMAL',
-        itemsSummary: '',
-        createdAt: i.createdAt.toISOString(),
-        destination: i.department?.name ?? '',
-      })),
-      ...recentTransfers.map((t) => ({
-        id: t.id,
-        documentNumber: t.transferNumber,
-        type: 'TRANSFER' as const,
-        status: t.status,
-        priority: 'NORMAL',
-        itemsSummary: '',
-        createdAt: t.createdAt.toISOString(),
-        destination: t.toWarehouse?.name ?? '',
-      })),
-    ]
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )
-      .slice(0, 5);
+    // Fetch recent kitchen requests for Kitchen Chief & operational dashboard
+    const recentKitchenRequests = await this.prisma.kitchenRequest
+      .findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          requestNumber: true,
+          status: true,
+          createdAt: true,
+          warehouse: { select: { name: true } },
+          department: { select: { name: true } },
+          items: {
+            take: 2,
+            select: {
+              item: { select: { name: true, sku: true } },
+            },
+          },
+        },
+      })
+      .catch(() => []);
+
+    const recentRequests =
+      recentKitchenRequests.length > 0
+        ? recentKitchenRequests.map((kr) => ({
+            id: kr.id,
+            documentNumber: kr.requestNumber,
+            type: 'KITCHEN_REQUEST' as const,
+            status: kr.status,
+            priority: 'NORMAL',
+            itemsSummary:
+              kr.items
+                .map((i) => i.item?.name || i.item?.sku)
+                .filter(Boolean)
+                .join(', ') || 'طلب توريد مطبخ',
+            createdAt: kr.createdAt.toISOString(),
+            destination: kr.warehouse?.name ?? kr.department?.name ?? '',
+          }))
+        : [
+            ...recentIssues.map((i) => ({
+              id: i.id,
+              documentNumber: i.issueNumber,
+              type: 'ISSUE' as const,
+              status: i.status,
+              priority: 'NORMAL',
+              itemsSummary: '',
+              createdAt: i.createdAt.toISOString(),
+              destination: i.department?.name ?? '',
+            })),
+            ...recentTransfers.map((t) => ({
+              id: t.id,
+              documentNumber: t.transferNumber,
+              type: 'TRANSFER' as const,
+              status: t.status,
+              priority: 'NORMAL',
+              itemsSummary: '',
+              createdAt: t.createdAt.toISOString(),
+              destination: t.toWarehouse?.name ?? '',
+            })),
+          ]
+            .sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
+            )
+            .slice(0, 5);
 
     const activityLog = (activityLedger || []).map((l) => ({
       id: l.id,
-      itemName: l.item?.name || 'Item',
+      itemName: l.item?.name || l.item?.sku || 'صنف مخزني',
       qty: Number(l.quantity || 0),
-      uom: l.item?.unitOfMeasure?.code ?? '',
+      uom: l.item?.unitOfMeasure?.code ?? 'PCS',
       time: l.postedAt ? l.postedAt.toISOString() : new Date().toISOString(),
       type: l.documentType || 'TRANSACTION',
     }));

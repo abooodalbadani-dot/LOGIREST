@@ -36,8 +36,8 @@ export function PendingDocumentsWidget({
    let path = 'purchase-requests';
    if (doc.type === 'PO') path = 'purchase-orders';
    else if (doc.type === 'ADJUSTMENT') path = 'adjustments';
-   else if (doc.type === 'ISSUE') path = 'kitchen-requests';
-   else if (doc.type === 'TRANSFER') path = 'internal-transfers';
+   else if (doc.type === 'ISSUE') path = 'issues';
+   else if (doc.type === 'TRANSFER') path = 'transfers';
 
    let typeKey = doc.type.toLowerCase();
    if (typeKey === 'adjustment') typeKey = 'adj';

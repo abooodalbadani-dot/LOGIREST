@@ -593,6 +593,7 @@
       "close": "Close"
     },
     "doc_number": "Document No",
+    "details_section": "Document Details",
     "doc_types": {
       "adj": "Adjustment",
       "grn": "GRN",
@@ -837,7 +838,7 @@
       "import": "Data Import",
       "issue": "Issues",
       "items": "Items Registry",
-      "kitchen_requests": "Operational Requisitions",
+      "kitchen_requests": "Kitchen Supply Requests",
       "landed_cost": "Landed Cost",
       "lots": "Lots",
       "mail_settings": "Mail Server Settings",
@@ -2773,6 +2774,7 @@
       "direction_increase": "Increase",
       "doc_number": "Adjustment No",
       "document_info": "Document Information",
+      "document_locked": "This document is locked",
       "errors": {
         "approve_failed": "Failed to approve adjustment",
         "create_failed": "Failed to create adjustment",
@@ -3015,6 +3017,7 @@
         "pending_lots_status": "PENDING LOTS",
         "qty": "Quantity",
         "ready_for_barcode": "READY FOR BARCODE...",
+        "scanned_items": "Scanned Items",
         "scanned_items_count": "Scanned Items ({count})",
         "subtitle": "Scan barcode to add products quickly.",
         "title": "Immersive Scan Mode",

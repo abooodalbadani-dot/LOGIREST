@@ -40,13 +40,38 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
  const router = useRouter();
 
 
- const adjustmentStatus = document?.status ?? ADJUSTMENT_STATUS.DRAFT;
- 
- const timelineEntries = document?.timeline?.map((e: { status: string; at: string; by: string }) => ({
-  status: e.status.toLowerCase() as Status,
-  at: e.at,
-  by: e.by
- })) || [];
+  const adjustmentStatus = document?.status ?? ADJUSTMENT_STATUS.DRAFT;
+  
+  const timelineEntries = useMemo(() => {
+    if (document?.timeline && document.timeline.length > 0) {
+      return document.timeline.map((e: { status: string; at: string; by: string }) => ({
+        status: e.status.toLowerCase() as Status,
+        at: e.at,
+        by: e.by
+      }));
+    }
+    if (!document) return [];
+    const docAny = document as unknown as Record<string, unknown>;
+    const h: { status: Status; at: string; by: string }[] = [
+      { status: 'draft' as Status, at: (docAny.createdAt as string) ?? '', by: (docAny.createdBy as string) ?? tc('system_user') }
+    ];
+    const currentStatusNorm = (document.status || '').toLowerCase();
+    if (currentStatusNorm !== 'draft' && currentStatusNorm !== 'posted') {
+      h.push({
+        status: (currentStatusNorm.includes('submitted') ? 'submitted' : currentStatusNorm) as Status,
+        at: (docAny.updatedAt as string) || (docAny.createdAt as string) || '',
+        by: (docAny.createdBy as string) || tc('system_user')
+      });
+    }
+    if (currentStatusNorm === 'posted' || docAny.postedAt) {
+      h.push({
+        status: 'posted' as Status,
+        at: (docAny.postedAt as string) || (docAny.updatedAt as string) || (docAny.createdAt as string) || '',
+        by: (docAny.postedBy as string) || (docAny.createdBy as string) || tc('system_user')
+      });
+    }
+    return h;
+  }, [document, tc]);
 
   interface MappedAdjustmentLine extends LineItem {
    direction: AdjustmentLine['direction'];

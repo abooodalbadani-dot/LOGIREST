@@ -41,6 +41,15 @@ export class DashboardController {
     @CurrentUser('role') role: Role,
     @Query('warehouseId') warehouseIdQuery?: string,
   ) {
+    if (role === Role.KITCHEN_CHIEF) {
+      if (!departmentId) {
+        throw new BadRequestException(
+          'Department ID is required for kitchen chief dashboard statistics.',
+        );
+      }
+      return this.reportsService.getKitchenChiefDashboardStats(departmentId);
+    }
+
     const effectiveWarehouseId = warehouseIdQuery || warehouseId;
 
     if (effectiveWarehouseId) {
@@ -49,15 +58,6 @@ export class DashboardController {
 
     if (role === Role.ADMIN || role === Role.GM) {
       return this.reportsService.getGlobalDashboardStats();
-    }
-
-    if (role === Role.KITCHEN_CHIEF) {
-      if (!departmentId) {
-        throw new BadRequestException(
-          'Department ID is required for kitchen chief dashboard statistics.',
-        );
-      }
-      return this.reportsService.getKitchenChiefDashboardStats(departmentId);
     }
 
     return this.reportsService.getGlobalDashboardStats();

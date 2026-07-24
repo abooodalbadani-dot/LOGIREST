@@ -305,7 +305,7 @@ export function IssueForm() {
   ], [t, tc]);
 
   const renderQty = React.useCallback((line: CustomLineItem) => (
-    <div className="flex flex-col items-center gap-1 w-full">
+    <div className="flex flex-col items-center gap-0.5 w-full">
       <div className="flex justify-center w-full">
         <QuantityInput
           value={form.watch(`lines.${line.index}.requestedQty`)}
@@ -314,11 +314,11 @@ export function IssueForm() {
             form.setValue(`lines.${line.index}.requestedQty`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
           }}
           disabled={form.formState.isSubmitting}
-          className="w-full text-center font-black text-lg bg-white dark:bg-card border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+          className="w-full text-center font-black text-xs h-7 px-1 bg-white dark:bg-card border border-[#b48e67]/40 text-[#0B1220] dark:text-white focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all font-mono"
         />
       </div>
       {form.formState.errors.lines?.[line.index]?.requestedQty && (
-        <p className="text-label-xxs font-bold text-status-error uppercase text-center mt-1">
+        <p className="text-[9px] font-bold text-status-error uppercase text-center">
           {t('validation.qty_positive')}
         </p>
       )}
