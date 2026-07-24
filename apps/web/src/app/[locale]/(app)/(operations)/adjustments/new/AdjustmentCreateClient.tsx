@@ -588,7 +588,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   ], [locale, t, tCommon]);
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-5rem)] w-full max-w-[1600px] mx-auto fade-in duration-1000 animate-in pb-32">
+    <div className="flex flex-col min-h-[calc(100vh-5rem)] w-full max-w-[1920px] mx-auto fade-in duration-1000 animate-in pb-32">
       {createAdjustment.error && (
         <div
           role="alert"
@@ -627,7 +627,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       <div className={cn("grid grid-cols-1 w-full flex-1", createAdjustment.isPending && "opacity-60 pointer-events-none transition-opacity")}>
         {/* Unified Master Deck Container - Document Details + Items Section */}
         <div className="lg:col-span-12 flex flex-col gap-6">
-          <div className="bg-card backdrop-blur-3xl p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-border/80 space-y-8 transition-all duration-500 hover:border-brand-gold/30 group">
+          <div className="bg-card backdrop-blur-3xl p-3.5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-border/80 space-y-8 transition-all duration-500 hover:border-brand-gold/30 group">
             {/* Decorative ambient background glow */}
             <div className="absolute top-0 end-0 w-96 h-96 bg-brand-gold/5 blur-[100px] pointer-events-none rounded-full" />
             <div className="absolute bottom-0 start-0 w-80 h-80 bg-brand-gold/5 blur-[90px] pointer-events-none rounded-full" />
@@ -776,6 +776,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
                   hideLotColumns={true}
                   dense={true}
+                  enableVirtualization={true}
+                  maxHeight="650px"
                   noCollapse={false}
                   mobileLayoutPattern="adjustment-form"
                   extraColumns={extraColumns}
@@ -822,7 +824,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-50 bg-card/95 backdrop-blur-2xl border-t border-border p-4 md:px-8 md:py-5 mt-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full shadow-2xl">
+      <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card/95 backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full shadow-lg md:shadow-2xl rounded-2xl md:rounded-none">
         {/* 1. The Dynamic Warning Message */}
         {!isValid && (
           <div className="flex items-center gap-3 text-sm font-bold text-brand-gold bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-brand-gold/20">

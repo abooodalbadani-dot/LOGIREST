@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Sidebar onClose={() => setIsSidebarOpen(false)} />
           </div>
 
-          <main className="flex-1 w-full min-w-0 max-w-[100vw] 2xl:max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto bg-background transition-all duration-300 print:w-full print:m-0 print:p-0 print:col-span-full print:overflow-visible">
+          <main className="flex-1 w-full min-w-0 max-w-[1920px] mx-auto p-2 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto bg-background transition-all duration-300 print:w-full print:m-0 print:p-0 print:col-span-full print:overflow-visible">
             {children}
           </main>
         </div>

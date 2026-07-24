@@ -858,7 +858,7 @@ export function AdjustmentForm({
 
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6"
+        className="max-w-[1920px] w-full mx-auto px-1 sm:px-4 lg:px-6 mt-3 sm:mt-6 space-y-4 sm:space-y-6"
       >
         <DocumentLockBanner
           status={adjustmentStatus}
@@ -885,11 +885,11 @@ export function AdjustmentForm({
         )}
 
         <DocumentLockWrapper isLocked={isLocked}>
-          <div className="flex-1 w-full p-4 md:p-6 lg:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 print:block items-start max-w-[1600px] mx-auto">
+          <div className="flex-1 w-full p-1 sm:p-4 lg:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 print:block items-start max-w-[1920px] mx-auto">
               {/* Main Content: Unified Master Container (Document Details + Items Table) */}
               <div className="col-span-12 lg:col-span-9 flex flex-col gap-6">
-                <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-3xl p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] border border-slate-200/60 dark:border-white/10 space-y-8 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:border-white/15 group">
+                <div className="bg-card backdrop-blur-3xl p-3.5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-border/70 space-y-6 lg:space-y-8 transition-all duration-500 group">
                   {/* Decorative background glow */}
                   <div className="absolute top-0 end-0 w-96 h-96 bg-brand-gold/5 blur-[100px] pointer-events-none rounded-full" />
                   <div className="absolute bottom-0 start-0 w-80 h-80 bg-brand-gold/5 blur-[90px] pointer-events-none rounded-full" />
@@ -1057,6 +1057,8 @@ export function AdjustmentForm({
                           onRemoveLine={(id) => removeLine(id)}
                           hideLotColumns={true}
                           dense={true}
+                          enableVirtualization={true}
+                          maxHeight="650px"
                           noCollapse={false}
                           mobileLayoutPattern="adjustment-form"
                           headers={{
@@ -1172,7 +1174,7 @@ export function AdjustmentForm({
         </DocumentLockWrapper>
 
         {isLocked ? (
-          <div className="sticky bottom-0 z-50 bg-card  backdrop-blur-2xl border-t border-slate-200/60 dark:border-slate-800/60 p-4 md:px-8 md:py-5 mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-[0_-10px_40px_rgb(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgb(0,0,0,0.3)]">
+          <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-lg md:shadow-[0_-10px_40px_rgb(0,0,0,0.3)] rounded-2xl md:rounded-none">
             <div className="flex items-center text-slate-600 dark:text-slate-400 text-sm gap-3 font-bold bg-slate-100 dark:bg-slate-900/50 px-5 py-3 rounded-2xl border border-slate-200 dark:border-white/5">
               <Info className="w-5 h-5 text-brand-gold" />
               <span>{t("document_locked")}</span>
@@ -1299,7 +1301,7 @@ export function AdjustmentForm({
             </div>
           </div>
         ) : (
-          <div className="sticky bottom-0 z-50 bg-card/95 backdrop-blur-2xl border-t border-border p-4 md:px-8 md:py-5 mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-2xl">
+          <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card/95 backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-lg md:shadow-2xl rounded-2xl md:rounded-none">
             {!isValid && canEdit ? (
               <div className="flex items-center gap-3 text-sm font-bold text-brand-gold bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-brand-gold/20">
                 <Info className="w-5 h-5 shrink-0" />
