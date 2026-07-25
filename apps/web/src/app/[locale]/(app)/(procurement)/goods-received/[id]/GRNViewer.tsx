@@ -200,8 +200,8 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             {document?.lines?.map((line, idx) => (
               <div key={line.id || idx} className="bg-card border border-border/60 shadow-sm p-4 sm:p-5 rounded-xl flex flex-col gap-3 relative overflow-hidden group">
                 <div className="flex gap-3 items-center border-b border-border/40 pb-3">
-                  {line.item.image ? (
-                    <img src={line.item.image} alt="Product" className="w-12 h-12 object-cover rounded-lg border border-border shrink-0" />
+                  {(line.item.image || line.item.imageUrl) ? (
+                    <img src={(line.item.image || line.item.imageUrl)!} alt="Product" className="w-12 h-12 object-cover rounded-lg border border-border shrink-0" />
                   ) : (
                     <div className="w-12 h-12 bg-surface flex items-center justify-center rounded-lg border border-border text-[10px] text-muted-foreground font-mono shrink-0">
                       N/A

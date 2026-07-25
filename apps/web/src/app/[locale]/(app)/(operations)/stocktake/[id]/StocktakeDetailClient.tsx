@@ -36,6 +36,8 @@ import {
  DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useItems } from "@/features/items/hooks/useItems";
+import type { Item } from "@/types/master-data";
 
 export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
@@ -48,8 +50,24 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  const [isAuditDialogOpen, setIsAuditDialogOpen] = React.useState(false);
  const [cancelReason, setCancelReason] = React.useState("");
  
+ const { data: itemsData } = useItems({ limit: 1000 });
  const { data: rawSession, isLoading, error } = useStocktake(id);
- const session = rawSession ? mapToSessionVM(rawSession) : null;
+ const session = React.useMemo(() => {
+  if (!rawSession) return null;
+  const vm = mapToSessionVM(rawSession);
+  if (itemsData?.data) {
+   vm.items = vm.items.map((item) => {
+    const masterItem = itemsData.data.find((i: Item) => i.id === item.itemId);
+    const img = item.image || item.imageUrl || masterItem?.image || masterItem?.imageUrl || null;
+    return {
+     ...item,
+     image: img,
+     imageUrl: img,
+    };
+   });
+  }
+  return vm;
+ }, [rawSession, itemsData]);
 
  // Clean up pointer-events on unmount to prevent Radix UI Dialog freeze bug
  React.useEffect(() => {
@@ -282,7 +300,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
         </label>
         <Textarea 
          value={cancelReason}
-         onChange={(e) => setCancelReason(e.target.value)}
+         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCancelReason(e.target.value)}
          placeholder={tc('enter_reason') || 'Enter reason...'}
          className="min-h-[80px] bg-card border border-border shadow-sm border-none resize-none rounded-2xl focus-visible:ring-1 focus-visible:ring-status-error/30"
         />

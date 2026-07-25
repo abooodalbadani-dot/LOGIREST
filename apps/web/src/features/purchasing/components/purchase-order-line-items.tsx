@@ -206,8 +206,8 @@ function LineItemCard({
                      {/* Header: Product Image + SmartCombobox Item Selector + Delete Button */}
                      <div className="flex items-center gap-2.5">
                             {/* Product Image */}
-                            {matchedItem?.image ? (
-                                   <img src={matchedItem.image} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
+                            {(matchedItem?.image || matchedItem?.imageUrl) ? (
+                                   <img src={(matchedItem?.image || matchedItem?.imageUrl)!} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
                             ) : (
                                    <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-lg border border-border text-[9px] text-muted-foreground font-mono shrink-0">
                                           N/A
@@ -421,13 +421,13 @@ function LineItemRow({
                      data-index={index}
                      className="absolute top-0 start-0 w-full min-w-[1000px] border-b border-border/60 transition-all hover:bg-primary/[0.04] flex items-center h-[80px] group"
                      style={{
-                            transform: `translateY(${virtualRow.start + 56}px)`, // Offset by header height
+                                                                             transform: `translateY(${virtualRow.start + 56}px)`, // Offset by header height
                      }}
               >
                      {/* Item Selection + Product Image */}
                      <div className="px-6 py-3 flex-[3] border-e border-border/60 h-full flex items-center gap-3 min-w-[340px]">
-                            {matchedItem?.image ? (
-                                   <img src={matchedItem.image} alt="Product" className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
+                            {(matchedItem?.image || matchedItem?.imageUrl) ? (
+                                   <img src={(matchedItem?.image || matchedItem?.imageUrl)!} alt="Product" className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
                             ) : (
                                    <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
                             )}

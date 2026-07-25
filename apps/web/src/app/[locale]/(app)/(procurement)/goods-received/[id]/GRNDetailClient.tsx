@@ -23,6 +23,8 @@ import { useVoidGRN } from '@/features/purchasing/hooks/useVoidGRN';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { canPerformActionV2 } from '@logirest/shared-types';
 import { toast } from 'sonner';
+import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
+import { ItemSchema, type Item } from '@/types/master-data';
 
 interface GRNDetailClientProps {
     id: string;
@@ -49,6 +51,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
 
     const isNew = id === 'new';
     const { data: grn, isLoading, error } = useGRN(isNew ? null : id);
+    const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
 
     if (isLoading) return <PageSkeleton variant="detail" />;
     if (error || (!isNew && !grn)) return <ErrorState onRetry={() => window.location.reload()} />;
@@ -160,30 +163,37 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                         supplierName: grn.supplier?.name,
                         warehouseName: grn.warehouseName,
                         poNumber: grn.poNumber ?? null,
-                        lines: grn.lines.map(l => ({
-                            id: l.id,
-                            documentId: '',
-                            itemId: l.item.id,
-                            item: {
-                                id: l.item.id,
-                                code: l.item.code,
-                                name: l.item.name,
-                                primaryUom: {
-                                    id: l.item.primaryUom.id,
-                                    code: l.item.primaryUom.code,
-                                    name: '',
+                        lines: grn.lines.map(l => {
+                            const itemImage = (l.item as { image?: string | null; imageUrl?: string | null }).image || (l.item as { image?: string | null; imageUrl?: string | null }).imageUrl || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.image || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.imageUrl || null;
+                            return {
+                                id: l.id,
+                                documentId: '',
+                                itemId: l.item.id,
+                                item: {
+                                    id: l.item.id,
+                                    code: l.item.code,
+                                    name: l.item.name,
+                                    nameAr: l.item.nameAr || l.item.name,
+                                    nameEn: l.item.nameEn || l.item.name,
+                                    image: itemImage,
+                                    imageUrl: itemImage,
+                                    primaryUom: {
+                                        id: l.item.primaryUom.id,
+                                        code: l.item.primaryUom.code,
+                                        name: '',
+                                    },
                                 },
-                            },
-                            lotId: l.lot?.id ?? null,
-                            lot: l.lot ? { ...l.lot, isExpired: false } : null,
-                            qty: l.qty,
-                            uomId: l.uomId,
-                            unitCost: null,
-                            poQty: null,
-                            receivedQty: l.receivedQty,
-                            unitCostForeign: l.unitCostForeign ?? 0,
-                            unitCostBase: l.unitCostBase ?? 0,
-                        })),
+                                lotId: l.lot?.id ?? null,
+                                lot: l.lot ? { ...l.lot, isExpired: false } : null,
+                                qty: l.qty,
+                                uomId: l.uomId,
+                                unitCost: null,
+                                poQty: null,
+                                receivedQty: l.receivedQty,
+                                unitCostForeign: l.unitCostForeign ?? 0,
+                                unitCostBase: l.unitCostBase ?? 0,
+                            };
+                        }),
                     }}
                     locale={locale}
                     actions={actions}

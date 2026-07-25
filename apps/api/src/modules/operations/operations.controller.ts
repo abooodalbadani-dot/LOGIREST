@@ -68,16 +68,20 @@ export class OperationsController {
     Role.VIEWER,
   )
   async getLotsAvailable(
-    @Query('itemId') itemId: string,
-    @Query('warehouseId') warehouseId: string,
-    @ActiveScope('warehouseId') activeWarehouseId: string,
+    @Query('itemId') queryItemId?: string,
+    @Query('item_id') queryItemIdSnake?: string,
+    @Query('warehouseId') queryWarehouseId?: string,
+    @Query('warehouse_id') queryWarehouseIdSnake?: string,
+    @ActiveScope('warehouseId') activeWarehouseId?: string,
   ) {
-    if (warehouseId !== activeWarehouseId) {
-      throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
+    const targetWarehouseId = queryWarehouseId || queryWarehouseIdSnake || activeWarehouseId;
+    const itemId = queryItemId || queryItemIdSnake;
+    if (!itemId) {
+      throw new BadRequestException('itemId is a required query parameter');
     }
     return this.lotsAvailableService.getLotsAvailable(
       itemId,
-      activeWarehouseId,
+      targetWarehouseId,
     );
   }
 

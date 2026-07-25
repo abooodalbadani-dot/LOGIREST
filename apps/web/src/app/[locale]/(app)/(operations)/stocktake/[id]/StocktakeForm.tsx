@@ -82,7 +82,8 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
         code: item.barcode || '',
         nameEn: item.itemName,
         nameAr: item.itemName,
-        image: item.image || null,
+        image: item.image || item.imageUrl || null,
+        imageUrl: item.imageUrl || item.image || null,
         primaryUom: { code: item.uom }
       },
       qty: item.countedQty ?? 0,
@@ -260,14 +261,21 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                       className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm flex flex-col gap-3 text-start"
                     >
                       {/* TOP TIER: Item Identity & Status */}
-                      <div className="flex justify-between items-start border-b border-gray-50 dark:border-gray-800/50 pb-2">
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">
-                            {line.item.nameEn}
-                          </span>
-                          <span className="text-[10px] text-[#b48e67] font-medium font-mono tracking-widest mt-0.5">
-                            {line.item.code || '—'}
-                          </span>
+                      <div className="flex justify-between items-center border-b border-gray-50 dark:border-gray-800/50 pb-2 gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          {(line.item.image || line.item.imageUrl) ? (
+                            <img src={(line.item.image || line.item.imageUrl)!} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
+                          ) : (
+                            <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0 font-bold">N/A</div>
+                          )}
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-bold text-[#0B1220] dark:text-white truncate">
+                              {locale === 'ar' ? (line.item.nameAr || line.item.nameEn) : (line.item.nameEn || line.item.nameAr)}
+                            </span>
+                            <span className="text-[10px] text-[#b48e67] font-medium font-mono tracking-widest mt-0.5" dir="ltr">
+                              {line.item.code || '—'}
+                            </span>
+                          </div>
                         </div>
                         {/* Render the COMPLETED / PENDING status badge here */}
                         <div className="scale-90 origin-top-right shrink-0">

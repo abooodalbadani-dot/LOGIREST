@@ -15,6 +15,7 @@ export interface StocktakeItemVM {
  expiryDate?: string;
  unitCost: number;
  image?: string | null;
+ imageUrl?: string | null;
 }
 
 export interface StocktakeSessionVM {
@@ -57,7 +58,8 @@ export function mapToItemVM(item: StocktakeItem): StocktakeItemVM {
   lotNumber: item.lotNumber,
   expiryDate: item.expiryDate,
   unitCost: item.unitCost,
-  image: item.image || null,
+  image: item.image || item.imageUrl || null,
+  imageUrl: item.imageUrl || item.image || null,
  };
 }
 

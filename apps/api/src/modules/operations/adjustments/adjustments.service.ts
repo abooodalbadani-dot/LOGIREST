@@ -264,13 +264,46 @@ export class AdjustmentsService {
       );
     }
 
+    const itemIds = adjustment.lines.map((l) => l.itemId);
+    const warehouseItems = await this.prisma.warehouseItem.findMany({
+      where: {
+        warehouseId: adjustment.warehouseId,
+        itemId: { in: itemIds },
+      },
+      select: {
+        itemId: true,
+        qtyOnHand: true,
+      },
+    });
+
+    const stockMap = new Map<string, number>();
+    for (const wi of warehouseItems) {
+      stockMap.set(wi.itemId, Number(wi.qtyOnHand));
+    }
+
+    const enrichedLines = adjustment.lines.map((line) => {
+      const rawLine = line as unknown as Record<string, unknown>;
+      const liveQtyBefore = stockMap.get(line.itemId) ?? 0;
+      const qtyBefore = Number(rawLine.qtyBefore ?? liveQtyBefore);
+      const qtyAdjusted = Number(rawLine.qtyAdjusted ?? line.quantity ?? 0);
+      return {
+        ...line,
+        qtyBefore,
+        qtyAdjusted,
+      };
+    });
+
     const approvalEvents = await this.prisma.approvalEvent.findMany({
       where: { documentId: id },
       include: { user: { select: { name: true, role: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
-    return { ...adjustment, approvalEvents };
+    return {
+      ...adjustment,
+      lines: enrichedLines,
+      approvalEvents,
+    };
   }
 
   async update(

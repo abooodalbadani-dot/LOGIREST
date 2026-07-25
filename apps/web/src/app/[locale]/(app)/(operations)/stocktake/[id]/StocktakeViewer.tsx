@@ -64,7 +64,8 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         code: item.barcode || '',
         nameEn: item.itemName,
         nameAr: item.itemName,
-        image: item.image || null,
+        image: item.image || item.imageUrl || null,
+        imageUrl: item.imageUrl || item.image || null,
         primaryUom: { code: item.uom }
       },
       qty: item.countedQty ?? 0,

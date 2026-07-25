@@ -352,14 +352,24 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             exchangeRate: initialData.fxRate || '',
             warehouseId: initialData.warehouseId || '',
             notes: initialData.notes || '',
-            lines: initialData.lines || []
+            lines: (initialData.lines || []).map(l => {
+               const itemImage = l.item?.image || l.item?.imageUrl || itemsData?.data?.find(i => i.id === l.item?.id)?.image || itemsData?.data?.find(i => i.id === l.item?.id)?.imageUrl || null;
+               return {
+                  ...l,
+                  item: {
+                     ...l.item,
+                     image: itemImage,
+                     imageUrl: itemImage,
+                  }
+               };
+            })
          }, {
             keepDirty: false,
             keepTouched: false
          });
          setIdempotencyKey(crypto.randomUUID());
       }
-   }, [initialData, reset]);
+   }, [initialData, reset, itemsData]);
 
    useEffect(() => {
       if (isNew && poData) {

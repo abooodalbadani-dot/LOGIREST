@@ -212,8 +212,8 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
                         <div key={line.id} className="bg-card border border-border/60 shadow-sm rounded-xl overflow-hidden flex flex-col transition-colors">
                             {/* Item Identity */}
                             <div className="flex gap-3 items-center border-b border-border/40 pb-3 p-4">
-                                {(line.item as any)?.image ? (
-                                    <img src={(line.item as any).image} alt="Product" className="w-12 h-12 object-cover rounded-lg border border-border/50 bg-muted/20" />
+                                {((line.item as { image?: string | null; imageUrl?: string | null })?.image || (line.item as { image?: string | null; imageUrl?: string | null })?.imageUrl) ? (
+                                    <img src={((line.item as { image?: string | null; imageUrl?: string | null })?.image || (line.item as { image?: string | null; imageUrl?: string | null })?.imageUrl)!} alt="Product" className="w-12 h-12 object-cover rounded-lg border border-border/50 bg-muted/20" />
                                 ) : (
                                     <div className="w-12 h-12 rounded-lg border border-border/50 bg-muted/20 flex items-center justify-center text-[10px] font-mono text-muted-foreground uppercase">
                                         N/A

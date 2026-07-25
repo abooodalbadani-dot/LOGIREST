@@ -20,7 +20,7 @@ import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { FormFooter } from '@/components/layouts/FormLayout';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
-import { Info, ArrowUp, ArrowDown, Warehouse, PackagePlus, Zap } from 'lucide-react';
+import { Info, ArrowUp, ArrowDown, Warehouse, PackagePlus, Zap, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useAbortController } from '@/hooks/useAbortController';
@@ -29,6 +29,7 @@ import { z } from 'zod';
 import { apiClient } from '@/lib/api/client';
 
 import { CreateCustomItemDialog } from '@/components/shared/CreateCustomItemDialog';
+import { AdjustmentLotSelector } from '@/features/operations/components/AdjustmentLotSelector';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -150,6 +151,7 @@ interface NewAdjustmentLine extends LineItem {
   itemId: string;
   direction: 'INCREASE' | 'DECREASE';
   lotNumber?: string;
+  lotId?: string;
   unitCost?: number | null;
 }
 
@@ -161,7 +163,8 @@ interface ItemOption {
   nameEn?: string;
   nameAr?: string;
   image?: string | null;
-  primaryUom: { id: string; code: string };
+  primaryUom: { id: string; code: string; name?: string };
+  uomConversions?: { fromUomId: string; toUomId: string; factor: number }[];
 }
 
 export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
@@ -195,28 +198,48 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     }
 
     const emptyLines = lines.filter(l => !l.lotNumber && l.direction === 'DECREASE');
-    if (emptyLines.length === 0) return;
+    if (emptyLines.length === 0) {
+      toast.info(locale === 'ar' ? 'لا توجد أسطر خصم بحاجة لتخصيص دفعات FIFO تلقائية' : 'No unallocated decrease lines found for FIFO suggestion');
+      return;
+    }
 
     const itemIds = [...new Set(emptyLines.map(l => l.itemId))];
 
     setIsSuggestingFIFO(true);
     try {
-      const qs = new URLSearchParams();
-      qs.append('warehouse_id', warehouseId);
-      itemIds.forEach(id => qs.append('item_id', id));
+      const fetchPromises = itemIds.map(async (itemId) => {
+        const qs = new URLSearchParams();
+        qs.append('warehouseId', warehouseId);
+        qs.append('itemId', itemId);
 
-      const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          itemId: z.string(),
-          lotNumber: z.string(),
-          expiryDate: z.string().nullable().optional(),
-          totalQty: z.number().optional(),
-          qtyAvailable: z.number().optional(),
-        }))
-      }));
+        const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
+          data: z.array(z.object({
+            id: z.string(),
+            itemId: z.string().optional(),
+            item_id: z.string().optional(),
+            lotNumber: z.string().optional(),
+            lot_number: z.string().optional(),
+            expiryDate: z.string().nullable().optional(),
+            expiry_date: z.string().nullable().optional(),
+            totalQty: z.number().optional(),
+            total_qty: z.number().optional(),
+            qtyAvailable: z.number().optional(),
+            qty_available: z.number().optional(),
+          }))
+        }));
 
-      const lotsAvailable = res.data;
+        return (res.data || []).map(lot => ({
+          id: lot.id,
+          itemId: lot.itemId || lot.item_id || itemId,
+          lotNumber: lot.lotNumber || lot.lot_number || lot.id,
+          expiryDate: lot.expiryDate || lot.expiry_date || null,
+          totalQty: lot.totalQty ?? lot.total_qty ?? 0,
+          qtyAvailable: lot.qtyAvailable ?? lot.qty_available ?? 0,
+        }));
+      });
+
+      const lotsAvailableNested = await Promise.all(fetchPromises);
+      const lotsAvailable = lotsAvailableNested.flat();
 
       const lotsByItem = lotsAvailable.reduce((acc, lot) => {
         if (!acc[lot.itemId]) acc[lot.itemId] = [];
@@ -229,12 +252,12 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         return acc;
       }, {} as Record<string, { id: string, lotNumber: string, qtyAvailable: number, expiryDate?: string | null }[]>);
 
-      const manualLines = lines.filter(l => l.lotNumber || l.direction === 'INCREASE');
+      const manualLines = lines.filter(l => l.lotId || l.lotNumber || l.direction === 'INCREASE');
       manualLines.forEach(l => {
-        if (l.direction === 'DECREASE' && l.lotNumber) {
+        if (l.direction === 'DECREASE' && (l.lotId || l.lotNumber)) {
           const itemLots = lotsByItem[l.itemId];
           if (itemLots) {
-            const lot = itemLots.find(il => il.id === l.lotNumber || il.lotNumber === l.lotNumber);
+            const lot = itemLots.find(il => il.id === l.lotId || il.id === l.lotNumber || il.lotNumber === l.lotNumber);
             if (lot) {
               lot.qtyAvailable = Math.max(0, lot.qtyAvailable - l.qty);
             }
@@ -260,7 +283,6 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       emptyLines.forEach((emptyLine, index) => {
         const itemLots = lotsByItem[emptyLine.itemId] || [];
         let remainingQty = emptyLine.qty;
-        let allocatedAny = false;
 
         for (const lot of itemLots) {
           if (remainingQty <= 0) break;
@@ -271,13 +293,13 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           newLines.push({
             ...emptyLine,
             id: `clone-${emptyLine.id}-${lot.id}-${index}-${Date.now()}`,
-            lotNumber: lot.id,
+            lotId: lot.id,
+            lotNumber: lot.lotNumber || lot.id,
             qty: qtyToAllocate
           });
 
           lot.qtyAvailable -= qtyToAllocate;
           remainingQty -= qtyToAllocate;
-          allocatedAny = true;
         }
 
         if (remainingQty > 0) {
@@ -294,14 +316,14 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       setLines([...linesToKeep, ...newLines]);
 
       if (hasShortage) {
-        toast.warning(t('shortage_warning', { qty: totalShortage }) || `Partial shortage: ${totalShortage} units could not be allocated due to insufficient stock.`);
+        toast.warning(t('shortage_warning', { qty: totalShortage }) || `عجز جزئي: تعذر تخصيص ${totalShortage} وحدة لعدم كفاية الرصيد في المباشرة.`);
       } else {
-        toast.success(t('fifo_applied') || "FIFO suggestions applied successfully.");
+        toast.success(t('fifo_applied') || "تم تطبيق اقتراح FIFO بنجاح");
         audioAlerts.playScanSuccess();
       }
     } catch (err) {
       console.error(err);
-      toast.error(tCommon('error_generic') || "An error occurred");
+      toast.error(tCommon('error_generic') || "حدث خطأ أثناء جلب اقتراح FIFO");
     } finally {
       setIsSuggestingFIFO(false);
     }
@@ -311,7 +333,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
   // Unsaved changes guard
   const isDirty = warehouseId !== '' || notes !== '' || lines.length > 0;
-  const { router } = useUnsavedChangesGuard(isDirty);
+  const { router, setDirty } = useUnsavedChangesGuard(isDirty);
 
   // Warehouse locking guard
   const { data: lockState } = useWarehouseLock(warehouseId);
@@ -351,9 +373,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       name: i.name,
       image: i.image,
       primaryUom: {
-        id: i.primaryUom.id,
-        code: i.primaryUom.code,
+        id: i.primaryUom?.id,
+        code: i.primaryUom?.code,
+        name: i.primaryUom?.name || i.primaryUom?.code,
       },
+      uomConversions: i.uomConversions || [],
     }));
     return [...mappedItems, ...customItems];
   }, [items, customItems]);
@@ -447,15 +471,19 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         warehouseId: warehouseId,
         reason: reasonCategory,
         notes,
-        lines: lines.map(l => ({
-          itemId: l.itemId,
-          qty: l.qty,
-          uomId: l.uomId,
-          direction: l.direction,
-          lotAllocations: l.lotNumber ? [{ lotId: l.lotNumber, qty: l.qty }] : undefined,
-          isCustom: l.itemId.startsWith('cust-') ? true : undefined,
-          unitCost: l.direction === 'INCREASE' ? l.unitCost : null
-        }))
+        lines: lines.map(l => {
+          const targetLotId = l.lotId || l.lotNumber;
+          return {
+            itemId: l.itemId,
+            qty: l.qty,
+            uomId: l.uomId,
+            direction: l.direction,
+            lotId: targetLotId || undefined,
+            lotAllocations: targetLotId ? [{ lotId: targetLotId, qty: l.qty }] : undefined,
+            isCustom: l.itemId.startsWith('cust-') ? true : undefined,
+            unitCost: l.direction === 'INCREASE' ? l.unitCost : null
+          };
+        })
       },
       signal: abortController.signal,
       headers: {
@@ -465,7 +493,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       }
     }, {
       onSuccess: (data) => {
-        router.push(`/adjustments/${data.id}`);
+        setDirty(false);
+        router.push(`/adjustments/${data.id}`, { skipGuard: true });
       }
     });
   };
@@ -497,7 +526,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             <button
               type="button"
               onClick={() => {
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE' } : l));
+                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE', lotNumber: '', lotId: undefined } : l));
               }}
               className={cn(
                 "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
@@ -512,7 +541,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             <button
               type="button"
               onClick={() => {
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE' } : l));
+                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE', lotNumber: '', lotId: undefined } : l));
               }}
               className={cn(
                 "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
@@ -554,34 +583,21 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     },
     {
       header: tCommon('lot_number') || 'Lot Number',
-      headerClassName: "min-w-[210px]",
-      cellClassName: "min-w-[210px]",
+      headerClassName: "min-w-[220px]",
+      cellClassName: "min-w-[220px]",
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-center w-full">
-          <div className="flex h-11 w-full shadow-sm">
-            <Input
-              type="text"
-              placeholder={t('lot_placeholder') || 'Enter lot...'}
-              value={line.lotNumber || ''}
-              onChange={(e) => {
-                const val = e.target.value;
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
-              }}
-              className={cn(
-                "flex-1 min-w-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-3 text-sm focus:border-brand-gold focus:ring-1 focus:ring-brand-gold outline-none transition-all disabled:opacity-50 h-11",
-                line.direction === 'INCREASE' ? "border-r-0 rounded-l-xl rounded-r-none" : "rounded-xl"
-              )}
-            />
-            {line.direction === 'INCREASE' && (
-              <button
-                type="button"
-                onClick={() => setCreatingLotForLineId(line.id)}
-                className="px-4 h-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 border-l-0 text-slate-700 dark:text-brand-gold rounded-r-xl text-xs font-bold whitespace-nowrap hover:bg-brand-gold/10 transition-colors"
-              >
-                + {t('new') || 'NEW'}
-              </button>
-            )}
-          </div>
+        <div className="flex justify-center w-full min-w-[250px]">
+          <AdjustmentLotSelector
+            itemId={line.itemId}
+            warehouseId={warehouseId}
+            value={line.lotId}
+            lotNumber={line.lotNumber}
+            direction={line.direction}
+            locale={locale}
+            onChange={(lotId, lotNumber) => {
+              setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotId, lotNumber } : l));
+            }}
+          />
         </div>
       )
     }
@@ -803,15 +819,48 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                     </div>
                   )}
                   renderUom={(line) => {
+                    const matchedItem = items.find(i => i.id === line.itemId || i.code === line.itemId);
+
+                    const allowedUomIds = new Set<string>();
+                    if (matchedItem?.primaryUom?.id) allowedUomIds.add(matchedItem.primaryUom.id);
+                    const lineUomId = (line.item?.primaryUom as unknown as { id?: string })?.id;
+                    if (lineUomId) allowedUomIds.add(lineUomId);
+                    if (line.uomId) allowedUomIds.add(line.uomId);
+
+                    (matchedItem?.uomConversions || []).forEach(conv => {
+                      if (conv.fromUomId) allowedUomIds.add(conv.fromUomId);
+                      if (conv.toUomId) allowedUomIds.add(conv.toUomId);
+                    });
+
+                    const itemUoMs = uoms.filter(u => allowedUomIds.has(u.id));
+
+                    // If item has no conversion UOMs (or only 1 UOM), render as a clean non-editable badge
+                    if (itemUoMs.length <= 1) {
+                      const uomName = line.item?.primaryUom?.name || line.item?.primaryUom?.code || matchedItem?.primaryUom?.name || matchedItem?.primaryUom?.code || 'PCS';
+                      return (
+                        <div className="flex items-center justify-center w-full">
+                          <span className="h-9 px-3 text-xs font-bold font-mono text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-xl flex items-center justify-center min-w-[70px]">
+                            {uomName}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    const comboboxItems = itemUoMs.map(u => ({
+                      id: u.id,
+                      name: u.name || u.code,
+                      code: u.code,
+                    }));
+
                     return (
                       <div className="flex items-center justify-center w-full">
                         <SmartCombobox
-                          items={activeUoMs}
+                          items={comboboxItems}
                           value={line.uomId}
                           onSelect={(uom) => {
                             setLines(prev => prev.map(l => l.id === line.id ? { ...l, uomId: uom.id } : l));
                           }}
-                          placeholder="PCS" // i18n-ignore
+                          placeholder={line.item?.primaryUom?.code || "UOM"}
                           triggerClassName="h-11 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
                         />
                       </div>
@@ -835,15 +884,16 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         {isValid && <div />} {/* spacer */}
 
         {/* 2. The Action Buttons */}
-        <div className="flex items-center gap-3">
-          {/* Cancel Button */}
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 w-full sm:w-auto">
+          {/* Back Button */}
           <button
             type="button"
             onClick={() => router.push('/adjustments')}
             disabled={createAdjustment.isPending}
-            className="px-6 py-3 rounded-2xl border border-border bg-surface-container-highest/40 hover:bg-surface-container-highest text-foreground font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
+            className="col-span-2 sm:w-auto px-6 py-3 rounded-2xl border border-border bg-surface-container-highest/40 hover:bg-surface-container-highest text-foreground font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
-            {locale === "ar" ? "إلغاء" : "Cancel"}
+            <ArrowLeft className="w-4 h-4 shrink-0 rtl:rotate-180" />
+            {locale === "ar" ? "عودة" : "Back"}
           </button>
 
           {/* Save Button */}
@@ -852,7 +902,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             onClick={handleSave}
             disabled={!isDirty || !isValid || createAdjustment.isPending || isLocked}
             isLoading={createAdjustment.isPending}
-            className="px-8 py-6 rounded-2xl bg-gradient-to-r from-brand-gold to-amber-400 hover:from-brand-gold/90 hover:to-amber-400/90 text-brand-black text-sm font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 shadow-lg shadow-brand-gold/20 hover:shadow-brand-gold/40 hover:-translate-y-0.5"
+            className="col-span-2 sm:w-auto px-8 py-6 rounded-2xl bg-gradient-to-r from-brand-gold to-amber-400 hover:from-brand-gold/90 hover:to-amber-400/90 text-brand-black text-sm font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 shadow-lg shadow-brand-gold/20 hover:shadow-brand-gold/40 hover:-translate-y-0.5"
           >
             {t('save_draft') || 'Save Adjustment'}
           </Button>

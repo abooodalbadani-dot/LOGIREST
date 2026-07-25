@@ -270,38 +270,6 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
         )}
        </div>
       </div>
-
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5">
-       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-         <Info className="w-5 h-5 text-foreground" />
-        </div>
-        <h4 className="text-label-xs font-semibold uppercase">{t('document_info')}</h4>
-       </div>
-       <div className="space-y-4">
-        <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
-         <span className="text-label-sm text-muted-foreground">{tc('status')}</span>
-         <StatusBadge status={adjustmentStatus as BadgeStatus} />
-        </div>
-        {document?.postedAt && (
-         <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
-          <span className="text-label-sm text-muted-foreground">{t('posted_at')}</span>
-          <ClientOnlyTime 
-           date={document.postedAt} 
-           mode="datetime" 
-           locale={locale as 'ar' | 'en'}
-           className="text-label-xs font-bold"
-          />
-         </div>
-        )}
-        {document?.approvedBy && (
-         <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
-          <span className="text-label-sm text-muted-foreground">{t('approved_by')}</span>
-          <span className="text-label-xs font-semibold uppercase text-foreground/70">{document.approvedBy}</span>
-         </div>
-        )}
-       </div>
-      </div>
      </div>
     </div>
    </div>

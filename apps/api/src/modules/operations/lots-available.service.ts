@@ -5,21 +5,25 @@ import { PrismaService } from '../../database/prisma.service';
 export class LotsAvailableService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getLotsAvailable(itemId: string, warehouseId: string) {
-    if (!itemId || !warehouseId) {
-      throw new BadRequestException(
-        'itemId and warehouseId are required query parameters',
-      );
+  async getLotsAvailable(itemId: string, warehouseId?: string) {
+    if (!itemId) {
+      throw new BadRequestException('itemId is a required query parameter');
     }
 
-    const warehouseItemLots = await this.prisma.warehouseItemLot.findMany({
+    // Fetch all lots created for this item, and attach warehouse balance if available
+    const lots = await this.prisma.lot.findMany({
       where: {
         itemId,
-        warehouseId,
-        qtyOnHand: { gt: 0 },
       },
       include: {
-        lot: true,
+        warehouseItemLots: warehouseId
+          ? {
+              where: { warehouseId },
+            }
+          : true,
+      },
+      orderBy: {
+        expiryDate: 'asc',
       },
     });
 
@@ -27,21 +31,29 @@ export class LotsAvailableService {
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-    const data = warehouseItemLots.map((itemLot) => {
-      const lot = itemLot.lot;
+    const data = lots.map((lot) => {
+      const itemLot = lot.warehouseItemLots?.[0];
       const isExpired = lot.expiryDate ? new Date(lot.expiryDate) < now : false;
       const isNearExpiry = lot.expiryDate
         ? new Date(lot.expiryDate) >= now &&
           new Date(lot.expiryDate) < thirtyDaysFromNow
         : false;
 
-      const qtyOnHand = parseFloat(itemLot.qtyOnHand.toString());
-      const qtyAllocated = parseFloat(itemLot.qtyAllocated.toString());
+      const qtyOnHand = itemLot ? parseFloat(itemLot.qtyOnHand.toString()) : 0;
+      const qtyAllocated = itemLot ? parseFloat(itemLot.qtyAllocated.toString()) : 0;
       const qtyAvailable = qtyOnHand - qtyAllocated;
 
       return {
         id: lot.id,
-        item_id: itemId,
+        itemId: lot.itemId,
+        lotNumber: lot.lotNumber,
+        expiryDate: lot.expiryDate ? lot.expiryDate.toISOString() : '',
+        totalQty: qtyOnHand,
+        qtyAvailable: qtyAvailable >= 0 ? qtyAvailable : 0,
+        isExpired: isExpired,
+        isNearExpiry: isNearExpiry,
+        // Compatibility aliases
+        item_id: lot.itemId,
         lot_number: lot.lotNumber,
         expiry_date: lot.expiryDate ? lot.expiryDate.toISOString() : '',
         total_qty: qtyOnHand,

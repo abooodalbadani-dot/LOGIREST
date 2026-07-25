@@ -102,10 +102,8 @@ export class AdjustmentPostService {
             // 3. Process each line
             for (const line of adj.lines) {
               const item = line.item;
-              const lotId = line.lotId;
+              let lotId = line.lotId;
               const qtyVal = Number(line.quantity);
-
-              // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
 
               // Check if item is frozen in warehouse
               const whItemCheck = await tx.warehouseItem.findUnique({
@@ -124,9 +122,48 @@ export class AdjustmentPostService {
 
               if (item.isBatched || item.hasExpiry) {
                 if (!lotId) {
-                  throw new BadRequestException(
-                    `Lot ID is required for batched item: ${item.sku}`,
-                  );
+                  if (line.direction === AdjustmentDirection.IN) {
+                    const existingLot = await tx.lot.findFirst({
+                      where: { itemId: item.id },
+                      orderBy: { createdAt: 'desc' },
+                    });
+                    if (existingLot) {
+                      lotId = existingLot.id;
+                    } else {
+                      const newLot = await tx.lot.create({
+                        data: {
+                          itemId: item.id,
+                          lotNumber: `LOT-ADJ-${adj.adjustmentNumber}`,
+                          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                        },
+                      });
+                      lotId = newLot.id;
+                    }
+                  } else {
+                    const availableLot = await tx.warehouseItemLot.findFirst({
+                      where: {
+                        warehouseId: adj.warehouseId,
+                        itemId: item.id,
+                        qtyOnHand: { gt: 0 },
+                      },
+                      include: { lot: true },
+                      orderBy: { lot: { createdAt: 'asc' } },
+                    });
+                    if (availableLot) {
+                      lotId = availableLot.lotId;
+                    } else {
+                      const anyLot = await tx.lot.findFirst({
+                        where: { itemId: item.id },
+                      });
+                      if (anyLot) {
+                        lotId = anyLot.id;
+                      } else {
+                        throw new BadRequestException(
+                          `Lot ID is required for batched item: ${item.sku}`,
+                        );
+                      }
+                    }
+                  }
                 }
 
                 if (line.direction === AdjustmentDirection.IN) {

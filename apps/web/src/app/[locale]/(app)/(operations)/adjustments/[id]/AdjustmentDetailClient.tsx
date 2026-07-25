@@ -12,12 +12,38 @@ import { AlertCircle } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ScopeGuard } from '@/components/shared/ScopeGuard';
 
+import { useItems } from '@/features/items/hooks/useItems';
+import type { Item } from '@/types/master-data';
+import React from 'react';
+
 export function AdjustmentDetailClient({ id }: { id: string }) {
  const t = useTranslations('operations.adjustment');
  const conflict = useConflictHandler('adjustment', id);
  
  const isNew = id === 'new';
- const { data: adjustment, isLoading } = useAdjustment(isNew ? null : id);
+ const { data: rawAdjustment, isLoading } = useAdjustment(isNew ? null : id);
+ const { data: itemsData } = useItems({ limit: 1000 });
+
+ const adjustment = React.useMemo(() => {
+  if (!rawAdjustment) return undefined;
+  if (!itemsData?.data || !rawAdjustment.lines) return rawAdjustment;
+  return {
+   ...rawAdjustment,
+   lines: rawAdjustment.lines.map((line) => {
+    const itemAny = line.item as unknown as { id?: string; image?: string | null; imageUrl?: string | null };
+    const masterItem = itemsData.data.find((i: Item) => i.id === itemAny?.id);
+    const img = itemAny?.image || itemAny?.imageUrl || masterItem?.image || masterItem?.imageUrl || null;
+    return {
+     ...line,
+     item: {
+      ...line.item,
+      image: img,
+      imageUrl: img,
+     },
+    };
+   }),
+  };
+ }, [rawAdjustment, itemsData]);
 
  if (isLoading) return <PageSkeleton variant="detail" />;
 

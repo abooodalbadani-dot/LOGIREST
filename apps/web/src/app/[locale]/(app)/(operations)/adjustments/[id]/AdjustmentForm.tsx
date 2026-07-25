@@ -160,58 +160,18 @@ function UnitCostInput({
   );
 }
 
-function AdjustmentLotSelector({
-  itemId,
-  warehouseId,
-  value,
-  onChange,
-  disabled,
-}: {
-  itemId: string;
-  warehouseId: string;
-  value?: string;
-  onChange: (lotId: string, lotNumber: string, expiryDate?: string) => void;
-  disabled: boolean;
-}) {
-  const { data: lots } = useLotsByItem({ itemId, warehouseId });
-  const items = useMemo(() => {
-    return (lots || []).map((lot) => ({
-      id: lot.id,
-      name: lot.lotNumber + (lot.isExpired ? ` (Expired)` : ""),
-      code: lot.lotNumber,
-    }));
-  }, [lots]);
-
-  return (
-    <div className="flex items-center justify-center w-full" dir="ltr">
-      <SmartCombobox
-        items={items}
-        value={value || ""}
-        disabled={disabled}
-        onSelect={(item) => {
-          const selected = lots?.find((l) => l.id === item.id);
-          if (selected) {
-            onChange(
-              selected.id,
-              selected.lotNumber,
-              selected.expiryDate || undefined,
-            );
-          }
-        }}
-        placeholder={"Select Lot"}
-        triggerClassName="w-full h-10 md:w-40 md:h-7 rounded-lg md:rounded-sm border border-slate-200 dark:border-slate-700/50 md:border-gray-600 bg-slate-50 dark:bg-slate-800/50 md:bg-transparent text-center px-3 py-2 md:px-2 md:py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 text-[#0B1220] dark:text-white md:text-white focus:ring-1 focus:ring-[#b48e67] shadow-none"
-      />
-    </div>
-  );
-}
+import { AdjustmentLotSelector } from "@/features/operations/components/AdjustmentLotSelector";
 
 interface AdjustmentFormLine extends Omit<
   AdjustmentLine,
   "lot" | "lotAllocations"
 > {
   qty: number;
-  lot?: { lotNumber: string; expiryDate: string | null } | null;
-  lotAllocations?: LotAllocation[];
+  lotId?: string | null;
+  lotNumber?: string | null;
+  lot_number?: string | null;
+  lot?: { id?: string; lotNumber: string; expiryDate: string | null } | null;
+  lotAllocations?: (LotAllocation & { lotNumber?: string })[];
 }
 
 export function AdjustmentForm({
@@ -403,10 +363,6 @@ export function AdjustmentForm({
 
   const handleSaveDraft = async () => {
     if (lines.length === 0) return;
-    if (hasNegativeStock) {
-      toast.error(t("errors.negative_stock_not_allowed"));
-      return;
-    }
     if (hasInvalidCosts) {
       toast.error(
         locale === "ar"
@@ -421,17 +377,22 @@ export function AdjustmentForm({
         warehouseId,
         reason,
         notes,
-        lines: lines.map((l) => ({
-          id: l.id.startsWith("new-") ? undefined : l.id,
-          itemId: l.item.id,
-          qty: l.qtyAdjusted,
-          uomId: l.uomId,
-          direction: l.direction,
-          unitCost: l.direction === "INCREASE" ? l.unitCost : null,
-          lotAllocations: l.lotAllocations?.length
-            ? l.lotAllocations
-            : undefined,
-        })),
+        lines: lines.map((l) => {
+          const lineObj = l as unknown as AdjustmentFormLine;
+          const lotIdVal = l.lotAllocations?.[0]?.lotId || lineObj.lotId || l.lot?.id || undefined;
+          return {
+            id: l.id.startsWith("new-") ? undefined : l.id,
+            itemId: l.item.id,
+            qty: l.qtyAdjusted,
+            uomId: l.uomId,
+            direction: l.direction,
+            unitCost: l.direction === "INCREASE" ? l.unitCost : null,
+            lotId: lotIdVal,
+            lotAllocations: l.lotAllocations?.length
+              ? l.lotAllocations
+              : (lotIdVal ? [{ lotId: lotIdVal, qty: l.qtyAdjusted }] : undefined),
+          };
+        }),
       };
 
       const headers = { "X-Idempotency-Key": idempotencyKey };
@@ -460,10 +421,6 @@ export function AdjustmentForm({
   };
 
   const handleSubmit = async () => {
-    if (hasNegativeStock) {
-      toast.error(t("errors.negative_stock_not_allowed"));
-      return;
-    }
     await submitAdjustment.mutateAsync({
       id,
       version: document?.version || 0,
@@ -626,13 +583,59 @@ export function AdjustmentForm({
   );
 
   const timelineEntries = useMemo(() => {
-    if (!document?.timeline) return [];
-    return document.timeline.map((e) => ({
-      status: e.status.toLowerCase() as Status,
-      at: e.at,
-      by: e.by,
-    }));
-  }, [document]);
+    if (!document || isNew) return [];
+
+    const docAny = document as unknown as Record<string, unknown>;
+    const cachedTimeline = docAny.timeline as {
+      status: string;
+      at: string;
+      by: string;
+    }[] | undefined;
+
+    if (cachedTimeline && cachedTimeline.length > 0) {
+      return cachedTimeline.map(e => ({
+        status: e.status.toLowerCase() as Status,
+        at: e.at,
+        by: e.by
+      }));
+    }
+
+    const h: { status: Status; at: string; by: string }[] = [
+      {
+        status: 'draft' as Status,
+        at: document.createdAt ?? new Date().toISOString(),
+        by: (docAny.createdBy as string) || (docAny.createdByName as string) || tc('system_user') || 'System'
+      }
+    ];
+
+    const currentStatusNorm = (document.status || '').toLowerCase();
+
+    if (currentStatusNorm !== 'draft') {
+      const statusTime = (docAny.submittedAt as string) || (docAny.updatedAt as string) || document.createdAt || new Date().toISOString();
+      const statusUser = (docAny.submittedBy as string) || (docAny.createdBy as string) || tc('system_user') || 'System';
+      const normalizedStatus = (currentStatusNorm.includes('submitted') ? 'submitted' : currentStatusNorm) as Status;
+
+      h.push({
+        status: normalizedStatus,
+        at: statusTime,
+        by: statusUser
+      });
+    }
+
+    if (currentStatusNorm === 'posted' || document.postedAt) {
+      const postedTime = document.postedAt || (docAny.updatedAt as string) || document.createdAt || new Date().toISOString();
+      const postedUser = (docAny.postedBy as string) || (docAny.createdBy as string) || tc('system_user') || 'System';
+      if (!h.some(entry => entry.status === 'posted')) {
+        h.push({
+          status: 'posted' as Status,
+          at: postedTime,
+          by: postedUser
+        });
+      }
+    }
+
+    return h;
+  }, [document, isNew, tc]);
 
   const extraColumns = useMemo(
     () => [
@@ -744,19 +747,21 @@ export function AdjustmentForm({
       },
       {
         header: tc("table_headers.lot") || "Lot",
-        headerClassName: "min-w-[150px]",
-        cellClassName: "min-w-[150px]",
+        headerClassName: "min-w-[170px]",
+        cellClassName: "min-w-[170px]",
         cell: (line: AdjustmentFormLine) => {
           if (!canEdit) {
-            let lotId =
-              line.lot?.lotNumber || line.lotAllocations?.[0]?.lotId || "—";
-            // Never display raw UUIDs to the user
-            if (lotId.length === 36 && lotId.includes("-")) {
-              lotId = "—";
-            }
+            const displayLot =
+              line.lot?.lotNumber ||
+              line.lotNumber ||
+              line.lot_number ||
+              line.lotAllocations?.[0]?.lotNumber ||
+              "";
+            const lotVal =
+              displayLot && displayLot.length !== 36 ? displayLot : "—";
             return (
-              <span className="font-mono text-[11px] md:text-xs font-semibold text-muted-foreground/80 truncate max-w-[120px] md:max-w-[150px] inline-block align-bottom">
-                {lotId}
+              <span className="font-mono text-[11px] md:text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 truncate inline-block">
+                {lotVal}
               </span>
             );
           }
@@ -764,8 +769,11 @@ export function AdjustmentForm({
             <AdjustmentLotSelector
               itemId={line.item.id}
               warehouseId={warehouseId}
-              value={line.lotAllocations?.[0]?.lotId}
+              value={line.lotAllocations?.[0]?.lotId || line.lotId || undefined}
+              lotNumber={line.lot?.lotNumber || line.lotNumber || undefined}
+              direction={line.direction}
               disabled={!canEdit || !!lockState?.isLocked}
+              locale={locale as "ar" | "en"}
               onChange={(lotId, lotNumber, expiryDate) => {
                 updateLine(line.id, {
                   lotAllocations: [{ lotId, qty: line.qtyAdjusted }],
@@ -1036,22 +1044,35 @@ export function AdjustmentForm({
 
                       <div className="bg-card backdrop-blur-xl shadow-xl rounded-[2rem] border border-border/70 overflow-hidden">
                         <DocumentLineItemTable<AdjustmentFormLine>
-                          lines={lines.map((l) => ({
-                            ...l,
-                            qty: l.qtyAdjusted,
-                            lot: l.lot
-                              ? {
-                                lotNumber: l.lot.lotNumber,
-                                expiryDate: l.lot.expiryDate ?? null,
-                              }
-                              : null,
-                            lotAllocations: l.lotAllocations?.map((la) => ({
-                              lotId: la.lotId,
-                              lotNumber: "",
-                              allocatedQty: la.qty,
-                              qty: la.qty,
-                            })),
-                          }))}
+                          lines={lines.map((l): AdjustmentFormLine => {
+                            const lineObj = l as unknown as AdjustmentFormLine;
+                            const lotAllocationsTyped = l.lotAllocations as (LotAllocation & { lotNumber?: string })[] | undefined;
+                            const lotNum =
+                              l.lot?.lotNumber ||
+                              lineObj.lotNumber ||
+                              lineObj.lot_number ||
+                              lotAllocationsTyped?.[0]?.lotNumber ||
+                              "";
+                            return {
+                              ...l,
+                              qty: l.qtyAdjusted,
+                              lot: lotNum
+                                ? {
+                                  lotNumber: lotNum,
+                                  expiryDate: l.lot?.expiryDate ? String(l.lot.expiryDate) : null,
+                                }
+                                : (l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate ? String(l.lot.expiryDate) : null } : null),
+                              lotAllocations: lotAllocationsTyped?.map((la) => {
+                                const qVal = la.allocatedQty ?? ((la as unknown as Record<string, number>).qty || 0);
+                                return {
+                                  lotId: la.lotId,
+                                  lotNumber: la.lotNumber || lotNum,
+                                  allocatedQty: qVal,
+                                  qty: qVal,
+                                };
+                              }),
+                            };
+                          })}
                           locale={locale as "ar" | "en"}
                           isReadOnly={!canEdit || !!lockState?.isLocked}
                           onRemoveLine={(id) => removeLine(id)}
@@ -1124,85 +1145,84 @@ export function AdjustmentForm({
                     )}
                   </div>
                 </div>
-
-                {!isNew && (
-                  <div className="bg-card border border-border shadow-sm p-8 rounded-[2.5rem] shadow-sm space-y-6 border border-surface-variant/5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-2xl bg-muted/50 flex items-center justify-center">
-                        <Info className="w-5 h-5 text-foreground" />
-                      </div>
-                      <h4 className="text-label-xs font-semibold uppercase">
-                        {t("document_info")}
-                      </h4>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center py-3">
-                        <span className="text-label-sm text-muted-foreground">
-                          {tc("status")}
-                        </span>
-                        <StatusBadge status={adjustmentStatus as BadgeStatus} />
-                      </div>
-                      {document?.postedAt && (
-                        <div className="flex justify-between items-center py-3">
-                          <span className="text-label-sm text-muted-foreground">
-                            {t("posted_at")}
-                          </span>
-                          <ClientOnlyTime
-                            date={document.postedAt}
-                            mode="datetime"
-                            locale={locale as "ar" | "en"}
-                            className="text-label-xs font-bold"
-                          />
-                        </div>
-                      )}
-                      {document?.approvedBy && (
-                        <div className="flex justify-between items-center py-3">
-                          <span className="text-label-sm text-muted-foreground">
-                            {t("approved_by")}
-                          </span>
-                          <span className="text-label-xs font-semibold uppercase text-foreground/70">
-                            {document.approvedBy}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </DocumentLockWrapper>
 
         {isLocked ? (
-          <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-lg md:shadow-[0_-10px_40px_rgb(0,0,0,0.3)] rounded-2xl md:rounded-none">
-            <div className="flex items-center text-slate-600 dark:text-slate-400 text-sm gap-3 font-bold bg-slate-100 dark:bg-slate-900/50 px-5 py-3 rounded-2xl border border-slate-200 dark:border-white/5">
-              <Info className="w-5 h-5 text-brand-gold" />
+          <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card/95 backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-2xl rounded-2xl md:rounded-none">
+            <div className="flex items-center text-slate-600 dark:text-slate-400 text-xs md:text-sm gap-3 font-bold bg-slate-100 dark:bg-slate-900/50 px-5 py-3 rounded-2xl border border-slate-200 dark:border-white/5 w-full md:w-auto justify-center md:justify-start">
+              <Info className="w-5 h-5 text-brand-gold shrink-0" />
               <span>{t("document_locked")}</span>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => router.push("/adjustments")}
-                className="px-6 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
+            <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-end gap-2.5 md:gap-3 w-full md:w-auto">
+              <div className="col-span-1 md:w-auto">
+                <button
+                  type="button"
+                  onClick={() => router.push("/adjustments")}
+                  className="px-4 md:px-6 py-3 rounded-xl border border-border/60 bg-surface-container-highest/60 hover:bg-surface-container-highest text-foreground font-bold uppercase tracking-wider text-xs shadow-sm transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2 w-full md:w-auto"
+                >
+                  {locale === "ar" ? "إغلاق" : "Close"}
+                </button>
+              </div>
+
+              <PermissionGate action="reject" resource="operations_adjustments">
+                <div className="col-span-1 md:w-auto">
+                  <ActionGuard
+                    documentType="ADJUSTMENT"
+                    status={adjustmentStatus}
+                    action="REJECT"
+                    role={user?.role || ""}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setRejectDialogOpen(true)}
+                      className="px-4 md:px-6 py-3 rounded-xl bg-gradient-to-r from-rose-950/90 to-red-900/90 hover:from-rose-900 hover:to-red-800 text-rose-200 font-bold text-xs md:text-sm uppercase tracking-wider border border-rose-500/40 hover:border-rose-400/60 shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 w-full md:w-auto"
+                    >
+                      <XCircleIcon className="w-4 h-4 shrink-0" /> {t("reject")}
+                    </button>
+                  </ActionGuard>
+                </div>
+              </PermissionGate>
+
+              <PermissionGate
+                action="approve"
+                resource="operations_adjustments"
               >
-                {locale === "ar" ? "إغلاق" : "Close"}
-              </button>
+                <div className="col-span-2 md:w-auto">
+                  <ActionGuard
+                    documentType="ADJUSTMENT"
+                    status={adjustmentStatus}
+                    action="APPROVE"
+                    role={user?.role || ""}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setApproveDialogOpen(true)}
+                      className="px-5 md:px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-xs md:text-sm uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/45 hover:-translate-y-0.5 border border-emerald-400/40 w-full md:w-auto"
+                    >
+                      <CheckCircle2 className="w-4.5 h-4.5 shrink-0" /> {t("approve")}
+                    </button>
+                  </ActionGuard>
+                </div>
+              </PermissionGate>
 
               <ActionGuard
                 documentType="ADJUSTMENT"
                 status={adjustmentStatus}
                 action="SUBMIT"
                 role={user?.role || ""}
-                disabled={hasNegativeStock}
               >
-                <button
-                  type="button"
-                  disabled={hasNegativeStock}
-                  onClick={() => setSubmitDialogOpen(true)}
-                  className="px-8 py-3 rounded-2xl bg-gradient-to-r from-brand-gold to-amber-400 hover:from-brand-gold/90 hover:to-amber-400/90 text-brand-black text-sm font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-3 shadow-lg shadow-brand-gold/20 hover:shadow-brand-gold/40 hover:-translate-y-0.5"
-                >
-                  <Send className="w-4 h-4" /> {t("submit_for_approval")}
-                </button>
+                <div className="col-span-2 md:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setSubmitDialogOpen(true)}
+                    className="px-5 md:px-7 py-3 rounded-xl bg-gradient-to-r from-brand-gold via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-brand-black font-black text-xs md:text-sm uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/45 hover:-translate-y-0.5 border border-amber-300/50 w-full md:w-auto"
+                  >
+                    <Send className="w-4 h-4 shrink-0" /> {t("submit_for_approval")}
+                  </button>
+                </div>
               </ActionGuard>
 
               <ActionGuard
@@ -1211,77 +1231,40 @@ export function AdjustmentForm({
                 action="EDIT"
                 role={user?.role || ""}
               >
-                <button
-                  type="button"
-                  onClick={() =>
-                    editAdjustment.mutate({
-                      id,
-                      version: document?.version ?? 0,
-                    })
-                  }
-                  className="px-6 py-2 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2"
-                >
-                  <Pencil className="w-4 h-4" /> {t("edit_rejected")}
-                </button>
+                <div className="col-span-2 md:w-auto">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      editAdjustment.mutate({
+                        id,
+                        version: document?.version ?? 0,
+                      })
+                    }
+                    className="px-4 md:px-6 py-3 rounded-xl bg-brand-gold text-brand-black font-bold text-xs md:text-sm uppercase tracking-wider hover:brightness-110 flex items-center justify-center gap-2 shadow-md hover:-translate-y-0.5 transition-all w-full md:w-auto"
+                  >
+                    <Pencil className="w-4 h-4 shrink-0" /> {t("edit_rejected")}
+                  </button>
+                </div>
               </ActionGuard>
 
-              <PermissionGate action="reject" resource="operations_adjustments">
-                <ActionGuard
-                  documentType="ADJUSTMENT"
-                  status={adjustmentStatus}
-                  action="REJECT"
-                  role={user?.role || ""}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setRejectDialogOpen(true)}
-                    className="px-6 py-2 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 font-bold flex items-center gap-2"
-                  >
-                    <XCircleIcon className="w-4 h-4" /> {t("reject")}
-                  </button>
-                </ActionGuard>
-              </PermissionGate>
-
-              <PermissionGate
-                action="approve"
-                resource="operations_adjustments"
-              >
-                <ActionGuard
-                  documentType="ADJUSTMENT"
-                  status={adjustmentStatus}
-                  action="APPROVE"
-                  role={user?.role || ""}
-                  disabled={hasNegativeStock}
-                >
-                  <button
-                    type="button"
-                    disabled={hasNegativeStock}
-                    onClick={() => setApproveDialogOpen(true)}
-                    className="px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 text-white text-sm font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-3 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5"
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> {t("approve")}
-                  </button>
-                </ActionGuard>
-              </PermissionGate>
-
               <PermissionGate action="post" resource="operations_adjustments">
-                <ActionGuard
-                  documentType="ADJUSTMENT"
-                  status={adjustmentStatus}
-                  action="POST"
-                  role={user?.role || ""}
-                  disabled={hasNegativeStock}
-                >
-                  <button
-                    type="button"
-                    disabled={hasNegativeStock}
-                    onClick={() => setPostDialogOpen(true)}
-                    className="px-6 py-2 rounded-xl bg-brand-gold text-brand-black font-bold hover:brightness-110 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                <div className="col-span-2 md:w-auto">
+                  <ActionGuard
+                    documentType="ADJUSTMENT"
+                    status={adjustmentStatus}
+                    action="POST"
+                    role={user?.role || ""}
                   >
-                    <CheckCircleIcon className="w-4 h-4" />{" "}
-                    {t("post_adjustment")}
-                  </button>
-                </ActionGuard>
+                    <button
+                      type="button"
+                      onClick={() => setPostDialogOpen(true)}
+                      className="px-4 md:px-6 py-3 rounded-xl bg-gradient-to-r from-brand-gold to-amber-400 text-brand-black font-black text-xs md:text-sm uppercase tracking-wider hover:brightness-110 flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/20 hover:-translate-y-0.5 transition-all w-full md:w-auto"
+                    >
+                      <CheckCircleIcon className="w-4 h-4 shrink-0" />{" "}
+                      {t("post_adjustment")}
+                    </button>
+                  </ActionGuard>
+                </div>
               </PermissionGate>
 
               <ActionGuard
@@ -1290,75 +1273,81 @@ export function AdjustmentForm({
                 action="CANCEL"
                 role={user?.role || ""}
               >
-                <button
-                  type="button"
-                  onClick={() => setCancelDialogOpen(true)}
-                  className="px-6 py-2 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 font-bold flex items-center gap-2"
-                >
-                  <XCircleIcon className="w-4 h-4" /> {t("cancel_adjustment")}
-                </button>
+                <div className="col-span-2 md:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setCancelDialogOpen(true)}
+                    className="px-4 md:px-6 py-3 rounded-xl bg-surface-container-high/80 hover:bg-surface-container-highest text-muted-foreground hover:text-foreground font-bold text-xs uppercase tracking-wider border border-border/60 hover:border-brand-gold/40 shadow-sm transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 w-full md:w-auto"
+                  >
+                    <XCircleIcon className="w-4 h-4 shrink-0" /> {t("cancel_adjustment")}
+                  </button>
+                </div>
               </ActionGuard>
             </div>
           </div>
         ) : (
-          <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card/95 backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-lg md:shadow-2xl rounded-2xl md:rounded-none">
+          <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card/95 backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-2xl rounded-2xl md:rounded-none">
             {!isValid && canEdit ? (
-              <div className="flex items-center gap-3 text-sm font-bold text-brand-gold bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-brand-gold/20">
+              <div className="flex items-center gap-3 text-sm font-bold text-brand-gold bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-brand-gold/20 w-full md:w-auto justify-center md:justify-start">
                 <Info className="w-5 h-5 shrink-0" />
                 <span>
                   {locale === "ar"
-                    ? "يرجى كتابة الملاحظات لتفعيل زر الحفظ"
-                    : "Please write notes to enable saving"}
+                    ? "يرجى كتابة الملاحظات واختيار مستودع لتفعيل زر الحفظ"
+                    : "Please write notes and select a warehouse to enable saving"}
                 </span>
               </div>
             ) : (
               <div />
             )}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => router.push("/adjustments")}
-                disabled={isSaving}
-                className="px-6 py-3 rounded-2xl border border-border bg-surface-container-highest/40 hover:bg-surface-container-highest text-foreground font-bold uppercase tracking-widest text-xs transition-all hover:-translate-y-0.5"
-              >
-                {locale === "ar" ? "إلغاء" : "Cancel"}
-              </button>
+            <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-end gap-2.5 md:gap-3 w-full md:w-auto">
+              <div className="col-span-2 md:w-auto">
+                <button
+                  type="button"
+                  onClick={() => router.push("/adjustments")}
+                  disabled={isSaving}
+                  className="px-4 md:px-6 py-3 rounded-xl border border-border/60 bg-surface-container-highest/60 hover:bg-surface-container-highest text-foreground font-bold uppercase tracking-wider text-xs shadow-sm transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2 w-full md:w-auto"
+                >
+                  <ArrowLeft className="w-4 h-4 shrink-0 rtl:rotate-180" />
+                  {locale === "ar" ? "عودة" : "Back"}
+                </button>
+              </div>
 
               {!isNew && (
-                <ActionGuard
-                  documentType="ADJUSTMENT"
-                  status={adjustmentStatus}
-                  action="SUBMIT"
-                  role={user?.role || ""}
-                  disabled={hasNegativeStock}
-                >
-                  <button
-                    type="button"
-                    disabled={hasNegativeStock}
-                    onClick={() => setSubmitDialogOpen(true)}
-                    className="px-8 py-3 rounded-2xl bg-gradient-to-r from-brand-gold to-amber-400 hover:from-brand-gold/90 hover:to-amber-400/90 text-brand-black text-sm font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-3 shadow-lg shadow-brand-gold/20 hover:shadow-brand-gold/40 hover:-translate-y-0.5"
+                <div className="col-span-2 md:w-auto">
+                  <ActionGuard
+                    documentType="ADJUSTMENT"
+                    status={adjustmentStatus}
+                    action="SUBMIT"
+                    role={user?.role || ""}
                   >
-                    <Send className="w-5 h-5" /> {t("submit_for_approval")}
-                  </button>
-                </ActionGuard>
+                    <button
+                      type="button"
+                      onClick={() => setSubmitDialogOpen(true)}
+                      className="px-5 md:px-7 py-3 rounded-xl bg-gradient-to-r from-brand-gold via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-brand-black font-black text-xs md:text-sm uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/45 hover:-translate-y-0.5 border border-amber-300/50 w-full md:w-auto"
+                    >
+                      <Send className="w-4.5 h-4.5 shrink-0" /> {t("submit_for_approval")}
+                    </button>
+                  </ActionGuard>
+                </div>
               )}
 
-              <Button
-                type="button"
-                onClick={handleSaveDraft}
-                disabled={
-                  hasNegativeStock ||
-                  lines.length === 0 ||
-                  notes.trim().length < 10 ||
-                  isRefreshingStock ||
-                  createAdjustment.isPending ||
-                  updateAdjustment.isPending
-                }
-                isLoading={createAdjustment.isPending || updateAdjustment.isPending}
-                className="px-8 py-6 rounded-2xl bg-brand-gold hover:bg-brand-gold/90 text-brand-black text-sm font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 shadow-lg shadow-brand-gold/20 hover:shadow-brand-gold/40 hover:-translate-y-0.5"
-              >
-                <Save className="w-5 h-5" /> {tc("actions.save") || "Save"}
-              </Button>
+              <div className="col-span-2 md:w-auto">
+                <Button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  disabled={
+                    lines.length === 0 ||
+                    notes.trim().length < 10 ||
+                    isRefreshingStock ||
+                    createAdjustment.isPending ||
+                    updateAdjustment.isPending
+                  }
+                  isLoading={createAdjustment.isPending || updateAdjustment.isPending}
+                  className="px-5 md:px-7 py-3 rounded-xl bg-gradient-to-r from-brand-gold via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-brand-black font-black text-xs md:text-sm uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/45 hover:-translate-y-0.5 border border-amber-300/50 w-full md:w-auto"
+                >
+                  <Save className="w-4.5 h-4.5 shrink-0" /> {tc("actions.save") || "Save"}
+                </Button>
+              </div>
             </div>
           </div>
         )}
