@@ -249,6 +249,7 @@ export class InventoryService {
       quantity: number | string;
       balanceAfter: number | string;
       performedByUserName: string | null;
+      image: string | null;
     }
 
     // Retrieve raw movements with calculated running balance using window functions (T024)
@@ -260,6 +261,7 @@ export class InventoryService {
           sl."itemId",
           i.sku as "itemCode",
           i.name as "itemName",
+          i.image as "image",
           sl."documentType" as "transactionType",
           COALESCE(
             grn."grnNumber",
@@ -344,6 +346,7 @@ export class InventoryService {
       quantity: Number(movement.quantity),
       balanceAfter: Number(movement.balanceAfter),
       performedByUserName: movement.performedByUserName,
+      image: movement.image,
     }));
 
     return {

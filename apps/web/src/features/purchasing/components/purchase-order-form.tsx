@@ -249,6 +249,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           id: initialData.id,
           payload: { ...values, version: initialData.version ?? 0 }
         });
+        
+        form.reset(values);
+        
         playSound('success');
         toast.success(t("edit_success"));
         queryClient.invalidateQueries({ queryKey: ['purchase-orders', initialData.id] });
@@ -819,7 +822,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         <FormFooter
           isLocked={isLocked}
           onCancel={() => router.push('/purchase-orders', { skipGuard: !form.formState.isDirty })}
-          cancelLabel={isSaved ? tc('back') || 'BACK' : tc('cancel') || 'CANCEL'}
+          cancelLabel={tc('back') || 'BACK'}
           onSubmit={mode === "edit"
             ? form.handleSubmit((values) => handleSavePO(values, false), onFormError)
             : form.handleSubmit((values) => handleSavePO(values, true), onFormError)

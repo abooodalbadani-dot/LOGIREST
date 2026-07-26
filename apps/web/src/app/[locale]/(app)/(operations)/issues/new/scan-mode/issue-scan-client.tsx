@@ -72,6 +72,14 @@ export function IssueScanClient() {
    const lotNumber = product.lotNumber || generateMockLot();
    const expiryDate = product.expiryDate || generateMockExpiry();
    const isExpired = product.isExpired || new Date(expiryDate) < new Date();
+   const isQuarantined = product.status === 'QUARANTINE' || product.lotStatus === 'QUARANTINE';
+
+   if (isQuarantined) {
+    flashFeedback("error");
+    // Show toast or let flash feedback handle the visual error
+    refocusInput();
+    return;
+   }
 
    if (isExpired) {
     // Open override modal; do NOT add to lines yet

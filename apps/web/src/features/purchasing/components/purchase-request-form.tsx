@@ -212,6 +212,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           name: l.item.name || l.item.nameEn || l.item.nameAr || '',
           name_ar: l.item.nameAr || '',
           name_en: l.item.nameEn || '',
+          image: l.item.image || null,
           primary_uom: {
             code: l.item.primaryUom?.code || 'EA',
             name: l.item.primaryUom?.name || l.item.primaryUom?.code || 'EA'
@@ -502,36 +503,36 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       <DocumentLockBanner status={status} isLocked={isFormDisabled} />
 
       <Form {...form}>
-        <form className="flex-1 w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-8 py-4 md:py-8 space-y-8">
+        <form className="flex-1 w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-8 py-2 md:py-8 space-y-4 md:space-y-8">
           <DocumentLockWrapper isLocked={isFormDisabled}>
-            <div className="space-y-6 md:space-y-10 w-full bg-card text-card-foreground border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative transition-all duration-200">
+            <div className="space-y-4 md:space-y-10 w-full bg-card text-card-foreground sm:border border-border shadow-sm px-4 py-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <h3 className="text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-3">
+                  <h3 className="text-title-md md:text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-2 md:gap-3">
                     {t('detail_title')}
-                    {isFormDisabled && <Badge variant="outline" className="bg-surface-container-high/50 border-none text-muted-foreground/60"><History className="w-3 h-3 me-1" /> {tc('read_only')}</Badge>}
+                    {isFormDisabled && <Badge variant="outline" className="bg-surface-container-high/50 border-none text-muted-foreground/60 scale-90 md:scale-100 origin-left"><History className="w-3 h-3 me-1" /> {tc('read_only')}</Badge>}
                   </h3>
                 </div>
                 {initialData?.documentNumber && (
-                  <span className="font-mono text-label-sm font-semibold text-muted-foreground/40 bg-card border border-border shadow-sm px-4 py-1.5 rounded-full">
+                  <span className="font-mono text-label-xs md:text-label-sm font-semibold text-muted-foreground/40 bg-card border border-border shadow-sm px-3 py-1 md:px-4 md:py-1.5 rounded-full">
                     {initialData.documentNumber}
                   </span>
                 )}
               </div>
 
               {/* Step 1: Request Header */}
-              <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-8 rounded-none sm:rounded-2xl relative">
-                <div className="flex items-center gap-4 mb-8 pb-6 border-none">
-                  <div className="p-3 rounded-xl bg-operational-cyan/10 text-operational-cyan">
-                    <Building2 className="w-5 h-5" />
+              <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm px-0 py-4 sm:px-4 sm:py-6 md:p-8 rounded-none sm:rounded-2xl relative">
+                <div className="flex items-center gap-3 mb-4 md:mb-8 pb-4 md:pb-6 border-b border-border/40 md:border-none">
+                  <div className="p-2 md:p-3 rounded-xl bg-operational-cyan/10 text-operational-cyan">
+                    <Building2 className="w-4 h-4 md:w-5 md:h-5" />
                   </div>
                   <div>
-                    <h3 className="text-body-md font-semibold uppercase text-foreground">{t('new_intent')}</h3>
-                    <p className="text-label-xs font-bold text-muted-foreground/60 uppercase mt-0.5">{t('specification')}</p>
+                    <h3 className="text-label-md md:text-body-md font-semibold uppercase text-foreground">{t('new_intent')}</h3>
+                    <p className="text-label-xxs md:text-label-xs font-bold text-muted-foreground/60 uppercase mt-0.5">{t('specification')}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                   <FormField<PurchaseRequestFormValues, 'department_id'>
                     control={form.control}
                     name="department_id"
@@ -590,11 +591,11 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               </div>
 
               {/* Step 2: Line Items */}
-              <div className="space-y-6">
-                <div className="bg-operational-cyan/[0.02] p-8 rounded-2xl">
-                  <div className="flex items-center gap-6 mb-6">
-                    <div className="p-3 bg-operational-cyan/10 rounded-xl text-operational-cyan">
-                      <Calculator className="w-6 h-6" />
+              <div className="space-y-4 md:space-y-6">
+                <div className="bg-operational-cyan/[0.02] p-4 sm:p-6 md:p-8 rounded-2xl">
+                  <div className="flex items-center gap-3 md:gap-6 mb-4 md:mb-6">
+                    <div className="p-2 md:p-3 bg-operational-cyan/10 rounded-xl text-operational-cyan">
+                      <Calculator className="w-4 h-4 md:w-6 md:h-6" />
                     </div>
                     <div>
                       <h3 className="text-label-sm font-bold uppercase text-foreground">{tc('items')}</h3>
@@ -650,9 +651,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                       const minStock = formLine?.item?.min_stock_level;
                       const reorderPt = formLine?.item?.reorder_point;
                       return (
-                        <div className="flex flex-col items-center gap-0.5">
+                        <div className="flex flex-col items-center gap-0.5 w-full">
                           {isFormDisabled ? (
-                            <span className="text-sm font-black text-[#0B1220] dark:text-white" dir="ltr">
+                            <span className="text-sm font-black text-brand-gold bg-brand-gold/10 border border-brand-gold rounded-lg px-2 h-9 flex items-center justify-center w-full" dir="ltr">
                               {line.qty}
                             </span>
                           ) : (
@@ -679,16 +680,16 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                 </div>
 
                 {/* Summary */}
-                <div className="flex items-center justify-end px-4 py-6 sm:p-8 bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-xl">
-                  <div className="flex items-center gap-6">
+                <div className="flex items-center justify-end px-4 py-4 sm:p-6 md:px-8 md:py-6 bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-xl">
+                  <div className="flex items-center gap-4 md:gap-6">
                     <div className="text-right">
-                      <div className="text-label-xs font-semibold uppercase text-muted-foreground/30">{tc('total_items')}</div>
-                      <div className="text-title-lg font-black text-foreground uppercase tracking-tight">
+                      <div className="text-label-xxs md:text-label-xs font-semibold uppercase text-muted-foreground/30">{tc('total_items')}</div>
+                      <div className="text-title-md md:text-title-lg font-black text-foreground uppercase tracking-tight">
                         {fields.length} <span className="text-operational-cyan">{tc('items')}</span>
                       </div>
                     </div>
-                    <div className="w-12 h-12 rounded-xl bg-operational-cyan/10 flex items-center justify-center text-operational-cyan">
-                      <Package className="w-6 h-6" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-operational-cyan/10 flex items-center justify-center text-operational-cyan">
+                      <Package className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
                   </div>
                 </div>

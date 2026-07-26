@@ -25,10 +25,11 @@ export function LotRow({
  const t = useTranslations('common.table_headers');
  const tc = useTranslations('operations.issue');
  const locale = useLocale();
- const bgClass = isExpired ? 'bg-status-error/10' : isNearExpiry ? 'bg-status-warning/10' : 'bg-surface-container';
+ const isQuarantined = lot.status === 'QUARANTINE';
+ const bgClass = isQuarantined ? 'bg-status-error/10' : isExpired ? 'bg-status-error/10' : isNearExpiry ? 'bg-status-warning/10' : 'bg-surface-container';
  
  const canOverride = ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'].includes(userRole || '');
- const inputDisabled = isExpired && !canOverride;
+ const inputDisabled = isQuarantined || (isExpired && !canOverride);
 
  return (
  <div className={`p-3 rounded-xl border ${bgClass}`}>
@@ -49,7 +50,10 @@ export function LotRow({
  </div>
  
  <div className="flex items-center gap-2">
- {isExpired && !canOverride && (
+ {isQuarantined && (
+ <span className="text-label-sm bg-status-error text-white px-2 py-1 rounded font-bold">QUARANTINED</span>
+ )}
+ {isExpired && !canOverride && !isQuarantined && (
  <span className="text-label-sm bg-status-error text-white px-2 py-1 rounded font-bold">{tc('expired_status')}</span>
  )}
  

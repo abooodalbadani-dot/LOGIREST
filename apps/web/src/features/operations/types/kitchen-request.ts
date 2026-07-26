@@ -68,6 +68,8 @@ export const KitchenRequestDetailSchema = z.object({
   itemId: z.string(),
   itemName: z.string(),
   itemCode: z.string().optional(),
+  barcode: z.string().optional(),
+  itemBarcode: z.string().optional(),
   uom: z.string(),
   quantity: z.number(),
   notes: z.string().optional(),

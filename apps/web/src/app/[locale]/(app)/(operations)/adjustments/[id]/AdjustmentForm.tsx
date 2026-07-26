@@ -1173,7 +1173,7 @@ export function AdjustmentForm({
               <span>{t("document_locked")}</span>
             </div>
             <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-end gap-2.5 md:gap-3 w-full md:w-auto">
-              <div className="col-span-1 md:w-auto">
+              <div className="col-span-2 md:w-auto">
                 <button
                   type="button"
                   onClick={() => router.push("/adjustments")}
@@ -1184,7 +1184,7 @@ export function AdjustmentForm({
               </div>
 
               <PermissionGate action="reject" resource="operations_adjustments">
-                <div className="col-span-1 md:w-auto">
+                <div className="col-span-2 md:w-auto">
                   <ActionGuard
                     documentType="ADJUSTMENT"
                     status={adjustmentStatus}

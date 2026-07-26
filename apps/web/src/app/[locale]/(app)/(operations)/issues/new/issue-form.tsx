@@ -400,9 +400,12 @@ export function IssueForm() {
         playSound('success');
         router.push(`/issues/${issue.id}`, { skipGuard: true });
       },
-      onError: () => {
+      onError: (error: any) => {
         playSound('error');
-        console.error("Failed to create issue");
+        console.error("Failed to create issue", error);
+        toast.error(isAr ? 'فشل إنشاء إذن الصرف' : 'Failed to create issue', {
+          description: error?.message || (isAr ? 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.' : 'An unexpected error occurred. Please try again.'),
+        });
       },
     });
   };
@@ -670,7 +673,8 @@ export function IssueForm() {
             expiryDate: l.expiryDate ?? '',
             allocatedQty: 0,
             availableQty: l.qtyAvailable,
-            isExpired: l.isExpired
+            isExpired: l.isExpired,
+            status: l.status
           }))}
         />
       )}

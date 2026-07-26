@@ -814,7 +814,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
                   expiryDate: sourceLot.expiryDate,
                   qtyAvailable: line.receivedQty || line.shippedQty,
                   isExpired: false,
-                  isNearExpiry: false
+                  isNearExpiry: false,
+                  status: ''
                 };
                 await db.lots.save(newLot);
 
@@ -1084,7 +1085,13 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'GET') {
       const all = await db.movements.findAll();
       const type = searchParams.get('document_type');
-      const filtered = type ? all.filter(m => m.transactionType === type) : all;
+      let filtered = type ? all.filter(m => m.transactionType === type) : all;
+
+      const items = await db.items.findAll();
+      filtered = filtered.map(m => {
+        const item = items.find(i => i.id === m.itemId);
+        return { ...m, image: item?.image || null };
+      });
       // Sort by posted_at descending
       filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       return MockFactory.wrapPagination(filtered);
@@ -1382,7 +1389,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
                   expiryDate: line.lot.expiryDate,
                   qtyAvailable: line.receivedQty,
                   isExpired: false,
-                  isNearExpiry: false
+                  isNearExpiry: false,
+                  status: ''
                 };
                 await db.lots.save(newLot);
 

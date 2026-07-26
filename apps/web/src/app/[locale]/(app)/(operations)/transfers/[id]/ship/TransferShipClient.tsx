@@ -332,20 +332,22 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
            return (
             <div key={line.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3.5 shadow-sm flex flex-col gap-3">
              {/* Item Identity */}
-             <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
-              <div className="flex flex-col text-start">
-               <span className="text-sm font-black text-[#0B1220] dark:text-white">
-                {locale === 'ar' ? (line.item?.nameAr || line.item?.name) : (line.item?.nameEn || line.item?.name)}
-               </span>
-               <span className="text-[10px] text-gray-400 font-mono tracking-widest mt-0.5" dir="ltr">{line.item?.code}</span>
-              </div>
+             <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-2">
               {itemImage ? (
-               <img src={itemImage} alt="Product" className="w-8 h-8 object-cover rounded-md border border-gray-800 shrink-0" />
+               <img src={itemImage} alt="Product" className="w-9 h-9 object-cover rounded-md border border-gray-200 dark:border-gray-800 shrink-0 shadow-sm" />
               ) : (
-               <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-gray-800 text-[9px] text-muted-foreground font-mono shrink-0">
+               <div className="w-9 h-9 bg-gray-50 dark:bg-surface-container flex items-center justify-center rounded-md border border-gray-200 dark:border-gray-800 text-[9px] text-muted-foreground font-mono shrink-0 shadow-sm">
                 N/A
                </div>
               )}
+              <div className="flex flex-col flex-1 min-w-0 text-start">
+               <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">
+                {locale === 'ar' ? (line.item?.nameAr || line.item?.name) : (line.item?.nameEn || line.item?.name)}
+               </span>
+               <div className="flex items-center gap-1.5 mt-0.5">
+                 <div className="bg-gray-100 dark:bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-200/50 dark:border-gray-700/50 text-[10px] text-gray-500 dark:text-gray-400 font-mono tracking-widest inline-block" dir="ltr">{line.item?.code}</div>
+               </div>
+              </div>
              </div>
 
              {/* Qty & Status Grid */}

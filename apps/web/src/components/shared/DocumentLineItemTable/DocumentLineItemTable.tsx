@@ -751,20 +751,20 @@ export function DocumentLineItemTable<T extends LineItem>({
                                   ) : (
                                     <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
                                   )}
-                                  <div className="flex flex-col min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="text-sm font-bold text-foreground leading-tight truncate">
-                                        {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                                      </span>
+                                  <div className="flex flex-col min-w-0 flex-1 text-start">
+                                    <span className="text-[13px] font-bold text-foreground leading-tight whitespace-normal mb-1">
+                                      {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 mt-0">
+                                      <span className="text-[10px] font-mono font-bold text-muted-foreground bg-surface-container-highest px-1.5 py-0.5 rounded border border-border/50" dir="ltr">{line.item.code}</span>
                                       {line.item.primaryUom && (
-                                        <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-md uppercase shrink-0">
+                                        <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
                                           {line.item.primaryUom.code || line.item.primaryUom.name}
                                         </span>
                                       )}
                                     </div>
-                                    <span className="text-[10px] font-mono text-muted-foreground tracking-wider uppercase mt-0.5" dir="ltr">{line.item.code}</span>
                                     {renderItemDescription && (
-                                      <div className="mt-0.5">
+                                      <div className="mt-1">
                                         {renderItemDescription(line as T)}
                                       </div>
                                     )}
@@ -1462,20 +1462,20 @@ export function DocumentLineItemTable<T extends LineItem>({
                           ) : (
                             <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
                           )}
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-bold text-foreground leading-tight truncate">
-                                {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                              </span>
+                          <div className="flex flex-col min-w-0 flex-1 text-start">
+                            <span className="text-[13px] font-bold text-foreground leading-tight whitespace-normal mb-1">
+                              {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0">
+                              <span className="text-[10px] font-mono font-bold text-muted-foreground bg-surface-container-highest px-1.5 py-0.5 rounded border border-border/50" dir="ltr">{line.item.code}</span>
                               {line.item.primaryUom && (
-                                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-md uppercase shrink-0">
+                                <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
                                   {line.item.primaryUom.code || line.item.primaryUom.name}
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] font-mono text-muted-foreground tracking-wider uppercase mt-0.5" dir="ltr">{line.item.code}</span>
                             {renderItemDescription && (
-                              <div className="mt-0.5">
+                              <div className="mt-1">
                                 {renderItemDescription(line as T)}
                               </div>
                             )}

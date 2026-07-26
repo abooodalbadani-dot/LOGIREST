@@ -91,9 +91,12 @@ export class IssuesService {
                       itemId: line.itemId,
                       lotNumber: alloc.lotNumber,
                     },
-                    select: { id: true },
+                    select: { id: true, status: true },
                   });
                   if (lot) {
+                    if (lot.status === 'QUARANTINE') {
+                      throw new BadRequestException(`Cannot allocate quarantined lot: ${alloc.lotNumber}`);
+                    }
                     lotId = lot.id;
                   }
                 }

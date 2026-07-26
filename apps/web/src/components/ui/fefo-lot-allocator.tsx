@@ -14,6 +14,7 @@ import { formatDate } from "@/utils/currency";
 interface AvailableLot extends IssueLot {
  availableQty: number;
  isExpired?: boolean;
+ status?: string;
 }
 
 interface FEFOLotAllocatorProps {
@@ -52,7 +53,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
   const auto: Record<string, number> = {};
   // FEFO: iterate sorted by expiry ASC (earliest first)
   for (const lot of availableLots) {
-   if (lot.isExpired) continue; // Skip expired lots in auto-allocation
+   if (lot.isExpired || lot.status === 'QUARANTINE') continue; // Skip expired or quarantined lots in auto-allocation
    if (left <= 0) break;
    const take = Math.min(lot.availableQty, left);
    auto[lot.lotNumber] = take;
@@ -158,17 +159,23 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
          const lotExpiryDate = new Date(lot.expiryDate);
          const isExpiredFlag = lot.isExpired || lotExpiryDate < now;
          const isNearExpiry = !isExpiredFlag && lotExpiryDate < nearExpiryThreshold;
+         const isQuarantined = lot.status === 'QUARANTINE';
          
          return (
           <div
            key={lot.lotNumber}
-           className={`p-3 sm:p-5 rounded-2xl border transition-all duration-300 group ${ isExpiredFlag ? 'bg-status-error/5 border-status-error/20 opacity-60' : isNearExpiry ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10' : 'bg-card border border-border shadow-sm hover:border-operational-cyan/30 hover:bg-muted/50' }`}
+           className={`p-3 sm:p-5 rounded-2xl border transition-all duration-300 group ${ isQuarantined ? 'bg-status-warning/5 border-status-warning/30 opacity-70' : isExpiredFlag ? 'bg-status-error/5 border-status-error/20 opacity-60' : isNearExpiry ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10' : 'bg-card border border-border shadow-sm hover:border-operational-cyan/30 hover:bg-muted/50' }`}
           >
            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div className="flex-1 space-y-1.5 sm:space-y-1 min-w-0">
              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-sm sm:text-body-md font-semibold text-foreground break-all">{lot.lotNumber}</span>
-              {isExpiredFlag ? (
+              {isQuarantined ? (
+               <Badge className="h-5 px-2 rounded-md text-[9px] sm:text-label-xxs font-semibold uppercase bg-status-warning/20 text-status-warning border-status-warning/30 shrink-0">
+                <ShieldAlert className="w-2.5 h-2.5 me-1" />
+                QUARANTINED
+               </Badge>
+              ) : isExpiredFlag ? (
                <Badge variant="destructive" className="h-5 px-2 rounded-md text-[9px] sm:text-label-xxs font-semibold uppercase bg-status-error/10 text-status-error border-none shrink-0">
                 <ShieldAlert className="w-2.5 h-2.5 me-1" />
                 {t("expired_violation")}
@@ -203,7 +210,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                step="0.01"
                className="w-full h-9 sm:h-10 text-center font-mono font-semibold text-xs sm:text-label-xs"
                dir="ltr"
-               disabled={isExpiredFlag}
+               disabled={isExpiredFlag || isQuarantined}
                value={allocations[lot.lotNumber] ?? ''} onChange={(e) => handleQtyChange(lot.lotNumber, e.target.value)}
               />
               <div className="absolute end-2 sm:end-3 top-1/2 -translate-y-1/2 text-[9px] sm:text-label-xxs font-semibold text-muted-foreground/20 uppercase pointer-events-none">{t("units")}</div>

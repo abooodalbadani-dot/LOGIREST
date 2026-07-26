@@ -22,6 +22,7 @@ export function useLotsByItem({ itemId, warehouseId }: { itemId?: string; wareho
      qtyAvailable: z.number().optional(),
      isExpired: z.boolean().optional(),
      isNearExpiry: z.boolean().optional(),
+     status: z.string().optional(),
     }))
    }), { signal });
 
@@ -35,6 +36,7 @@ export function useLotsByItem({ itemId, warehouseId }: { itemId?: string; wareho
      qtyAvailable: item.totalQty ?? item.qtyAvailable ?? 0,
      isExpired: item.isExpired ?? false,
      isNearExpiry: item.isNearExpiry ?? false,
+     status: item.status || 'ACTIVE',
     };
     return LotSchema.parse(lot);
    });
