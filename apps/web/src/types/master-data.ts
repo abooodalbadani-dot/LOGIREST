@@ -4,13 +4,13 @@ import { z } from 'zod';
 
 export interface Branch { id: string; code: string; name?: string; isActive?: boolean; createdAt?: string; version?: number; }
 export interface Warehouse { id: string; branchId: string; code: string; name?: string; isActive?: boolean; version?: number; }
-export interface Department { 
- id: string; 
- branchId: string; 
- code: string; 
- name?: string;
- isActive?: boolean;
- version?: number; 
+export interface Department {
+  id: string;
+  branchId: string;
+  code: string;
+  name?: string;
+  isActive?: boolean;
+  version?: number;
 }
 
 export interface UoM { id: string; code: string; name: string; version?: number; }
@@ -84,9 +84,9 @@ export const WarehouseSchema = z.object({
 });
 
 export const DepartmentSchema = z.object({
-  id: z.string(), 
-  branchId: z.string(), 
-  code: z.string(), 
+  id: z.string(),
+  branchId: z.string(),
+  code: z.string(),
   name: z.string().optional(),
   isActive: z.boolean().optional(),
   version: z.number().optional()
@@ -102,15 +102,27 @@ export const CategorySchema = z.object({
 });
 
 export const UoMConversionSchema = z.object({
-  fromUomId: z.string(), toUomId: z.string(), factor: z.number()
-});
+  id: z.string().optional(),
+  fromUomId: z.string().optional(),
+  from_uom_id: z.string().optional(),
+  toUomId: z.string().optional(),
+  to_uom_id: z.string().optional(),
+  factor: z.coerce.number().optional().default(1),
+}).transform((data) => ({
+  id: data.id,
+  fromUomId: data.fromUomId || data.from_uom_id || '',
+  toUomId: data.toUomId || data.to_uom_id || '',
+  factor: data.factor,
+}));
 
 export const ItemSchema = z.object({
   id: z.string(), code: z.string(), barcode: z.string(), name: z.string(),
   categoryId: z.string(),
   category: CategorySchema.optional().nullable(),
-  primaryUom: UoMSchema,
+  primaryUom: UoMSchema.optional().nullable(),
+  primary_uom: UoMSchema.optional().nullable(),
   uomConversions: z.array(UoMConversionSchema).optional().default([]),
+  uom_conversions: z.array(UoMConversionSchema).optional(),
   trackLots: z.boolean().optional().default(false),
   track_lots: z.boolean().optional(),
   isBatched: z.boolean().optional(),
@@ -295,10 +307,10 @@ export const ItemFormSchema = z.object({
   minStockLevel: z.number().min(0).optional().nullable(),
   reorderPoint: z.number().min(0),
   uomConversions: z.array(z.object({
-  fromUomId: z.string().min(1),
-  toUomId: z.string().min(1),
-  factor: z.number().positive()
-  })),
+    fromUomId: z.string().optional().default(''),
+    toUomId: z.string().optional().default(''),
+    factor: z.coerce.number().optional().default(1)
+  })).optional().default([]),
   isActive: z.boolean().optional().nullable(),
   version: z.number().optional().nullable(),
   image: z.string().optional().nullable()

@@ -82,13 +82,23 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
   useEffect(() => {
     if (data) {
+      const rawConvs = (data.uomConversions && data.uomConversions.length > 0)
+        ? data.uomConversions
+        : ((data as unknown as Record<string, unknown>).uom_conversions as UoMConversion[] || []);
+
       reset({
-        code: data.code, barcode: data.barcode, name: data.name,
-        categoryId: data.categoryId || '', primaryUomId: data.primaryUom?.id || '',
-        trackLots: data.trackLots, minStockLevel: data.minStockLevel,
-        reorderPoint: data.reorderPoint,
-        uomConversions: (data.uomConversions || []).map((c: UoMConversion) => ({
-          fromUomId: c.fromUomId, toUomId: c.toUomId, factor: c.factor,
+        code: data.code,
+        barcode: data.barcode,
+        name: data.name,
+        categoryId: data.categoryId || (data as unknown as Record<string, unknown>).category_id as string || '',
+        primaryUomId: data.primaryUom?.id || (data as unknown as Record<string, unknown>).primary_uom_id as string || '',
+        trackLots: data.trackLots ?? (data as unknown as Record<string, unknown>).track_lots as boolean ?? false,
+        minStockLevel: data.minStockLevel ?? (data as unknown as Record<string, unknown>).min_stock_level as number ?? 0,
+        reorderPoint: data.reorderPoint ?? (data as unknown as Record<string, unknown>).reorder_point as number ?? 0,
+        uomConversions: (rawConvs || []).map((c: UoMConversion & { from_uom_id?: string; to_uom_id?: string }) => ({
+          fromUomId: c.fromUomId || c.from_uom_id || '',
+          toUomId: c.toUomId || c.to_uom_id || '',
+          factor: Number(c.factor || 1),
         })),
         isActive: data.isActive,
         version: data.version,
@@ -145,11 +155,13 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       trackLots: values.trackLots,
       minStockLevel: values.minStockLevel,
       reorderPoint: values.reorderPoint,
-      uomConversions: values.uomConversions.map((conv) => ({
-        fromUomId: conv.fromUomId,
-        toUomId: conv.toUomId,
-        factor: conv.factor,
-      })),
+      uomConversions: (values.uomConversions || [])
+        .filter((conv) => conv.fromUomId && conv.toUomId && Number(conv.factor) > 0)
+        .map((conv) => ({
+          fromUomId: conv.fromUomId,
+          toUomId: conv.toUomId,
+          factor: Number(conv.factor),
+        })),
       isActive: values.isActive ?? true,
       image: values.image || null,
     };
@@ -480,6 +492,18 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <Plus className="w-4 h-4" /> {locale === 'ar' ? 'إضافة تحويل' : (ti('add_conversion') || 'Add Conversion')}
                 </Button>
               )}
+            </div>
+
+            {/* Helper Guide Banner */}
+            <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-200/90 text-xs space-y-1.5 my-1">
+              <p className="font-bold flex items-center gap-1.5 text-amber-400">
+                <span>💡</span> {locale === 'ar' ? 'معادلة التحويل:' : 'Conversion Formula:'} <code className="bg-background/50 px-1.5 py-0.5 rounded font-mono text-foreground">1 (من وحدة) = (المعامل) × (إلى وحدة)</code>
+              </p>
+              <p className="text-muted-foreground text-[11px] leading-relaxed">
+                {locale === 'ar'
+                  ? 'مثال: شراء كرتونة تحتوي 24 حبة ➔ من وحدة: كرتونة (BOX) | إلى وحدة: حبة (PCS) | المعامل: 24'
+                  : 'Example: Purchasing 1 Box of 24 Pcs ➔ From: BOX | To: PCS | Factor: 24'}
+              </p>
             </div>
 
             <div className="space-y-4">

@@ -4,7 +4,32 @@ import {
   IsOptional,
   IsBoolean,
   IsNumber,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class UomConversionDto {
+  @IsString()
+  @IsOptional()
+  fromUomId?: string;
+
+  @IsString()
+  @IsOptional()
+  from_uom_id?: string;
+
+  @IsString()
+  @IsOptional()
+  toUomId?: string;
+
+  @IsString()
+  @IsOptional()
+  to_uom_id?: string;
+
+  @IsNumber()
+  @Type(() => Number)
+  factor!: number;
+}
 
 export class CreateItemDto {
   @IsString()
@@ -42,6 +67,18 @@ export class CreateItemDto {
   @IsString()
   @IsOptional()
   image?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UomConversionDto)
+  uomConversions?: UomConversionDto[];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UomConversionDto)
+  uom_conversions?: UomConversionDto[];
 }
 
 export class UpdateItemDto {
@@ -88,4 +125,16 @@ export class UpdateItemDto {
   @IsNumber()
   @IsOptional()
   version?: number;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UomConversionDto)
+  uomConversions?: UomConversionDto[];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UomConversionDto)
+  uom_conversions?: UomConversionDto[];
 }

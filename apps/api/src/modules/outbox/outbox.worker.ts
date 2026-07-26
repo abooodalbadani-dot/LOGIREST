@@ -324,8 +324,23 @@ export class OutboxWorker extends WorkerHost {
         targetRoles = [Role.ADMIN, Role.GM];
         break;
       case 'PO_APPROVED':
-        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
-        break;
+      case 'PO_REJECTED': {
+        const emails: string[] = [];
+        if (data.createdById) {
+          const creator = await this.prisma.user.findUnique({
+            where: { id: data.createdById, isActive: true },
+          });
+          if (creator) {
+            emails.push(creator.email);
+          }
+        }
+        const managers = await this.prisma.user.findMany({
+          where: { role: { in: [Role.PROC_MGR, Role.APPROVER, Role.GM] }, isActive: true },
+          select: { email: true },
+        });
+        emails.push(...managers.map((u) => u.email));
+        return Array.from(new Set(emails));
+      }
       case 'KITCHEN_REQUEST_SUBMITTED': {
         const whId = data.warehouseId;
         if (!whId) return [];
@@ -703,6 +718,15 @@ export class OutboxWorker extends WorkerHost {
           <p>Purchase Order <strong>${docNo}</strong> has been approved by management.</p>
           <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
           <p><strong>Approved By</strong>: ${data.userName || 'N/A'}</p>
+        `;
+        break;
+      case 'PO_REJECTED':
+        subject = `Your PO ${docNo} has been rejected`;
+        body = `
+          <p>Hello,</p>
+          <p>Purchase Order <strong>${docNo}</strong> has been rejected by management.</p>
+          <p><strong>Warehouse</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Rejected By</strong>: ${data.userName || 'N/A'}</p>
         `;
         break;
       default:

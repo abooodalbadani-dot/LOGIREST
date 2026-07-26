@@ -349,7 +349,9 @@ model UnitOfMeasure {
   code    String @unique
   version Int    @default(1)
 
-  items Item[]
+  items           Item[]
+  fromConversions UomConversion[] @relation("FromUomConversions")
+  toConversions   UomConversion[] @relation("ToUomConversions")
 
   @@map("units_of_measure")
 }
@@ -413,12 +415,14 @@ model Item {
   isActive     Boolean  @default(true)
   version      Int      @default(1)
   createdAt    DateTime @default(now())
-  reorderPoint Decimal? @db.Decimal(18, 4)
-  image        String?
+  reorderPoint  Decimal? @db.Decimal(18, 4)
+  minStockLevel Decimal? @db.Decimal(18, 4)
+  image         String?
 
   category            Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   unitOfMeasure       UnitOfMeasure        @relation(fields: [uomId], references: [id], onDelete: Restrict)
   barcodeMappings     BarcodeMapping[]
+  uomConversions      UomConversion[]
   prLines             PRLine[]
   poLines             POLine[]
   grnLines            GRNLine[]
@@ -446,6 +450,20 @@ model BarcodeMapping {
   item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@map("barcode_mappings")
+}
+
+model UomConversion {
+  id        String  @id @default(uuid())
+  itemId    String
+  fromUomId String
+  toUomId   String
+  factor    Decimal @db.Decimal(18, 6)
+
+  item    Item          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  fromUom UnitOfMeasure @relation("FromUomConversions", fields: [fromUomId], references: [id], onDelete: Restrict)
+  toUom   UnitOfMeasure @relation("ToUomConversions", fields: [toUomId], references: [id], onDelete: Restrict)
+
+  @@map("uom_conversions")
 }
 
 // ─── Tier 2: Transaction Documents ─────────────────────────────────

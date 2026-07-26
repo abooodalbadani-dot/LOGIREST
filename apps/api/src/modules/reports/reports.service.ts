@@ -1749,7 +1749,7 @@ export class ReportsService {
       currency,
       currencySymbol,
       totalValue,
-      pendingFulfillment: pendingFulfillmentCount,
+      pendingFulfillment: (pendingFulfillmentCount || 0) + (recentIssues?.length || 0) + (recentTransfers?.length || 0),
       shortages: lowStockCount,
       warehouseCapacity,
       pendingPrs,
@@ -2123,6 +2123,11 @@ export class ReportsService {
       total_value += Number(item.qtyOnHand || 0) * Number(item.wac || 0);
     }
 
+    const total_pending_fulfillment =
+      Number(pending_fulfillment || 0) +
+      (pendingIssues?.length || 0) +
+      (pendingTransfers?.length || 0);
+
     const shortages = (shortagesItems || []).filter(
       (wi) =>
         wi?.item?.reorderPoint !== null &&
@@ -2379,7 +2384,7 @@ export class ReportsService {
       currency,
       currencySymbol,
       totalValue: total_value,
-      pendingFulfillment: pending_fulfillment,
+      pendingFulfillment: total_pending_fulfillment,
       shortages,
       warehouseCapacity,
       pendingPrs: pending_prs,

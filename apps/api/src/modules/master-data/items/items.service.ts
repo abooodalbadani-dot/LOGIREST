@@ -7,6 +7,15 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { Prisma } from '@prisma/client';
 
+interface UomConversionDto {
+  id?: string;
+  fromUomId?: string;
+  from_uom_id?: string;
+  toUomId?: string;
+  to_uom_id?: string;
+  factor: number;
+}
+
 interface ItemCreateDto {
   name?: string;
   categoryId?: string;
@@ -26,6 +35,8 @@ interface ItemCreateDto {
   is_active?: boolean;
   barcode?: string;
   image?: string;
+  uomConversions?: UomConversionDto[];
+  uom_conversions?: UomConversionDto[];
 }
 
 interface ItemUpdateDto extends ItemCreateDto {
@@ -46,16 +57,41 @@ export class ItemsService {
     hasExpiry: boolean;
     isActive: boolean;
     reorderPoint: unknown;
+    minStockLevel?: unknown;
     image: string | null;
     version: number;
     barcodeMappings: Array<{ barcode: string }>;
     category: { id: string; code: string; name: string; version: number } | null;
     unitOfMeasure: { id: string; code: string; name: string; version: number } | null;
+    uomConversions?: Array<{ id?: string; fromUomId: string; toUomId: string; factor: unknown }>;
     warehouseItems?: Array<{ qtyOnHand: unknown }>;
   }) {
     const qtyVal = item.warehouseItems?.[0]?.qtyOnHand
       ? parseFloat(String(item.warehouseItems[0].qtyOnHand))
       : 0;
+
+    const mappedConversions = (item.uomConversions || []).map((c) => ({
+      id: c.id,
+      fromUomId: c.fromUomId,
+      from_uom_id: c.fromUomId,
+      toUomId: c.toUomId,
+      to_uom_id: c.toUomId,
+      factor: parseFloat(String(c.factor)),
+    }));
+
+    const primaryUomObj = item.unitOfMeasure
+      ? {
+          id: item.unitOfMeasure.id,
+          code: item.unitOfMeasure.code,
+          name: item.unitOfMeasure.name,
+          name_ar: item.unitOfMeasure.name,
+          name_en: item.unitOfMeasure.name,
+          category: 'General',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          version: item.unitOfMeasure.version,
+        }
+      : null;
 
     return {
       id: item.id,
@@ -75,20 +111,10 @@ export class ItemsService {
             version: item.category.version,
           }
         : null,
-      primary_uom: item.unitOfMeasure
-        ? {
-            id: item.unitOfMeasure.id,
-            code: item.unitOfMeasure.code,
-            name: item.unitOfMeasure.name,
-            name_ar: item.unitOfMeasure.name,
-            name_en: item.unitOfMeasure.name,
-            category: 'General',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            version: item.unitOfMeasure.version,
-          }
-        : null,
-      uom_conversions: [],
+      primary_uom: primaryUomObj,
+      primaryUom: primaryUomObj,
+      uom_conversions: mappedConversions,
+      uomConversions: mappedConversions,
       track_lots: item.isBatched || item.hasExpiry,
       is_batched: item.isBatched,
       has_expiry: item.hasExpiry,
@@ -97,7 +123,12 @@ export class ItemsService {
       hasExpiry: item.hasExpiry,
       isBatchTracked: item.isBatched || item.hasExpiry,
       trackLots: item.isBatched || item.hasExpiry,
-      min_stock_level: 0,
+      min_stock_level: item.minStockLevel != null
+        ? parseFloat(String(item.minStockLevel))
+        : 0,
+      minStockLevel: item.minStockLevel != null
+        ? parseFloat(String(item.minStockLevel))
+        : 0,
       reorder_point: item.reorderPoint != null
         ? parseFloat(String(item.reorderPoint))
         : 0,
@@ -169,12 +200,14 @@ export class ItemsService {
           isActive: true,
           image: true,
           reorderPoint: true,
+          minStockLevel: true,
           isBatched: true,
           hasExpiry: true,
           version: true,
           category: { select: { id: true, code: true, name: true, version: true } },
           unitOfMeasure: { select: { id: true, code: true, name: true, version: true } },
           barcodeMappings: { select: { barcode: true }, take: 1 },
+          uomConversions: true,
           warehouseItems: filters.warehouse_id
             ? {
                 where: { warehouseId: filters.warehouse_id },
@@ -223,6 +256,7 @@ export class ItemsService {
         category: true,
         unitOfMeasure: true,
         barcodeMappings: true,
+        uomConversions: true,
       },
     });
 
@@ -295,6 +329,7 @@ export class ItemsService {
     }
 
     const name = body.name || name_en || name_ar || code;
+    const rawConversions = body.uomConversions || body.uom_conversions || [];
 
     const created = await this.prisma.$transaction(async (tx) => {
       const newItem = await tx.item.create({
@@ -307,6 +342,7 @@ export class ItemsService {
           hasExpiry: track_lots || false, // default expiry tracking if batched
           isActive: is_active !== undefined ? is_active : true,
           reorderPoint: reorder_point !== undefined ? reorder_point : null,
+          minStockLevel: min_stock_level !== undefined ? min_stock_level : null,
           image: image || null,
           version: 1,
         },
@@ -320,6 +356,25 @@ export class ItemsService {
             version: 1,
           },
         });
+      }
+
+      if (rawConversions.length > 0) {
+        const validConversions = rawConversions.filter(
+          (c) =>
+            (c.fromUomId || c.from_uom_id) &&
+            (c.toUomId || c.to_uom_id) &&
+            c.factor > 0,
+        );
+        if (validConversions.length > 0) {
+          await tx.uomConversion.createMany({
+            data: validConversions.map((c) => ({
+              itemId: newItem.id,
+              fromUomId: (c.fromUomId || c.from_uom_id)!,
+              toUomId: (c.toUomId || c.to_uom_id)!,
+              factor: c.factor,
+            })),
+          });
+        }
       }
 
       await tx.auditLog.create({
@@ -368,11 +423,13 @@ export class ItemsService {
     const category_id = body.category_id || body.categoryId;
     const primary_uom_id = body.primary_uom_id || body.primaryUomId;
     const track_lots = body.track_lots ?? body.trackLots;
+    const min_stock_level = body.min_stock_level ?? body.minStockLevel;
     const reorder_point = body.reorder_point ?? body.reorderPoint;
     const is_active = body.is_active ?? body.isActive;
     const barcode = body.barcode;
     const image = body.image;
     const name = body.name || name_en || name_ar || existing.name;
+    const rawConversions = body.uomConversions ?? body.uom_conversions;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.item.update({
@@ -383,9 +440,12 @@ export class ItemsService {
           categoryId: category_id || existing.categoryId,
           uomId: primary_uom_id || existing.uomId,
           isBatched: track_lots !== undefined ? track_lots : existing.isBatched,
+          hasExpiry: track_lots !== undefined ? track_lots : existing.hasExpiry,
           isActive: is_active !== undefined ? is_active : existing.isActive,
           reorderPoint:
             reorder_point !== undefined ? reorder_point : existing.reorderPoint,
+          minStockLevel:
+            min_stock_level !== undefined ? min_stock_level : existing.minStockLevel,
           image: image !== undefined ? image || null : existing.image,
           version: existing.version + 1,
         },
@@ -402,6 +462,26 @@ export class ItemsService {
         } else {
           await tx.barcodeMapping.create({
             data: { itemId: id, barcode, version: 1 },
+          });
+        }
+      }
+
+      if (rawConversions !== undefined) {
+        await tx.uomConversion.deleteMany({ where: { itemId: id } });
+        const validConversions = rawConversions.filter(
+          (c) =>
+            (c.fromUomId || c.from_uom_id) &&
+            (c.toUomId || c.to_uom_id) &&
+            c.factor > 0,
+        );
+        if (validConversions.length > 0) {
+          await tx.uomConversion.createMany({
+            data: validConversions.map((c) => ({
+              itemId: id,
+              fromUomId: (c.fromUomId || c.from_uom_id)!,
+              toUomId: (c.toUomId || c.to_uom_id)!,
+              factor: c.factor,
+            })),
           });
         }
       }
@@ -447,6 +527,8 @@ export class ItemsService {
     await this.prisma.$transaction(async (tx) => {
       // Delete barcode mappings first
       await tx.barcodeMapping.deleteMany({ where: { itemId: id } });
+      // Delete UoM conversions
+      await tx.uomConversion.deleteMany({ where: { itemId: id } });
       // Delete the item
       await tx.item.delete({ where: { id } });
 
