@@ -1739,10 +1739,10 @@ export class ReportsService {
 
     const systemAuditLogs = (auditLogsList || []).map((log) => ({
       id: log.id,
-      action: log.action || 'MUTATION',
+      action: (log.action || 'MUTATION').replace(/_/g, ' '),
       user: log.user?.name || log.userId || 'System',
       time: log.createdAt ? log.createdAt.toISOString() : new Date().toISOString(),
-      type: log.targetTable || 'System',
+      type: (log.targetTable || 'System').replace(/_/g, ' '),
     }));
 
     return {
@@ -2170,10 +2170,7 @@ export class ReportsService {
       qty: 1,
       uom: 'PCS',
       time: log.createdAt
-        ? log.createdAt.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })
+        ? log.createdAt.toISOString()
         : '',
       type: log.action || 'MUTATION',
     }));
@@ -2372,10 +2369,10 @@ export class ReportsService {
 
     const systemAuditLogs = auditLogsList.map((log) => ({
       id: log.id,
-      action: log.action,
+      action: (log.action || 'MUTATION').replace(/_/g, ' '),
       user: log.user?.name || log.userId || 'System',
-      time: log.createdAt.toISOString(),
-      type: log.targetTable,
+      time: log.createdAt ? log.createdAt.toISOString() : new Date().toISOString(),
+      type: (log.targetTable || 'System').replace(/_/g, ' '),
     }));
 
     return {
@@ -2582,10 +2579,7 @@ export class ReportsService {
           itemName: line.item.name,
           qty: Number(line.quantity),
           uom: line.item.unitOfMeasure?.code ?? 'PCS',
-          time: issue.createdAt.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
+          time: issue.createdAt.toISOString(),
           type: 'OUT (Issue)',
         });
       }

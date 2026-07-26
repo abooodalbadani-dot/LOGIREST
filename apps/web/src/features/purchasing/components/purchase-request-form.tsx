@@ -163,7 +163,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
   const status = initialData?.status as DocumentStatus;
   const isLocked = isDocumentLocked('PR', status);
-  const isFormDisabled = initialData ? status !== 'DRAFT' : false;
+  const isFormDisabled = isLocked;
 
   // Mocks/Hooks for data selection
   const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
@@ -367,7 +367,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const isStrictlyDraft = initialData?.status === 'DRAFT' || !initialData;
 
   const workflowActions = (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
       {/* Standard Submit Button for Drafts */}
       {isStrictlyDraft && (
         <>
@@ -376,7 +376,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             variant="outline"
             disabled={isSubmitting}
             onClick={form.handleSubmit((v) => onSave(v, false), onFormError)}
-            className="h-12 px-8 border-none bg-card border border-border shadow-sm text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
+            className="w-full md:w-auto order-3 md:order-none h-12 px-8 border-none bg-card border border-border shadow-sm text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
           >
             <Save className="w-3.5 h-3.5 me-2" />
             {tc('save')}
@@ -385,7 +385,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             type="button"
             disabled={isSubmitting}
             onClick={form.handleSubmit(handleSubmitClick, onFormError)}
-            className="w-[300px] md:w-auto flex items-center justify-center h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
+            className="w-full md:w-auto order-4 md:order-none flex items-center justify-center h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
           >
             {isSubmitting ? tc('saving') : (
               <>
@@ -415,7 +415,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   }
                 }
               }}
-              className="h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+              className="w-full md:w-auto order-2 md:order-none h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
             >
               <Trash2 className="w-3.5 h-3.5 me-2" />
               {t('cancel_request')}
@@ -442,7 +442,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   }
                 }
               }}
-              className="w-full md:w-auto flex items-center justify-center h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+              className="w-full md:w-auto order-1 md:order-none flex items-center justify-center h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
             >
               <Trash2 className="w-3.5 h-3.5 me-2" />
               {tc('actions.delete') || 'Delete'}
@@ -624,6 +624,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                       return {
                         ...f,
                         ...live,
+                        id: f.id, // Preserve RHF internal ID for fields.findIndex
                         itemId: live.item_id || f.item_id,
                         reqQty: live.req_qty || f.req_qty,
                         uomId: live.uom_id || f.uom_id,
@@ -654,7 +655,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                         <div className="flex flex-col items-center gap-0.5 w-full">
                           {isFormDisabled ? (
                             <span className="text-sm font-black text-brand-gold bg-brand-gold/10 border border-brand-gold rounded-lg px-2 h-9 flex items-center justify-center w-full" dir="ltr">
-                              {line.qty}
+                              {formLine?.req_qty}
                             </span>
                           ) : (
                             <QuantityInput

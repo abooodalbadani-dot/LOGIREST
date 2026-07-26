@@ -2914,6 +2914,8 @@
       "title": "منتج منتهي الصلاحية"
     },
     "issue": {
+      "allocated_successfully": "تم تخصيص الدفعات تلقائياً (FEFO) بنجاح.",
+      "shortage_warning": "تحذير عجز: لا ينصح بالصرف دون تخصيص كامل للكمية المطلوب.",
       "kitchen_request": "طلب توريد تشغيلي",
       "select_kitchen_request": "اختر طلب توريد تشغيلي",
       "active_consumption": "الاستهلاك النشط",

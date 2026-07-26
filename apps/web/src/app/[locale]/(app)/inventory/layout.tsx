@@ -8,71 +8,73 @@ import { useAuth } from '@/providers/AuthProvider';
 import { EmptyScopeState } from '@/components/ui/EmptyScopeState';
 
 export default function InventoryLayout({
- children,
+    children,
 }: {
- children: React.ReactNode;
+    children: React.ReactNode;
 }) {
- const pathname = usePathname();
- const t = useTranslations('operational.inventory.tabs');
- const { user, activeScope, isLoading } = useAuth();
+    const pathname = usePathname();
+    const t = useTranslations('operational.inventory.tabs');
+    const { user, activeScope, isLoading } = useAuth();
 
- if (isLoading) {
- return (
-  <div className="flex h-screen items-center justify-center">
-  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-  </div>
- );
- }
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
 
- if (!user) {
- return null;
- }
+    if (!user) {
+        return null;
+    }
 
- // Ensure warehouse context is resolved before rendering inventory pages
- if (!activeScope?.warehouseId) {
- return (
-  <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] py-12 w-full min-w-0 shrink-0">
-   <EmptyScopeState 
-    context="warehouse"
-    title="يرجى تحديد المستودع أولاً"
-    description="لعرض بيانات المخزون أو الأصناف، يجب عليك اختيار المستودع أو الفرع النشط من القائمة العلوية."
-    buttonText="اختيار المستودع الآن"
-   />
-  </div>
- );
- }
+    // Ensure warehouse context is resolved before rendering inventory pages
+    if (!activeScope?.warehouseId) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 w-full min-w-0 shrink-0">
+                <div className="p-8 md:p-12 border-2 border-dashed border-muted-foreground/20 rounded-2xl bg-card/30 backdrop-blur-sm max-w-2xl w-full mx-auto animate-in fade-in zoom-in-95 duration-500 shadow-sm flex flex-col items-center text-center">
+                    <EmptyScopeState
+                        context="warehouse"
+                        title="يرجى تحديد المستودع أولاً"
+                        description="لعرض بيانات المخزون أو الأصناف، يجب عليك اختيار المستودع أو الفرع النشط من القائمة العلوية."
+                        buttonText="اختيار المستودع الآن"
+                    />
+                </div>
+            </div>
+        );
+    }
 
- const tabs = [
- { name: t('balance'), href: `/inventory/balance`, icon: Layers },
- { name: t('lots'), href: `/inventory/lots`, icon: Database },
- { name: t('movements'), href: `/inventory/movements`, icon: History },
- { name: t('scan'), href: `/inventory/scan-mode`, icon: Scan },
- ];
+    const tabs = [
+        { name: t('balance'), href: `/inventory/balance`, icon: Layers },
+        { name: t('lots'), href: `/inventory/lots`, icon: Database },
+        { name: t('movements'), href: `/inventory/movements`, icon: History },
+        { name: t('scan'), href: `/inventory/scan-mode`, icon: Scan },
+    ];
 
- return (
- <div className="flex flex-col gap-6 w-full min-w-0 max-w-full">
- <div className="flex items-center gap-2 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-full pb-2 p-1 bg-card border border-border shadow-sm rounded-2xl">
- {tabs.map((tab) => {
- const isActive = pathname === tab.href;
- const Icon = tab.icon;
- return (
- <Link
- key={tab.href}
- href={tab.href}
- className={cn(
- "flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-label-xs font-semibold uppercase transition-all duration-[140ms] ease-out whitespace-nowrap shrink-0",
- isActive
- ? "bg-primary text-white shadow-sm shadow-primary/20"
- : "text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high"
- )}
- >
- <Icon className={cn("w-3.5 h-3.5", isActive ? "animate-pulse" : "")} />
- {tab.name}
- </Link>
- );
- })}
- </div>
- {children}
- </div>
- );
+    return (
+        <div className="flex flex-col gap-6 w-full min-w-0 max-w-full">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-full pb-2 p-1 bg-card border border-border shadow-sm rounded-2xl">
+                {tabs.map((tab) => {
+                    const isActive = pathname === tab.href;
+                    const Icon = tab.icon;
+                    return (
+                        <Link
+                            key={tab.href}
+                            href={tab.href}
+                            className={cn(
+                                "flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-label-xs font-semibold uppercase transition-all duration-[140ms] ease-out whitespace-nowrap shrink-0",
+                                isActive
+                                    ? "bg-primary text-white shadow-sm shadow-primary/20"
+                                    : "text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high"
+                            )}
+                        >
+                            <Icon className={cn("w-3.5 h-3.5", isActive ? "animate-pulse" : "")} />
+                            {tab.name}
+                        </Link>
+                    );
+                })}
+            </div>
+            {children}
+        </div>
+    );
 }

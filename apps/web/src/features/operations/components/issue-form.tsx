@@ -294,11 +294,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
         audioAlerts.playScanSuccess();
         playSound('success');
-        toast.success(t('allocated_successfully') || "FEFO auto-allocated successfully.");
+        const successMsg = t.has('allocated_successfully') ? t('allocated_successfully') : "FEFO auto-allocated successfully.";
+        toast.success(successMsg);
       } else {
         // Partial shortage warning
         if (totalAvailable < targetQty) {
-          toast.warning(t('shortage_warning') || `Shortage: Only ${totalAvailable} available, but ${targetQty} requested.`);
+          const shortageMsg = t.has('shortage_warning') ? t('shortage_warning') : `Shortage: Only ${totalAvailable} available, but ${targetQty} requested.`;
+          toast.warning(shortageMsg);
         }
 
         let lineToActivate: LineItem;

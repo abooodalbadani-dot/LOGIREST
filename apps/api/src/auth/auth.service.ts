@@ -500,29 +500,35 @@ export class AuthService {
       },
     });
 
-    // Write profile update audit log
-    await this.prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'USER_PROFILE_UPDATED',
-        targetTable: 'users',
-        targetId: userId,
-        beforeStateJson: JSON.stringify({
-          name: user.name,
-          phone: user.phone,
-          locale: user.locale,
-          themePreferences: user.themePreferences,
-          notificationPreferences: user.notificationPreferences,
-        }),
-        afterStateJson: JSON.stringify({
-          name: updatedUser.name,
-          phone: updatedUser.phone,
-          locale: updatedUser.locale,
-          themePreferences: updatedUser.themePreferences,
-          notificationPreferences: updatedUser.notificationPreferences,
-        }),
-      },
-    });
+    // Check if there are substantive changes (ignore theme/locale only changes)
+    const hasSubstantiveChanges = 
+      user.name !== updatedUser.name ||
+      user.phone !== updatedUser.phone ||
+      user.email !== updatedUser.email ||
+      user.avatarUrl !== updatedUser.avatarUrl ||
+      JSON.stringify(user.notificationPreferences) !== JSON.stringify(updatedUser.notificationPreferences);
+
+    if (hasSubstantiveChanges) {
+      // Write profile update audit log
+      await this.prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'USER_PROFILE_UPDATED',
+          targetTable: 'users',
+          targetId: userId,
+          beforeStateJson: JSON.stringify({
+            name: user.name,
+            phone: user.phone,
+            notificationPreferences: user.notificationPreferences,
+          }),
+          afterStateJson: JSON.stringify({
+            name: updatedUser.name,
+            phone: updatedUser.phone,
+            notificationPreferences: updatedUser.notificationPreferences,
+          }),
+        },
+      });
+    }
 
     return {
       id: updatedUser.id,

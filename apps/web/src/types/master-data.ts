@@ -62,7 +62,7 @@ export function isItemBatchTracked(item?: unknown): boolean {
   return false;
 }
 
-export interface Lot { id: string; itemId: string; warehouseId: string; lotNumber: string; expiryDate: string | null; status: string; qtyAvailable: number; isExpired: boolean; isNearExpiry: boolean; }
+export interface Lot { id: string; itemId: string; warehouseId: string; lotNumber: string; expiryDate: string | null; status?: string; qtyAvailable: number; isExpired: boolean; isNearExpiry: boolean; }
 export interface Supplier { id: string; code: string; name: string; contactEmail?: string | null; contactPhone?: string | null; contactName?: string | null; currencyId: string; paymentTerms: string; isActive: boolean; version?: number; }
 export interface Currency { id: string; code: string; name: string; symbol?: string | null; isBase: boolean; isActive: boolean; createdAt: string; version?: number; }
 export interface FXRate { id: string; fromCurrencyId: string; toCurrencyId: string; rate: number; effectiveDate: string; isActive: boolean; createdAt: string; version?: number; fromCurrency?: Currency | null; toCurrency?: Currency | null; }
@@ -133,7 +133,8 @@ export const ItemSchema = z.object({
 export const LotSchema = z.object({
   id: z.string(), itemId: z.string(), warehouseId: z.string(), lotNumber: z.string(),
   expiryDate: z.string().nullable(), qtyAvailable: z.number(),
-  isExpired: z.boolean(), isNearExpiry: z.boolean()
+  isExpired: z.boolean(), isNearExpiry: z.boolean(),
+  status: z.string().optional()
 });
 
 export const SupplierSchema = z.object({

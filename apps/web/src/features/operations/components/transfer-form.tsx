@@ -170,7 +170,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
          <div className="hidden md:block overflow-x-auto border border-border/50 rounded-lg custom-scrollbar">
           <DocumentLineItemTable<TransferLine>
            lines={(transfer?.lines ?? []) as unknown as TransferLine[]}
-           isReadOnly={true}
+           isReadOnly={isLocked}
            onRemoveLine={() => {}}
            hideLotColumns={true}
            dense={true}

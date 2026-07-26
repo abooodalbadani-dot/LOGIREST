@@ -2914,6 +2914,8 @@
       "title": "Expired Product"
     },
     "issue": {
+      "allocated_successfully": "FEFO auto-allocated successfully.",
+      "shortage_warning": "Shortage Warning: Partial allocation due to insufficient stock.",
       "kitchen_request": "Supply Requisition",
       "select_kitchen_request": "Select Supply Requisition",
       "active_consumption": "Active Consumption",

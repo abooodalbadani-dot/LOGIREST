@@ -354,6 +354,8 @@ export function canPerformActionV2(
  * Locked documents cannot be edited.
  */
 export function isDocumentLocked(type: DocumentType, status: string): boolean {
+  if (status === 'DRAFT' || status === 'NEW') return false;
+  
   const normalizedType = type.toLowerCase() as BaseDocumentType;
   if (normalizedType in workflowMap) {
     return workflowMap[normalizedType].locked.includes(status as DocumentStatus);
