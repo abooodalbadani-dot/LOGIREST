@@ -852,13 +852,14 @@ export function DocumentLineItemTable<T extends LineItem>({
                                   </div>
                                 </div>
 
-                                {/* Body: Qty + Unit Cost + Lot Number in 1 compact bar */}
-                                <div className="bg-surface-container-highest/30 p-2 rounded-lg border border-border/40 space-y-2">
-                                  {/* Qty & Unit Cost side by side */}
-                                  <div className="grid grid-cols-2 gap-2 text-xs items-center">
-                                    {/* Quantity */}
-                                    <div className="flex flex-col gap-0.5">
-                                      <span className="text-[9px] font-bold text-muted-foreground/80 truncate">{h.qty}</span>
+                                {/* 3. Main Data Row & Lot Selector */}
+                                <div className="bg-surface-container-highest/30 p-2.5 rounded-xl border border-border/40 space-y-2.5">
+                                  {/* Row: Qty, Unit Cost, Before, After */}
+                                  <div className="flex items-end justify-between gap-1.5 text-xs w-full has-[.qty-error]:mb-4 transition-all">
+
+                                    {/* Qty Input (Main) */}
+                                    <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1.5' }}>
+                                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{h.qty}</span>
                                       <div className="w-full">
                                         {renderQty ? renderQty(line) : (
                                           <span className="text-xs font-black font-mono text-foreground" dir="ltr">
@@ -868,20 +869,59 @@ export function DocumentLineItemTable<T extends LineItem>({
                                       </div>
                                     </div>
 
-                                    {/* Unit Cost (if extraColumns[1] exists) */}
+                                    {/* Unit Cost (Main) */}
                                     {extraColumns.length > 1 && (
-                                      <div className="flex flex-col gap-0.5">
-                                        <span className="text-[9px] font-bold text-muted-foreground/80 truncate">{extraColumns[1].header}</span>
+                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1.5' }}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{extraColumns[1].header}</span>
                                         <div className="w-full font-mono font-bold text-foreground text-xs">{extraColumns[1].cell(line)}</div>
                                       </div>
                                     )}
+
+                                    {/* Qty Before (Read-only Badge) */}
+                                    {extraColumns.length > 2 && (
+                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1' }}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{extraColumns[2].header}</span>
+                                        <div className="flex items-center justify-center rounded-md bg-brand-gold/10 border border-brand-gold/20 shrink-0 h-9 w-full relative">
+                                          <div className="flex items-center justify-center [&_span]:text-xs [&_span]:font-black [&_div]:gap-0">
+                                            {extraColumns[2].cell(line)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Qty After (Read-only Badge) */}
+                                    {extraColumns.length > 4 ? (
+                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1' }}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{extraColumns[4].header}</span>
+                                        <div className="flex items-center justify-center rounded-md bg-brand-gold/10 border border-brand-gold/20 shrink-0 h-9 w-full relative">
+                                          <div className="flex items-center justify-center [&_span]:text-xs [&_span]:font-black [&_div]:gap-0">
+                                            {extraColumns[4].cell(line)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : extraColumns.length > 2 && (
+                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1' }}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{tc('qty_after') || 'Qty After'}</span>
+                                        <div className="flex items-center justify-center rounded-md bg-brand-gold/10 border border-brand-gold/20 shrink-0 h-9 w-full relative">
+                                          <div className="font-mono font-black text-brand-gold text-xs">
+                                            {(() => {
+                                              const qBefore = (line as { qtyBefore?: number }).qtyBefore ?? 0;
+                                              const qAdj = line.qty ?? 0;
+                                              const dir = (line as { direction?: string }).direction;
+                                              return dir === 'INCREASE' ? qBefore + qAdj : qBefore - qAdj;
+                                            })()}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
                                   </div>
 
-                                  {/* Lot Number (if extraColumns[2] exists) */}
-                                  {extraColumns.length > 2 && (
-                                    <div className="flex flex-col gap-0.5 border-t border-border/30 pt-1.5">
-                                      <span className="text-[9px] font-bold text-muted-foreground/80 truncate">{extraColumns[2].header}</span>
-                                      <div className="w-full font-mono font-bold text-foreground text-xs">{extraColumns[2].cell(line)}</div>
+                                  {/* Lot Selection Section (extraColumns[3]) */}
+                                  {extraColumns.length > 3 && (
+                                    <div className="flex flex-col gap-1 border-t border-border/30 pt-2">
+                                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{extraColumns[3].header}</span>
+                                      <div className="w-full">{extraColumns[3].cell(line)}</div>
                                     </div>
                                   )}
                                 </div>
@@ -1526,7 +1566,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                         {/* Body: Qty + Unit Cost + Lot Number in 1 compact bar */}
                         <div className="bg-surface-container-highest/30 p-2 rounded-lg border border-border/40 space-y-2">
                           {/* Qty & Unit Cost side by side */}
-                          <div className="grid grid-cols-2 gap-2 text-xs items-center">
+                          <div className="grid grid-cols-2 gap-1.5 text-xs items-center">
                             {/* Quantity */}
                             <div className="flex flex-col gap-0.5">
                               <span className="text-[9px] font-bold text-muted-foreground/80 truncate">{h.qty}</span>

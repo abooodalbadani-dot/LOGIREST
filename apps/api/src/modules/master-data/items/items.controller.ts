@@ -36,6 +36,8 @@ export class ItemsController {
     @Query('category_id') category_id?: string,
     @Query('is_active') is_active?: string,
     @Query('barcode') barcode?: string,
+    @Query('warehouse_id') warehouse_id?: string,
+    @Query('warehouseId') warehouseId?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
@@ -44,6 +46,7 @@ export class ItemsController {
       category_id,
       is_active,
       barcode,
+      warehouse_id: warehouse_id || warehouseId,
       page,
       limit,
     });

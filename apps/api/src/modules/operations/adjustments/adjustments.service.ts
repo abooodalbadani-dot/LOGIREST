@@ -27,6 +27,8 @@ export class AdjustmentsService {
   async create(
     body: {
       warehouseId: string;
+      reason?: AdjustmentReason | string;
+      notes?: string;
       lines: Array<{
         itemId: string;
         lotId?: string;
@@ -47,6 +49,23 @@ export class AdjustmentsService {
         throw new NotFoundException(
           `Warehouse with ID ${body.warehouseId} not found`,
         );
+      }
+      const docReason = String(body.reason || '').trim().toLowerCase();
+      const isDecreaseOnly =
+        docReason.includes('damage') ||
+        docReason.includes('spoilage') ||
+        docReason.includes('theft') ||
+        docReason.includes('loss');
+
+      if (isDecreaseOnly) {
+        for (const line of body.lines) {
+          const dirStr = String(line.direction).toUpperCase();
+          if (dirStr === 'IN' || dirStr === 'INCREASE') {
+            throw new BadRequestException(
+              `Cannot specify INCREASE direction when adjustment reason is '${body.reason}'.`,
+            );
+          }
+        }
       }
 
       // Pre-creation stock sufficiency check for all OUT (decrease) lines and unit cost check for IN (increase)
@@ -89,13 +108,65 @@ export class AdjustmentsService {
         warehouse.branchId,
       );
 
+      const preparedLines = await Promise.all(
+        body.lines.map(async (line) => {
+          let resolvedLotId: string | null = null;
+          if (line.lotId) {
+            const cleanLotNum = line.lotId.replace(/^new-/, '').trim();
+            const existingLot = await tx.lot.findFirst({
+              where: {
+                OR: [
+                  { id: line.lotId },
+                  { lotNumber: cleanLotNum },
+                ],
+                itemId: line.itemId,
+              },
+            });
+
+            if (existingLot) {
+              resolvedLotId = existingLot.id;
+            } else if (cleanLotNum) {
+              const createdLot = await tx.lot.create({
+                data: {
+                  itemId: line.itemId,
+                  lotNumber: cleanLotNum,
+                },
+              });
+              resolvedLotId = createdLot.id;
+            }
+          }
+          return {
+            ...line,
+            lotId: resolvedLotId,
+          };
+        }),
+      );
+
+      // Capture stock snapshots for each line before persisting
+      const snapshots = new Map<string, number>();
+      for (const line of preparedLines) {
+        if (!snapshots.has(line.itemId)) {
+          const whItem = await tx.warehouseItem.findUnique({
+            where: {
+              warehouseId_itemId: {
+                warehouseId: body.warehouseId,
+                itemId: line.itemId,
+              },
+            },
+            select: { qtyOnHand: true },
+          });
+          snapshots.set(line.itemId, Number(whItem?.qtyOnHand ?? 0));
+        }
+      }
+
       return tx.adjustment.create({
         data: {
           adjustmentNumber,
           warehouseId: body.warehouseId,
+          notes: body.notes || null,
           status: 'DRAFT',
           lines: {
-            create: body.lines.map((line) => ({
+            create: preparedLines.map((line) => ({
               itemId: line.itemId,
               lotId: line.lotId || null,
               quantity: line.quantity,
@@ -105,6 +176,7 @@ export class AdjustmentsService {
                 line.unitCost !== undefined && line.unitCost !== null
                   ? line.unitCost
                   : null,
+              snapshotQtyBefore: snapshots.get(line.itemId) ?? 0,
             })),
           },
         },
@@ -264,28 +336,38 @@ export class AdjustmentsService {
       );
     }
 
-    const itemIds = adjustment.lines.map((l) => l.itemId);
-    const warehouseItems = await this.prisma.warehouseItem.findMany({
-      where: {
-        warehouseId: adjustment.warehouseId,
-        itemId: { in: itemIds },
-      },
-      select: {
-        itemId: true,
-        qtyOnHand: true,
-      },
-    });
+    const isDraft = adjustment.status === 'DRAFT';
 
-    const stockMap = new Map<string, number>();
-    for (const wi of warehouseItems) {
-      stockMap.set(wi.itemId, Number(wi.qtyOnHand));
+    // Only fetch live stock when the document is still in DRAFT.
+    // For all other statuses (SUBMITTED, APPROVED, POSTED, etc.) we
+    // MUST use the frozen snapshot saved at line-creation time.
+    let stockMap = new Map<string, number>();
+    if (isDraft) {
+      const itemIds = adjustment.lines.map((l) => l.itemId);
+      const warehouseItems = await this.prisma.warehouseItem.findMany({
+        where: {
+          warehouseId: adjustment.warehouseId,
+          itemId: { in: itemIds },
+        },
+        select: { itemId: true, qtyOnHand: true },
+      });
+      for (const wi of warehouseItems) {
+        stockMap.set(wi.itemId, Number(wi.qtyOnHand));
+      }
     }
 
     const enrichedLines = adjustment.lines.map((line) => {
-      const rawLine = line as unknown as Record<string, unknown>;
-      const liveQtyBefore = stockMap.get(line.itemId) ?? 0;
-      const qtyBefore = Number(rawLine.qtyBefore ?? liveQtyBefore);
-      const qtyAdjusted = Number(rawLine.qtyAdjusted ?? line.quantity ?? 0);
+      let qtyBefore: number;
+      if (isDraft) {
+        // For DRAFT: show live stock so users see real-time feedback
+        qtyBefore = stockMap.get(line.itemId) ?? 0;
+      } else {
+        // For submitted/approved/posted: STRICTLY use the frozen snapshot
+        qtyBefore = line.snapshotQtyBefore !== null && line.snapshotQtyBefore !== undefined
+          ? Number(line.snapshotQtyBefore)
+          : 0;
+      }
+      const qtyAdjusted = Number(line.quantity ?? 0);
       return {
         ...line,
         qtyBefore,
@@ -326,7 +408,7 @@ export class AdjustmentsService {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.adjustment.findUnique({
         where: { id },
-        select: { version: true, status: true },
+        select: { version: true, status: true, warehouseId: true },
       });
 
       if (!existing) {
@@ -373,14 +455,72 @@ export class AdjustmentsService {
           ? (body.reason as AdjustmentReason)
           : AdjustmentReason.CORRECTION;
 
+      let preparedUpdateLines: typeof body.lines = undefined;
+      if (body.lines) {
+        preparedUpdateLines = await Promise.all(
+          body.lines.map(async (line) => {
+            let resolvedLotId: string | null = null;
+            if (line.lotId) {
+              const cleanLotNum = line.lotId.replace(/^new-/, '').trim();
+              const existingLot = await tx.lot.findFirst({
+                where: {
+                  OR: [
+                    { id: line.lotId },
+                    { lotNumber: cleanLotNum },
+                  ],
+                  itemId: line.itemId,
+                },
+              });
+
+              if (existingLot) {
+                resolvedLotId = existingLot.id;
+              } else if (cleanLotNum) {
+                const createdLot = await tx.lot.create({
+                  data: {
+                    itemId: line.itemId,
+                    lotNumber: cleanLotNum,
+                  },
+                });
+                resolvedLotId = createdLot.id;
+              }
+            }
+            return {
+              ...line,
+              lotId: resolvedLotId,
+            };
+          }),
+        );
+      }
+
+      // Capture current stock snapshots for each line before saving
+      const updateTargetWarehouseId = body.warehouseId ?? existing.warehouseId;
+      const updateSnapshots = new Map<string, number>();
+      if (preparedUpdateLines) {
+        for (const line of preparedUpdateLines) {
+          if (!updateSnapshots.has(line.itemId)) {
+            const whItem = await tx.warehouseItem.findUnique({
+              where: {
+                warehouseId_itemId: {
+                  warehouseId: updateTargetWarehouseId,
+                  itemId: line.itemId,
+                },
+              },
+              select: { qtyOnHand: true },
+            });
+            updateSnapshots.set(line.itemId, Number(whItem?.qtyOnHand ?? 0));
+          }
+        }
+      }
+
       return tx.adjustment.update({
         where: { id },
         data: {
           warehouseId: body.warehouseId,
+          notes: body.notes !== undefined ? body.notes : undefined,
           version: { increment: 1 },
-          ...(body.lines && {
+          ...(preparedUpdateLines && {
             lines: {
-              create: body.lines.map((line) => {
+              create: preparedUpdateLines.map((line) => {
                 const isIncrease =
                   line.direction === 'INCREASE' ||
                   (line.direction as string) === 'IN';
@@ -396,6 +536,7 @@ export class AdjustmentsService {
                     line.unitCost !== undefined && line.unitCost !== null
                       ? line.unitCost
                       : null,
+                  snapshotQtyBefore: updateSnapshots.get(line.itemId) ?? 0,
                 };
               }),
             },

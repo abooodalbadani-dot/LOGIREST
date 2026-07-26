@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -153,6 +153,7 @@ interface NewAdjustmentLine extends LineItem {
   lotNumber?: string;
   lotId?: string;
   unitCost?: number | null;
+  qtyBefore?: number;
 }
 
 interface ItemOption {
@@ -163,9 +164,23 @@ interface ItemOption {
   nameEn?: string;
   nameAr?: string;
   image?: string | null;
+  qtyOnHand?: number;
+  qty_on_hand?: number;
   primaryUom: { id: string; code: string; name?: string };
   uomConversions?: { fromUomId: string; toUomId: string; factor: number }[];
 }
+
+const isDecreaseOnlyReason = (reason: string) => {
+  if (!reason) return false;
+  const r = reason.trim().toLowerCase();
+  return r.includes('damage') || r.includes('spoilage') || r.includes('theft') || r.includes('loss');
+};
+
+const isIncreaseOnlyReason = (reason: string) => {
+  if (!reason) return false;
+  const r = reason.trim().toLowerCase();
+  return r.includes('found') || r.includes('initial') || r.includes('gain') || r.includes('addition');
+};
 
 export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.adjustment');
@@ -174,16 +189,18 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const searchParams = useSearchParams();
   const { activeScope } = useAuth();
 
-  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
-  const { data: itemsData, isLoading: isLoadingItems } = useItems(); const items = itemsData?.data || [];
-  const { data: uomsResult } = useUoMs();
-  const { data: varianceReasonsData, isLoading: isLoadingReasons } = useVarianceReasons();
-  const createAdjustment = useCreateAdjustment();
-
   const [warehouseId, setWarehouseId] = useState('');
   const [reasonCategory, setReasonCategory] = useState('DAMAGE');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<NewAdjustmentLine[]>([]);
+
+  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
+  const { data: itemsData, isLoading: isLoadingItems } = useItems(
+    warehouseId ? { warehouse_id: warehouseId } : { warehouse_id: 'none' }
+  ); const items = itemsData?.data || [];
+  const { data: uomsResult } = useUoMs();
+  const { data: varianceReasonsData, isLoading: isLoadingReasons } = useVarianceReasons();
+  const createAdjustment = useCreateAdjustment();
 
   const [customItems, setCustomItems] = useState<ItemOption[]>([]);
   const [isCustomItemDialogOpen, setIsCustomItemDialogOpen] = useState(false);
@@ -350,37 +367,74 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     }));
   }, [warehouses]);
 
-  const fallbackReasons = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'];
+  const getLocalizedReasonName = useCallback((rawName: string) => {
+    if (locale !== 'ar') return rawName;
+    const nameLower = rawName.trim().toLowerCase();
+    if (nameLower.includes('damage') || nameLower === 'telf') return 'تلف';
+    if (nameLower.includes('spoilage') || nameLower.includes('expiry')) return 'إفساد / انتهاء صلاحية';
+    if (nameLower.includes('theft') || nameLower.includes('loss')) return 'سرقة / فقدان';
+    if (nameLower.includes('inventory correction') || nameLower.includes('correction')) return 'تصحيح مخزني';
+    if (nameLower.includes('admin override') || nameLower.includes('override')) return 'تعديل إداري';
+    if (nameLower.includes('found')) return 'بضاعة عُثر عليها';
+    if (nameLower.includes('initial')) return 'مخزون أولي';
+    return rawName;
+  }, [locale]);
+
+  const fallbackReasons = useMemo(() => [
+    { id: 'Damage', name: getLocalizedReasonName('Damage') },
+    { id: 'Spoilage', name: getLocalizedReasonName('Spoilage') },
+    { id: 'Theft / Loss', name: getLocalizedReasonName('Theft / Loss') },
+    { id: 'Inventory Correction', name: getLocalizedReasonName('Inventory Correction') },
+    { id: 'Admin Override', name: getLocalizedReasonName('Admin Override') },
+  ], [getLocalizedReasonName]);
+
   const reasonItems = useMemo(() => {
     const reasons = varianceReasonsData?.data;
     if (reasons && reasons.length > 0) {
       return reasons.map(r => ({
-        id: r.code,
-        name: r.name,
+        id: r.code || r.name,
+        name: getLocalizedReasonName(r.name || r.code),
       }));
     }
-    return fallbackReasons.map(r => ({
-      id: r,
-      name: t(`reasons.${r.toLowerCase()}`) || r,
-    }));
-  }, [t, varianceReasonsData]);
+    return fallbackReasons;
+  }, [varianceReasonsData, fallbackReasons, getLocalizedReasonName]);
+
+
 
   const allItems = useMemo<ItemOption[]>(() => {
-    const mappedItems: ItemOption[] = (items || []).map(i => ({
+    if (!warehouseId) return [];
+    // `items` now carries qtyOnHand / qty_on_hand from the ItemSchema (populated
+    // by the backend when warehouse_id is passed as a filter).
+    const mappedItems: ItemOption[] = (items || []).map((i) => ({
       id: i.id,
       code: i.code,
       barcode: i.barcode,
       name: i.name,
       image: i.image,
+      qtyOnHand: i.qtyOnHand ?? i.qty_on_hand ?? 0,
+      qty_on_hand: i.qty_on_hand ?? i.qtyOnHand ?? 0,
       primaryUom: {
-        id: i.primaryUom?.id,
-        code: i.primaryUom?.code,
-        name: i.primaryUom?.name || i.primaryUom?.code,
+        id: i.primaryUom?.id || '',
+        code: i.primaryUom?.code || '',
+        name: i.primaryUom?.name || i.primaryUom?.code || '',
       },
       uomConversions: i.uomConversions || [],
     }));
     return [...mappedItems, ...customItems];
-  }, [items, customItems]);
+  }, [items, customItems, warehouseId]);
+
+
+  useEffect(() => {
+    if (isDecreaseOnlyReason(reasonCategory)) {
+      setLines(prev =>
+        prev.map(l => (l.direction !== 'DECREASE' ? { ...l, direction: 'DECREASE', lotNumber: '', lotId: undefined } : l))
+      );
+    } else if (isIncreaseOnlyReason(reasonCategory)) {
+      setLines(prev =>
+        prev.map(l => (l.direction !== 'INCREASE' ? { ...l, direction: 'INCREASE' } : l))
+      );
+    }
+  }, [reasonCategory]);
 
   // Parse query parameters to pre-populate expiring item disposal
   const paramItemId = searchParams.get('itemId');
@@ -415,6 +469,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             }
           },
           qty: 1,
+          qtyBefore: item.qtyOnHand ?? item.qty_on_hand ?? 0,
           uomId: item.primaryUom.id,
           direction: 'DECREASE',
           lotNumber: paramBatch || '',
@@ -451,8 +506,9 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           }
         },
         qty: 1,
+        qtyBefore: item.qtyOnHand ?? item.qty_on_hand ?? 0,
         uomId: item.primaryUom.id,
-        direction: 'INCREASE',
+        direction: isDecreaseOnlyReason(reasonCategory) ? 'DECREASE' : 'INCREASE',
         lotNumber: '',
         unitCost: 0
       }];
@@ -518,44 +574,49 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const extraColumns = useMemo(() => [
     {
       header: t('direction') || 'Direction',
-      headerClassName: "min-w-[150px]",
-      cellClassName: "min-w-[150px]",
-      cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-center w-full min-w-[140px]">
-          <div className="flex justify-center bg-slate-100 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-xl h-11 w-full max-w-[140px] p-1 md:mx-auto shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE', lotNumber: '', lotId: undefined } : l));
-              }}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-                line.direction === 'INCREASE'
-                  ? "bg-brand-gold/15 text-brand-gold shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-              )}
-            >
-              <ArrowUp className="w-3 h-3" />
-              {t('direction_increase') || 'Inc'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE', lotNumber: '', lotId: undefined } : l));
-              }}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-                line.direction === 'DECREASE'
-                  ? "bg-status-error/15 text-status-error shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-              )}
-            >
-              <ArrowDown className="w-3 h-3" />
-              {t('direction_decrease') || 'Dec'}
-            </button>
+      headerClassName: "min-w-[130px]",
+      cellClassName: "min-w-[130px]",
+      cell: (line: NewAdjustmentLine) => {
+        const isStrictDecrease = isDecreaseOnlyReason(reasonCategory);
+        return (
+          <div className="flex justify-center w-full min-w-0">
+            <div className="inline-flex items-center rounded p-0.5 bg-muted border border-border shadow-inner">
+              <button
+                type="button"
+                disabled={isStrictDecrease}
+                onClick={() => {
+                  setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'INCREASE', lotNumber: '', lotId: undefined } : l));
+                }}
+                className={cn(
+                  "px-2 py-1 text-[10px] font-bold rounded-sm transition-all flex items-center gap-1 whitespace-nowrap active:scale-[0.95] disabled:opacity-50 disabled:cursor-not-allowed",
+                  line.direction === 'INCREASE'
+                    ? "bg-brand-gold text-slate-950 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <ArrowUp className="w-3 h-3" />
+                {t('direction_increase') || (locale === 'ar' ? 'زيادة' : 'INC')}
+              </button>
+              <button
+                type="button"
+                disabled={isStrictDecrease}
+                onClick={() => {
+                  setLines(prev => prev.map(l => l.id === line.id ? { ...l, direction: 'DECREASE', lotNumber: '', lotId: undefined } : l));
+                }}
+                className={cn(
+                  "px-2 py-1 text-[10px] font-bold rounded-sm transition-all flex items-center gap-1 whitespace-nowrap active:scale-[0.95] disabled:opacity-50 disabled:cursor-not-allowed",
+                  line.direction === 'DECREASE'
+                    ? "bg-destructive text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <ArrowDown className="w-3 h-3" />
+                {t('direction_decrease') || (locale === 'ar' ? 'نقص' : 'DEC')}
+              </button>
+            </div>
           </div>
-        </div>
-      )
+        );
+      }
     },
     {
       header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
@@ -564,7 +625,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       cell: (line: NewAdjustmentLine) => {
         const isIncrease = line.direction === 'INCREASE';
         return (
-          <div className="flex justify-center w-full min-w-[120px]">
+          <div className="flex justify-center w-full min-w-0">
             <UnitCostInput
               value={line.unitCost}
               disabled={!isIncrease}
@@ -573,8 +634,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
               }}
               className={cn(
-                "w-full text-center font-black text-lg h-11 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm disabled:opacity-30",
-                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500 focus:ring-red-500/30"
+                "w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1",
+                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
               )}
             />
           </div>
@@ -582,7 +643,17 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       }
     },
     {
-      header: tCommon('lot_number') || 'Lot Number',
+      header: t('qty_before') || (locale === 'ar' ? 'قبل' : 'Qty Before'),
+      cell: (line: NewAdjustmentLine) => (
+        <div className="flex flex-col items-center gap-0.5 tabular-nums">
+          <span className="text-body-md font-bold text-muted-foreground/45" lang="en" dir="ltr">
+            {Number(line.qtyBefore || 0).toLocaleString("en-US")}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: tCommon('table_headers.lot') || tCommon('lot_number') || (locale === 'ar' ? 'رقم الدفعة' : 'Lot Number'),
       headerClassName: "min-w-[220px]",
       cellClassName: "min-w-[220px]",
       cell: (line: NewAdjustmentLine) => (
@@ -600,8 +671,35 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           />
         </div>
       )
+    },
+    {
+      header: t('qty_after') || (locale === 'ar' ? 'بعد' : 'Qty After'),
+      cell: (line: NewAdjustmentLine) => {
+        const qBefore = line.qtyBefore || 0;
+        const qAdj = line.qty || 0;
+        const after = line.direction === "INCREASE" ? qBefore + qAdj : qBefore - qAdj;
+        return (
+          <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 sm:min-w-[180px] sm:max-w-[220px] text-center whitespace-normal">
+            <span
+              className={cn(
+                "font-mono font-bold",
+                after < 0 ? "text-status-error" : "text-foreground"
+              )}
+              lang="en"
+              dir="ltr"
+            >
+              {Number(after).toLocaleString("en-US")}
+            </span>
+            {after < 0 && (
+              <span className="qty-error absolute top-[calc(100%+6px)] ltr:right-0 rtl:left-0 sm:static sm:top-auto sm:right-auto sm:left-auto w-max sm:w-auto text-[10px] md:text-xs text-status-error leading-tight font-semibold uppercase mt-0 sm:mt-1 z-10">
+                {t("errors.exceeds_available_stock")}
+              </span>
+            )}
+          </div>
+        );
+      },
     }
-  ], [locale, t, tCommon]);
+  ], [locale, t, tCommon, reasonCategory, warehouseId]);
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-5rem)] w-full max-w-[1920px] mx-auto fade-in duration-1000 animate-in pb-32">
@@ -761,7 +859,12 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   </label>
                   <ScanInput
                     onScan={handleAddItem}
-                    placeholder={t('scan_item_placeholder') || 'Scan item barcode...'}
+                    disabled={!warehouseId}
+                    placeholder={
+                      !warehouseId
+                        ? (locale === 'ar' ? 'يرجى اختيار المستودع أولاً...' : 'Please select a warehouse first...')
+                        : (t('scan_item_placeholder') || 'Scan item barcode...')
+                    }
                     className="w-full bg-surface-container-highest/30 backdrop-blur-md border border-border/70 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-within:ring-2 focus-within:ring-brand-gold/30 transition-all hover:bg-surface-container-highest/60 text-foreground"
                   />
                 </div>
@@ -772,8 +875,12 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   <SmartCombobox
                     items={allItems}
                     onSelect={(item: ItemOption) => handleAddItem(item.code)}
-                    placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
-                    disabled={isLoadingItems}
+                    placeholder={
+                      !warehouseId
+                        ? (locale === 'ar' ? 'يرجى اختيار المستودع أولاً...' : 'Please select a warehouse first...')
+                        : (locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...')
+                    }
+                    disabled={!warehouseId || isLoadingItems}
                     triggerClassName="w-full bg-surface-container-highest/30 backdrop-blur-md border border-border/70 shadow-sm h-[52px] px-5 rounded-xl text-label-sm font-semibold focus-visible:ring-2 focus-visible:ring-brand-gold/30 transition-all hover:bg-surface-container-highest/60 text-foreground text-center md:text-start justify-center md:justify-start"
                     onAddCustomItem={(query) => {
                       setCustomItemNameQuery(query);
@@ -804,17 +911,20 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                     uom: tCommon('table_headers.uom'),
                   }}
                   renderQty={(line) => (
-                    <div className="flex justify-center w-full">
+                    <div className="flex justify-center w-full min-w-0">
                       <Input
-                        type="text"
-                        inputMode="decimal"
-                        pattern="[0-9]*"
+                        type="number"
+                        min="0.001"
+                        step="0.001"
                         value={line.qty}
+                        lang="en"
+                        dir="ltr"
+                        style={{ direction: "ltr" }}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
                           setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: isNaN(val) ? 0 : val } : l));
                         }}
-                        className="w-full text-center font-black text-lg h-11 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm"
+                        className="w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm min-w-0 px-1"
                       />
                     </div>
                   )}
@@ -878,7 +988,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         {!isValid && (
           <div className="flex items-center gap-3 text-sm font-bold text-brand-gold bg-brand-gold/10 px-5 py-3 rounded-2xl animate-pulse border border-brand-gold/20">
             <Info className="w-5 h-5 shrink-0" />
-            <span>{locale === 'ar' ? 'يرجى كتابة الملاحظات لتفعيل زر الحفظ' : 'Please write notes to enable saving'}</span>
+            <span>{locale === 'ar' ? 'يرجى كتابة الملاحظات واختيار مستودع لتفعيل زر الحفظ' : 'Please write notes and choose a warehouse to enable saving'}</span>
           </div>
         )}
         {isValid && <div />} {/* spacer */}

@@ -711,14 +711,15 @@ model Adjustment {
 }
 
 model AdjustmentLine {
-  id           String              @id @default(uuid())
-  adjustmentId String
-  itemId       String
-  lotId        String?
-  quantity     Decimal             @db.Decimal(18, 4)
-  direction    AdjustmentDirection
-  reason       AdjustmentReason
-  unitCost     Decimal?            @db.Decimal(18, 4)
+  id                  String              @id @default(uuid())
+  adjustmentId        String
+  itemId              String
+  lotId               String?
+  quantity            Decimal             @db.Decimal(18, 4)
+  direction           AdjustmentDirection
+  reason              AdjustmentReason
+  unitCost            Decimal?            @db.Decimal(18, 4)
+  snapshotQtyBefore   Decimal?            @map("snapshot_qty_before") @db.Decimal(18, 4)
 
   adjustment Adjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
   item       Item       @relation(fields: [itemId], references: [id], onDelete: Restrict)

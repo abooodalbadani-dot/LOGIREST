@@ -26,6 +26,7 @@ export const AdjustmentLineSchema = z.object({
  direction: z.enum(['INCREASE', 'DECREASE']),
  qtyBefore: z.number(),
  qtyAdjusted: z.number(),
+ snapshotQtyBefore: z.number().nullable().optional(),
  uomId: z.string(),
  unitCost: z.number().nullable().optional(),
  reasonNotes: z.string().optional(),
@@ -39,6 +40,7 @@ export const AdjustmentLineSchema = z.object({
   qty: z.number(),
  })).optional(),
 });
+
 
 export const AdjustmentDetailSchema = z.object({
  id: z.string(),

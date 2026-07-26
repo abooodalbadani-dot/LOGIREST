@@ -337,20 +337,31 @@ export function TransferNewClient() {
         return apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
           data: z.array(z.object({
             id: z.string(),
-            item_id: z.string(),
-            lot_number: z.string(),
+            itemId: z.string().optional(),
+            item_id: z.string().optional(),
+            lotNumber: z.string().optional(),
+            lot_number: z.string().optional(),
+            expiryDate: z.string().nullable().optional(),
             expiry_date: z.string().nullable().optional(),
+            qtyAvailable: z.number().optional(),
             qty_available: z.number().optional(),
+            totalQty: z.number().optional(),
+            total_qty: z.number().optional(),
           }))
-        })).then(res => res.data);
+        })).then(res => (res.data || []).map(lot => ({
+          id: lot.id,
+          itemId: lot.itemId || lot.item_id || l.itemId,
+          lotNumber: lot.lotNumber || lot.lot_number || lot.id,
+          expiryDate: lot.expiryDate || lot.expiry_date || null,
+        })));
       });
 
       const results = await Promise.all(fetchPromises);
       const lots = results.flat();
-      const expiredLots = lots.filter(l => l.expiry_date && new Date(l.expiry_date) < new Date());
+      const expiredLots = lots.filter(l => l.expiryDate && new Date(l.expiryDate) < new Date());
       const nearExpiry = lots.filter(l => {
-        if (!l.expiry_date) return false;
-        const daysUntilExpiry = Math.ceil((new Date(l.expiry_date).getTime() - Date.now()) / 86400000);
+        if (!l.expiryDate) return false;
+        const daysUntilExpiry = Math.ceil((new Date(l.expiryDate).getTime() - Date.now()) / 86400000);
         return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
       });
 

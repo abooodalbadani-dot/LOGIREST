@@ -216,9 +216,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       const LotsResponseSchema = z.object({
         data: z.array(z.object({
           id: z.string(),
-          itemId: z.string(),
-          lotNumber: z.string(),
-          expiryDate: z.string(),
+          itemId: z.string().optional(),
+          item_id: z.string().optional(),
+          lotNumber: z.string().optional(),
+          lot_number: z.string().optional(),
+          expiryDate: z.string().nullable().optional(),
+          expiry_date: z.string().nullable().optional(),
           totalQty: z.number().optional(),
           qtyAvailable: z.number().optional(),
           isExpired: z.boolean().optional(),
@@ -234,10 +237,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
       const availableLots = (lotsRes.data || []).map((lotItem) => ({
         id: lotItem.id,
-        itemId: lotItem.itemId,
+        itemId: lotItem.itemId || lotItem.item_id || item.id,
         warehouseId: warehouseId,
-        lotNumber: lotItem.lotNumber,
-        expiryDate: lotItem.expiryDate,
+        lotNumber: lotItem.lotNumber || lotItem.lot_number || lotItem.id,
+        expiryDate: lotItem.expiryDate || lotItem.expiry_date || null,
         qtyAvailable: lotItem.totalQty ?? lotItem.qtyAvailable ?? 0,
         isExpired: lotItem.isExpired ?? false,
         isNearExpiry: lotItem.isNearExpiry ?? false,
@@ -245,7 +248,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
       const validLots = availableLots
         .filter(l => !l.isExpired && l.qtyAvailable > 0)
-        .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+        .sort((a, b) => new Date(a.expiryDate || 0).getTime() - new Date(b.expiryDate || 0).getTime());
 
       const existingLine = lines.find(l => l.item.id === item.id);
       const targetQty = existingLine ? existingLine.qty + 1 : 1;
@@ -262,8 +265,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       if (validLots.length === 1 && validLots[0].qtyAvailable >= targetQty) {
         const allocation = [{
           lotId: validLots[0].id,
-          lotNumber: validLots[0].lotNumber,
-          expiryDate: validLots[0].expiryDate,
+          lotNumber: validLots[0].lotNumber || validLots[0].id,
+          expiryDate: validLots[0].expiryDate || null,
           allocatedQty: targetQty,
           overrideReason: null
         }];

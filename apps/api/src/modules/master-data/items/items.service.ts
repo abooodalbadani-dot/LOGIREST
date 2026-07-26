@@ -51,7 +51,12 @@ export class ItemsService {
     barcodeMappings: Array<{ barcode: string }>;
     category: { id: string; code: string; name: string; version: number } | null;
     unitOfMeasure: { id: string; code: string; name: string; version: number } | null;
+    warehouseItems?: Array<{ qtyOnHand: unknown }>;
   }) {
+    const qtyVal = item.warehouseItems?.[0]?.qtyOnHand
+      ? parseFloat(String(item.warehouseItems[0].qtyOnHand))
+      : 0;
+
     return {
       id: item.id,
       code: item.sku,
@@ -60,6 +65,8 @@ export class ItemsService {
       name_ar: item.name,
       name_en: item.name,
       category_id: item.categoryId,
+      qty_on_hand: qtyVal,
+      qtyOnHand: qtyVal,
       category: item.category
         ? {
             id: item.category.id,
@@ -106,6 +113,7 @@ export class ItemsService {
     category_id?: string;
     is_active?: string;
     barcode?: string;
+    warehouse_id?: string;
     page?: string;
     limit?: string;
   }) {
@@ -127,6 +135,14 @@ export class ItemsService {
       where.barcodeMappings = {
         some: {
           barcode: filters.barcode,
+        },
+      };
+    }
+
+    if (filters.warehouse_id) {
+      where.warehouseItems = {
+        some: {
+          warehouseId: filters.warehouse_id,
         },
       };
     }
@@ -159,6 +175,12 @@ export class ItemsService {
           category: { select: { id: true, code: true, name: true, version: true } },
           unitOfMeasure: { select: { id: true, code: true, name: true, version: true } },
           barcodeMappings: { select: { barcode: true }, take: 1 },
+          warehouseItems: filters.warehouse_id
+            ? {
+                where: { warehouseId: filters.warehouse_id },
+                select: { qtyOnHand: true },
+              }
+            : false,
         },
         orderBy: { sku: 'asc' },
       }),

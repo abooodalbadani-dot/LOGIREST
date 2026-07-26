@@ -41,6 +41,9 @@ export interface Item {
   category?: Category | null;
   image?: string | null;
   imageUrl?: string | null;
+  /** Stock balance for a specific warehouse (populated when warehouse_id filter is used). */
+  qtyOnHand?: number;
+  qty_on_hand?: number;
 }
 
 export function isItemBatchTracked(item?: unknown): boolean {
@@ -121,7 +124,10 @@ export const ItemSchema = z.object({
   isActive: z.boolean(),
   version: z.number().optional(),
   image: z.string().optional().nullable(),
-  imageUrl: z.string().optional().nullable()
+  imageUrl: z.string().optional().nullable(),
+  /** Stock balance for a specific warehouse (populated when warehouse_id filter is used). */
+  qtyOnHand: z.number().optional(),
+  qty_on_hand: z.number().optional(),
 });
 
 export const LotSchema = z.object({

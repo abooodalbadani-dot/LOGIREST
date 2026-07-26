@@ -453,6 +453,8 @@
     "security_standard_desc": "Your login session is secured with standard encryption and enterprise scope protection.",
     "void_warning_description": "This operation is irreversible. This will offset inventory ledgers, adjust cost balances, and lock the document.",
     "void_reason_prompt": "Reason for voiding (minimum 5 characters):",
+    "qty_before": "Qty Before",
+    "qty_after": "Qty After",
     "void_reason_placeholder": "Enter explanation...",
     "void_success": "Document voided successfully.",
     "actions": {
@@ -2870,7 +2872,9 @@
       "title_edit": "Edit Adjustment",
       "title_new": "New Adjustment",
       "type": "Type",
-      "updated_success": "Adjustment updated successfully",
+      "create_success": "Adjustment created successfully.",
+      "update_success": "Adjustment updated successfully.",
+      "updated_success": "Adjustment updated successfully.",
       "validation": {
         "item_required": "Item is required",
         "notes_max_length": "Notes cannot exceed 1000 characters",

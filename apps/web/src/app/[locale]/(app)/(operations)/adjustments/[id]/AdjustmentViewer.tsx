@@ -78,25 +78,38 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
    qtyBefore: number;
    qtyAdjusted: number;
    unitCost?: number | null;
+   snapshotQtyBefore?: number | null;
+   displayLot?: string;
   }
 
   const documentLines = document?.lines;
   const mappedLines = useMemo(() => {
-   return documentLines?.map((line: AdjustmentLine) => ({
-    id: line.id,
-    item: line.item,
-    qty: line.qtyAdjusted,
-    uomId: line.uomId,
-    direction: line.direction,
-    qtyBefore: line.qtyBefore,
-    qtyAdjusted: line.qtyAdjusted,
-    unitCost: line.unitCost,
-    lot: line.lot ? {
-     lotNumber: line.lot.lotNumber,
-     expiryDate: line.lot.expiryDate ?? null,
-    } : null,
-   })) || [];
+   return documentLines?.map((line: AdjustmentLine) => {
+     // Prefer the typed `lot` relation (included by the API) for lot number display.
+     // Fall back through legacy field names only if the relation is absent.
+     const displayLot = line.lot?.lotNumber ?? '';
+
+     return {
+       id: line.id,
+       item: line.item,
+       qty: line.qtyAdjusted,
+       uomId: line.uomId,
+       direction: line.direction,
+       // qtyBefore is already correctly computed by the backend:
+       //   DRAFT  → live warehouseItem.qtyOnHand
+       //   non-DRAFT → frozen snapshotQtyBefore
+       qtyBefore: line.qtyBefore,
+       qtyAdjusted: line.qtyAdjusted,
+       snapshotQtyBefore: line.snapshotQtyBefore,
+       unitCost: line.unitCost,
+       lot: line.lot
+         ? { lotNumber: line.lot.lotNumber, expiryDate: line.lot.expiryDate ?? null }
+         : null,
+       displayLot,
+     };
+   }) || [];
   }, [documentLines]);
+
 
   const extraColumns = useMemo(() => [
    {
@@ -133,11 +146,14 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
    },
    {
     header: tc('table_headers.lot') || 'Lot',
-    cell: (line: MappedAdjustmentLine) => (
-     <span className="text-body-md font-mono text-muted-foreground/60">
-      {line.lot?.lotNumber || '—'}
-     </span>
-    )
+    cell: (line: MappedAdjustmentLine) => {
+     const lotVal = line.displayLot || '—';
+     return (
+      <span className="font-mono text-[11px] md:text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 truncate inline-block">
+       {lotVal}
+      </span>
+     );
+    }
    },
    {
     header: t('qty_after') || 'Qty After',

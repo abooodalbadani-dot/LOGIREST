@@ -260,27 +260,37 @@ export function AdjustmentForm({
     [warehouses],
   );
 
-  const fallbackReasons = [
-    "DAMAGE",
-    "EXPIRY",
-    "THEFT",
-    "COUNTING_ERROR",
-    "CORRECTION",
-    "OTHER",
-  ];
+  const getLocalizedReasonName = useCallback((rawName: string) => {
+    if (locale !== 'ar') return rawName;
+    const nameLower = rawName.trim().toLowerCase();
+    if (nameLower.includes('damage') || nameLower === 'telf') return 'تلف';
+    if (nameLower.includes('spoilage') || nameLower.includes('expiry')) return 'إفساد / انتهاء صلاحية';
+    if (nameLower.includes('theft') || nameLower.includes('loss')) return 'سرقة / فقدان';
+    if (nameLower.includes('inventory correction') || nameLower.includes('correction')) return 'تصحيح مخزني';
+    if (nameLower.includes('admin override') || nameLower.includes('override')) return 'تعديل إداري';
+    if (nameLower.includes('found')) return 'بضاعة عُثر عليها';
+    if (nameLower.includes('initial')) return 'مخزون أولي';
+    return rawName;
+  }, [locale]);
+
+  const fallbackReasons = useMemo(() => [
+    { id: 'Damage', name: getLocalizedReasonName('Damage') },
+    { id: 'Spoilage', name: getLocalizedReasonName('Spoilage') },
+    { id: 'Theft / Loss', name: getLocalizedReasonName('Theft / Loss') },
+    { id: 'Inventory Correction', name: getLocalizedReasonName('Inventory Correction') },
+    { id: 'Admin Override', name: getLocalizedReasonName('Admin Override') },
+  ], [getLocalizedReasonName]);
+
   const reasonItems = useMemo(() => {
     const reasons = varianceReasonsData?.data;
     if (reasons && reasons.length > 0) {
       return reasons.map((r) => ({
-        id: r.code,
-        name: r.name,
+        id: r.code || r.name,
+        name: getLocalizedReasonName(r.name || r.code),
       }));
     }
-    return fallbackReasons.map((opt) => ({
-      id: opt,
-      name: t(`reason_${opt.toLowerCase()}`) || opt,
-    }));
-  }, [t, varianceReasonsData]);
+    return fallbackReasons;
+  }, [varianceReasonsData, fallbackReasons, getLocalizedReasonName]);
 
   const canEdit = !isLocked || isNew;
 
@@ -646,47 +656,52 @@ export function AdjustmentForm({
         cell: (line: AdjustmentFormLine) => {
           if (!canEdit) {
             return line.direction === "INCREASE" ? (
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-500">
-                <ArrowUp className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                <ArrowUp className="w-3 h-3" />
                 {t("direction_increase") || (locale === "ar" ? "زيادة" : "Inc")}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-red-500">
-                <ArrowDown className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">
+                <ArrowDown className="w-3 h-3" />
                 {t("direction_decrease") || (locale === "ar" ? "نقص" : "Dec")}
               </span>
             );
           }
+          const r = String(reason || "").trim().toLowerCase();
+          const isDecreaseOnly = r.includes("damage") || r.includes("spoilage") || r.includes("theft") || r.includes("loss");
+          const isDisabled = !canEdit || isDecreaseOnly;
           return (
-            <div className="flex justify-center bg-slate-100 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-xl h-11 w-full md:max-w-[140px] p-1 md:mx-auto shadow-sm min-w-[140px]">
-              <button
-                type="button"
-                disabled={!canEdit}
-                onClick={() => updateLine(line.id, { direction: "INCREASE" })}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] md:text-xs font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-                  line.direction === "INCREASE"
-                    ? "bg-brand-gold/15 text-brand-gold shadow-sm"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
-                )}
-              >
-                <ArrowUp className="w-3 h-3" />
-                {t("direction_increase") || (locale === "ar" ? "زيادة" : "Inc")}
-              </button>
-              <button
-                type="button"
-                disabled={!canEdit}
-                onClick={() => updateLine(line.id, { direction: "DECREASE" })}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-1 rounded-lg text-[10px] md:text-xs font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
-                  line.direction === "DECREASE"
-                    ? "bg-status-error/15 text-status-error shadow-sm"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
-                )}
-              >
-                <ArrowDown className="w-3 h-3" />
-                {t("direction_decrease") || (locale === "ar" ? "نقص" : "Dec")}
-              </button>
+            <div className="flex justify-center">
+              <div className="inline-flex items-center rounded p-0.5 bg-muted border border-border shadow-inner">
+                <button
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => updateLine(line.id, { direction: "INCREASE" })}
+                  className={cn(
+                    "px-2 py-1 text-[10px] font-bold rounded-sm transition-all flex items-center gap-1 whitespace-nowrap active:scale-[0.95] disabled:opacity-50 disabled:cursor-not-allowed",
+                    line.direction === "INCREASE"
+                      ? "bg-brand-gold text-slate-950 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <ArrowUp className="w-3 h-3" />
+                  {t("direction_increase") || (locale === "ar" ? "زيادة" : "INC")}
+                </button>
+                <button
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => updateLine(line.id, { direction: "DECREASE" })}
+                  className={cn(
+                    "px-2 py-1 text-[10px] font-bold rounded-sm transition-all flex items-center gap-1 whitespace-nowrap active:scale-[0.95] disabled:opacity-50 disabled:cursor-not-allowed",
+                    line.direction === "DECREASE"
+                      ? "bg-destructive text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <ArrowDown className="w-3 h-3" />
+                  {t("direction_decrease") || (locale === "ar" ? "نقص" : "DEC")}
+                </button>
+              </div>
             </div>
           );
         },
@@ -699,7 +714,7 @@ export function AdjustmentForm({
           const isIncrease = line.direction === "INCREASE";
           if (!canEdit) {
             return (
-              <span className="font-mono text-body-md font-bold text-foreground">
+              <span className="font-mono text-sm font-bold text-foreground">
                 {line.unitCost !== null && line.unitCost !== undefined
                   ? Number(line.unitCost).toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -710,7 +725,7 @@ export function AdjustmentForm({
             );
           }
           return (
-            <div className="flex justify-center w-full min-w-[120px]">
+            <div className="flex justify-center w-full min-w-0">
               <UnitCostInput
                 value={line.unitCost}
                 disabled={!isIncrease || !canEdit}
@@ -719,7 +734,7 @@ export function AdjustmentForm({
                   updateLine(line.id, { unitCost: val });
                 }}
                 className={cn(
-                  "w-full text-center font-black text-lg h-11 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-none disabled:shadow-none",
+                  "w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1",
                   isIncrease &&
                   (line.unitCost === null ||
                     line.unitCost === undefined ||
@@ -751,14 +766,15 @@ export function AdjustmentForm({
         cellClassName: "min-w-[170px]",
         cell: (line: AdjustmentFormLine) => {
           if (!canEdit) {
+            const rawLine = line as unknown as Record<string, unknown>;
             const displayLot =
               line.lot?.lotNumber ||
               line.lotNumber ||
               line.lot_number ||
               line.lotAllocations?.[0]?.lotNumber ||
+              (typeof rawLine.lotId === 'string' ? rawLine.lotId : "") ||
               "";
-            const lotVal =
-              displayLot && displayLot.length !== 36 ? displayLot : "—";
+            const lotVal = displayLot || "—";
             return (
               <span className="font-mono text-[11px] md:text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 truncate inline-block">
                 {lotVal}
@@ -792,10 +808,10 @@ export function AdjustmentForm({
               ? line.qtyBefore + line.qtyAdjusted
               : line.qtyBefore - line.qtyAdjusted;
           return (
-            <div className="flex flex-col items-center justify-center gap-1.5 tabular-nums min-w-[180px] max-w-[220px] text-center whitespace-normal">
+            <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 sm:min-w-[180px] sm:max-w-[220px] text-center whitespace-normal">
               <span
                 className={cn(
-                  "text-body-md font-bold",
+                  "font-mono font-bold",
                   after < 0 ? "text-red-500" : "text-foreground",
                 )}
                 lang="en"
@@ -804,7 +820,7 @@ export function AdjustmentForm({
                 {Number(after).toLocaleString("en-US")}
               </span>
               {after < 0 && (
-                <span className="text-[10px] md:text-xs text-red-500 leading-tight font-semibold uppercase">
+                <span className="qty-error absolute top-[calc(100%+6px)] ltr:right-0 rtl:left-0 sm:static sm:top-auto sm:right-auto sm:left-auto w-max sm:w-auto text-[10px] md:text-xs text-red-500 leading-tight font-semibold uppercase mt-0 sm:mt-1 z-10">
                   {t("errors.exceeds_available_stock")}
                 </span>
               )}
@@ -813,7 +829,7 @@ export function AdjustmentForm({
         },
       },
     ],
-    [locale, t, tc, canEdit, updateLine, warehouseId, lockState?.isLocked],
+    [locale, t, tc, canEdit, updateLine, warehouseId, lockState?.isLocked, reason],
   );
 
   return (
@@ -1091,7 +1107,7 @@ export function AdjustmentForm({
                                 {Number(line.qty).toLocaleString("en-US")}
                               </span>
                             ) : (
-                              <div className="flex justify-center w-full">
+                              <div className="flex justify-center w-full min-w-0">
                                 <Input
                                   type="number"
                                   min="0.001"
@@ -1105,7 +1121,7 @@ export function AdjustmentForm({
                                     const val = parseFloat(e.target.value);
                                     updateLine(line.id, { qtyAdjusted: val || 0 });
                                   }}
-                                  className="w-full text-center font-black text-lg h-11 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl outline-none transition-all shadow-sm"
+                                  className="w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm min-w-0 px-1"
                                 />
                               </div>
                             )
