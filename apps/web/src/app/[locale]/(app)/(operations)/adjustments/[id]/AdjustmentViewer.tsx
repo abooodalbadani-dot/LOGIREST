@@ -85,9 +85,10 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
   const documentLines = document?.lines;
   const mappedLines = useMemo(() => {
    return documentLines?.map((line: AdjustmentLine) => {
-     // Prefer the typed `lot` relation (included by the API) for lot number display.
-     // Fall back through legacy field names only if the relation is absent.
-     const displayLot = line.lot?.lotNumber ?? '';
+     // Prefer the typed `lot` relation for lot number display.
+     // Fall back to lotAllocations if relation object is absent.
+     const allocLotId = line.lotAllocations?.[0]?.lotId;
+     const displayLot = line.lot?.lotNumber || allocLotId || '';
 
      return {
        id: line.id,
@@ -95,7 +96,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
        qty: line.qtyAdjusted,
        uomId: line.uomId,
        direction: line.direction,
-       // qtyBefore is already correctly computed by the backend:
+       // qtyBefore is computed by the backend:
        //   DRAFT  → live warehouseItem.qtyOnHand
        //   non-DRAFT → frozen snapshotQtyBefore
        qtyBefore: line.qtyBefore,

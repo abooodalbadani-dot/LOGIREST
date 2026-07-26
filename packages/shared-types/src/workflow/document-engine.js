@@ -19,14 +19,14 @@ const workflowMap = {
         completed: [statuses_1.PR_STATUS.APPROVED, statuses_1.PR_STATUS.CANCELLED, statuses_1.PR_STATUS.FULFILLED],
         approved: [statuses_1.PR_STATUS.APPROVED],
         posted: [],
-        locked: [statuses_1.PR_STATUS.SUBMITTED, statuses_1.PR_STATUS.APPROVED, statuses_1.PR_STATUS.CANCELLED, statuses_1.PR_STATUS.FULFILLED]
+        locked: [statuses_1.PR_STATUS.SUBMITTED, statuses_1.PR_STATUS.APPROVED, statuses_1.PR_STATUS.REJECTED, statuses_1.PR_STATUS.CANCELLED, statuses_1.PR_STATUS.FULFILLED]
     },
     'po': {
         pending: [statuses_1.PO_STATUS.DRAFT, statuses_1.PO_STATUS.SUBMITTED, statuses_1.PO_STATUS.REJECTED],
         completed: [statuses_1.PO_STATUS.APPROVED, statuses_1.PO_STATUS.FULFILLED, statuses_1.PO_STATUS.PARTIAL, statuses_1.PO_STATUS.CANCELLED],
         approved: [statuses_1.PO_STATUS.APPROVED],
         posted: [],
-        locked: [statuses_1.PO_STATUS.SUBMITTED, statuses_1.PO_STATUS.APPROVED, statuses_1.PO_STATUS.FULFILLED, statuses_1.PO_STATUS.PARTIAL, statuses_1.PO_STATUS.CANCELLED]
+        locked: [statuses_1.PO_STATUS.SUBMITTED, statuses_1.PO_STATUS.APPROVED, statuses_1.PO_STATUS.REJECTED, statuses_1.PO_STATUS.FULFILLED, statuses_1.PO_STATUS.PARTIAL, statuses_1.PO_STATUS.CANCELLED]
     },
     'grn': {
         pending: [statuses_1.GRN_STATUS.DRAFT],
@@ -54,7 +54,7 @@ const workflowMap = {
         completed: [statuses_1.ADJUSTMENT_STATUS.POSTED, statuses_1.ADJUSTMENT_STATUS.CANCELLED, statuses_1.ADJUSTMENT_STATUS.VOIDED],
         approved: [statuses_1.ADJUSTMENT_STATUS.APPROVED],
         posted: [statuses_1.ADJUSTMENT_STATUS.POSTED],
-        locked: [statuses_1.ADJUSTMENT_STATUS.SUBMITTED, statuses_1.ADJUSTMENT_STATUS.APPROVED, statuses_1.ADJUSTMENT_STATUS.POSTED, statuses_1.ADJUSTMENT_STATUS.CANCELLED, statuses_1.ADJUSTMENT_STATUS.VOIDED]
+        locked: [statuses_1.ADJUSTMENT_STATUS.SUBMITTED, statuses_1.ADJUSTMENT_STATUS.APPROVED, statuses_1.ADJUSTMENT_STATUS.POSTED, statuses_1.ADJUSTMENT_STATUS.REJECTED, statuses_1.ADJUSTMENT_STATUS.CANCELLED, statuses_1.ADJUSTMENT_STATUS.VOIDED]
     },
     'stocktake': {
         pending: [statuses_1.STOCKTAKE_STATUS.DRAFT, statuses_1.STOCKTAKE_STATUS.STARTED, statuses_1.STOCKTAKE_STATUS.COUNTING, statuses_1.STOCKTAKE_STATUS.REVIEW],

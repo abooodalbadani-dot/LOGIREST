@@ -48,6 +48,12 @@ interface ItemDetail {
   image?: string | null;
 }
 
+interface LotDetail {
+  id: string;
+  lotNumber: string;
+  expiryDate?: Date | string | null;
+}
+
 interface AdjustmentLineWithRelations {
   id: string;
   itemId: string;
@@ -56,7 +62,10 @@ interface AdjustmentLineWithRelations {
   direction: string;
   reason: string;
   unitCost?: number | string | unknown | null;
+  snapshotQtyBefore?: number | string | unknown | null;
+  qtyBefore?: number | string | unknown | null;
   item?: ItemDetail | null;
+  lot?: LotDetail | null;
 }
 
 interface ApprovalEventDetail {
@@ -110,11 +119,27 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
             primaryUom: { id: '', code: '' },
           },
       direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
-      qtyBefore: 0,
+      qtyBefore: Number(line.qtyBefore ?? line.snapshotQtyBefore ?? 0),
       qtyAdjusted: Number(line.quantity),
+      snapshotQtyBefore:
+        line.snapshotQtyBefore !== undefined && line.snapshotQtyBefore !== null
+          ? Number(line.snapshotQtyBefore)
+          : null,
       uomId: item?.uomId || '',
       unitCost: line.unitCost ? Number(line.unitCost) : null,
       reasonNotes: line.reason || '',
+      lot: line.lot
+        ? {
+            id: line.lot.id,
+            lotNumber: line.lot.lotNumber,
+            expiryDate: line.lot.expiryDate
+              ? (line.lot.expiryDate instanceof Date
+                  ? line.lot.expiryDate
+                  : new Date(line.lot.expiryDate)
+                ).toISOString()
+              : null,
+          }
+        : null,
       lotAllocations: line.lotId
         ? [{ lotId: line.lotId, qty: Number(line.quantity) }]
         : [],
@@ -508,7 +533,7 @@ export class AdjustmentsController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body() body: { comments?: string; version?: number },
+    @Body() body: { comments?: string; reject?: string; reason?: string; version?: number },
     @Req() req: Request,
   ) {
     const ipAddress =
@@ -518,8 +543,11 @@ export class AdjustmentsController {
       req.ip ||
       undefined;
 
+    const comments = body.comments || body.reject || body.reason;
+
     const adj = await this.adjustmentsService.reject(id, userId, role, {
       ...body,
+      comments,
       ipAddress,
     });
     return mapAdjustmentDetail(adj);

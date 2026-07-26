@@ -1347,23 +1347,25 @@ export function AdjustmentForm({
                 </div>
               )}
 
-              <div className="col-span-2 md:w-auto">
-                <Button
-                  type="button"
-                  onClick={handleSaveDraft}
-                  disabled={
-                    lines.length === 0 ||
-                    notes.trim().length < 10 ||
-                    isRefreshingStock ||
-                    createAdjustment.isPending ||
-                    updateAdjustment.isPending
-                  }
-                  isLoading={createAdjustment.isPending || updateAdjustment.isPending}
-                  className="px-5 md:px-7 py-3 rounded-xl bg-gradient-to-r from-brand-gold via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-brand-black font-black text-xs md:text-sm uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/45 hover:-translate-y-0.5 border border-amber-300/50 w-full md:w-auto"
-                >
-                  <Save className="w-4.5 h-4.5 shrink-0" /> {tc("actions.save") || "Save"}
-                </Button>
-              </div>
+              {(isNew || document?.status === 'DRAFT') && (
+                <div className="col-span-2 md:w-auto">
+                  <Button
+                    type="button"
+                    onClick={handleSaveDraft}
+                    disabled={
+                      lines.length === 0 ||
+                      notes.trim().length < 10 ||
+                      isRefreshingStock ||
+                      createAdjustment.isPending ||
+                      updateAdjustment.isPending
+                    }
+                    isLoading={createAdjustment.isPending || updateAdjustment.isPending}
+                    className="px-5 md:px-7 py-3 rounded-xl bg-gradient-to-r from-brand-gold via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-brand-black font-black text-xs md:text-sm uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/45 hover:-translate-y-0.5 border border-amber-300/50 w-full md:w-auto"
+                  >
+                    <Save className="w-4.5 h-4.5 shrink-0" /> {tc("actions.save") || "Save"}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}
