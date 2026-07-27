@@ -16,8 +16,9 @@ export const CreateIssueLineAllocationSchema = z.object({
 });
 
 export const CreateIssueLineSchema = z.object({
- itemId: z.string().min(1),
  requestedQty: z.number().positive(),
+ itemId: z.string().min(1),
+ uomId: z.string().optional(),
  lotAllocations: z.array(CreateIssueLineAllocationSchema),
  notes: z.string().optional(),
 });

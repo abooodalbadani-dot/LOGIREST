@@ -41,6 +41,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useItems } from '@/features/items/hooks/useItems';
 import { onFormError } from '@/hooks/useFormError';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
+import { getAvailableUomsForItem, resolveUomCode, handleUomChange } from '@/utils/uom-helper';
 import { toast } from 'sonner';
 
 type KitchenRequestFormValues = CreateKitchenRequestDTO;
@@ -179,7 +180,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       name: b.itemName,
       qtyAvailable: b.qtyAvailable,
       categoryId: '',
-      primaryUom: { id: '', code: b.uomCode || '', name: '' },
+      primaryUom: { id: b.uomId || b.primaryUom?.id || '', code: b.uomCode || '', name: '' },
       uomConversions: [],
       trackLots: false,
       minStockLevel: 0,
@@ -496,7 +497,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                           code: selectedItem?.barcode || '',
                           name: selectedItem?.name || '',
                           image: selectedItem?.image || null,
-                          primaryUom: { code: selectedItem?.primaryUom?.code || '' }
+                          primaryUom: { id: selectedItem?.primaryUom?.id || '', code: selectedItem?.primaryUom?.code || '' }
                         },
                         qty: watchedItems?.[index]?.quantity ?? 1,
                         uomId: '',
@@ -536,11 +537,35 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                         )}
                       </div>
                     )}
-                    renderUom={(line) => (
-                      <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-                        {line.selectedItem?.primaryUom?.code || '---'}
-                      </span>
-                    )}
+                    renderUom={(line) => {
+                      const availableUoms = getAvailableUomsForItem(line.selectedItem);
+                      const itemValues = watchedItems?.[line.index] as { uomId?: string } | undefined;
+                      const currentUomId = itemValues?.uomId || line.selectedItem?.primaryUom?.id || '';
+                      const resolvedCode = resolveUomCode(currentUomId, line.selectedItem);
+
+                      if (availableUoms.length <= 1) {
+                        return (
+                          <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2 py-1 bg-surface-container rounded font-mono font-bold">
+                            {resolvedCode}
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <SmartCombobox
+                          items={availableUoms}
+                          value={currentUomId}
+                          onSelect={(uom) => {
+                            const currentList = form.getValues('items') || [];
+                            const updatedList = currentList.map((it, idx) =>
+                              idx === line.index ? { ...it, uomId: uom.id } : it
+                            );
+                            form.setValue('items', updatedList, { shouldDirty: true, shouldValidate: true });
+                          }}
+                          triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
+                        />
+                      );
+                    }}
                     extraColumns={extraColumns}
                   />
                 </div>

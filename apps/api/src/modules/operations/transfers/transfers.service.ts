@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
-import { Role } from '@logirest/shared-types';
+import { Role, toBaseQty } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType, Prisma } from '@prisma/client';
 
@@ -18,7 +18,7 @@ export class TransfersService {
       fromWarehouseId: string;
       toWarehouseId: string;
       notes?: string;
-      lines: Array<{ itemId: string; quantityShipped: number; notes?: string }>;
+      lines: Array<{ itemId: string; quantityShipped: number; uomId?: string; notes?: string }>;
     },
     userId: string,
   ) {
@@ -47,10 +47,33 @@ export class TransfersService {
           notes: body.notes || null,
           status: 'DRAFT',
           lines: {
-            create: body.lines.map((line) => ({
-              itemId: line.itemId,
-              quantityShipped: line.quantityShipped,
-              notes: line.notes || null,
+            create: await Promise.all(body.lines.map(async (line) => {
+              let normalizedQty = line.quantityShipped;
+              let resolvedUomId: string | null = null;
+              if (line.uomId) {
+                const itemData = await tx.item.findUnique({
+                  where: { id: line.itemId },
+                  select: {
+                    uomId: true,
+                    uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                  },
+                });
+                if (itemData) {
+                  const conversions = itemData.uomConversions.map((c) => ({
+                    fromUomId: c.fromUomId,
+                    toUomId: c.toUomId,
+                    factor: Number(c.factor),
+                  }));
+                  normalizedQty = toBaseQty(line.quantityShipped, line.uomId, itemData.uomId, conversions);
+                  resolvedUomId = line.uomId;
+                }
+              }
+              return {
+                itemId: line.itemId,
+                quantityShipped: normalizedQty,
+                uomId: resolvedUomId,
+                notes: line.notes || null,
+              };
             })),
           },
         },

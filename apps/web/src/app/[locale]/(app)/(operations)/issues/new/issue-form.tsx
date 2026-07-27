@@ -41,6 +41,7 @@ import { SmartCombobox } from "@/components/shared/SmartCombobox";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { toast } from "sonner";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
+import { getAvailableUomsForItem, resolveUomCode } from '@/utils/uom-helper';
 import { DocumentLineItemTable, type LineItem, type ExtraColumn } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { cn } from "@/lib/utils";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -51,6 +52,7 @@ const buildLineSchema = (t: (k: string) => string) => z.object({
   itemId: z.string().min(1, t('validation.item_required')),
   requestedQty: z.number().min(0.01, t('validation.qty_positive')),
   qty: z.number(),
+  uomId: z.string().optional(),
   lotAllocations: z.array(z.custom<IssueLot>()),
   notes: z.string().optional(),
 });
@@ -325,11 +327,31 @@ export function IssueForm() {
     </div>
   ), [form, t]);
 
-  const renderUom = React.useCallback((line: CustomLineItem) => (
-    <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-      {line.selectedItem?.primaryUom?.code || '---'}
-    </span>
-  ), []);
+  const renderUom = React.useCallback((line: LineItem & { index: number; selectedItem?: Item }) => {
+    const selectedItem = line.selectedItem;
+    const availableUoms = getAvailableUomsForItem(selectedItem);
+    const currentUomId = form.watch(`lines.${line.index}.uomId`) || selectedItem?.primaryUom?.id || '';
+    const resolvedCode = resolveUomCode(currentUomId, selectedItem);
+
+    if (availableUoms.length <= 1) {
+      return (
+        <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2 py-1 bg-surface-container rounded font-mono font-bold">
+          {resolvedCode}
+        </span>
+      );
+    }
+
+    return (
+      <SmartCombobox
+        items={availableUoms}
+        value={currentUomId}
+        onSelect={(uom) => {
+          form.setValue(`lines.${line.index}.uomId`, uom.id, { shouldDirty: true, shouldValidate: true });
+        }}
+        triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
+      />
+    );
+  }, [form]);
 
   const { data: lockState } = useWarehouseLock(watchedWarehouse || null);
   const isWarehouseLocked = lockState?.isLocked ?? false;
@@ -366,7 +388,7 @@ export function IssueForm() {
         const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
         form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
       } else {
-        append({ itemId: matchedItem.id, requestedQty: 1, qty: 0, lotAllocations: [] });
+        append({ itemId: matchedItem.id, requestedQty: 1, qty: 0, uomId: matchedItem.primaryUom?.id, lotAllocations: [] });
       }
       playSound('success');
       toast.success(isAr ? `تمت إضافة ${matchedItem.name}` : `Added ${matchedItem.name}`);
@@ -382,17 +404,21 @@ export function IssueForm() {
       warehouseId: data.warehouseId,
       destinationDeptId: data.destinationDeptId,
       notes: data.notes,
-      lines: data.lines.map(line => ({
-        itemId: line.itemId,
-        requestedQty: line.requestedQty,
-        notes: line.notes,
-        lotAllocations: line.lotAllocations.map(lot => ({
-          lotId: lot.lotId,
-          lotNumber: lot.lotNumber,
-          expiryDate: lot.expiryDate,
-          allocatedQty: lot.allocatedQty,
-        })),
-      })),
+      lines: data.lines.map(line => {
+        const selectedItem = items?.find(i => i.id === line.itemId);
+        return {
+          itemId: line.itemId,
+          requestedQty: line.requestedQty,
+          uomId: line.uomId || selectedItem?.primaryUom?.id,
+          notes: line.notes,
+          lotAllocations: line.lotAllocations.map(lot => ({
+            lotId: lot.lotId,
+            lotNumber: lot.lotNumber,
+            expiryDate: lot.expiryDate,
+            allocatedQty: lot.allocatedQty,
+          })),
+        };
+      }),
       kitchenRequestId: selectedKitchenRequestId || undefined,
     };
     createIssue.mutate(payload, {
@@ -579,12 +605,13 @@ export function IssueForm() {
                 items={items || []}
                 disabled={!watchedWarehouse}
                 onSelect={(item) => {
+                  const fullItem = items?.find(i => i.id === item.id);
                   const existingIndex = watchedLines?.findIndex(i => i?.itemId === item.id) ?? -1;
                   if (existingIndex !== -1) {
                     const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
                     form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
                   } else {
-                    append({ itemId: item.id, requestedQty: 1, qty: 0, lotAllocations: [] });
+                    append({ itemId: item.id, requestedQty: 1, qty: 0, uomId: fullItem?.primaryUom?.id, lotAllocations: [] });
                   }
                 }}
                 placeholder={tc('select_item') || "Search and Select Item"}
@@ -612,7 +639,6 @@ export function IssueForm() {
                 renderQty={renderQty}
                 renderUom={renderUom}
                 hideLotColumns={true}
-                hideUomColumn={true}
                 noCollapse={false}
                 dense={true}
                 mobileLayoutPattern="issue-form"

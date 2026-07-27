@@ -10,6 +10,7 @@ import { Prisma } from '@prisma/client';
 interface SupplierDto {
   code?: string;
   name?: string;
+  currencyId?: string | null;
   contactEmail?: string;
   contactPhone?: string;
   contactName?: string;
@@ -33,8 +34,10 @@ export class SuppliersService {
 
   private mapDbSupplierToFrontend(
     supplier: Prisma.SupplierGetPayload<Record<string, never>>,
-    currencyId: string,
+    fallbackCurrencyId: string,
   ) {
+    const supObj = supplier as Record<string, unknown>;
+    const actualCurrencyId = (supObj.currencyId as string) || fallbackCurrencyId;
     return {
       id: supplier.id,
       code: supplier.code,
@@ -42,7 +45,7 @@ export class SuppliersService {
       contactEmail: supplier.contactEmail || '',
       contactPhone: supplier.contactPhone || '',
       contactName: supplier.contactName || '',
-      currencyId: currencyId,
+      currencyId: actualCurrencyId,
       paymentTerms: ((supplier as Record<string, unknown>).paymentTerms as string) || 'NET_30',
       isActive: supplier.isActive,
       version: supplier.version,
@@ -62,7 +65,7 @@ export class SuppliersService {
       ];
     }
 
-    const currencyId = await this.getBaseCurrencyId();
+    const fallbackCurrencyId = await this.getBaseCurrencyId();
     const [suppliers, total] = await Promise.all([
       this.prisma.supplier.findMany({
         where,
@@ -74,7 +77,7 @@ export class SuppliersService {
     ]);
 
     const data = suppliers.map((sup) =>
-      this.mapDbSupplierToFrontend(sup, currencyId),
+      this.mapDbSupplierToFrontend(sup, fallbackCurrencyId),
     );
     return {
       data,
@@ -88,19 +91,19 @@ export class SuppliersService {
   }
 
   async findOne(id: string) {
-    const currencyId = await this.getBaseCurrencyId();
+    const fallbackCurrencyId = await this.getBaseCurrencyId();
     const supplier = await this.prisma.supplier.findUnique({
       where: { id },
     });
     if (!supplier) {
       throw new NotFoundException(`Supplier with ID ${id} not found`);
     }
-    return this.mapDbSupplierToFrontend(supplier, currencyId);
+    return this.mapDbSupplierToFrontend(supplier, fallbackCurrencyId);
   }
 
   async create(body: SupplierDto, userId: string, ipAddress?: string) {
     let { code } = body;
-    const { name, contactEmail, contactPhone, contactName } = body;
+    const { name, contactEmail, contactPhone, contactName, currencyId } = body;
     if (!name) {
       throw new BadRequestException('name is required');
     }
@@ -143,6 +146,7 @@ export class SuppliersService {
         data: {
           code: code,
           name: name,
+          currencyId: currencyId || null,
           contactEmail: contactEmail || null,
           contactPhone: contactPhone || null,
           contactName: contactName || null,
@@ -167,8 +171,8 @@ export class SuppliersService {
       return newSup;
     });
 
-    const currencyId = await this.getBaseCurrencyId();
-    return this.mapDbSupplierToFrontend(created, currencyId);
+    const fallbackCurrencyId = await this.getBaseCurrencyId();
+    return this.mapDbSupplierToFrontend(created, fallbackCurrencyId);
   }
 
   async update(
@@ -188,7 +192,7 @@ export class SuppliersService {
       );
     }
 
-    const { code, name, contactEmail, contactPhone, contactName } = body;
+    const { code, name, contactEmail, contactPhone, contactName, currencyId } = body;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.supplier.update({
@@ -196,6 +200,7 @@ export class SuppliersService {
         data: {
           code: code || existing.code,
           name: name || existing.name,
+          currencyId: currencyId !== undefined ? currencyId : (existing as { currencyId?: string | null }).currencyId,
           contactEmail:
             contactEmail !== undefined ? contactEmail : existing.contactEmail,
           contactPhone:
@@ -225,8 +230,8 @@ export class SuppliersService {
       return res;
     });
 
-    const currencyId = await this.getBaseCurrencyId();
-    return this.mapDbSupplierToFrontend(updated, currencyId);
+    const fallbackCurrencyId = await this.getBaseCurrencyId();
+    return this.mapDbSupplierToFrontend(updated, fallbackCurrencyId);
   }
 
   async remove(id: string, userId: string, ipAddress?: string) {

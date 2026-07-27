@@ -23,7 +23,7 @@ export class PurchaseRequestsService {
       branchId: string;
       warehouseId: string;
       departmentId?: string;
-      lines: Array<{ itemId: string; quantity: number }>;
+      lines: Array<{ itemId: string; quantity: number; uomId?: string }>;
     },
     userId: string,
   ) {
@@ -54,6 +54,7 @@ export class PurchaseRequestsService {
               create: body.lines.map((line) => ({
                 itemId: line.itemId,
                 quantity: line.quantity,
+                uomId: line.uomId || null,
               })),
             },
           },
@@ -62,10 +63,17 @@ export class PurchaseRequestsService {
             branch: true,
             lines: {
               include: {
+                uom: true,
                 item: {
                   include: {
                     unitOfMeasure: true,
                     category: true,
+                    uomConversions: {
+                      include: {
+                        fromUom: { select: { id: true, code: true, name: true } },
+                        toUom:   { select: { id: true, code: true, name: true } },
+                      },
+                    },
                   },
                 },
               },
@@ -174,10 +182,17 @@ export class PurchaseRequestsService {
         branch: true,
         lines: {
           include: {
+            uom: true,
             item: {
               include: {
                 unitOfMeasure: true,
                 category: true,
+                uomConversions: {
+                  include: {
+                    fromUom: { select: { id: true, code: true, name: true } },
+                    toUom:   { select: { id: true, code: true, name: true } },
+                  },
+                },
               },
             },
           },
@@ -208,7 +223,7 @@ export class PurchaseRequestsService {
     id: string,
     body: {
       version: number;
-      lines?: Array<{ itemId: string; quantity: number }>;
+      lines?: Array<{ itemId: string; quantity: number; uomId?: string }>;
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -248,6 +263,7 @@ export class PurchaseRequestsService {
               create: body.lines.map((line) => ({
                 itemId: line.itemId,
                 quantity: line.quantity,
+                uomId: line.uomId || null,
               })),
             },
           }),
@@ -257,10 +273,17 @@ export class PurchaseRequestsService {
           branch: true,
           lines: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
                   category: true,
+                  uomConversions: {
+                    include: {
+                      fromUom: { select: { id: true, code: true, name: true } },
+                      toUom:   { select: { id: true, code: true, name: true } },
+                    },
+                  },
                 },
               },
             },

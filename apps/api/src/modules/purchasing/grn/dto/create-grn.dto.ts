@@ -35,6 +35,10 @@ export class GrnLineDto {
 
   @IsString()
   @IsOptional()
+  uomId?: string | null;
+
+  @IsString()
+  @IsOptional()
   lotId?: string | null;
 
   @IsString()
@@ -62,16 +66,24 @@ export class GrnLineDto {
 
 export class CreateGrnDto {
   @IsString()
-  @IsNotEmpty()
-  poId!: string;
+  @IsOptional()
+  poId?: string | null;
+
+  @IsString()
+  @IsOptional()
+  supplierId?: string | null;
+
+  @IsString()
+  @IsOptional()
+  currencyId?: string | null;
 
   @IsString()
   @IsNotEmpty()
   warehouseId!: string;
 
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  currencyId?: string;
+  fxRate?: number | null;
 
   @IsString()
   @IsOptional()

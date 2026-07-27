@@ -30,7 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
+import { isDocumentLocked, canPerformActionV2, getConversionFactor, toBaseQty, type DocumentStatus } from '@logirest/shared-types';
+import { resolveUomCode } from '@/utils/uom-helper';
 import { useAuth } from '@/providers/AuthProvider';
 import type { LotAllocation, StockIssue, IssueLineItem } from '@/types/documents';
 import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
@@ -38,9 +39,10 @@ import { cn } from '@/lib/utils';
 import { ISSUE_STATUS } from '@logirest/shared-types';
 import { useAbortController } from '@/hooks/useAbortController';
 import { isItemBatchTracked } from '@/types/master-data';
+import { useUoMs } from '@/features/uoms/hooks/useUoMs';
+import { SmartCombobox, type ComboboxItem } from '@/components/shared/SmartCombobox';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { SmartCombobox, ComboboxItem } from '@/components/shared/SmartCombobox';
 import { useWarehouseInventory } from '@/features/inventory/hooks/useWarehouseInventory';
 import { RelationalName } from '@/components/shared/RelationalName';
 
@@ -49,6 +51,16 @@ interface IssueFormProps {
   id: string;
   isNew: boolean;
   onConflict?: () => void;
+}
+
+/** Extended line state that carries UOM conversion data for the UOM combobox */
+interface IssueLine extends LineItem {
+  /** Base-UOM quantity — always sent to the API */
+  baseQty: number;
+  /** UOM conversions fetched from item API (fromUomId, toUomId, factor) */
+  uomConversions: Array<{ fromUomId: string; toUomId: string; factor: number }>;
+  /** The item's base (primary) UOM id */
+  baseUomId: string;
 }
 
 export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
@@ -71,7 +83,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         code: l.item.code,
         name: l.item.name,
         image: l.item.image || null,
-        primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
+        primaryUom: { id: l.item.primaryUom?.id || l.uomId || '', code: l.item.primaryUom?.code || l.uomId || '' },
       },
       lot,
       qty: l.qty,
@@ -81,7 +93,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   };
 
   const [warehouseId] = useState(() => issue?.warehouseId || activeScope.warehouseId || '');
-  const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []).map(toLineItem));
+  const [lines, setLines] = useState<IssueLine[]>(() =>
+    (issue?.lines || []).map((l): IssueLine => ({
+      ...toLineItem(l),
+      baseQty: l.qty,
+      uomConversions: [],
+      baseUomId: l.uomId || '',
+    }))
+  );
   const [destinationId, setDestinationId] = useState(() => issue?.destinationDeptId ?? '');
   const [notes, setNotes] = useState(() => issue?.notes || '');
   const [scanError, setScanError] = useState('');
@@ -92,6 +111,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const submitIssue = useSubmitIssue({ onConflict });
   const cancelIssue = useCancelIssue({ onConflict });
   const { playSound } = useAudioFeedback();
+  const { data: uomsResult } = useUoMs();
+  const uoms = uomsResult?.data || [];
 
   const { data: inventoryData } = useWarehouseInventory(warehouseId, { enabled: !!warehouseId });
   const inventoryItems = inventoryData?.data || [];
@@ -116,7 +137,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   useEffect(() => {
     if (issue && issue.id !== lastResetId.current) {
       lastResetId.current = issue.id;
-      setLines((issue.lines || []).map(toLineItem));
+      setLines(
+        (issue.lines || []).map((l): IssueLine => ({
+          ...toLineItem(l),
+          baseQty: l.qty,
+          uomConversions: [],
+          baseUomId: l.uomId || '',
+        }))
+      );
       setDestinationId(issue.destinationDeptId ?? '');
       setNotes(issue.notes || '');
       setRequestedBy(issue.requestedBy ?? '');
@@ -194,7 +222,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
             name: z.string().optional(),
             nameAr: z.string().optional(),
             nameEn: z.string().optional()
-          })
+          }),
+          uomConversions: z.array(z.object({
+            fromUomId: z.string(),
+            toUomId: z.string(),
+            factor: z.coerce.number(),
+          })).optional().default([]),
         }))
       });
       const clean = barcode.trim();
@@ -256,8 +289,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
       if (totalAvailable <= 0) {
         playSound('error');
-        toast.error(t('no_stock_available') || "Shortage: No available stock for this item in this warehouse.");
-        setScanError(t('no_stock_available') || "Shortage: No available stock.");
+        const noStockMsg = t.has('no_stock_available') ? t('no_stock_available') : "Shortage: No available stock for this item in this warehouse.";
+        toast.error(noStockMsg);
+        setScanError(noStockMsg);
         throw new Error('NoStock');
       }
 
@@ -284,12 +318,15 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               name: item.name || (locale === 'ar' ? item.nameAr : item.nameEn) || '',
               nameAr: item.nameAr,
               nameEn: item.nameEn,
-              primaryUom: { code: item.primaryUom.code }
+              primaryUom: { id: item.primaryUom.id, code: item.primaryUom.code }
             },
             qty: targetQty,
+            baseQty: targetQty,
             uomId: item.primaryUom.id,
+            baseUomId: item.primaryUom.id,
+            uomConversions: item.uomConversions ?? [],
             lotAllocations: allocation
-          }];
+          } as IssueLine];
         });
 
         audioAlerts.playScanSuccess();
@@ -303,9 +340,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           toast.warning(shortageMsg);
         }
 
-        let lineToActivate: LineItem;
+        let lineToActivate: IssueLine;
         if (existingLine) {
-          lineToActivate = { ...existingLine, qty: targetQty };
+          lineToActivate = { ...existingLine, qty: targetQty } as IssueLine;
           setLines(prev => prev.map(l => l.id === existingLine.id ? lineToActivate : l));
         } else {
           lineToActivate = {
@@ -316,12 +353,15 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               name: item.name || (locale === 'ar' ? item.nameAr : item.nameEn) || '',
               nameAr: item.nameAr,
               nameEn: item.nameEn,
-              primaryUom: { code: item.primaryUom.code }
+              primaryUom: { id: item.primaryUom.id, code: item.primaryUom.code }
             },
             qty: targetQty,
+            baseQty: targetQty,
             uomId: item.primaryUom.id,
+            baseUomId: item.primaryUom.id,
+            uomConversions: item.uomConversions ?? [],
             lotAllocations: []
-          };
+          } as IssueLine;
           setLines(prev => [...prev, lineToActivate]);
         }
 
@@ -336,7 +376,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   };
 
   const removeLine = (lineId: string) => {
-    setLines(prev => prev.filter(l => l.id !== lineId));
+    setLines(prev => prev.filter(l => l.id !== lineId) as IssueLine[]);
   };
 
   const handleLotClick = (line: LineItem) => {
@@ -350,7 +390,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       const currentLine = lines.find(l => l.id === activeLine.id);
       const hasAllocations = (currentLine?.lotAllocations && currentLine.lotAllocations.length > 0);
       if (!hasAllocations) {
-        setLines(prev => prev.filter(l => l.id !== activeLine.id));
+        setLines(prev => prev.filter(l => l.id !== activeLine.id) as IssueLine[]);
       }
     }
     setActiveLine(null);
@@ -577,9 +617,57 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                 isReadOnly={isDocLocked}
                 onRemoveLine={removeLine}
                 dense={true}
-                hideUomColumn={true}
                 noCollapse={false}
                 mobileLayoutPattern="issue-form"
+                renderUom={(line) => {
+                  const issueLine = line as IssueLine;
+                  const uomOptions = [
+                    // Always include primary UOM
+                    ...(issueLine.baseUomId ? [{
+                      id: issueLine.baseUomId,
+                      name: issueLine.item.primaryUom?.code || issueLine.baseUomId,
+                    }] : []),
+                    // Add alternate UOMs from conversions
+                    ...uoms
+                      .filter(u => u.id !== issueLine.baseUomId &&
+                        issueLine.uomConversions.some(c => c.fromUomId === u.id || c.toUomId === u.id)
+                      )
+                      .map(u => ({ id: u.id, name: u.code || u.name })),
+                  ];
+
+                  const resolvedCode = resolveUomCode(issueLine.uomId, issueLine.item, uoms);
+
+                  if (uomOptions.length <= 1 || isDocLocked) {
+                    return (
+                      <span className="text-label-xs font-bold uppercase text-muted-foreground px-2 py-0.5 bg-surface-container rounded-lg font-mono">
+                        {resolvedCode}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <SmartCombobox
+                      items={uomOptions}
+                      value={issueLine.uomId}
+                      onSelect={(uom) => {
+                        const factor = getConversionFactor(
+                          uom.id,
+                          issueLine.baseUomId,
+                          issueLine.uomConversions,
+                        );
+                        const currentBaseQty = issueLine.baseQty ?? issueLine.qty;
+                        const newDisplayQty = parseFloat((currentBaseQty / factor).toFixed(4));
+                        setLines(prev => prev.map(l =>
+                          l.id === line.id
+                            ? { ...l, uomId: uom.id, qty: newDisplayQty, baseQty: currentBaseQty } as IssueLine
+                            : l
+                        ));
+                      }}
+                      placeholder={issueLine.item.primaryUom?.code || 'UOM'}
+                      triggerClassName="h-9 px-2 text-xs border border-border/70 bg-surface-container-highest/30 text-foreground text-center rounded-lg w-full font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
+                    />
+                  );
+                }}
                 extraColumns={[
                   {
                     header: t('allocate'),

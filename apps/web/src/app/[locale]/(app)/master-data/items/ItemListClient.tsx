@@ -115,7 +115,7 @@ export function ItemListClient({ locale }: { locale: string }) {
    header: ti('fields.base_unit'), 
    cell: ({ row }) => (
     <span className="text-label-xs font-bold uppercase text-muted-foreground px-2 py-0.5 bg-surface-container rounded-lg">
-     {row.original.primaryUom.code}
+     {row.original.primaryUom?.code}
     </span>
    )
   },
@@ -350,7 +350,7 @@ function VirtualizedMobileItemList({ items, onView, onEdit, tYes, tNo, tView, tE
      </div>
      <div className="flex justify-between items-center pt-2 mt-1 border-t border-border/20">
       <div className="flex gap-1.5 flex-wrap">
-       <span className="text-[10px] font-medium text-muted-foreground bg-surface-container px-2 py-0.5 rounded uppercase">{item.primaryUom.code}</span>
+       <span className="text-[10px] font-medium text-muted-foreground bg-surface-container px-2 py-0.5 rounded uppercase">{item.primaryUom?.code}</span>
        {item.trackLots ? (
         <span className="text-[10px] font-bold text-operational-cyan bg-operational-cyan/10 px-2 py-0.5 rounded whitespace-nowrap">{tYes}</span>
        ) : (

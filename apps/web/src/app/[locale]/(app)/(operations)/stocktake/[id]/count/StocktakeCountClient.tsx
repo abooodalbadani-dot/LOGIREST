@@ -26,6 +26,8 @@ import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { ScopeGuard } from "@/components/shared/ScopeGuard";
+import { SmartCombobox } from "@/components/shared/SmartCombobox"
+import { resolveUomCode } from "@/utils/uom-helper";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -467,7 +469,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                       </div>
                       <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded shrink-0">
                         <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase">
-                          {line.uom}
+                          {resolveUomCode(line.uom, null, null, 'PCS')}
                         </span>
                       </div>
                     </div>

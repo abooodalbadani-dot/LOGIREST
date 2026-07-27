@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem, useDeleteItem, useNextItemCode } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category, type UoMConversion } from '@/types/master-data';
+import { ItemFormSchema, type ItemFormValues, type ItemFormInput, UoMSchema, type Category, type UoMConversion } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -66,7 +66,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
-    useForm<ItemFormValues>({
+    useForm<ItemFormInput>({
       resolver: zodResolver(ItemFormSchema),
       disabled: isReadOnly,
       defaultValues: {
@@ -143,7 +143,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
   }, [uoms?.data, tm]);
 
-  const onValid = (values: ItemFormValues) => {
+  const onValid = (values: ItemFormInput) => {
     if (isReadOnly) return;
 
     const payload = {
@@ -203,7 +203,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     }
   };
 
-  const onInvalid = (errors: FieldErrors<ItemFormValues>) => {
+  const onInvalid = (errors: FieldErrors<ItemFormInput>) => {
     console.log('3. [ItemForm] Validation FAILED (Silent Zod Blocker):', errors);
     onFormError(errors);
   };

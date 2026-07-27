@@ -63,7 +63,14 @@ export class ItemsService {
     barcodeMappings: Array<{ barcode: string }>;
     category: { id: string; code: string; name: string; version: number } | null;
     unitOfMeasure: { id: string; code: string; name: string; version: number } | null;
-    uomConversions?: Array<{ id?: string; fromUomId: string; toUomId: string; factor: unknown }>;
+    uomConversions?: Array<{
+      id?: string;
+      fromUomId: string;
+      toUomId: string;
+      factor: unknown;
+      fromUom?: { id: string; code: string; name: string } | null;
+      toUom?: { id: string; code: string; name: string } | null;
+    }>;
     warehouseItems?: Array<{ qtyOnHand: unknown }>;
   }) {
     const qtyVal = item.warehouseItems?.[0]?.qtyOnHand
@@ -74,8 +81,12 @@ export class ItemsService {
       id: c.id,
       fromUomId: c.fromUomId,
       from_uom_id: c.fromUomId,
+      fromUomCode: c.fromUom?.code ?? '',
+      fromUomName: c.fromUom?.name ?? '',
       toUomId: c.toUomId,
       to_uom_id: c.toUomId,
+      toUomCode: c.toUom?.code ?? '',
+      toUomName: c.toUom?.name ?? '',
       factor: parseFloat(String(c.factor)),
     }));
 
@@ -207,7 +218,12 @@ export class ItemsService {
           category: { select: { id: true, code: true, name: true, version: true } },
           unitOfMeasure: { select: { id: true, code: true, name: true, version: true } },
           barcodeMappings: { select: { barcode: true }, take: 1 },
-          uomConversions: true,
+          uomConversions: {
+            include: {
+              fromUom: { select: { id: true, code: true, name: true } },
+              toUom: { select: { id: true, code: true, name: true } },
+            },
+          },
           warehouseItems: filters.warehouse_id
             ? {
                 where: { warehouseId: filters.warehouse_id },
@@ -256,7 +272,12 @@ export class ItemsService {
         category: true,
         unitOfMeasure: true,
         barcodeMappings: true,
-        uomConversions: true,
+        uomConversions: {
+          include: {
+            fromUom: { select: { id: true, code: true, name: true } },
+            toUom: { select: { id: true, code: true, name: true } },
+          },
+        },
       },
     });
 

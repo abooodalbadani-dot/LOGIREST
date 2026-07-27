@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useWarehouseInventory } from '@/features/inventory/hooks/useWarehouseInventory';
-import { type Item } from '@/features/items/types';
 import { useCreateTransfer } from '@/features/operations/hooks/useCreateTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
@@ -23,6 +22,9 @@ import { audioAlerts } from '@/utils/audio';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 import { Save, Warehouse, PackagePlus, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
+import { Item, ItemSchema } from '@/types/master-data';
+import { getAvailableUomsForItem, resolveUomCode, handleUomChange } from '@/utils/uom-helper';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -171,6 +173,8 @@ export function TransferNewClient() {
   const createTransfer = useCreateTransfer();
   const { playSound } = useAudioFeedback();
 
+  const { data: itemsMaster } = useMasterDataList('items', ItemSchema);
+
   // Inventory balance hook enabled when fromWarehouseId is active
   const { data: inventoryBalances, isError: isBalanceError, isLoading: isBalanceLoading } = useInventoryBalance(
     fromWarehouseId ? { warehouse_id: fromWarehouseId } : undefined,
@@ -193,7 +197,7 @@ export function TransferNewClient() {
         barcode: inv.primaryBarcode || inv.itemCode,
         name: inv.itemName,
         qtyAvailable: inv.qtyAvailable,
-        primaryUom: { id: inv.uomCode || '', code: inv.uomCode || '' },
+        primaryUom: { id: inv.uomId || inv.primaryUom?.id || inv.uomCode || '', code: inv.uomCode || inv.primaryUom?.code || '' },
         isActive: true,
         image: inv.image || null,
       }));
@@ -250,7 +254,7 @@ export function TransferNewClient() {
           `/items?search=${encodeURIComponent(clean)}`,
           z.object({ data: z.array(z.unknown()) })
         );
-        const apiFound = (res as { data: Array<{ id: string; code: string; name: string; barcode?: string; primaryUom?: { code?: string } }> })?.data?.[0];
+        const apiFound = (res as { data: Array<{ id: string; code: string; name: string; barcode?: string; primaryUom?: { id?: string; code?: string }; unitOfMeasureId?: string }> })?.data?.[0];
         if (apiFound) {
           item = {
             id: apiFound.id,
@@ -258,7 +262,7 @@ export function TransferNewClient() {
             barcode: apiFound.barcode || apiFound.code,
             name: apiFound.name,
             qtyAvailable: 999999,
-            primaryUom: { id: apiFound.primaryUom?.code || 'EA', code: apiFound.primaryUom?.code || 'EA' },
+            primaryUom: { id: apiFound.primaryUom?.id || apiFound.unitOfMeasureId || apiFound.primaryUom?.code || 'EA', code: apiFound.primaryUom?.code || 'EA' },
             isActive: true,
             image: null,
           };
@@ -313,7 +317,7 @@ export function TransferNewClient() {
           code: item.code,
           name: item.name,
           image: item.image || null,
-          primaryUom: { code: item.primaryUom.code }
+          primaryUom: { id: item.primaryUom.id, code: item.primaryUom.code }
         },
         qty: 1,
         uomId: item.primaryUom.id,
@@ -437,16 +441,41 @@ export function TransferNewClient() {
     );
   }, [inventoryBalances?.data, handleQtyChange, locale]);
 
+  const renderUom = useCallback((line: { id: string; item?: { primaryUom?: { code?: string } } }) => {
+    const lineItem = lines.find(l => l.id === line.id);
+    const matchedItem = itemsMaster?.data?.find((i: Item) => i.id === lineItem?.itemId);
+    const availableUoms = getAvailableUomsForItem(matchedItem);
+    const currentUomId = lineItem?.uomId || matchedItem?.primaryUom?.id || '';
+    const resolvedCode = resolveUomCode(currentUomId, matchedItem);
+
+    if (availableUoms.length <= 1) {
+      return (
+        <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2 py-1 bg-surface-container rounded font-mono font-bold">
+          {resolvedCode}
+        </span>
+      );
+    }
+
+    return (
+      <SmartCombobox
+        items={availableUoms}
+        value={currentUomId}
+        onSelect={(uom) => {
+          setLines(prev => prev.map(l => (l.id === line.id ? { ...l, uomId: uom.id } : l)));
+        }}
+        triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
+      />
+    );
+  }, [lines, itemsMaster?.data]);
+
   const extraColumns = useMemo(() => [
     {
-      header: tCommon('notes'),
-      headerClassName: "w-full min-w-[200px] text-start",
-      cellClassName: "w-full min-w-[200px] text-start",
-      cell: (line: NewTransferLine) => (
+      header: tCommon('table_headers.notes') || 'Notes',
+      cell: (line: { id: string; notes?: string }) => (
         <TransferLineNotesCell
-          locale={locale as 'ar' | 'en'}
+          locale={locale}
           lineId={line.id}
-          notes={line.notes}
+          notes={(line as NewTransferLine).notes}
           onChange={(val) => handleNotesChange(line.id, val)}
         />
       )
@@ -522,7 +551,7 @@ export function TransferNewClient() {
         )}
       </div>
 
-      <div className="flex flex-col max-w-4xl mx-auto w-full bg-card rounded-none sm:rounded-2xl relative shadow-lg border border-border/60 overflow-hidden mb-10">
+      <div className="flex flex-col max-w-6xl mx-auto w-full bg-card rounded-none sm:rounded-2xl relative shadow-lg border border-border/60 overflow-hidden mb-10">
 
         {/* Top Section: Parameters */}
         <div className="p-4 sm:p-8 border-b border-border/40 bg-surface-container-highest/10">
@@ -655,7 +684,6 @@ export function TransferNewClient() {
               isReadOnly={false}
               onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
               hideLotColumns={true}
-              hideUomColumn={true}
               noCollapse={false}
               dense={false}
               mobileLayoutPattern="transfer-form"
@@ -666,6 +694,7 @@ export function TransferNewClient() {
                 uom: tCommon('table_headers.uom'),
               }}
               renderQty={renderQty}
+              renderUom={renderUom}
               extraColumns={extraColumns}
             />
           </div>

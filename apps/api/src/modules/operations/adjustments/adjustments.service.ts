@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
+import { toBaseQty } from '@logirest/shared-types';
 import {
   AdjustmentDirection,
   AdjustmentReason,
@@ -33,6 +34,7 @@ export class AdjustmentsService {
         itemId: string;
         lotId?: string;
         quantity: number;
+        uomId?: string;
         direction: AdjustmentDirection;
         reason: AdjustmentReason;
         unitCost?: number;
@@ -83,6 +85,26 @@ export class AdjustmentsService {
         }
 
         if (line.direction === AdjustmentDirection.OUT) {
+          // Fetch the item to get its base UOM and conversions for stock check
+          const itemForCheck = await tx.item.findUnique({
+            where: { id: line.itemId },
+            select: {
+              uomId: true,
+              uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+            },
+          });
+          const baseUomId = itemForCheck?.uomId ?? line.itemId;
+          const conversions = (itemForCheck?.uomConversions ?? []).map((c) => ({
+            fromUomId: c.fromUomId,
+            toUomId: c.toUomId,
+            factor: Number(c.factor),
+          }));
+          const normalizedQtyForCheck = toBaseQty(
+            line.quantity,
+            (line as { uomId?: string }).uomId ?? baseUomId,
+            baseUomId,
+            conversions,
+          );
           const whItem = await tx.warehouseItem.findUnique({
             where: {
               warehouseId_itemId: {
@@ -93,10 +115,10 @@ export class AdjustmentsService {
             select: { qtyOnHand: true },
           });
           const available = Number(whItem?.qtyOnHand ?? 0);
-          if (available < line.quantity) {
+          if (available < normalizedQtyForCheck) {
             throw new BadRequestException(
               `Insufficient stock for DECREASE adjustment: item ${line.itemId} ` +
-                `has ${available} on hand, requested ${line.quantity}.`,
+                `has ${available} on hand, requested ${normalizedQtyForCheck} (base UOM).`,
             );
           }
         }
@@ -110,6 +132,7 @@ export class AdjustmentsService {
 
       const preparedLines = await Promise.all(
         body.lines.map(async (line) => {
+          // Resolve lot ID
           let resolvedLotId: string | null = null;
           if (line.lotId) {
             const cleanLotNum = line.lotId.replace(/^new-/, '').trim();
@@ -135,9 +158,35 @@ export class AdjustmentsService {
               resolvedLotId = createdLot.id;
             }
           }
+
+          // Normalize quantity to base UOM before persisting
+          const lineUomId = (line as { uomId?: string }).uomId;
+          let normalizedQty = line.quantity;
+          let resolvedUomId: string | null = null;
+          if (lineUomId) {
+            const itemData = await tx.item.findUnique({
+              where: { id: line.itemId },
+              select: {
+                uomId: true,
+                uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+              },
+            });
+            if (itemData) {
+              const conversions = itemData.uomConversions.map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              normalizedQty = toBaseQty(line.quantity, lineUomId, itemData.uomId, conversions);
+              resolvedUomId = lineUomId;
+            }
+          }
+
           return {
             ...line,
             lotId: resolvedLotId,
+            normalizedQty,
+            resolvedUomId,
           };
         }),
       );
@@ -169,7 +218,8 @@ export class AdjustmentsService {
             create: preparedLines.map((line) => ({
               itemId: line.itemId,
               lotId: line.lotId || null,
-              quantity: line.quantity,
+              quantity: line.normalizedQty,
+              uomId: line.resolvedUomId || null,
               direction: line.direction,
               reason: line.reason,
               unitCost:

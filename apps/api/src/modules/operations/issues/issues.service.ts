@@ -7,6 +7,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType, Prisma, Role, IssueStatus } from '@prisma/client';
+import { toBaseQty } from '@logirest/shared-types';
 
 @Injectable()
 export class IssuesService {
@@ -22,6 +23,7 @@ export class IssuesService {
       lines: Array<{
         itemId: string;
         quantity: number;
+        uomId?: string;
         lotAllocations?: Array<{
           lotId?: string;
           lotNumber?: string;
@@ -62,9 +64,33 @@ export class IssuesService {
               `Cannot create issue: item ${line.itemId} is frozen in this warehouse.`,
             );
           }
-          if (!whItem || Number(whItem.qtyOnHand) < line.quantity) {
+          // Normalize quantity to base UOM before comparing with on-hand stock
+          let normalizedQtyForCheck = line.quantity;
+          if (line.uomId) {
+            const itemForCheck = await tx.item.findUnique({
+              where: { id: line.itemId },
+              select: {
+                uomId: true,
+                uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+              },
+            });
+            if (itemForCheck) {
+              const conversions = itemForCheck.uomConversions.map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              normalizedQtyForCheck = toBaseQty(
+                line.quantity,
+                line.uomId,
+                itemForCheck.uomId,
+                conversions,
+              );
+            }
+          }
+          if (!whItem || Number(whItem.qtyOnHand) < normalizedQtyForCheck) {
             throw new BadRequestException(
-              `Insufficient stock: requested quantity (${line.quantity}) exceeds available on hand for item ${line.itemId}.`,
+              `Insufficient stock: requested quantity (${normalizedQtyForCheck} base units) exceeds available on hand for item ${line.itemId}.`,
             );
           }
         }
@@ -77,6 +103,28 @@ export class IssuesService {
 
         const linesToCreate = await Promise.all(
           body.lines.map(async (line) => {
+            // Normalize quantity to base UOM before persisting
+            let normalizedQty = line.quantity;
+            let resolvedUomId: string | null = null;
+            if (line.uomId) {
+              const itemData = await tx.item.findUnique({
+                where: { id: line.itemId },
+                select: {
+                  uomId: true,
+                  uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                },
+              });
+              if (itemData) {
+                const conversions = itemData.uomConversions.map((c) => ({
+                  fromUomId: c.fromUomId,
+                  toUomId: c.toUomId,
+                  factor: Number(c.factor),
+                }));
+                normalizedQty = toBaseQty(line.quantity, line.uomId, itemData.uomId, conversions);
+                resolvedUomId = line.uomId;
+              }
+            }
+
             const allocationsToCreate: Array<{
               lotId: string;
               quantityAllocated: number;
@@ -111,7 +159,8 @@ export class IssuesService {
 
             return {
               itemId: line.itemId,
-              quantity: line.quantity,
+              quantity: normalizedQty,
+              uomId: resolvedUomId,
               ...(allocationsToCreate.length > 0 && {
                 lotAllocations: {
                   create: allocationsToCreate,

@@ -80,7 +80,15 @@ export class InventoryService {
       ),
       reorderPoint:
         wItem.item.reorderPoint !== null ? Number(wItem.item.reorderPoint) : 0,
+      uomId: wItem.item.unitOfMeasure?.id || null,
       uomCode: wItem.item.unitOfMeasure?.code || 'PCS',
+      primaryUom: wItem.item.unitOfMeasure
+        ? {
+            id: wItem.item.unitOfMeasure.id,
+            code: wItem.item.unitOfMeasure.code,
+            name: wItem.item.unitOfMeasure.name,
+          }
+        : null,
       wac: Number(wItem.wac || 0),
       image: wItem.item.image,
       primaryBarcode: wItem.item.barcodeMappings[0]?.barcode ?? null,

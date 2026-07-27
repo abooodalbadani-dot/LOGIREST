@@ -7,12 +7,15 @@ import { toast } from 'sonner';
 import { GRNDetailSchema } from './useGRN';
 
 const CreateGRNPayloadSchema = z.object({
- poId: z.string(),
- currencyId: z.string().optional(),
- warehouseId: z.string(),
+  poId: z.string().optional().nullable().or(z.literal('')),
+  supplierId: z.string().optional().nullable(),
+  currencyId: z.string().optional(),
+  warehouseId: z.string(),
+  fxRate: z.number().optional().nullable(),
  notes: z.string().optional(),
  lines: z.array(z.object({
   itemId: z.string(),
+  uomId: z.string().optional().nullable(),
   lotId: z.string().nullable().optional(),
   lotNumber: z.string().nullable().optional(),
   expiryDate: z.string().nullable().optional(),

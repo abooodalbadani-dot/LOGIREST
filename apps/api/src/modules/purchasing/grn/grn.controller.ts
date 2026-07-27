@@ -49,7 +49,8 @@ interface UpdateGrnLineBody {
 function mapGRNDetail(grn: Record<string, unknown>) {
   const grnLines = (grn.lines as Record<string, unknown>[]) || [];
   const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
-  const supplier = purchaseOrder?.supplier as Record<string, unknown> | null;
+  const supplier = (grn.supplier as Record<string, unknown> | null) || (purchaseOrder?.supplier as Record<string, unknown> | null);
+  const currency = (grn.currency as Record<string, unknown> | null) || (purchaseOrder?.currency as Record<string, unknown> | null);
   const warehouse = grn.warehouse as Record<string, unknown> | null;
 
   const lines = grnLines.map((line: Record<string, unknown>) => {
@@ -95,7 +96,7 @@ function mapGRNDetail(grn: Record<string, unknown>) {
         : null,
       qty: Number(line.quantityReceived),
       receivedQty: Number(line.quantityReceived),
-      uomId: (item?.uomId as string) || '',
+      uomId: (line.uomId as string) || (item?.uomId as string) || '',
       unitCostForeign:
         line.unitPriceForeign !== undefined && line.unitPriceForeign !== null
           ? Number(line.unitPriceForeign)
@@ -114,11 +115,14 @@ function mapGRNDetail(grn: Record<string, unknown>) {
       ).toISOString()
     : new Date().toISOString();
 
+  const supplierId = (grn.supplierId as string) || (purchaseOrder?.supplierId as string) || '';
+  const currencyId = (grn.currencyId as string) || (purchaseOrder?.currencyId as string) || '';
+
   return {
     id: grn.id as string,
     documentNumber: grn.grnNumber as string,
     status: grn.status as string,
-    supplierId: (purchaseOrder?.supplierId as string) || '',
+    supplierId,
     supplier: supplier
       ? {
           id: supplier.id as string,
@@ -129,10 +133,8 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     poId: grn.poId as string,
     poNumber: (purchaseOrder?.poNumber as string) || '',
     poFxRate: 1.0,
-    currencyId: (purchaseOrder?.currencyId as string) || '',
-    currencyCode:
-      ((purchaseOrder?.currency as Record<string, unknown> | null)
-        ?.code as string) || '',
+    currencyId,
+    currencyCode: (currency?.code as string) || '',
     warehouseId: grn.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     fxRate:
@@ -242,8 +244,8 @@ export class GrnController {
   ) {
     const poId = body.poId;
     const warehouseId = body.warehouseId;
-    if (!poId || !warehouseId) {
-      throw new BadRequestException('poId and warehouseId are required');
+    if (!warehouseId) {
+      throw new BadRequestException('warehouseId is required');
     }
 
     await this.scopeValidationService.validateWarehouse(
@@ -267,6 +269,7 @@ export class GrnController {
       const unitPrice = Number(line.unitCostForeign);
       return {
         itemId: itemId || '',
+        uomId: line.uomId || undefined,
         lotId: lotId || null,
         lotNumber: lotNumber || null,
         expiryDate: expiryDate || null,
@@ -276,7 +279,7 @@ export class GrnController {
     });
 
     const grn = await this.grnService.create(
-      { poId, warehouseId, notes: body.notes, lines },
+      { poId, supplierId: body.supplierId, currencyId: body.currencyId, warehouseId, fxRate: body.fxRate, notes: body.notes, lines },
       userId,
     );
     return { data: mapGRNDetail(grn) };
@@ -440,6 +443,7 @@ export class GrnController {
       | Array<{
           id?: string;
           itemId: string;
+          uomId?: string;
           lotId?: string | null;
           lotNumber?: string | null;
           expiryDate?: string | null;
@@ -463,6 +467,7 @@ export class GrnController {
         return {
           id: line.id,
           itemId: itemId || '',
+          uomId: line.uomId || undefined,
           lotId: lotId || null,
           lotNumber: lotNumber || null,
           expiryDate: expiryDate || null,
@@ -474,7 +479,11 @@ export class GrnController {
 
     const grn = await this.grnService.update(id, {
       poId,
+      supplierId: body.supplierId,
+      currencyId: body.currencyId,
+      fxRate: body.fxRate,
       warehouseId,
+      notes: body.notes,
       version: body.version,
       lines,
     });

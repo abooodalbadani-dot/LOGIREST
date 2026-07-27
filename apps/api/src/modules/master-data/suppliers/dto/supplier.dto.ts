@@ -18,6 +18,10 @@ export class CreateSupplierDto {
 
   @IsString()
   @IsOptional()
+  currencyId?: string | null;
+
+  @IsString()
+  @IsOptional()
   @IsEmail()
   contactEmail?: string;
 
@@ -46,6 +50,10 @@ export class UpdateSupplierDto {
   @IsString()
   @IsOptional()
   code?: string;
+
+  @IsString()
+  @IsOptional()
+  currencyId?: string | null;
 
   @IsString()
   @IsOptional()

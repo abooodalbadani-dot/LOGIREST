@@ -39,6 +39,10 @@ export class UpdateGrnLineDto {
 
   @IsString()
   @IsOptional()
+  uomId?: string | null;
+
+  @IsString()
+  @IsOptional()
   lotId?: string | null;
 
   @IsString()
@@ -71,11 +75,19 @@ export class UpdateGrnDto {
 
   @IsString()
   @IsOptional()
+  supplierId?: string | null;
+
+  @IsString()
+  @IsOptional()
   warehouseId?: string;
 
   @IsString()
   @IsOptional()
   currencyId?: string;
+
+  @IsNumber()
+  @IsOptional()
+  fxRate?: number | null;
 
   @IsInt()
   @IsNotEmpty()

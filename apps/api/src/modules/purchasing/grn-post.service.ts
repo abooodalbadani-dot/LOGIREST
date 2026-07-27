@@ -273,73 +273,76 @@ export class GrnPostService {
             }
 
             // 4. Task 1.3: Update PO Status (Auto-fulfillment)
-            const poLines = await tx.pOLine.findMany({
-              where: { poId: grn.poId },
-            });
-            const allPostedGrns = await tx.goodsReceivedNote.findMany({
-              where: { poId: grn.poId, status: 'POSTED' },
-              include: { lines: true },
-            });
-
-            const receivedTotals = new Map<string, number>();
-            for (const pGrn of allPostedGrns) {
-              for (const pLine of pGrn.lines) {
-                receivedTotals.set(
-                  pLine.itemId,
-                  (receivedTotals.get(pLine.itemId) || 0) +
-                    Number(pLine.quantityReceived),
-                );
-              }
-            }
-
-            let allFulfilled = true;
-            let anyFulfilled = false;
-            for (const pol of poLines) {
-              const reqQty = Number(pol.quantity);
-              const recQty = receivedTotals.get(pol.itemId) || 0;
-              if (recQty >= reqQty) {
-                anyFulfilled = true;
-              } else {
-                allFulfilled = false;
-                if (recQty > 0) anyFulfilled = true;
-              }
-            }
-
-            const newPoStatus = allFulfilled
-              ? 'FULFILLED'
-              : anyFulfilled
-                ? 'PARTIAL'
-                : 'APPROVED';
-            const currentPo = await tx.purchaseOrder.findUnique({
-              where: { id: grn.poId },
-            });
-
-            if (currentPo && currentPo.status !== newPoStatus) {
-              await tx.purchaseOrder.update({
-                where: { id: grn.poId },
-                data: { status: newPoStatus, version: { increment: 1 } },
+            if (grn.poId) {
+              const poId = grn.poId;
+              const poLines = await tx.pOLine.findMany({
+                where: { poId },
+              });
+              const allPostedGrns = await tx.goodsReceivedNote.findMany({
+                where: { poId, status: 'POSTED' },
+                include: { lines: true },
               });
 
-              const poStep =
-                (await tx.approvalEvent.count({
-                  where: {
-                    documentId: grn.poId,
+              const receivedTotals = new Map<string, number>();
+              for (const pGrn of allPostedGrns) {
+                for (const pLine of pGrn.lines) {
+                  receivedTotals.set(
+                    pLine.itemId,
+                    (receivedTotals.get(pLine.itemId) || 0) +
+                      Number(pLine.quantityReceived),
+                  );
+                }
+              }
+
+              let allFulfilled = true;
+              let anyFulfilled = false;
+              for (const pol of poLines) {
+                const reqQty = Number(pol.quantity);
+                const recQty = receivedTotals.get(pol.itemId) || 0;
+                if (recQty >= reqQty) {
+                  anyFulfilled = true;
+                } else {
+                  allFulfilled = false;
+                  if (recQty > 0) anyFulfilled = true;
+                }
+              }
+
+              const newPoStatus = allFulfilled
+                ? 'FULFILLED'
+                : anyFulfilled
+                  ? 'PARTIAL'
+                  : 'APPROVED';
+              const currentPo = await tx.purchaseOrder.findUnique({
+                where: { id: poId },
+              });
+
+              if (currentPo && currentPo.status !== newPoStatus) {
+                await tx.purchaseOrder.update({
+                  where: { id: poId },
+                  data: { status: newPoStatus, version: { increment: 1 } },
+                });
+
+                const poStep =
+                  (await tx.approvalEvent.count({
+                    where: {
+                      documentId: poId,
+                      documentType: PrismaDocType.PURCHASE_ORDER,
+                    },
+                  })) + 1;
+
+                await tx.approvalEvent.create({
+                  data: {
+                    documentId: poId,
                     documentType: PrismaDocType.PURCHASE_ORDER,
+                    fromStatus: currentPo.status,
+                    toStatus: newPoStatus,
+                    actionPerformed: 'AUTO_FULFILL',
+                    userId,
+                    userRole: userRole,
+                    stepNumber: poStep,
                   },
-                })) + 1;
-
-              await tx.approvalEvent.create({
-                data: {
-                  documentId: grn.poId,
-                  documentType: PrismaDocType.PURCHASE_ORDER,
-                  fromStatus: currentPo.status,
-                  toStatus: newPoStatus,
-                  actionPerformed: 'AUTO_FULFILL',
-                  userId,
-                  userRole: userRole,
-                  stepNumber: poStep,
-                },
-              });
+                });
+              }
             }
 
             const updatedGrn = await tx.goodsReceivedNote.findUnique({

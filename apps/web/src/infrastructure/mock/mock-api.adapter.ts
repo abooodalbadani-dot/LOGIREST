@@ -84,7 +84,7 @@ async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<Purc
       lotId: l.lotId || l.lot_id || null,
       lot: null,
       qty,
-      uomId: l.uomId || l.uom_id || item?.primaryUom.id || '',
+      uomId: l.uomId || l.uom_id || item?.primaryUom?.id || '',
       unitCost: null,
       requestedQty: qty,
       reqQty: qty, // Alias for feature schema
@@ -123,8 +123,8 @@ async function hydrateAdjustment(doc: Record<string, unknown>): Promise<Record<s
         name_ar: item.name,
         name_en: item.name,
         primary_uom: {
-          id: item.primaryUom.id,
-          code: item.primaryUom.code,
+          id: item.primaryUom?.id ?? '',
+          code: item.primaryUom?.code ?? '',
         }
       } : {
         id: itemId,
@@ -136,7 +136,7 @@ async function hydrateAdjustment(doc: Record<string, unknown>): Promise<Record<s
       direction: String(l.direction || 'INCREASE'),
       qty_before: Number(l.qty_before ?? 0),
       qty_adjusted: Number(l.qty_adjusted ?? 0),
-      uomId: String(l.uomId || item?.primaryUom.id || 'uom-pcs'),
+      uomId: String(l.uomId || item?.primaryUom?.id || 'uom-pcs'),
       reason_notes: l.reason_notes ? String(l.reason_notes) : undefined,
     };
   }));
@@ -178,10 +178,10 @@ async function hydrateIssue(doc: Record<string, unknown>): Promise<Record<string
         nameAr: item.name,
         nameEn: item.name,
         primaryUom: {
-          id: item.primaryUom.id,
-          code: item.primaryUom.code,
-          nameAr: item.primaryUom.name || item.primaryUom.code,
-          nameEn: item.primaryUom.name || item.primaryUom.code
+          id: item.primaryUom?.id ?? '',
+          code: item.primaryUom?.code ?? '',
+          nameAr: item.primaryUom?.name || item.primaryUom?.code || '',
+          nameEn: item.primaryUom?.name || item.primaryUom?.code || ''
         }
       } : {
         id: itemId,
@@ -198,7 +198,7 @@ async function hydrateIssue(doc: Record<string, unknown>): Promise<Record<string
         isExpired: lot.isExpired || false,
       } : null,
       qty: Number(l.qty ?? 0),
-      uomId: String(l.uomId || item?.primaryUom.id || 'uom-pcs'),
+      uomId: String(l.uomId || item?.primaryUom?.id || 'uom-pcs'),
       unitCost: l.unitCost !== undefined && l.unitCost !== null ? Number(l.unitCost) : null,
       requestedQty: Number(l.requestedQty ?? l.qty ?? 0),
       issuedQty: Number(l.issuedQty ?? 0),
@@ -243,10 +243,10 @@ async function hydrateTransfer(doc: Record<string, unknown>): Promise<Record<str
         nameAr: item.name,
         nameEn: item.name,
         primaryUom: {
-          id: item.primaryUom.id,
-          code: item.primaryUom.code,
-          nameAr: item.primaryUom.name || item.primaryUom.code,
-          nameEn: item.primaryUom.name || item.primaryUom.code
+          id: item.primaryUom?.id ?? '',
+          code: item.primaryUom?.code ?? '',
+          nameAr: item.primaryUom?.name || item.primaryUom?.code || '',
+          nameEn: item.primaryUom?.name || item.primaryUom?.code || ''
         }
       } : {
         id: itemId,
@@ -261,7 +261,7 @@ async function hydrateTransfer(doc: Record<string, unknown>): Promise<Record<str
       unitCost: null,
       shippedQty: shippedQty,
       receivedQty: l.receivedQty !== undefined && l.receivedQty !== null ? Number(l.receivedQty) : null,
-      uomId: String(l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs'),
+      uomId: String(l.uomId || l.uom_id || item?.primaryUom?.id || 'uom-pcs'),
       lotAllocations: lotAllocations
     };
   }));
@@ -281,7 +281,7 @@ async function hydrateKitchenRequest(doc: Record<string, unknown>): Promise<Reco
       itemId,
       itemName: item ? item.name : 'Custom Item',
       itemCode: item ? item.code : 'CUSTOM',
-      uom: item ? item.primaryUom.code : 'PCS',
+      uom: item ? item.primaryUom?.code : 'PCS',
       quantity: Number(l.quantity ?? 0),
       notes: l.notes ? String(l.notes) : '',
       fulfilled_quantity: Number(l.fulfilled_quantity ?? l.fulfilledQuantity ?? 0),
@@ -322,7 +322,7 @@ async function hydrateGRN(doc: Record<string, unknown>): Promise<Record<string, 
     }
 
     const qty = Number(l.receivedQty || l.qty || l.received_qty || 0);
-    const uomId = String(l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs');
+    const uomId = String(l.uomId || l.uom_id || item?.primaryUom?.id || 'uom-pcs');
     const unitCostForeign = l.unitCostForeign !== undefined && l.unitCostForeign !== null ? Number(l.unitCostForeign) : (l.unit_cost_foreign !== undefined && l.unit_cost_foreign !== null ? Number(l.unit_cost_foreign) : null);
 
     return {
@@ -334,8 +334,8 @@ async function hydrateGRN(doc: Record<string, unknown>): Promise<Record<string, 
         name_ar: item.name,
         name_en: item.name,
         primary_uom: {
-          id: item.primaryUom.id,
-          code: item.primaryUom.code
+          id: item.primaryUom?.id ?? '',
+          code: item.primaryUom?.code ?? ''
         }
       } : {
         id: itemId,
@@ -915,7 +915,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           itemId: itemId,
           itemName: item?.name || 'Unknown Item',
           barcode: item?.barcode || '',
-          uom: item?.primaryUom.code || 'UNIT',
+          uom: item?.primaryUom?.code || 'UNIT',
           snapshotQty: qty,
           countedQty: null,
           variance: null,
@@ -1745,7 +1745,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           days_left: daysLeft,
           warehouse_name: wh ? wh.name : 'Main Warehouse',
           qty: l.qtyAvailable,
-          uom: item ? item.primaryUom.code : 'PCS',
+          uom: item ? item.primaryUom?.code : 'PCS',
         };
       }));
 

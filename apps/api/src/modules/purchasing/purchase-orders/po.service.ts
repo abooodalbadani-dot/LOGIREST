@@ -26,7 +26,7 @@ export class PurchaseOrderService {
       prId?: string;
       isSubmitted?: boolean;
       warehouseId?: string;
-      lines: Array<{ itemId: string; quantity: number; unitPrice: number }>;
+      lines: Array<{ itemId: string; quantity: number; unitPrice: number; uomId?: string }>;
     },
     userId: string,
     userRole: Role = Role.PROC_OFFICER,
@@ -113,16 +113,24 @@ export class PurchaseOrderService {
               itemId: line.itemId,
               quantity: line.quantity,
               unitPrice: line.unitPrice,
+              uomId: line.uomId || null,
             })),
           },
         },
         include: {
           lines: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
                   category: true,
+                  uomConversions: {
+                    include: {
+                      fromUom: { select: { id: true, code: true, name: true } },
+                      toUom:   { select: { id: true, code: true, name: true } },
+                    },
+                  },
                 },
               },
             },
@@ -255,10 +263,17 @@ export class PurchaseOrderService {
       include: {
         lines: {
           include: {
+            uom: true,
             item: {
               include: {
                 unitOfMeasure: true,
                 category: true,
+                uomConversions: {
+                  include: {
+                    fromUom: { select: { id: true, code: true, name: true } },
+                    toUom:   { select: { id: true, code: true, name: true } },
+                  },
+                },
               },
             },
           },
@@ -302,6 +317,7 @@ export class PurchaseOrderService {
         itemId: string;
         quantity: number;
         unitPrice: number;
+        uomId?: string;
       }>;
     },
   ) {
@@ -347,6 +363,7 @@ export class PurchaseOrderService {
                 itemId: line.itemId,
                 quantity: line.quantity,
                 unitPrice: line.unitPrice,
+                uomId: line.uomId || null,
               })),
             },
           }),
@@ -354,10 +371,17 @@ export class PurchaseOrderService {
         include: {
           lines: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
                   category: true,
+                  uomConversions: {
+                    include: {
+                      fromUom: { select: { id: true, code: true, name: true } },
+                      toUom:   { select: { id: true, code: true, name: true } },
+                    },
+                  },
                 },
               },
             },

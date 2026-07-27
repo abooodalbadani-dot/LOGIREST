@@ -54,13 +54,14 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { LotAllocationDialog, type LotAllocation } from './LotAllocationDialog';
+import { getAvailableUomsForItem, resolveUomCode } from '@/utils/uom-helper';
 import { cn } from '@/lib/utils';
 
 const isExpiryInPast = (date: string) => new Date(date) < new Date(new Date().toDateString());
 
 const grnFormSchema = z.object({
-   poId: z.string().min(1, 'Required'),
-   supplierId: z.string().min(1, 'Required'),
+   poId: z.string().optional().nullable().or(z.literal('')),
+   supplierId: z.string().min(1, 'Supplier is required'),
    currencyId: z.string().min(1, 'Required'),
    exchangeRate: z.coerce.number().positive().min(0.000001).optional().or(z.literal('')),
    warehouseId: z.string().min(1, 'Required'),
@@ -419,13 +420,28 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
    useEffect(() => {
       if (isNew && !initialData && !watchedPoId) {
-         setValue('supplierId', '');
-         const defaultCurrency = currencies?.find(c => c.isBase || c.code === baseCurrency);
-         setValue('currencyId', defaultCurrency?.id || '');
-         setValue('exchangeRate', 1);
-         setValue('lines', []);
+         const currentCurrency = getValues('currencyId');
+         if (!currentCurrency && currencies && currencies.length > 0) {
+            const defaultCurrency = currencies.find(c => c.isBase || c.code === baseCurrency) || currencies[0];
+            if (defaultCurrency?.id) {
+               setValue('currencyId', defaultCurrency.id, { shouldValidate: true });
+            }
+         }
+         if (!getValues('exchangeRate')) {
+            setValue('exchangeRate', 1);
+         }
       }
-   }, [isNew, initialData, watchedPoId, currencies, baseCurrency, setValue]);
+   }, [isNew, initialData, watchedPoId, currencies, baseCurrency]);
+
+   useEffect(() => {
+      if (isNew && !watchedPoId) {
+         if (selectedCurrencyCode && baseCurrency && selectedCurrencyCode === baseCurrency) {
+            setValue('exchangeRate', 1);
+         } else if (fxRates && fxRates.length > 0 && fxRates[0]?.rate) {
+            setValue('exchangeRate', fxRates[0].rate);
+         }
+      }
+   }, [isNew, watchedPoId, selectedCurrencyCode, baseCurrency, fxRates]);
 
    useEffect(() => {
       const expired = (watchedLines || [])
@@ -562,13 +578,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       }
       try {
          const payload = {
-            poId: values.poId,
+            poId: values.poId || undefined,
+            supplierId: values.supplierId,
             currencyId: values.currencyId,
             warehouseId: values.warehouseId,
+            fxRate: values.exchangeRate ? Number(values.exchangeRate) : 1,
             notes: values.notes,
             lines: (values.lines || []).map(l => ({
                id: (l.id && l.id.startsWith('new-')) ? undefined : l.id,
                itemId: l.item.id,
+               uomId: l.uomId,
                lotId: l.lot?.id || null,
                lotNumber: l.lot?.lotNumber || null,
                expiryDate: l.lot?.expiryDate || null,
@@ -595,22 +614,21 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             });
             playSound('success');
             toast.success(t('update_success'));
+            reset(values);
             queryClient.invalidateQueries({ queryKey: ['grn', initialData.id] });
             queryClient.invalidateQueries({ queryKey: ['grns'] });
          }
       } catch (error) {
          const isConflict = error && typeof error === 'object' && 'name' in error && error.name === 'ConflictError';
          if (!isConflict) {
-            // Extract real message from ApiError POJO (not an Error instance — logs as {} otherwise)
-            const apiMessage = error && typeof error === 'object'
-               ? (error as { message?: string }).message
-               : undefined;
-            const apiCode = error && typeof error === 'object'
-               ? (error as { code?: string }).code
-               : undefined;
-            console.error('[GRNForm] Submit Error:', { code: apiCode, message: apiMessage, raw: error });
+            const errObj = error as { message?: string; code?: string; _isToastShown?: boolean } | null;
+            const apiMessage = error instanceof Error
+               ? error.message
+               : errObj?.message || (typeof error === 'string' ? error : undefined);
+            const apiCode = errObj?.code;
+            console.error('[GRNForm] Submit Error:', apiMessage || error);
             playSound('error');
-            const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+            const isToastShown = errObj?._isToastShown === true;
             if (!isToastShown) {
                toast.error(apiMessage || tc('error_occurred'));
             }
@@ -631,27 +649,27 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             <Input type="hidden" {...register('poId')} />
             <div className="flex items-center justify-between px-4 sm:px-2 gap-4">
                <div className="flex flex-col flex-1 min-w-0">
-                  <h1 className="text-2xl font-black text-foreground tracking-widest uppercase whitespace-nowrap truncate max-w-full block">
+                  <h1 className="text-2xl font-black text-operational-cyan tracking-widest uppercase whitespace-nowrap truncate max-w-full block">
                      {isNew ? t('create_new') : `#${initialData?.documentNumber}`}
                   </h1>
                   <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase mt-1">
                      {isNew ? t('new_manifest_sub') : t('detail_sub')}
                   </p>
                </div>
-               {!isNew && (
-                  <Button
-                     type="button"
-                     onClick={(e) => {
-                        e.preventDefault();
-                        router.push(`/goods-received/${id}/scan-mode`, { skipGuard: true });
-                     }}
-                     variant="outline"
-                     className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
-                  >
-                     <Scan className="w-4 h-4" />
-                     {t('scan_mode')}
-                  </Button>
-               )}
+               {/* {!isNew && (
+   <Button
+      type="button"
+      onClick={(e) => {
+         e.preventDefault();
+         router.push(`/goods-received/${id}/scan-mode`, { skipGuard: true });
+      }}
+      variant="outline"
+      className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
+   >
+      <Scan className="w-4 h-4" />
+      {t('scan_mode')}
+   </Button>
+)} */}
             </div>
 
             {isCustomItemDialogOpen && (
@@ -737,7 +755,13 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                     <SmartCombobox
                                        items={supplierItems}
                                        value={field.value}
-                                       onSelect={(item) => field.onChange(item.id)}
+                                       onSelect={(item) => {
+                                          field.onChange(item.id);
+                                          const selectedSupplier = suppliers?.find(s => s.id === item.id);
+                                          if (selectedSupplier?.currencyId) {
+                                             setValue('currencyId', selectedSupplier.currencyId, { shouldValidate: true, shouldDirty: true });
+                                          }
+                                       }}
                                        placeholder={tc('select_supplier')}
                                        className="mt-1"
                                        triggerClassName={cn(
@@ -915,33 +939,66 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
                         <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
                            <DocumentLineItemTable<LineItem>
-                              lines={fields.map(f => ({
-                                 id: f.id,
-                                 qty: f.qty,
-                                 receivedQty: f.receivedQty,
-                                 uomId: f.uomId,
-                                 unitCostForeign: f.unitCostForeign,
-                                 unitCostBase: f.unitCostBase,
-                                 item: {
-                                    id: f.item.id,
-                                    code: f.item.code,
-                                    name: f.item.name || f.item.nameEn || f.item.nameAr || '',
-                                    nameAr: f.item.nameAr,
-                                    nameEn: f.item.nameEn,
-                                    image: f.item.image || f.item.imageUrl || itemsData?.data?.find(i => i.id === f.item.id)?.image || itemsData?.data?.find(i => i.id === f.item.id)?.imageUrl || null,
-                                    primaryUom: {
-                                       id: f.item.primaryUom?.id || f.uomId || '',
-                                       code: f.item.primaryUom?.code || f.uomId || ''
+                              lines={fields.map((f, idx) => {
+                                 const live = watchedLines?.[idx] || {};
+                                 const matchedItem = itemsData?.data?.find(i => i.id === f.item.id);
+                                 const liveUomId = live.uomId || f.uomId;
+                                 return {
+                                    id: f.id,
+                                    qty: live.qty ?? f.qty,
+                                    receivedQty: live.receivedQty ?? f.receivedQty,
+                                    uomId: liveUomId,
+                                    unitCostForeign: live.unitCostForeign ?? f.unitCostForeign,
+                                    unitCostBase: live.unitCostBase ?? f.unitCostBase,
+                                    item: {
+                                       id: f.item.id,
+                                       code: f.item.code,
+                                       name: f.item.name || f.item.nameEn || f.item.nameAr || '',
+                                       nameAr: f.item.nameAr,
+                                       nameEn: f.item.nameEn,
+                                       image: f.item.image || f.item.imageUrl || matchedItem?.image || matchedItem?.imageUrl || null,
+                                       primaryUom: matchedItem?.primaryUom || f.item.primaryUom || {
+                                          id: liveUomId || '',
+                                          code: liveUomId || ''
+                                       },
+                                       uomConversions: matchedItem?.uomConversions || null
                                     },
-                                 },
-                                 lot: f.lot ? { id: f.lot.id, lotNumber: f.lot.lotNumber, expiryDate: f.lot.expiryDate } : null,
-                              }))}
+                                    lot: live.lot ? { id: live.lot.id, lotNumber: live.lot.lotNumber, expiryDate: live.lot.expiryDate } : (f.lot ? { id: f.lot.id, lotNumber: f.lot.lotNumber, expiryDate: f.lot.expiryDate } : null),
+                                 };
+                              })}
                               isReadOnly={isLocked || isWarehouseLocked}
                               dense={true}
                               layoutMode="table"
                               mobileLayoutPattern="goods-received-form"
                               hideLotColumns={true}
-                              hideUomColumn={true}
+                              renderUom={(line) => {
+                                 const matchedItem = itemsData?.data?.find(i => i.id === line.item.id);
+                                 const availableUoms = getAvailableUomsForItem(matchedItem || line.item);
+                                 const lineIdx = fields.findIndex(f => f.id === line.id);
+                                 const currentUomId = line.uomId || matchedItem?.primaryUom?.id || '';
+                                 const resolvedCode = resolveUomCode(currentUomId, matchedItem || line.item);
+
+                                 if (availableUoms.length <= 1 || isLocked || isWarehouseLocked) {
+                                    return (
+                                       <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2 py-1 bg-surface-container rounded font-mono">
+                                          {resolvedCode}
+                                       </span>
+                                    );
+                                 }
+
+                                 return (
+                                    <SmartCombobox
+                                       items={availableUoms}
+                                       value={currentUomId}
+                                       onSelect={(uom) => {
+                                          if (lineIdx !== -1) {
+                                             setValue(`lines.${lineIdx}.uomId`, uom.id, { shouldDirty: true, shouldValidate: true });
+                                          }
+                                       }}
+                                       triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
+                                    />
+                                 );
+                              }}
                               borderless={true}
                               noCollapse={false}
                               enableVirtualization={false}

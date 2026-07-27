@@ -14,7 +14,15 @@ export interface Department {
 }
 
 export interface UoM { id: string; code: string; name: string; version?: number; }
-export interface UoMConversion { fromUomId: string; toUomId: string; factor: number; }
+export interface UoMConversion {
+  fromUomId: string;
+  toUomId: string;
+  factor: number;
+  fromUomCode?: string;
+  fromUomName?: string;
+  toUomCode?: string;
+  toUomName?: string;
+}
 export interface Category { id: string; code: string; name: string; isReferenced?: boolean; version?: number; }
 export interface Item {
   id: string;
@@ -22,7 +30,7 @@ export interface Item {
   barcode: string;
   name: string;
   categoryId: string;
-  primaryUom: UoM;
+  primaryUom?: UoM | null;
   uomConversions: UoMConversion[];
   trackLots?: boolean;
   track_lots?: boolean;
@@ -108,11 +116,19 @@ export const UoMConversionSchema = z.object({
   toUomId: z.string().optional(),
   to_uom_id: z.string().optional(),
   factor: z.coerce.number().optional().default(1),
+  fromUomCode: z.string().optional().default(''),
+  fromUomName: z.string().optional().default(''),
+  toUomCode: z.string().optional().default(''),
+  toUomName: z.string().optional().default(''),
 }).transform((data) => ({
   id: data.id,
   fromUomId: data.fromUomId || data.from_uom_id || '',
   toUomId: data.toUomId || data.to_uom_id || '',
   factor: data.factor,
+  fromUomCode: data.fromUomCode ?? '',
+  fromUomName: data.fromUomName ?? '',
+  toUomCode: data.toUomCode ?? '',
+  toUomName: data.toUomName ?? '',
 }));
 
 export const ItemSchema = z.object({
@@ -140,7 +156,13 @@ export const ItemSchema = z.object({
   /** Stock balance for a specific warehouse (populated when warehouse_id filter is used). */
   qtyOnHand: z.number().optional(),
   qty_on_hand: z.number().optional(),
-});
+}).transform((data) => ({
+  ...data,
+  primaryUom: data.primaryUom || data.primary_uom || null,
+  uomConversions: (data.uomConversions && data.uomConversions.length > 0)
+    ? data.uomConversions
+    : (data.uom_conversions || []),
+}));
 
 export const LotSchema = z.object({
   id: z.string(), itemId: z.string(), warehouseId: z.string(), lotNumber: z.string(),
@@ -307,10 +329,10 @@ export const ItemFormSchema = z.object({
   minStockLevel: z.number().min(0).optional().nullable(),
   reorderPoint: z.number().min(0),
   uomConversions: z.array(z.object({
-    fromUomId: z.string().optional().default(''),
-    toUomId: z.string().optional().default(''),
-    factor: z.coerce.number().optional().default(1)
-  })).optional().default([]),
+    fromUomId: z.string(),
+    toUomId: z.string(),
+    factor: z.coerce.number()
+  })).default([]),
   isActive: z.boolean().optional().nullable(),
   version: z.number().optional().nullable(),
   image: z.string().optional().nullable()
@@ -367,6 +389,7 @@ export type DepartmentFormValues = z.infer<typeof DepartmentFormSchema>;
 export type UoMFormValues = z.infer<typeof UoMFormSchema>;
 export type CategoryFormValues = z.infer<typeof CategoryFormSchema>;
 export type ItemFormValues = z.infer<typeof ItemFormSchema>;
+export type ItemFormInput = z.input<typeof ItemFormSchema>;
 export type SupplierFormValues = z.infer<typeof SupplierFormSchema>;
 export type CurrencyFormValues = z.infer<typeof CurrencyFormSchema>;
 export type FXRateFormValues = z.infer<typeof FXRateFormSchema>;

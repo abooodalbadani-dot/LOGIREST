@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
-import { Role } from '@logirest/shared-types';
+import { Role, toBaseQty } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType, Prisma, GRStatus } from '@prisma/client';
 
@@ -20,8 +20,11 @@ export class GrnService {
 
   async create(
     body: {
-      poId: string;
+      poId?: string | null;
+      supplierId?: string | null;
+      currencyId?: string | null;
       warehouseId: string;
+      fxRate?: number | null;
       notes?: string;
       lines: Array<{
         itemId: string;
@@ -30,33 +33,66 @@ export class GrnService {
         expiryDate?: string | null;
         quantity: number;
         unitPrice: number;
+        uomId?: string;
       }>;
     },
     userId: string,
   ) {
     return this.prisma.$transaction(async (tx) => {
-      // Find PO to get branchId
-      const po = await tx.purchaseOrder.findUnique({
-        where: { id: body.poId },
-        include: {
-          purchaseRequest: true,
-          currency: true,
-        },
-      });
+      let branchId: string | undefined = undefined;
+      let capturedFxRate = body.fxRate ? new Prisma.Decimal(body.fxRate) : new Prisma.Decimal(1);
+      const fxRateCapturedAt = new Date();
 
-      if (!po) {
-        throw new NotFoundException(
-          `Purchase Order with ID ${body.poId} not found`,
-        );
+      if (body.poId) {
+        const po = await tx.purchaseOrder.findUnique({
+          where: { id: body.poId },
+          include: {
+            purchaseRequest: true,
+            currency: true,
+          },
+        });
+
+        if (!po) {
+          throw new NotFoundException(
+            `Purchase Order with ID ${body.poId} not found`,
+          );
+        }
+
+        if (po.status !== 'APPROVED') {
+          throw new BadRequestException(
+            `Cannot create a GRN against a Purchase Order that is not APPROVED. (Current status: ${po.status})`,
+          );
+        }
+
+        branchId = po.purchaseRequest?.branchId;
+
+        if (po.currency && !po.currency.isBase) {
+          const baseCurrency = await tx.currency.findFirst({
+            where: { isBase: true },
+          });
+
+          if (!baseCurrency) {
+            throw new BadRequestException('System base currency is not defined.');
+          }
+
+          const fx = await tx.fXRate.findFirst({
+            where: {
+              fromCurrencyId: po.currencyId,
+              toCurrencyId: baseCurrency.id,
+              effectiveFrom: { lte: fxRateCapturedAt },
+            },
+            orderBy: { effectiveFrom: 'desc' },
+          });
+
+          if (!fx) {
+            throw new BadRequestException(
+              `No active FX rate found for ${po.currency.code} to ${baseCurrency.code}`,
+            );
+          }
+          capturedFxRate = fx.rate;
+        }
       }
 
-      if (po.status !== 'APPROVED') {
-        throw new BadRequestException(
-          `Cannot create a GRN against a Purchase Order that is not APPROVED. (Current status: ${po.status})`,
-        );
-      }
-
-      let branchId = po.purchaseRequest?.branchId;
       if (!branchId) {
         const wh = await tx.warehouse.findUnique({
           where: { id: body.warehouseId },
@@ -81,36 +117,6 @@ export class GrnService {
         branchId,
       );
 
-      // Task 1.1: Capture FX Rate at Creation
-      let capturedFxRate = new Prisma.Decimal(1); // Default to 1 if PO is in base currency
-      const fxRateCapturedAt = new Date();
-
-      if (!po.currency.isBase) {
-        const baseCurrency = await tx.currency.findFirst({
-          where: { isBase: true },
-        });
-
-        if (!baseCurrency) {
-          throw new BadRequestException('System base currency is not defined.');
-        }
-
-        const fx = await tx.fXRate.findFirst({
-          where: {
-            fromCurrencyId: po.currencyId,
-            toCurrencyId: baseCurrency.id,
-            effectiveFrom: { lte: fxRateCapturedAt },
-          },
-          orderBy: { effectiveFrom: 'desc' },
-        });
-
-        if (!fx) {
-          throw new BadRequestException(
-            `No active FX rate found for ${po.currency.code} to ${baseCurrency.code}`,
-          );
-        }
-        capturedFxRate = fx.rate;
-      }
-
       const processedLines = [];
       for (const line of body.lines) {
         const lotId = await this.resolveOrCreateLot(
@@ -124,20 +130,44 @@ export class GrnService {
         const foreignPrice = new Prisma.Decimal(line.unitPrice);
         const basePrice = foreignPrice.mul(capturedFxRate).toDecimalPlaces(4);
 
+        // Normalize quantityReceived to base UOM if an alternate UOM was selected
+        let normalizedQty = line.quantity;
+        const lineUomId = (line as { uomId?: string }).uomId ?? null;
+        if (lineUomId) {
+          const itemData = await tx.item.findUnique({
+            where: { id: line.itemId },
+            select: {
+              uomId: true,
+              uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+            },
+          });
+          if (itemData) {
+            const conversions = itemData.uomConversions.map((c) => ({
+              fromUomId: c.fromUomId,
+              toUomId: c.toUomId,
+              factor: Number(c.factor),
+            }));
+            normalizedQty = toBaseQty(line.quantity, lineUomId, itemData.uomId, conversions);
+          }
+        }
+
         processedLines.push({
           itemId: line.itemId,
           lotId,
-          quantityReceived: line.quantity,
-          unitPrice: line.unitPrice, // Keep legacy field populated for compat
+          quantityReceived: normalizedQty,
+          unitPrice: line.unitPrice,
           unitPriceForeign: foreignPrice,
           unitPriceBase: basePrice,
+          uomId: lineUomId,
         });
       }
 
       return tx.goodsReceivedNote.create({
         data: {
           grnNumber,
-          poId: body.poId,
+          poId: body.poId || undefined,
+          supplierId: body.supplierId || undefined,
+          currencyId: body.currencyId || undefined,
           warehouseId: body.warehouseId,
           status: 'DRAFT',
           notes: body.notes || null,
@@ -166,6 +196,8 @@ export class GrnService {
               currency: true,
             },
           },
+          supplier: true,
+          currency: true,
           warehouse: true,
         },
       });
@@ -317,11 +349,16 @@ export class GrnService {
     id: string,
     body: {
       poId?: string;
+      supplierId?: string | null;
+      currencyId?: string | null;
+      fxRate?: number | null;
       warehouseId?: string;
+      notes?: string;
       version: number;
       lines?: Array<{
         id?: string;
         itemId: string;
+        uomId?: string;
         lotId?: string | null;
         lotNumber?: string | null;
         expiryDate?: string | null;
@@ -371,6 +408,7 @@ export class GrnService {
           );
           processedLines.push({
             itemId: line.itemId,
+            uomId: line.uomId,
             lotId,
             quantityReceived: line.quantity,
             unitPrice: line.unitPrice,
@@ -382,7 +420,13 @@ export class GrnService {
         where: { id },
         data: {
           poId: body.poId,
+          supplierId: body.supplierId,
+          currencyId: body.currencyId,
+          notes: body.notes,
           warehouseId: body.warehouseId,
+          ...(body.fxRate !== undefined && {
+            fxRate: body.fxRate ? new Prisma.Decimal(body.fxRate) : new Prisma.Decimal(1),
+          }),
           version: { increment: 1 },
           ...(processedLines && {
             lines: {
@@ -408,6 +452,8 @@ export class GrnService {
               currency: true,
             },
           },
+          supplier: true,
+          currency: true,
           warehouse: true,
         },
       });

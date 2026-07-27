@@ -13,8 +13,10 @@ import {
        FormItem,
        FormMessage,
 } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn, useWatch, FieldArrayWithId } from "react-hook-form";
 import { Item } from "@/types/master-data";
+import { getAvailableUomsForItem, resolveUomCode, handleUomChange } from "@/utils/uom-helper";
 import { PurchaseOrderFormValues } from "./purchase-order-form";
 
 interface PurchaseOrderLineItemsProps {
@@ -255,9 +257,9 @@ function LineItemCard({
 
                             {/* Delete Action Button */}
                             {!isLocked && (
-                                   <button 
-                                          type="button" 
-                                          className="h-9 w-9 text-destructive hover:bg-destructive/10 border border-transparent rounded-lg transition-colors flex items-center justify-center shrink-0" 
+                                   <button
+                                          type="button"
+                                          className="h-9 w-9 text-destructive hover:bg-destructive/10 border border-transparent rounded-lg transition-colors flex items-center justify-center shrink-0"
                                           onClick={() => remove(index)}
                                           aria-label={tc('actions.remove_line')}
                                    >
@@ -311,14 +313,43 @@ function LineItemCard({
                                                  control={form.control}
                                                  name={`lines.${index}.uomId`}
                                                  render={({ field: inputField }) => {
-                                                        const uomCode = matchedItem?.primaryUom?.code || (inputField.value && inputField.value.length === 36 ? '...' : (inputField.value || 'PCS'));
+                                                        const availableUoms = getAvailableUomsForItem(matchedItem);
+                                                        const resolvedCode = resolveUomCode(inputField.value, matchedItem);
+
+                                                        if (availableUoms.length <= 1 || isLocked) {
+                                                               return (
+                                                                      <FormItem className="space-y-0 w-full">
+                                                                             <FormControl>
+                                                                                    <div className="h-8 w-full flex items-center justify-center bg-background border border-border text-foreground rounded-md font-mono uppercase text-[10px] font-bold">
+                                                                                           {resolvedCode}
+                                                                                    </div>
+                                                                             </FormControl>
+                                                                             <FormMessage className="text-[10px] mt-0.5" />
+                                                                      </FormItem>
+                                                               );
+                                                        }
                                                         return (
                                                                <FormItem className="space-y-0 w-full">
-                                                                      <FormControl>
-                                                                             <div className="h-8 w-full flex items-center justify-center bg-background border border-border text-foreground rounded-md font-mono uppercase text-[10px] font-bold">
-                                                                                    {uomCode}
-                                                                             </div>
-                                                                      </FormControl>
+                                                                      <Select
+                                                                             disabled={isLocked}
+                                                                             value={inputField.value || ''}
+                                                                             onValueChange={(newUomId) => {
+                                                                                    inputField.onChange(newUomId || '');
+                                                                             }}
+                                                                      >
+                                                                             <FormControl>
+                                                                                    <SelectTrigger className="h-8 w-full bg-background border border-border text-foreground rounded-md font-mono uppercase text-[10px] font-bold px-1 text-center">
+                                                                                           <SelectValue placeholder={resolvedCode}>{resolvedCode}</SelectValue>
+                                                                                    </SelectTrigger>
+                                                                             </FormControl>
+                                                                             <SelectContent>
+                                                                                    {availableUoms.map((u) => (
+                                                                                           <SelectItem key={u.id} value={u.id}>
+                                                                                                  {u.code}{u.name && u.name !== u.code ? ` (${u.name})` : ''}
+                                                                                           </SelectItem>
+                                                                                    ))}
+                                                                             </SelectContent>
+                                                                      </Select>
                                                                       <FormMessage className="text-[10px] mt-0.5" />
                                                                </FormItem>
                                                         );
@@ -421,7 +452,7 @@ function LineItemRow({
                      data-index={index}
                      className="absolute top-0 start-0 w-full min-w-[1000px] border-b border-border/60 transition-all hover:bg-primary/[0.04] flex items-center h-[80px] group"
                      style={{
-                                                                             transform: `translateY(${virtualRow.start + 56}px)`, // Offset by header height
+                            transform: `translateY(${virtualRow.start + 56}px)`, // Offset by header height
                      }}
               >
                      {/* Item Selection + Product Image */}
@@ -508,14 +539,67 @@ function LineItemRow({
                                    control={form.control}
                                    name={`lines.${index}.uomId`}
                                    render={({ field: inputField }) => {
-                                          const uomCode = matchedItem?.primaryUom?.code || (inputField.value && inputField.value.length === 36 ? '...' : (inputField.value || 'PCS'));
+                                          const availableUoms = getAvailableUomsForItem(matchedItem);
+                                          const resolvedCode = resolveUomCode(inputField.value, matchedItem);
+
+                                          if (availableUoms.length <= 1 || isLocked) {
+                                                 return (
+                                                        <FormItem className="space-y-0 w-full">
+                                                               <FormControl>
+                                                                      <div className="h-10 w-full flex items-center justify-center px-2 bg-background border border-border text-foreground rounded-xl font-mono uppercase text-[11px] font-bold">
+                                                                             {resolvedCode}
+                                                                      </div>
+                                                               </FormControl>
+                                                               <FormMessage className="text-[10px] mt-1" />
+                                                        </FormItem>
+                                                 );
+                                          }
+
                                           return (
                                                  <FormItem className="space-y-0 w-full">
-                                                        <FormControl>
-                                                               <div className="h-10 w-full flex items-center justify-center px-2 bg-background border border-border text-foreground rounded-xl font-mono uppercase text-[11px] font-bold">
-                                                                      {uomCode}
-                                                               </div>
-                                                        </FormControl>
+                                                        <Select
+                                                               disabled={isLocked}
+                                                               value={inputField.value || ''}
+                                                               onValueChange={(newUomId) => {
+                                                                      const safeNewUomId = newUomId || '';
+                                                                      inputField.onChange(safeNewUomId);
+                                                                      let baseUomId: string = safeNewUomId;
+                                                                      const pId = matchedItem?.primaryUom?.id;
+                                                                      if (typeof pId === 'string' && pId.length > 0) {
+                                                                             baseUomId = pId;
+                                                                      }
+                                                                      let currentLineUomId: string = baseUomId;
+                                                                      const rUomId = rowValues.uomId;
+                                                                      if (typeof rUomId === 'string' && rUomId.length > 0) {
+                                                                             currentLineUomId = rUomId;
+                                                                      }
+                                                                      const conversions = (matchedItem?.uomConversions || []).map(c => ({
+                                                                             fromUomId: c.fromUomId || '',
+                                                                             toUomId: c.toUomId || '',
+                                                                             factor: c.factor,
+                                                                      }));
+                                                                      const updated = handleUomChange(
+                                                                             { ...rowValues, uomId: currentLineUomId, qty: rowValues.quantity },
+                                                                             safeNewUomId,
+                                                                             baseUomId,
+                                                                             conversions
+                                                                      );
+                                                                      form.setValue(`lines.${index}.quantity`, updated.quantity ?? 1);
+                                                               }}
+                                                        >
+                                                               <FormControl>
+                                                                      <SelectTrigger className="h-10 w-full bg-background border border-border text-foreground rounded-xl font-mono uppercase text-[11px] font-bold px-2">
+                                                                             <SelectValue placeholder={resolvedCode}>{resolvedCode}</SelectValue>
+                                                                      </SelectTrigger>
+                                                               </FormControl>
+                                                               <SelectContent>
+                                                                      {availableUoms.map((u) => (
+                                                                             <SelectItem key={u.id} value={u.id}>
+                                                                                    {u.code}{u.name && u.name !== u.code ? ` (${u.name})` : ''}
+                                                                             </SelectItem>
+                                                                      ))}
+                                                               </SelectContent>
+                                                        </Select>
                                                         <FormMessage className="text-[10px] mt-1" />
                                                  </FormItem>
                                           );

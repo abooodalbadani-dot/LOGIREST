@@ -350,24 +350,33 @@ model UnitOfMeasure {
   version Int    @default(1)
 
   items           Item[]
-  fromConversions UomConversion[] @relation("FromUomConversions")
-  toConversions   UomConversion[] @relation("ToUomConversions")
+  fromConversions UomConversion[]     @relation("FromUomConversions")
+  toConversions   UomConversion[]     @relation("ToUomConversions")
+  prLines         PRLine[]
+  poLines         POLine[]
+  grnLines        GRNLine[]
+  issueLines      InventoryIssueLine[]
+  transferLines   TransferLine[]
+  adjustmentLines AdjustmentLine[]
 
   @@map("units_of_measure")
 }
 
 model Supplier {
-  id           String  @id @default(uuid())
+  id           String    @id @default(uuid())
   name         String
-  code         String  @unique
+  code         String    @unique
+  currencyId   String?
   contactEmail String?
   contactName  String?
   contactPhone String?
-  paymentTerms String? @default("NET_30")
-  isActive     Boolean @default(true)
-  version      Int     @default(1)
+  paymentTerms String?   @default("NET_30")
+  isActive     Boolean   @default(true)
+  version      Int       @default(1)
 
-  purchaseOrders PurchaseOrder[]
+  currency           Currency?               @relation(fields: [currencyId], references: [id], onDelete: Restrict)
+  purchaseOrders     PurchaseOrder[]
+  goodsReceivedNotes GoodsReceivedNote[]
 
   @@map("suppliers")
 }
@@ -381,9 +390,11 @@ model Currency {
   isActive Boolean @default(true)
   version  Int     @default(1)
 
-  purchaseOrders PurchaseOrder[]
-  fxRatesFrom    FXRate[]        @relation("FXFrom")
-  fxRatesTo      FXRate[]        @relation("FXTo")
+  suppliers          Supplier[]
+  purchaseOrders     PurchaseOrder[]
+  goodsReceivedNotes GoodsReceivedNote[]
+  fxRatesFrom        FXRate[]        @relation("FXFrom")
+  fxRatesTo          FXRate[]        @relation("FXTo")
 
   @@map("currencies")
 }
@@ -494,9 +505,11 @@ model PRLine {
   prId     String
   itemId   String
   quantity Decimal @db.Decimal(18, 4)
+  uomId    String? @map("uom_id")
 
   purchaseRequest PurchaseRequest @relation(fields: [prId], references: [id], onDelete: Cascade)
   item            Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom             UnitOfMeasure?  @relation(fields: [uomId], references: [id], onDelete: SetNull)
 
   @@map("pr_lines")
 }
@@ -528,9 +541,11 @@ model POLine {
   itemId    String
   quantity  Decimal @db.Decimal(18, 4)
   unitPrice Decimal @db.Decimal(18, 4)
+  uomId     String? @map("uom_id")
 
-  purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
-  item          Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder  @relation(fields: [poId], references: [id], onDelete: Cascade)
+  item          Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom           UnitOfMeasure? @relation(fields: [uomId], references: [id], onDelete: SetNull)
 
   @@map("po_lines")
 }
@@ -538,7 +553,9 @@ model POLine {
 model GoodsReceivedNote {
   id               String    @id @default(uuid())
   grnNumber        String    @unique
-  poId             String
+  poId             String?
+  supplierId       String?
+  currencyId       String?
   warehouseId      String
   status           GRStatus  @default(DRAFT)
   version          Int       @default(1)
@@ -551,7 +568,9 @@ model GoodsReceivedNote {
   fxRateCapturedAt DateTime? @map("fx_rate_captured_at") // When the rate was captured
   // ──────────────────────────────────────────────────────────────────
 
-  purchaseOrder       PurchaseOrder           @relation(fields: [poId], references: [id], onDelete: Restrict)
+  purchaseOrder       PurchaseOrder?          @relation(fields: [poId], references: [id], onDelete: Restrict)
+  supplier            Supplier?               @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  currency            Currency?               @relation(fields: [currencyId], references: [id], onDelete: Restrict)
   warehouse           Warehouse               @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   createdBy           User?                   @relation("GRNCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   lines               GRNLine[]
@@ -570,10 +589,12 @@ model GRNLine {
   unitPriceForeign Decimal? @db.Decimal(18, 4) // explicit: price in PO's currency
   unitPriceBase    Decimal? @db.Decimal(18, 4) // converted to base currency at time of GRN post
   lotId            String?
+  uomId            String?  @map("uom_id")
 
   goodsReceivedNote     GoodsReceivedNote          @relation(fields: [grnId], references: [id], onDelete: Cascade)
   item                  Item                       @relation(fields: [itemId], references: [id], onDelete: Restrict)
   lot                   Lot?                       @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  uom                   UnitOfMeasure?             @relation(fields: [uomId], references: [id], onDelete: SetNull)
   landedCostAllocations LandedCostAllocationLine[]
 
   @@map("grn_lines")
@@ -652,9 +673,11 @@ model InventoryIssueLine {
   issueId  String
   itemId   String
   quantity Decimal @db.Decimal(18, 4)
+  uomId    String? @map("uom_id")
 
   inventoryIssue InventoryIssue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
   item           Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom            UnitOfMeasure?  @relation(fields: [uomId], references: [id], onDelete: SetNull)
   lotAllocations LotAllocation[]
 
   @@map("inventory_issue_lines")
@@ -702,9 +725,11 @@ model TransferLine {
   unitCost         Decimal? @db.Decimal(18, 4)
   varianceReason   String?
   notes            String?
+  uomId            String?  @map("uom_id")
 
   transfer       Transfer        @relation(fields: [transferId], references: [id], onDelete: Cascade)
   item           Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom            UnitOfMeasure?  @relation(fields: [uomId], references: [id], onDelete: SetNull)
   lotAllocations LotAllocation[]
 
   @@map("transfer_lines")
@@ -738,10 +763,12 @@ model AdjustmentLine {
   reason              AdjustmentReason
   unitCost            Decimal?            @db.Decimal(18, 4)
   snapshotQtyBefore   Decimal?            @map("snapshot_qty_before") @db.Decimal(18, 4)
+  uomId               String?             @map("uom_id")
 
-  adjustment Adjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
-  item       Item       @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  lot        Lot?       @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  adjustment Adjustment     @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  item       Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  lot        Lot?           @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  uom        UnitOfMeasure? @relation(fields: [uomId], references: [id], onDelete: SetNull)
 
   @@map("adjustment_lines")
 }

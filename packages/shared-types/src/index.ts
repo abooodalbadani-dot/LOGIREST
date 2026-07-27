@@ -10,6 +10,7 @@ export * from './workflows';
 export * from './pagination';
 export * from './zod/landed-cost';
 export * from './zod/admin-user';
+export * from './utils/uom-conversion';
 
 // Explicitly re-export conflicting types to resolve TS2308 ambiguity
 export type { DocumentType } from './contracts/role-capabilities';

@@ -51,8 +51,18 @@ export class SearchController {
           { barcodeMappings: { some: { barcode: { contains: query, mode: 'insensitive' } } } },
         ],
       },
+      include: {
+        unitOfMeasure: { select: { id: true, code: true, name: true } },
+        uomConversions: {
+          include: {
+            fromUom: { select: { id: true, code: true, name: true } },
+            toUom: { select: { id: true, code: true, name: true } },
+          },
+        },
+      },
       take: 10,
     });
+
 
     // 2. Search suppliers (active only for search/listing)
     const suppliers = await this.prisma.supplier.findMany({
@@ -145,10 +155,23 @@ export class SearchController {
         status: item.isActive ? 'ACTIVE' : 'INACTIVE',
         metadata: {
           SKU: item.sku,
+          primaryUom: item.unitOfMeasure
+            ? { id: item.unitOfMeasure.id, code: item.unitOfMeasure.code, name: item.unitOfMeasure.name }
+            : null,
+          uomConversions: item.uomConversions.map((c) => ({
+            fromUomId: c.fromUomId,
+            fromUomCode: c.fromUom?.code ?? '',
+            fromUomName: c.fromUom?.name ?? '',
+            toUomId: c.toUomId,
+            toUomCode: c.toUom?.code ?? '',
+            toUomName: c.toUom?.name ?? '',
+            factor: Number(c.factor),
+          })),
         },
         link: '/inventory/balance',
       });
     });
+
 
     // Map suppliers
     suppliers.forEach((supplier) => {

@@ -10,7 +10,7 @@ import { RelationalName } from '@/components/shared/RelationalName';
 
 export interface LineItem {
   id: string;
-  item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; image?: string | null; imageUrl?: string | null; primaryUom?: { code: string; name?: string } | null; category?: { id: string; name: string } | null };
+  item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; image?: string | null; imageUrl?: string | null; primaryUom?: { id?: string; code: string; name?: string } | null; category?: { id: string; name: string } | null };
   lot?: { lotNumber: string; expiryDate: string | null } | null;
   qty: number;
   requestedQty?: number;

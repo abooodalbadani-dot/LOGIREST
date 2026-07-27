@@ -39,6 +39,7 @@ import {
  isDocumentLocked,
  DocumentStatus 
 } from '@logirest/shared-types';
+import { resolveUomCode } from '@/utils/uom-helper';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { KITCHEN_REQUEST_STATUS } from '@logirest/shared-types';
@@ -454,8 +455,8 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
              </span>
             )}
             renderUom={(line) => (
-             <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">
-              {line.item.primaryUom?.code || '---'}
+             <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 font-mono">
+              {resolveUomCode(line.uomId, line.item, null, 'PCS')}
              </span>
             )}
             extraColumns={extraColumns}

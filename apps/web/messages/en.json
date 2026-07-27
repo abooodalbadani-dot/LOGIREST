@@ -2972,6 +2972,7 @@
       "lot": "Lot",
       "new_description": "Initialize internal stock consumption sequence",
       "no_item_found": "No item found for this barcode.",
+      "no_stock_available": "Shortage: No available stock for this item in this warehouse.",
       "no_records": "No Issues Found",
       "not_found_prefix": "Not found: ",
       "notes_placeholder": "Specify reason for issue or handling instructions...",

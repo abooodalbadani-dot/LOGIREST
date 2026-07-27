@@ -633,6 +633,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                           ...item,
                           image: item.image || null,
                           primaryUom: primaryUom ? {
+                            id: (primaryUom as { id?: string }).id || '',
                             code: primaryUom.code,
                             name: primaryUom.name || primaryUom.code
                           } : undefined

@@ -16,7 +16,8 @@ import { useAuth } from '@/providers/AuthProvider';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
-import { SmartCombobox } from '@/components/shared/SmartCombobox';
+import { SmartCombobox, type ComboboxItem } from '@/components/shared/SmartCombobox';
+import { resolveUomCode } from '@/utils/uom-helper';
 import { FormFooter } from '@/components/layouts/FormLayout';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
@@ -154,6 +155,8 @@ interface NewAdjustmentLine extends LineItem {
   lotId?: string;
   unitCost?: number | null;
   qtyBefore?: number;
+  /** Quantity in the item's base UOM — always sent to the API */
+  baseQty: number;
 }
 
 interface ItemOption {
@@ -167,7 +170,7 @@ interface ItemOption {
   qtyOnHand?: number;
   qty_on_hand?: number;
   primaryUom: { id: string; code: string; name?: string };
-  uomConversions?: { fromUomId: string; toUomId: string; factor: number }[];
+  uomConversions?: { fromUomId: string; toUomId: string; factor: number; fromUomCode?: string; toUomCode?: string }[];
 }
 
 const isDecreaseOnlyReason = (reason: string) => {
@@ -469,6 +472,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             }
           },
           qty: 1,
+          baseQty: 1,
           qtyBefore: item.qtyOnHand ?? item.qty_on_hand ?? 0,
           uomId: item.primaryUom.id,
           direction: 'DECREASE',
@@ -502,10 +506,12 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           name: item.name,
           image: item.image,
           primaryUom: {
+            id: item.primaryUom.id,
             code: item.primaryUom.code
           }
         },
         qty: 1,
+        baseQty: 1,
         qtyBefore: item.qtyOnHand ?? item.qty_on_hand ?? 0,
         uomId: item.primaryUom.id,
         direction: isDecreaseOnlyReason(reasonCategory) ? 'DECREASE' : 'INCREASE',
@@ -531,11 +537,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           const targetLotId = l.lotId || l.lotNumber;
           return {
             itemId: l.itemId,
-            qty: l.qty,
+            qty: l.baseQty ?? l.qty,
             uomId: l.uomId,
             direction: l.direction,
             lotId: targetLotId || undefined,
-            lotAllocations: targetLotId ? [{ lotId: targetLotId, qty: l.qty }] : undefined,
+            lotAllocations: targetLotId ? [{ lotId: targetLotId, qty: l.baseQty ?? l.qty }] : undefined,
             isCustom: l.itemId.startsWith('cust-') ? true : undefined,
             unitCost: l.direction === 'INCREASE' ? l.unitCost : null
           };
@@ -922,7 +928,19 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                         style={{ direction: "ltr" }}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
-                          setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: isNaN(val) ? 0 : val } : l));
+                          const safeVal = isNaN(val) ? 0 : val;
+                          const matchedItemForQty = items.find(i => i.id === line.itemId || i.code === line.itemId);
+                          const baseUomIdForQty = matchedItemForQty?.primaryUom?.id ?? line.uomId ?? '';
+                          const conversionsForQty = (matchedItemForQty?.uomConversions ?? []).map(c => ({
+                            fromUomId: c.fromUomId,
+                            toUomId: c.toUomId,
+                            factor: Number(c.factor),
+                          }));
+                          import('@logirest/shared-types').then(({ getConversionFactor }) => {
+                            const factor = getConversionFactor(line.uomId ?? baseUomIdForQty, baseUomIdForQty, conversionsForQty);
+                            const newBaseQty = parseFloat((safeVal * factor).toFixed(4));
+                            setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: safeVal, baseQty: newBaseQty } : l));
+                          });
                         }}
                         className="w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm min-w-0 px-1"
                       />
@@ -946,11 +964,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
                     // If item has no conversion UOMs (or only 1 UOM), render as a clean non-editable badge
                     if (itemUoMs.length <= 1) {
-                      const uomName = line.item?.primaryUom?.name || line.item?.primaryUom?.code || matchedItem?.primaryUom?.name || matchedItem?.primaryUom?.code || 'PCS';
+                      const resolvedCode = resolveUomCode(line.uomId, matchedItem || line.item, uoms);
                       return (
                         <div className="flex items-center justify-center w-full">
                           <span className="h-9 px-3 text-xs font-bold font-mono text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-xl flex items-center justify-center min-w-[70px]">
-                            {uomName}
+                            {resolvedCode}
                           </span>
                         </div>
                       );
@@ -968,7 +986,9 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                           items={comboboxItems}
                           value={line.uomId}
                           onSelect={(uom) => {
-                            setLines(prev => prev.map(l => l.id === line.id ? { ...l, uomId: uom.id } : l));
+                            setLines(prev => prev.map(l =>
+                              l.id === line.id ? { ...l, uomId: uom.id } : l
+                            ));
                           }}
                           placeholder={line.item?.primaryUom?.code || "UOM"}
                           triggerClassName="h-11 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
@@ -1066,7 +1086,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
               uomId: newItem.primary_uom.id,
               direction: 'INCREASE',
               lotNumber: '',
-              unitCost: 0
+              unitCost: 0,
+              baseQty: 1
             }];
           });
         }}

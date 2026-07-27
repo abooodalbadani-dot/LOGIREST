@@ -10,7 +10,13 @@ export const StockBalanceItemSchema = z.object({
   qtyReserved: z.number(),
   qtyAvailable: z.number(),
   reorderPoint: z.number(),
+  uomId: z.string().optional().nullable(),
   uomCode: z.string().optional(),
+  primaryUom: z.object({
+    id: z.string(),
+    code: z.string(),
+    name: z.string().optional().nullable(),
+  }).optional().nullable(),
   wac: z.number().optional(),
   image: z.string().optional().nullable(),
   primaryBarcode: z.string().optional().nullable(),
