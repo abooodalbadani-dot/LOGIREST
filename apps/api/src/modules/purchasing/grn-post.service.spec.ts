@@ -157,7 +157,17 @@ describe('GrnPostService', () => {
     expect(result).toBeDefined();
     expect(mockGrnFindUnique).toHaveBeenCalledWith({
       where: { id: grnId },
-      include: { lines: { include: { item: true } } },
+      include: {
+        lines: {
+          include: {
+            item: {
+              include: {
+                uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+              },
+            },
+          },
+        },
+      },
     });
     expect(mockLockService.lockLots).toHaveBeenCalledWith(
       mockPrismaTx,

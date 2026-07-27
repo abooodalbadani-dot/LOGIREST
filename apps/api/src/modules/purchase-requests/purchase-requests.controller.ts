@@ -59,7 +59,21 @@ function mapPRDetail(pr: Record<string, unknown>) {
           : { id: '', code: '' },
       },
       reqQty: Number(line.quantity),
-      uomId: (item?.uomId as string) || '',
+      quantity: Number(line.quantity),
+      uomId: (line.uomId as string) || (item?.uomId as string) || '',
+      uom: line.uom
+        ? {
+            id: (line.uom as Record<string, unknown>).id as string,
+            code: (line.uom as Record<string, unknown>).code as string,
+            name: ((line.uom as Record<string, unknown>).name as string) || ((line.uom as Record<string, unknown>).code as string),
+          }
+        : unitOfMeasure
+          ? {
+              id: unitOfMeasure.id as string,
+              code: unitOfMeasure.code as string,
+              name: (unitOfMeasure.name as string) || (unitOfMeasure.code as string),
+            }
+          : null,
     };
   });
 

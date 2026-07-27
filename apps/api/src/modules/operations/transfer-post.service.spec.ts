@@ -184,7 +184,17 @@ describe('TransferPostService', () => {
       expect(result).toBeDefined();
       expect(mockTransferFindUnique).toHaveBeenCalledWith({
         where: { id: transferId },
-        include: { lines: { include: { item: true } } },
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                },
+              },
+            },
+          },
+        },
       });
       expect(mockAllocationService.allocate).toHaveBeenCalledWith(
         mockPrismaTx,

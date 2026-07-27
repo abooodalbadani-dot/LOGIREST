@@ -58,6 +58,8 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     const lot = line.lot as Record<string, unknown> | null;
     const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
 
+    const lineUom = line.uom as Record<string, unknown> | null;
+
     return {
       id: line.id as string,
       item: item
@@ -97,6 +99,19 @@ function mapGRNDetail(grn: Record<string, unknown>) {
       qty: Number(line.quantityReceived),
       receivedQty: Number(line.quantityReceived),
       uomId: (line.uomId as string) || (item?.uomId as string) || '',
+      uom: lineUom
+        ? {
+            id: lineUom.id as string,
+            code: lineUom.code as string,
+            name: (lineUom.name as string) || (lineUom.code as string),
+          }
+        : unitOfMeasure
+          ? {
+              id: unitOfMeasure.id as string,
+              code: unitOfMeasure.code as string,
+              name: (unitOfMeasure.name as string) || (unitOfMeasure.code as string),
+            }
+          : null,
       unitCostForeign:
         line.unitPriceForeign !== undefined && line.unitPriceForeign !== null
           ? Number(line.unitPriceForeign)

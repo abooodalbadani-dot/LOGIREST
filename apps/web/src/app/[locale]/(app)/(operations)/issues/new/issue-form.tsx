@@ -36,7 +36,8 @@ import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useDepartments } from "@/features/departments/hooks/useDepartments";
 import { useItems } from "@/features/items/hooks/useItems";
 import { useLotsByItem } from "@/features/operations/hooks/useLotsByItem";
-import { type Item, isItemBatchTracked } from "@/types/master-data";
+import { type Item, isItemBatchTracked, UoMSchema } from "@/types/master-data";
+import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { toast } from "sonner";
@@ -146,6 +147,7 @@ export function IssueForm() {
   const { data: deptData } = useDepartments();
   const departments = deptData?.data || [];
   const { data: itemsData } = useItems(); const items = itemsData?.data || [];
+  const { data: uomsData } = useMasterDataList('units-of-measure', UoMSchema);
 
   const [allocatorOpen, setAllocatorOpen] = useState(false);
   const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
@@ -331,7 +333,7 @@ export function IssueForm() {
     const selectedItem = line.selectedItem;
     const availableUoms = getAvailableUomsForItem(selectedItem);
     const currentUomId = form.watch(`lines.${line.index}.uomId`) || selectedItem?.primaryUom?.id || '';
-    const resolvedCode = resolveUomCode(currentUomId, selectedItem);
+    const resolvedCode = resolveUomCode(currentUomId, selectedItem, uomsData?.data);
 
     if (availableUoms.length <= 1) {
       return (

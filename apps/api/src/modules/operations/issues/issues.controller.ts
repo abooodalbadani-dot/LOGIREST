@@ -102,7 +102,20 @@ function mapIssueDetail(issue: Record<string, unknown>) {
             }
           : null,
         qty: Number(line.quantity),
-        uomId: (item?.uomId as string) || '',
+        uomId: (line.uomId as string) || (item?.uomId as string) || '',
+        uom: line.uom
+          ? {
+              id: (line.uom as Record<string, unknown>).id as string,
+              code: (line.uom as Record<string, unknown>).code as string,
+              name: ((line.uom as Record<string, unknown>).name as string) || ((line.uom as Record<string, unknown>).code as string),
+            }
+          : item?.unitOfMeasure
+            ? {
+                id: (item.unitOfMeasure as Record<string, unknown>).id as string,
+                code: (item.unitOfMeasure as Record<string, unknown>).code as string,
+                name: ((item.unitOfMeasure as Record<string, unknown>).name as string) || ((item.unitOfMeasure as Record<string, unknown>).code as string),
+              }
+            : null,
         unitCost: item?.wac ? Number(item.wac) : null,
         requestedQty: Number(line.quantity),
         issuedQty: Number(line.quantity),

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
-import { Role, toBaseQty } from '@logirest/shared-types';
+import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType, Prisma, GRStatus } from '@prisma/client';
 
@@ -129,32 +129,12 @@ export class GrnService {
 
         const foreignPrice = new Prisma.Decimal(line.unitPrice);
         const basePrice = foreignPrice.mul(capturedFxRate).toDecimalPlaces(4);
-
-        // Normalize quantityReceived to base UOM if an alternate UOM was selected
-        let normalizedQty = line.quantity;
-        const lineUomId = (line as { uomId?: string }).uomId ?? null;
-        if (lineUomId) {
-          const itemData = await tx.item.findUnique({
-            where: { id: line.itemId },
-            select: {
-              uomId: true,
-              uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
-            },
-          });
-          if (itemData) {
-            const conversions = itemData.uomConversions.map((c) => ({
-              fromUomId: c.fromUomId,
-              toUomId: c.toUomId,
-              factor: Number(c.factor),
-            }));
-            normalizedQty = toBaseQty(line.quantity, lineUomId, itemData.uomId, conversions);
-          }
-        }
+        const lineUomId = line.uomId ?? null;
 
         processedLines.push({
           itemId: line.itemId,
           lotId,
-          quantityReceived: normalizedQty,
+          quantityReceived: line.quantity,
           unitPrice: line.unitPrice,
           unitPriceForeign: foreignPrice,
           unitPriceBase: basePrice,
@@ -310,6 +290,7 @@ export class GrnService {
               },
             },
             lot: true,
+            uom: true,
           },
         },
         purchaseOrder: {
@@ -318,6 +299,8 @@ export class GrnService {
             currency: true,
           },
         },
+        supplier: true,
+        currency: true,
         warehouse: true,
         createdBy: {
           select: { id: true, name: true, email: true },

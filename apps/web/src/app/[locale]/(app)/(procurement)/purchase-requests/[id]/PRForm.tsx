@@ -28,7 +28,7 @@ import { useSubmitPR } from '@/features/purchasing/hooks/useSubmitPR';
 import { PRDetail } from '@/features/purchasing/hooks/usePR';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
-import { Item, Warehouse, ItemSchema, WarehouseSchema } from '@/types/master-data';
+import { Item, Warehouse, ItemSchema, WarehouseSchema, UoMSchema } from '@/types/master-data';
 import { getAvailableUomsForItem, resolveUomCode } from '@/utils/uom-helper';
 import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { onFormError } from '@/hooks/useFormError';
@@ -73,6 +73,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   // Mocks/Hooks for data selection
   const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
   const { data: itemsData } = useMasterDataList('items', ItemSchema);
+  const { data: uomsData } = useMasterDataList('units-of-measure', UoMSchema);
 
   const createPR = useCreatePR();
   const updatePR = useUpdatePR({ onConflict });
@@ -369,7 +370,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                     const currentItemId = form.watch(`lines.${index}.item_id`);
                     const currentItem = itemsData?.data?.find((i: Item) => i.id === currentItemId);
                     const availableUoms = getAvailableUomsForItem(currentItem);
-                    const resolvedCode = resolveUomCode(inputField.value, currentItem);
+                    const resolvedCode = resolveUomCode(inputField.value, currentItem, uomsData?.data);
 
                     if (availableUoms.length <= 1) {
                       return (

@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
+import { toBaseQty } from '@logirest/shared-types';
 import {
   Role,
   DocumentType,
@@ -71,7 +72,11 @@ export class AdjustmentPostService {
               include: {
                 lines: {
                   include: {
-                    item: true,
+                    item: {
+                      include: {
+                        uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                      },
+                    },
                   },
                 },
               },
@@ -103,7 +108,18 @@ export class AdjustmentPostService {
             for (const line of adj.lines) {
               const item = line.item;
               let lotId = line.lotId;
-              const qtyVal = Number(line.quantity);
+              const lineUomId = line.uomId ?? item.uomId;
+              const conversions = (item.uomConversions ?? []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const qtyVal = toBaseQty(
+                Number(line.quantity),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
 
               // Check if item is frozen in warehouse
               const whItemCheck = await tx.warehouseItem.findUnique({

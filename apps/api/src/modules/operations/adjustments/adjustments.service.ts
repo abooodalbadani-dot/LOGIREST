@@ -159,34 +159,12 @@ export class AdjustmentsService {
             }
           }
 
-          // Normalize quantity to base UOM before persisting
-          const lineUomId = (line as { uomId?: string }).uomId;
-          let normalizedQty = line.quantity;
-          let resolvedUomId: string | null = null;
-          if (lineUomId) {
-            const itemData = await tx.item.findUnique({
-              where: { id: line.itemId },
-              select: {
-                uomId: true,
-                uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
-              },
-            });
-            if (itemData) {
-              const conversions = itemData.uomConversions.map((c) => ({
-                fromUomId: c.fromUomId,
-                toUomId: c.toUomId,
-                factor: Number(c.factor),
-              }));
-              normalizedQty = toBaseQty(line.quantity, lineUomId, itemData.uomId, conversions);
-              resolvedUomId = lineUomId;
-            }
-          }
+          const lineUomId = line.uomId ?? null;
 
           return {
             ...line,
             lotId: resolvedLotId,
-            normalizedQty,
-            resolvedUomId,
+            resolvedUomId: lineUomId,
           };
         }),
       );
@@ -218,7 +196,7 @@ export class AdjustmentsService {
             create: preparedLines.map((line) => ({
               itemId: line.itemId,
               lotId: line.lotId || null,
-              quantity: line.normalizedQty,
+              quantity: line.quantity,
               uomId: line.resolvedUomId || null,
               direction: line.direction,
               reason: line.reason,
@@ -371,6 +349,7 @@ export class AdjustmentsService {
           include: {
             item: { include: { unitOfMeasure: true, category: true } },
             lot: true,
+            uom: true,
           },
         },
         warehouse: true,

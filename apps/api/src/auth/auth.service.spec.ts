@@ -193,14 +193,16 @@ describe('AuthService', () => {
           branchId: 'br-1',
           warehouseId: 'wh-1',
           departmentId: null,
-          warehouse: { id: 'wh-1', name: 'WH 1' },
+          branch: null,
+          warehouse: { id: 'wh-1', name: 'WH 1', code: null },
           department: null,
         },
         {
           branchId: 'br-1',
           warehouseId: 'wh-2',
           departmentId: null,
-          warehouse: { id: 'wh-2', name: 'WH 2' },
+          branch: null,
+          warehouse: { id: 'wh-2', name: 'WH 2', code: null },
           department: null,
         },
       ]);

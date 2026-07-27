@@ -24,7 +24,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { canPerformActionV2 } from '@logirest/shared-types';
 import { toast } from 'sonner';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemSchema, type Item } from '@/types/master-data';
+import { ItemSchema, type Item, UoMSchema, type UoM } from '@/types/master-data';
 
 interface GRNDetailClientProps {
     id: string;
@@ -52,6 +52,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
     const isNew = id === 'new';
     const { data: grn, isLoading, error } = useGRN(isNew ? null : id);
     const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
+    const { data: uomsData } = useMasterDataList<UoM>('units-of-measure', UoMSchema);
 
     if (isLoading) return <PageSkeleton variant="detail" />;
     if (error || (!isNew && !grn)) return <ErrorState onRetry={() => window.location.reload()} />;
@@ -160,11 +161,15 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                         branchId: '',
                         postedAt: null,
                         postedBy: null,
-                        supplierName: grn.supplier?.name,
+                        supplierName: grn.supplierName || grn.supplier?.name,
                         warehouseName: grn.warehouseName,
                         poNumber: grn.poNumber ?? null,
                         lines: grn.lines.map(l => {
                             const itemImage = (l.item as { image?: string | null; imageUrl?: string | null }).image || (l.item as { image?: string | null; imageUrl?: string | null }).imageUrl || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.image || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.imageUrl || null;
+                            const lineUom = (l as { uom?: { id: string; code: string; name?: string } }).uom;
+                            const selectedUom = lineUom || (l.uomId ? uomsData?.data?.find((u: UoM) => u.id === l.uomId) : null);
+                            const uomCode = selectedUom?.code || l.item.primaryUom.code;
+                            const uomName = selectedUom?.name || selectedUom?.code || '';
                             return {
                                 id: l.id,
                                 documentId: '',
@@ -178,9 +183,9 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                                     image: itemImage,
                                     imageUrl: itemImage,
                                     primaryUom: {
-                                        id: l.item.primaryUom.id,
-                                        code: l.item.primaryUom.code,
-                                        name: '',
+                                        id: selectedUom?.id || l.item.primaryUom.id,
+                                        code: uomCode,
+                                        name: uomName,
                                     },
                                 },
                                 lotId: l.lot?.id ?? null,

@@ -10,7 +10,7 @@ import { AllocationService } from '../ledger/allocation.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { Role, DocumentType, Prisma, Transfer } from '@prisma/client';
-import { canPerformActionV2, DocumentStatus } from '@logirest/shared-types';
+import { canPerformActionV2, DocumentStatus, toBaseQty } from '@logirest/shared-types';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { WacService } from '../ledger/wac.service';
@@ -99,7 +99,11 @@ export class TransferPostService {
             include: {
               lines: {
                 include: {
-                  item: true,
+                  item: {
+                    include: {
+                      uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                    },
+                  },
                 },
               },
             },
@@ -114,8 +118,18 @@ export class TransferPostService {
           // 2. Process each line
           for (const line of transfer.lines) {
             const item = line.item;
-
-            // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
+            const lineUomId = line.uomId ?? item.uomId;
+            const conversions = (item.uomConversions ?? []).map((c) => ({
+              fromUomId: c.fromUomId,
+              toUomId: c.toUomId,
+              factor: Number(c.factor),
+            }));
+            const baseShippedQty = toBaseQty(
+              Number(line.quantityShipped),
+              lineUomId,
+              item.uomId,
+              conversions,
+            );
 
             // Check if item is frozen in source warehouse
             await this.scopeValidationService.checkWarehouseItemQuarantine(
@@ -149,7 +163,7 @@ export class TransferPostService {
               tx,
               transfer.fromWarehouseId,
               item.id,
-              Number(line.quantityShipped),
+              baseShippedQty,
             );
 
             if (item.isBatched || item.hasExpiry) {
@@ -183,7 +197,7 @@ export class TransferPostService {
                   warehouseId: transfer.fromWarehouseId,
                   itemId: item.id,
                   lotId: null,
-                  quantity: -Number(line.quantityShipped),
+                  quantity: -baseShippedQty,
                   documentId: transfer.id,
                   documentType: DocumentType.TRANSFER,
                   idempotencyKey: `${DocumentType.TRANSFER}:stock_ship:${transfer.id}:${item.id}:${line.id}`,
@@ -417,7 +431,11 @@ export class TransferPostService {
             include: {
               lines: {
                 include: {
-                  item: true,
+                  item: {
+                    include: {
+                      uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                    },
+                  },
                 },
               },
             },
@@ -454,6 +472,25 @@ export class TransferPostService {
                 : Number(line.quantityShipped);
             const varianceReason = input ? input.varianceReason : undefined;
             const shippedQty = Number(line.quantityShipped);
+
+            const lineUomId = line.uomId ?? item.uomId;
+            const conversions = (item.uomConversions ?? []).map((c) => ({
+              fromUomId: c.fromUomId,
+              toUomId: c.toUomId,
+              factor: Number(c.factor),
+            }));
+            const baseReceivedQty = toBaseQty(
+              receivedQty,
+              lineUomId,
+              item.uomId,
+              conversions,
+            );
+            const baseShippedQty = toBaseQty(
+              shippedQty,
+              lineUomId,
+              item.uomId,
+              conversions,
+            );
 
             // Discrepancy checks: if receivedQty < shippedQty, must have non-empty varianceReason
             if (
@@ -522,8 +559,8 @@ export class TransferPostService {
                 );
               }
 
-              // Distribute receivedQty progressively across the shipped lots
-              let remainingReceived = receivedQty;
+              // Distribute baseReceivedQty progressively across the shipped lots
+              let remainingReceived = baseReceivedQty;
               for (const alloc of allocations) {
                 if (remainingReceived <= 0) break;
 
@@ -585,7 +622,7 @@ export class TransferPostService {
                   warehouseId: transfer.toWarehouseId,
                   itemId: item.id,
                   lotId: null,
-                  quantity: receivedQty,
+                  quantity: baseReceivedQty,
                   documentId: transfer.id,
                   documentType: DocumentType.TRANSFER,
                   idempotencyKey: `${DocumentType.TRANSFER}:stock_receive:${transfer.id}:${item.id}:${line.id}`,
@@ -599,14 +636,14 @@ export class TransferPostService {
               tx,
               transfer.toWarehouseId,
               item.id,
-              receivedQty,
+              baseReceivedQty,
               Number(sourceWac),
               transfer.id,
               receiveCostIdempotencyKey,
             );
 
             // Log Transit Loss if there is a discrepancy
-            const discrepancy = shippedQty - receivedQty;
+            const discrepancy = baseShippedQty - baseReceivedQty;
             if (discrepancy > 0) {
               let transitLossWh = await tx.warehouse.findUnique({
                 where: { code: 'TRANSIT_LOSS' },

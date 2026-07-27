@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
-import { DocumentType, Role } from '@logirest/shared-types';
+import { DocumentType, Role, toBaseQty } from '@logirest/shared-types';
 import {
   DocumentType as PrismaDocType,
   GoodsReceivedNote,
@@ -72,7 +72,13 @@ export class GrnPostService {
               include: {
                 lines: {
                   include: {
-                    item: true,
+                    item: {
+                      include: {
+                        uomConversions: {
+                          select: { fromUomId: true, toUomId: true, factor: true },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -89,7 +95,18 @@ export class GrnPostService {
               const item = line.item;
               const lotId = line.lotId;
 
-              // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
+              const lineUomId = line.uomId ?? item.uomId;
+              const conversions = (item.uomConversions ?? []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const baseQuantity = toBaseQty(
+                Number(line.quantityReceived),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
 
               // Check if item is frozen in destination warehouse
               const destWhItemCheck = await tx.warehouseItem.findUnique({
@@ -169,12 +186,12 @@ export class GrnPostService {
                   create: {
                     warehouseId: grn.warehouseId,
                     itemId: item.id,
-                    qtyOnHand: line.quantityReceived,
+                    qtyOnHand: baseQuantity,
                     qtyAllocated: 0,
                     wac: 0, // updated by WacService
                   },
                   update: {
-                    qtyOnHand: { increment: line.quantityReceived },
+                    qtyOnHand: { increment: baseQuantity },
                   },
                 });
 
@@ -191,11 +208,11 @@ export class GrnPostService {
                     warehouseId: grn.warehouseId,
                     itemId: item.id,
                     lotId: resolvedLotId,
-                    qtyOnHand: line.quantityReceived,
+                    qtyOnHand: baseQuantity,
                     qtyAllocated: 0,
                   },
                   update: {
-                    qtyOnHand: { increment: line.quantityReceived },
+                    qtyOnHand: { increment: baseQuantity },
                   },
                 });
 
@@ -215,12 +232,12 @@ export class GrnPostService {
                   create: {
                     warehouseId: grn.warehouseId,
                     itemId: item.id,
-                    qtyOnHand: line.quantityReceived,
+                    qtyOnHand: baseQuantity,
                     qtyAllocated: 0,
                     wac: 0, // updated by WacService
                   },
                   update: {
-                    qtyOnHand: { increment: line.quantityReceived },
+                    qtyOnHand: { increment: baseQuantity },
                   },
                 });
               }
@@ -238,7 +255,7 @@ export class GrnPostService {
                 tx,
                 grn.warehouseId,
                 item.id,
-                Number(line.quantityReceived),
+                baseQuantity,
                 costToUse,
                 grn.id,
                 costIdempotencyKey,
@@ -251,7 +268,7 @@ export class GrnPostService {
                   warehouseId: grn.warehouseId,
                   itemId: item.id,
                   lotId: line.lotId || null,
-                  quantity: line.quantityReceived,
+                  quantity: baseQuantity,
                   documentId: grn.id,
                   documentType: PrismaDocType.GOODS_RECEIVED_NOTE,
                   idempotencyKey: stockIdempotencyKey,
@@ -277,19 +294,52 @@ export class GrnPostService {
               const poId = grn.poId;
               const poLines = await tx.pOLine.findMany({
                 where: { poId },
+                include: {
+                  item: {
+                    include: {
+                      uomConversions: {
+                        select: { fromUomId: true, toUomId: true, factor: true },
+                      },
+                    },
+                  },
+                },
               });
               const allPostedGrns = await tx.goodsReceivedNote.findMany({
                 where: { poId, status: 'POSTED' },
-                include: { lines: true },
+                include: {
+                  lines: {
+                    include: {
+                      item: {
+                        include: {
+                          uomConversions: {
+                            select: { fromUomId: true, toUomId: true, factor: true },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
 
               const receivedTotals = new Map<string, number>();
               for (const pGrn of allPostedGrns) {
                 for (const pLine of pGrn.lines) {
+                  const pItem = pLine.item;
+                  const pLineUomId = pLine.uomId ?? pItem.uomId;
+                  const pConversions = (pItem.uomConversions ?? []).map((c) => ({
+                    fromUomId: c.fromUomId,
+                    toUomId: c.toUomId,
+                    factor: Number(c.factor),
+                  }));
+                  const pBaseQty = toBaseQty(
+                    Number(pLine.quantityReceived),
+                    pLineUomId,
+                    pItem.uomId,
+                    pConversions,
+                  );
                   receivedTotals.set(
                     pLine.itemId,
-                    (receivedTotals.get(pLine.itemId) || 0) +
-                      Number(pLine.quantityReceived),
+                    (receivedTotals.get(pLine.itemId) || 0) + pBaseQty,
                   );
                 }
               }
@@ -297,7 +347,19 @@ export class GrnPostService {
               let allFulfilled = true;
               let anyFulfilled = false;
               for (const pol of poLines) {
-                const reqQty = Number(pol.quantity);
+                const polItem = pol.item;
+                const polUomId = pol.uomId ?? polItem.uomId;
+                const polConversions = (polItem.uomConversions ?? []).map((c) => ({
+                  fromUomId: c.fromUomId,
+                  toUomId: c.toUomId,
+                  factor: Number(c.factor),
+                }));
+                const reqQty = toBaseQty(
+                  Number(pol.quantity),
+                  polUomId,
+                  polItem.uomId,
+                  polConversions,
+                );
                 const recQty = receivedTotals.get(pol.itemId) || 0;
                 if (recQty >= reqQty) {
                   anyFulfilled = true;

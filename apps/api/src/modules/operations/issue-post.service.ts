@@ -7,6 +7,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
+import { toBaseQty } from '@logirest/shared-types';
 import { Role, DocumentType, Prisma, InventoryIssue } from '@prisma/client';
 import { OutboxService } from '../outbox/outbox.service';
 import { MetricsService } from '../metrics/metrics.service';
@@ -62,7 +63,13 @@ export class IssuePostService {
         include: {
           lines: {
             include: {
-              item: true,
+              item: {
+                include: {
+                  uomConversions: {
+                    select: { fromUomId: true, toUomId: true, factor: true },
+                  },
+                },
+              },
             },
           },
         },
@@ -77,8 +84,18 @@ export class IssuePostService {
       // 2. Process each line
       for (const line of issue.lines) {
         const item = line.item;
-
-        // Historical posting guard (disabled to allow posting draft documents in current chronological ledger sequence)
+        const lineUomId = line.uomId ?? item.uomId;
+        const conversions = (item.uomConversions ?? []).map((c) => ({
+          fromUomId: c.fromUomId,
+          toUomId: c.toUomId,
+          factor: Number(c.factor),
+        }));
+        const baseQty = toBaseQty(
+          Number(line.quantity),
+          lineUomId,
+          item.uomId,
+          conversions,
+        );
 
         // Check if item is frozen in source warehouse
         await this.scopeValidationService.checkWarehouseItemQuarantine(
@@ -92,7 +109,7 @@ export class IssuePostService {
           tx,
           issue.warehouseId,
           item.id,
-          Number(line.quantity),
+          baseQty,
         );
 
         if (item.isBatched || item.hasExpiry) {
@@ -126,7 +143,7 @@ export class IssuePostService {
               warehouseId: issue.warehouseId,
               itemId: item.id,
               lotId: null,
-              quantity: -Number(line.quantity),
+              quantity: -baseQty,
               documentId: issue.id,
               documentType: DocumentType.INVENTORY_ISSUE,
               idempotencyKey: `${DocumentType.INVENTORY_ISSUE}:stock:${issue.id}:${item.id}:${line.id}`,

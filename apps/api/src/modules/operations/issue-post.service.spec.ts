@@ -151,7 +151,17 @@ describe('IssuePostService', () => {
     expect(result).toBeDefined();
     expect(mockIssueFindUnique).toHaveBeenCalledWith({
       where: { id: issueId },
-      include: { lines: { include: { item: true } } },
+      include: {
+        lines: {
+          include: {
+            item: {
+              include: {
+                uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+              },
+            },
+          },
+        },
+      },
     });
     expect(mockAllocationService.allocate).toHaveBeenCalledWith(
       mockPrismaTx,

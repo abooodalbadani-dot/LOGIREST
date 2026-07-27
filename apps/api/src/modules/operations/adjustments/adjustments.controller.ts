@@ -37,6 +37,7 @@ import type { Request, Response } from 'express';
 interface UomDetail {
   id: string;
   code: string;
+  name?: string | null;
 }
 
 interface ItemDetail {
@@ -58,6 +59,7 @@ interface AdjustmentLineWithRelations {
   id: string;
   itemId: string;
   lotId?: string | null;
+  uomId?: string | null;
   quantity: number | string | unknown;
   direction: string;
   reason: string;
@@ -65,6 +67,7 @@ interface AdjustmentLineWithRelations {
   snapshotQtyBefore?: number | string | unknown | null;
   qtyBefore?: number | string | unknown | null;
   item?: ItemDetail | null;
+  uom?: UomDetail | null;
   lot?: LotDetail | null;
 }
 
@@ -125,7 +128,20 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
         line.snapshotQtyBefore !== undefined && line.snapshotQtyBefore !== null
           ? Number(line.snapshotQtyBefore)
           : null,
-      uomId: item?.uomId || '',
+      uomId: line.uomId || item?.uomId || '',
+      uom: line.uom
+        ? {
+            id: line.uom.id,
+            code: line.uom.code,
+            name: line.uom.name || line.uom.code,
+          }
+        : item?.unitOfMeasure
+          ? {
+              id: item.unitOfMeasure.id,
+              code: item.unitOfMeasure.code,
+              name: item.unitOfMeasure.name || item.unitOfMeasure.code,
+            }
+          : null,
       unitCost: line.unitCost ? Number(line.unitCost) : null,
       reasonNotes: line.reason || '',
       lot: line.lot

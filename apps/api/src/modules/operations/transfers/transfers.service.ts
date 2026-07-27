@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
-import { Role, toBaseQty } from '@logirest/shared-types';
+import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType, Prisma } from '@prisma/client';
 
@@ -47,33 +47,11 @@ export class TransfersService {
           notes: body.notes || null,
           status: 'DRAFT',
           lines: {
-            create: await Promise.all(body.lines.map(async (line) => {
-              let normalizedQty = line.quantityShipped;
-              let resolvedUomId: string | null = null;
-              if (line.uomId) {
-                const itemData = await tx.item.findUnique({
-                  where: { id: line.itemId },
-                  select: {
-                    uomId: true,
-                    uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
-                  },
-                });
-                if (itemData) {
-                  const conversions = itemData.uomConversions.map((c) => ({
-                    fromUomId: c.fromUomId,
-                    toUomId: c.toUomId,
-                    factor: Number(c.factor),
-                  }));
-                  normalizedQty = toBaseQty(line.quantityShipped, line.uomId, itemData.uomId, conversions);
-                  resolvedUomId = line.uomId;
-                }
-              }
-              return {
-                itemId: line.itemId,
-                quantityShipped: normalizedQty,
-                uomId: resolvedUomId,
-                notes: line.notes || null,
-              };
+            create: body.lines.map((line) => ({
+              itemId: line.itemId,
+              quantityShipped: line.quantityShipped,
+              uomId: line.uomId ?? null,
+              notes: line.notes || null,
             })),
           },
         },
@@ -243,6 +221,7 @@ export class TransfersService {
                 barcodeMappings: true,
               },
             },
+            uom: true,
           },
         },
         fromWarehouse: true,

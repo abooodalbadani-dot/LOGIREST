@@ -39,6 +39,7 @@ export const GRNDetailSchema = z.object({
  documentNumber: z.string(),
  status: BadgeStatusSchema,
  supplierId: z.string(),
+ supplierName: z.string().optional().nullable(),
  supplier: z.object({
  id: z.string(),
  name: z.string()
@@ -126,6 +127,7 @@ const GRNDetailResponseSchema = z.object({
  documentNumber: z.string(),
  status: BadgeStatusSchema,
  supplierId: z.string().nullish(),
+ supplierName: z.string().nullish(),
  supplier: z.object({
   id: z.string(),
   name: z.string()
@@ -151,6 +153,7 @@ const GRNDetailResponseSchema = z.object({
   documentNumber: val.documentNumber,
   status: val.status,
   supplierId: val.supplierId ?? '',
+  supplierName: val.supplierName ?? val.supplier?.name ?? undefined,
   supplier: val.supplier ? {
    id: val.supplier.id,
    name: val.supplier.name

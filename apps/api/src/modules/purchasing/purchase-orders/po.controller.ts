@@ -75,7 +75,20 @@ function mapPODetail(po: Record<string, unknown>) {
       qty: Number(line.quantity),
       unitCostForeign: Number(line.unitPrice),
       unitPrice: Number(line.unitPrice),
-      uomId: (item?.uomId as string) || '',
+      uomId: (line.uomId as string) || (item?.uomId as string) || '',
+      uom: line.uom
+        ? {
+            id: (line.uom as Record<string, unknown>).id as string,
+            code: (line.uom as Record<string, unknown>).code as string,
+            name: ((line.uom as Record<string, unknown>).name as string) || ((line.uom as Record<string, unknown>).code as string),
+          }
+        : unitOfMeasure
+          ? {
+              id: unitOfMeasure.id as string,
+              code: unitOfMeasure.code as string,
+              name: (unitOfMeasure.name as string) || (unitOfMeasure.code as string),
+            }
+          : undefined,
       notes: '',
     };
   });
@@ -117,10 +130,22 @@ function mapPODetail(po: Record<string, unknown>) {
     prId: po.prId as string,
     version: po.version as number,
     supplierId: po.supplierId as string,
+    supplier: supplier
+      ? {
+          id: supplier.id as string,
+          name: supplier.name as string,
+        }
+      : undefined,
     supplierName: (supplier?.name as string) || '',
     warehouseName: (warehouse?.name as string) || '',
     currencyCode: (currency?.code as string) || '',
     currencyId: po.currencyId as string,
+    currency: currency
+      ? {
+          id: currency.id as string,
+          code: currency.code as string,
+        }
+      : undefined,
     exchangeRate: 1.0,
     expectedDate: createdAtIso,
     expectedDeliveryDate: createdAtIso,
