@@ -55,6 +55,7 @@ import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { LotAllocationDialog, type LotAllocation } from './LotAllocationDialog';
 import { getAvailableUomsForItem, resolveUomCode } from '@/utils/uom-helper';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 import { cn } from '@/lib/utils';
 
 const isExpiryInPast = (date: string) => new Date(date) < new Date(new Date().toDateString());
@@ -458,23 +459,13 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          toast.error(ts('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
          throw new Error('WarehouseLocked');
       }
-      const clean = barcode.trim();
-      let item = itemsData?.data?.find(i => i.code === clean || i.barcode === clean);
-      if (!item) {
-         try {
-            const res = await apiClient.get(
-               `/items?search=${encodeURIComponent(clean)}`,
-               z.object({ data: z.array(z.unknown()) })
-            );
-            item = (res as { data: NonNullable<typeof itemsData>['data'] })?.data?.[0];
-         } catch {
-            // ignore fallback errors
-         }
-      }
+      const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data as any);
+      const item = resolved?.item;
+      const targetUomId = resolved?.uomId || item?.primaryUom?.id || 'EA';
 
       if (item) {
          const currentLines = getValues("lines") || [];
-         const index = currentLines.findIndex(l => l.item.id === item.id);
+         const index = currentLines.findIndex(l => l.item.id === item.id && (l.uomId || l.item.primaryUom?.id) === targetUomId);
 
          if (index >= 0) {
             const existing = currentLines[index];
@@ -495,14 +486,14 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   nameEn: item.name,
                   image: item.image || item.imageUrl || null,
                   primaryUom: {
-                     id: item.primaryUom?.id || 'EA',
-                     code: item.primaryUom?.code || 'EA'
+                     id: item.primaryUom?.id || targetUomId,
+                     code: item.primaryUom?.code || targetUomId
                   }
                },
                lot: null,
                qty: 1,
                receivedQty: 1,
-               uomId: item.primaryUom?.id || 'EA',
+               uomId: targetUomId,
                unitCostForeign: item.lastPurchasePrice || 0,
                unitCostBase: 0
             });

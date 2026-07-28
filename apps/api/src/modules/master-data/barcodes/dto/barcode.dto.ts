@@ -8,6 +8,10 @@ export class CreateBarcodeDto {
   @IsString()
   @IsNotEmpty()
   code!: string;
+
+  @IsOptional()
+  @IsString()
+  uomId?: string;
 }
 
 export class UpdateBarcodeDto {
@@ -20,6 +24,10 @@ export class UpdateBarcodeDto {
   @IsString()
   @IsNotEmpty()
   code?: string;
+
+  @IsOptional()
+  @IsString()
+  uomId?: string;
 
   @IsOptional()
   @IsNumber()

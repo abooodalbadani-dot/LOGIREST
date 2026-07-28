@@ -13,6 +13,7 @@ export class BarcodesService {
   private mapDbBarcodeToFrontend(mapping: {
     id: string;
     itemId: string;
+    uomId?: string | null;
     barcode: string;
     version: number;
     item?: { uomId?: string; name?: string; sku?: string } | null;
@@ -20,7 +21,7 @@ export class BarcodesService {
     return {
       id: mapping.id,
       itemId: mapping.itemId,
-      uomId: mapping.item?.uomId || '',
+      uomId: mapping.uomId || mapping.item?.uomId || '',
       itemName: mapping.item?.name || '',
       itemCode: mapping.item?.sku || '',
       code: mapping.barcode,
@@ -69,11 +70,11 @@ export class BarcodesService {
   }
 
   async create(
-    body: { itemId: string; code: string },
+    body: { itemId: string; code: string; uomId?: string },
     userId: string,
     ipAddress?: string,
   ) {
-    const { itemId, code } = body;
+    const { itemId, code, uomId } = body;
     if (!itemId || !code) {
       throw new BadRequestException('itemId and code are required');
     }
@@ -89,6 +90,7 @@ export class BarcodesService {
       const newMapping = await tx.barcodeMapping.create({
         data: {
           itemId: itemId,
+          uomId: uomId || null,
           barcode: code,
           version: 1,
         },
@@ -114,7 +116,7 @@ export class BarcodesService {
 
   async update(
     id: string,
-    body: { itemId?: string; code?: string; version?: number },
+    body: { itemId?: string; code?: string; uomId?: string; version?: number },
     userId: string,
     ipAddress?: string,
   ) {
@@ -131,13 +133,14 @@ export class BarcodesService {
       );
     }
 
-    const { itemId, code } = body;
+    const { itemId, code, uomId } = body;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.barcodeMapping.update({
         where: { id },
         data: {
           itemId: itemId || existing.itemId,
+          uomId: uomId !== undefined ? uomId : existing.uomId,
           barcode: code || existing.barcode,
           version: existing.version + 1,
         },

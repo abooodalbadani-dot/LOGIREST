@@ -173,22 +173,25 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   const allItems = allItemsData?.data || [];
 
   const items = useMemo<ScopedItem[]>(() => {
-    return (inventoryData?.data || []).map((b) => ({
-      id: b.itemId,
-      code: b.itemCode,
-      barcode: b.itemCode,
-      name: b.itemName,
-      qtyAvailable: b.qtyAvailable,
-      categoryId: '',
-      primaryUom: { id: b.uomId || b.primaryUom?.id || '', code: b.uomCode || '', name: '' },
-      uomConversions: [],
-      trackLots: false,
-      minStockLevel: 0,
-      reorderPoint: b.reorderPoint || 0,
-      isActive: true,
-      image: b.image || null,
-    }));
-  }, [inventoryData]);
+    return (inventoryData?.data || []).map((b) => {
+      const fullItem = allItems.find((i) => i.id === b.itemId);
+      return {
+        id: b.itemId,
+        code: b.itemCode,
+        barcode: b.itemCode,
+        name: b.itemName,
+        qtyAvailable: b.qtyAvailable,
+        categoryId: '',
+        primaryUom: fullItem?.primaryUom || { id: b.uomId || b.primaryUom?.id || '', code: b.uomCode || '', name: '' },
+        uomConversions: fullItem?.uomConversions || [],
+        trackLots: false,
+        minStockLevel: 0,
+        reorderPoint: b.reorderPoint || 0,
+        isActive: true,
+        image: b.image || null,
+      };
+    });
+  }, [inventoryData, allItems]);
 
   const [prevWarehouseId, setPrevWarehouseId] = useState<string | undefined>(undefined);
 
@@ -298,8 +301,8 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   const handleScan = (barcode: string) => {
     const matchedItem = allItems?.find(i => i.barcode === barcode || i.code === barcode);
     if (matchedItem) {
-      const isAvailableInWarehouse = items?.some(i => i.id === matchedItem.id);
-      if (!isAvailableInWarehouse) {
+      const scopedItem = items?.find(i => i.id === matchedItem.id);
+      if (!scopedItem) {
         toast.error(locale === 'ar' ? 'الصنف غير موجود أو غير متوفر في هذا المستودع' : 'Item not available in this warehouse');
         return;
       }
@@ -308,7 +311,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
         form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
       } else {
-        append({ itemId: matchedItem.id, quantity: 1, notes: '' });
+        append({ itemId: matchedItem.id, quantity: 1, uomId: scopedItem.primaryUom?.id || matchedItem.primaryUom?.id || '', notes: '' });
       }
       toast.success(locale === 'ar' ? `تمت إضافة ${matchedItem.name}` : `Added ${matchedItem.name}`);
     } else {
@@ -462,12 +465,13 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 items={itemItems}
                 disabled={!watchedWarehouseId || isLoadingItems}
                 onSelect={(item) => {
+                  const selectedScopedItem = items?.find(i => i.id === String(item.id));
                   const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
                   if (existingIndex !== -1) {
                     const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
                     form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
                   } else {
-                    append({ itemId: String(item.id), quantity: 1, notes: '' });
+                    append({ itemId: String(item.id), quantity: 1, uomId: selectedScopedItem?.primaryUom?.id || '', notes: '' });
                   }
                 }}
                 getPrimaryLabel={(item) => item.name}
@@ -490,6 +494,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                     lines={fields.map((field, index) => {
                       const selectedItemId = watchedItems?.[index]?.itemId;
                       const selectedItem = items?.find(i => i.id === selectedItemId);
+                      const currentUomId = watchedItems?.[index]?.uomId || selectedItem?.primaryUom?.id || '';
                       return {
                         id: field.id,
                         item: {
@@ -497,10 +502,11 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                           code: selectedItem?.barcode || '',
                           name: selectedItem?.name || '',
                           image: selectedItem?.image || null,
-                          primaryUom: { id: selectedItem?.primaryUom?.id || '', code: selectedItem?.primaryUom?.code || '' }
+                          primaryUom: { id: selectedItem?.primaryUom?.id || '', code: selectedItem?.primaryUom?.code || '' },
+                          uomConversions: selectedItem?.uomConversions || [],
                         },
                         qty: watchedItems?.[index]?.quantity ?? 1,
-                        uomId: '',
+                        uomId: currentUomId,
                         lot: null,
                         index,
                         selectedItem,
@@ -556,12 +562,9 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                           items={availableUoms}
                           value={currentUomId}
                           onSelect={(uom) => {
-                            const currentList = form.getValues('items') || [];
-                            const updatedList = currentList.map((it, idx) =>
-                              idx === line.index ? { ...it, uomId: uom.id } : it
-                            );
-                            form.setValue('items', updatedList, { shouldDirty: true, shouldValidate: true });
+                            form.setValue(`items.${line.index}.uomId`, String(uom.id), { shouldDirty: true, shouldValidate: true });
                           }}
+                          getPrimaryLabel={(uom) => uom.code || uom.name || 'UOM'}
                           triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
                         />
                       );

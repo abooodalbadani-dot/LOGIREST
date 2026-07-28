@@ -97,12 +97,12 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
      barcode: displayBarcode,
      nameEn: item.itemName,
      nameAr: item.itemName,
-     primaryUom: { code: item.uom },
+     primaryUom: { id: item.uomId || '', code: item.uom },
      image: item.itemImage || item.image || null
     },
     qty: item.quantity,
     fulfilledQty: item.fulfilledQuantity ?? 0,
-    uomId: '',
+    uomId: item.uomId || '',
     lot: null,
     notes: item.notes ?? null,
    };

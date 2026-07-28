@@ -259,10 +259,17 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       throw new Error('WarehouseLocked');
     }
 
-    const lineIndex = lines.findIndex(l =>
-      l.item?.code === barcode ||
-      l.item?.barcodes?.some(b => b.barcode === barcode)
-    );
+    const lineIndex = lines.findIndex(l => {
+      const matchedBarcode = l.item?.barcodes?.find(b => b.barcode === barcode);
+      if (matchedBarcode) {
+        const bmUomId = (matchedBarcode as { barcode: string; uomId?: string }).uomId;
+        if (bmUomId) {
+          return l.uomId === bmUomId;
+        }
+        return true;
+      }
+      return l.item?.code === barcode;
+    });
     if (lineIndex !== -1) {
       const line = lines[lineIndex];
       const shippedQty = line.shippedQty ?? line.qty;

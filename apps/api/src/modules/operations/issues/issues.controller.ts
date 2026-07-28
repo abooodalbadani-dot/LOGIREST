@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   Req,
+  Res,
   HttpCode,
   HttpStatus,
   BadRequestException,
@@ -14,6 +15,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { IssuePostService } from '../issue-post.service';
 import { IssuesService } from './issues.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -29,7 +31,7 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { AllRoles } from '../../../auth/decorators/all-roles.decorator';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 function mapIssueDetail(issue: Record<string, unknown>) {
   const lines = ((issue.lines as Record<string, unknown>[]) || []).map(
@@ -225,7 +227,25 @@ export class IssuesController {
     private readonly issuePostService: IssuePostService,
     private readonly issuesService: IssuesService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
+
+  @Get(':id/pdf')
+  @AllRoles()
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @Res() res: Response,
+  ) {
+    const issue = await this.issuesService.findOne(id);
+    const buffer = await this.pdfGeneratorService.generateIssuePdf(id, locale);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=ISSUE_${issue.issueNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
+  }
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Post()

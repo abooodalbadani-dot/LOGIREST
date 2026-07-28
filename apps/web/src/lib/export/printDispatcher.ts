@@ -2,6 +2,7 @@ import { generatePDF } from './pdfExport';
 import { type SystemPrintSettings } from '@/features/admin/hooks/useSystemPrintSettings';
 import { type KitchenRequestDetail, type KitchenRequestItem } from '@/features/operations/types/kitchen-request';
 import { type StockIssue, type IssueLineItem, type LotAllocation } from '@/types/documents';
+import { resolveUomCode } from '@/utils/uom-helper';
 
 export interface PrintDispatcherOptions {
   docType?: 'KITCHEN_REQUEST' | 'INVENTORY_ISSUE';
@@ -71,11 +72,11 @@ export async function dispatchPrintJob({
     ];
 
     const pdfRows = (doc.items || []).map((item: KitchenRequestItem) => ({
-      code: item.itemId,
+      code: item.itemCode || (item.itemId && item.itemId.length < 15 ? item.itemId : '—'),
       name: item.itemName,
       qty: item.quantity,
       fulfilledQty: item.fulfilledQuantity ?? 0,
-      uom: item.uom,
+      uom: item.uom || '—',
       notes: item.notes ?? '',
     }));
 
@@ -101,12 +102,18 @@ export async function dispatchPrintJob({
         ? line.lotAllocations.map((alloc: LotAllocation) => `${alloc.lotNumber} (${alloc.allocatedQty})`).join(', ')
         : line.lot ? `${line.lot.lotNumber}` : '—';
 
+      const lineUom =
+        (line as { uom?: { code?: string } }).uom?.code ||
+        resolveUomCode(line.uomId, line.item) ||
+        line.item?.primaryUom?.code ||
+        '—';
+
       return {
-        code: line.item.code,
-        name: line.item.name || '—',
+        code: line.item?.code || '—',
+        name: line.item?.name || '—',
         qty: line.qty,
         lot: lotText,
-        uom: line.item.primaryUom?.code || line.uomId || '',
+        uom: lineUom,
       };
     });
 

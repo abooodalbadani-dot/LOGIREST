@@ -440,6 +440,7 @@
     "sign_in": "Sign In"
   },
   "common": {
+    "primary_uom": "Primary UoM",
     "scan_placeholder": "Scan or type barcode...",
     "no_results": "No results found.",
     "loading_camera": "Initializing Camera Feed...",
@@ -1527,11 +1528,12 @@
       "description": "Advanced interface for linking physical barcodes to system items using live scanning.",
       "duplicate_warning": "This barcode is already mapped to {item}",
       "errors": {
-        "missing_data": "Please scan a code and select an item"
+        "missing_data": "Please select an item, scan a barcode, and choose a Unit of Measure."
       },
       "fields": {
         "mapped_item": "Mapped Item",
-        "scan_barcode": "Scan Barcode"
+        "scan_barcode": "Scan Barcode",
+        "select_uom": "Select Unit of Measure"
       },
       "history": {
         "empty": "No history for today",
@@ -1554,7 +1556,9 @@
       },
       "placeholders": {
         "no_item_selected": "No item selected",
-        "scan_here": "Scan here..."
+        "scan_here": "Scan here...",
+        "select_item_first": "Select item first...",
+        "no_uoms": "No UOMs available"
       },
       "recent_mappings": "Recent Mappings",
       "scan_prompt": "Scan Barcode to Begin",

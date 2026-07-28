@@ -4,21 +4,19 @@ import { useEffect, useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, useFieldArray, Controller, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Package, Plus, Trash2, ShieldCheck, Scale, Boxes, Settings2, Edit3 } from 'lucide-react';
+import { Package, Plus, Trash2, ShieldCheck, Scale, Boxes, Settings2, Edit3, Barcode as BarcodeIcon, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Camera, ScanLine } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
-import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem, useDeleteItem, useNextItemCode } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemFormSchema, type ItemFormValues, type ItemFormInput, UoMSchema, type Category, type UoMConversion } from '@/types/master-data';
+import { ItemFormSchema, type ItemFormInput, UoMSchema, type Category, type UoMConversion } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
-import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { CameraBarcodeScanner } from '@/components/shared/CameraBarcodeScanner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -30,9 +28,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { toast } from 'sonner';
 import { useAbortController } from '@/hooks/useAbortController';
-import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from '@/hooks/useFormError';
-
 
 interface Props {
   id: string | null;
@@ -59,18 +55,17 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const conflict = useConflictHandler('item', id ?? '');
   const update = useUpdateItem({ onConflict: conflict.triggerConflict });
   const deleteMutation = useDeleteItem();
-  const { playSound } = useAudioFeedback();
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [isAutoPopulated, setIsAutoPopulated] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraScanRowIndex, setCameraScanRowIndex] = useState<number | null>(null);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<ItemFormInput>({
       resolver: zodResolver(ItemFormSchema),
       disabled: isReadOnly,
       defaultValues: {
-        code: '', barcode: '', name: '', categoryId: '', primaryUomId: '',
+        code: '', barcode: '', barcodes: [], name: '', categoryId: '', primaryUomId: '',
         trackLots: false, minStockLevel: 0, reorderPoint: 0, uomConversions: [], isActive: true,
         version: undefined, image: '',
       },
@@ -79,6 +74,66 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({ control, name: 'uomConversions' });
+  const { fields: barcodeFields, append: appendBarcode, remove: removeBarcode } = useFieldArray({ control, name: 'barcodes' });
+
+  const watchedPrimaryUomId = useWatch({ control, name: 'primaryUomId' });
+  const watchedConversions = useWatch({ control, name: 'uomConversions' });
+
+  // Compute available UOMs for barcode row dropdowns (Primary UOM + Conversion UOMs)
+  const availableFormUoms = useMemo(() => {
+    const uomMap = new Map<string, { id: string; code: string; name: string }>();
+
+    // 1. Primary UOM
+    if (watchedPrimaryUomId && uoms?.data) {
+      const found = uoms.data.find(u => u.id === watchedPrimaryUomId);
+      if (found) {
+        uomMap.set(found.id, {
+          id: found.id,
+          code: found.code,
+          name: `${found.code} — ${found.name} (${locale === 'ar' ? 'الوحدة الأساسية' : 'Base UOM'})`,
+        });
+      }
+    }
+
+    // 2. Conversion UOMs
+    if (Array.isArray(watchedConversions) && uoms?.data) {
+      for (const conv of watchedConversions) {
+        if (conv.fromUomId) {
+          const found = uoms.data.find(u => u.id === conv.fromUomId);
+          if (found && !uomMap.has(found.id)) {
+            uomMap.set(found.id, {
+              id: found.id,
+              code: found.code,
+              name: `${found.code} — ${found.name}`,
+            });
+          }
+        }
+        if (conv.toUomId) {
+          const found = uoms.data.find(u => u.id === conv.toUomId);
+          if (found && !uomMap.has(found.id)) {
+            uomMap.set(found.id, {
+              id: found.id,
+              code: found.code,
+              name: `${found.code} — ${found.name}`,
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Fallback to all master UOMs if none selected yet
+    if (uomMap.size === 0 && uoms?.data) {
+      for (const u of uoms.data) {
+        uomMap.set(u.id, {
+          id: u.id,
+          code: u.code,
+          name: `${u.code} — ${u.name}`,
+        });
+      }
+    }
+
+    return Array.from(uomMap.values());
+  }, [watchedPrimaryUomId, watchedConversions, uoms?.data, locale]);
 
   useEffect(() => {
     if (data) {
@@ -86,9 +141,15 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         ? data.uomConversions
         : ((data as unknown as Record<string, unknown>).uom_conversions as UoMConversion[] || []);
 
+      const rawBarcodes = ((data as unknown as Record<string, unknown>).barcodes as Array<{ barcode: string; uomId?: string }>)
+        || ((data as unknown as Record<string, unknown>).barcodeMappings as Array<{ barcode: string; uomId?: string }>)
+        || ((data as unknown as Record<string, unknown>).barcode_mappings as Array<{ barcode: string; uomId?: string }>)
+        || (data.barcode ? [{ barcode: data.barcode, uomId: data.primaryUom?.id || '' }] : []);
+
       reset({
         code: data.code,
-        barcode: data.barcode,
+        barcode: data.barcode || rawBarcodes[0]?.barcode || '',
+        barcodes: (rawBarcodes || []).map((b: { barcode: string; uomId?: string }) => ({ barcode: b.barcode, uomId: b.uomId || '' })),
         name: data.name,
         categoryId: data.categoryId || (data as unknown as Record<string, unknown>).category_id as string || '',
         primaryUomId: data.primaryUom?.id || (data as unknown as Record<string, unknown>).primary_uom_id as string || '',
@@ -106,9 +167,6 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       });
     }
   }, [data, reset]);
-
-  const codeValue = useWatch({ control, name: 'code' });
-  const currentBarcode = useWatch({ control, name: 'barcode' });
 
   useEffect(() => {
     if (!id && nextCodeData?.nextCode && !isDirty) {
@@ -132,7 +190,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       name_ar: `${u.code} — ${u.name}`,
     })) || [];
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
-  }, [uoms?.data, locale, tm]);
+  }, [uoms?.data, tm]);
 
   const uomShortItems = useMemo(() => {
     const list = uoms?.data?.map((u) => ({
@@ -146,9 +204,17 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const onValid = (values: ItemFormInput) => {
     if (isReadOnly) return;
 
+    const validBarcodes = (values.barcodes || [])
+      .filter(b => b.barcode && b.barcode.trim() !== '')
+      .map(b => ({
+        barcode: b.barcode.trim(),
+        uomId: b.uomId || values.primaryUomId || undefined,
+      }));
+
     const payload = {
       code: values.code || undefined,
-      barcode: values.barcode,
+      barcode: validBarcodes[0]?.barcode || values.barcode || undefined,
+      barcodes: validBarcodes,
       name: values.name,
       categoryId: values.categoryId,
       primaryUomId: values.primaryUomId,
@@ -204,7 +270,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   };
 
   const onInvalid = (errors: FieldErrors<ItemFormInput>) => {
-    console.log('3. [ItemForm] Validation FAILED (Silent Zod Blocker):', errors);
+    console.log('3. [ItemForm] Validation FAILED:', errors);
     onFormError(errors);
   };
 
@@ -335,35 +401,6 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
               </div>
 
               <div className="w-full min-w-0 flex flex-col gap-1.5 text-start">
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.barcode')}</Label>
-                <div className="relative w-full min-w-0">
-                  <ScanInput
-                    value={currentBarcode}
-                    onScan={(val) => setValue('barcode', val, { shouldValidate: true })}
-                    placeholder={isReadOnly ? "" : ti('fields.barcode')}
-                    disabled={isReadOnly}
-                    size="md"
-                    actions={
-                      !isReadOnly && (
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            const generated = 'BAR' + Math.floor(10000000 + Math.random() * 90000000);
-                            setValue('barcode', generated, { shouldDirty: true, shouldValidate: true });
-                          }}
-                          className="h-8 px-4 text-[10px] sm:text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold uppercase tracking-wider ml-2"
-                        >
-                          {locale === 'ar' ? 'توليد' : 'Generate'}
-                        </Button>
-                      )
-                    }
-                  />
-                  <Input type="hidden" {...register('barcode')} />
-                </div>
-                {errors.barcode?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.barcode.message as never)}</p>}
-              </div>
-
-              <div className="w-full min-w-0 flex flex-col gap-1.5 text-start col-span-1 md:col-span-2">
                 <Label htmlFor="item-name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">{ti('fields.name') || tm('name') || 'Name'}</Label>
                 <Input id="item-name" {...register('name')} disabled={isReadOnly} className="font-semibold w-full h-10" />
                 {errors.name?.message && <p className="text-xs text-red-500 mt-1">{tv(errors.name.message as never)}</p>}
@@ -570,6 +607,144 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
             </div>
           </div>
 
+          {/* Barcode & UOM Mappings Protocol */}
+          <div className="w-full min-w-0 flex flex-col gap-6">
+            <div className="flex items-center justify-between border-b border-border pb-3 mb-4 gap-4">
+              <div className="flex items-center gap-2">
+                <BarcodeIcon className="text-muted-foreground w-5 h-5" />
+                <h3 className="text-base font-bold text-foreground">
+                  {locale === 'ar' ? 'ترميزات الباركود والوحدات' : 'Barcode & UOM Mappings'}
+                </h3>
+              </div>
+              {!isReadOnly && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-2 border-2 border-operational-cyan bg-transparent text-operational-cyan hover:bg-operational-cyan hover:text-black font-bold w-fit shadow-sm"
+                  onClick={() => appendBarcode({ barcode: '', uomId: watchedPrimaryUomId || '' })}
+                >
+                  <Plus className="w-4 h-4" /> {locale === 'ar' ? 'إضافة ربط باركود' : '+ Add Barcode Mapping'}
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {barcodeFields.length === 0 ? (
+                <div className="w-full flex flex-col items-center justify-center p-8 bg-muted/20 border border-dashed border-border rounded-xl gap-3 my-2">
+                  <BarcodeIcon className="w-8 h-8 text-muted-foreground" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {locale === 'ar' ? 'لا توجد باركودات معرفة لهذا الصنف' : 'No barcodes defined for this item'}
+                  </p>
+                  {!isReadOnly && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendBarcode({ barcode: '', uomId: watchedPrimaryUomId || '' })}
+                      className="text-xs font-bold"
+                    >
+                      <Plus className="w-3.5 h-3.5 me-1" /> {locale === 'ar' ? 'إضافة باركود' : 'Add First Barcode'}
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {barcodeFields.map((field, idx) => (
+                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_auto] gap-4 items-end p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 transition-all hover:bg-surface-container-highest/30">
+                      {/* Barcode Input */}
+                      <div className="col-span-1 w-full min-w-0 flex flex-col gap-1.5 text-start">
+                        <Label htmlFor={`barcode-val-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">
+                          {locale === 'ar' ? 'رمز الباركود' : 'Barcode Value'}
+                        </Label>
+                        <div className="relative w-full flex items-center gap-2">
+                          <Input
+                            id={`barcode-val-${idx}`}
+                            dir="ltr"
+                            disabled={isReadOnly}
+                            className="font-mono font-semibold text-status-active w-full h-10"
+                            placeholder="e.g. 6291000123456"
+                            {...register(`barcodes.${idx}.barcode`)}
+                          />
+                          {!isReadOnly && (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  const generated = 'BAR' + Math.floor(10000000 + Math.random() * 90000000);
+                                  setValue(`barcodes.${idx}.barcode`, generated, { shouldDirty: true, shouldValidate: true });
+                                }}
+                                className="h-10 px-3 text-[10px] sm:text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold uppercase tracking-wider"
+                                title={locale === 'ar' ? 'توليد باركود تلقائي' : 'Auto-Generate Barcode'}
+                              >
+                                <Zap className="w-3.5 h-3.5 me-1" />
+                                {locale === 'ar' ? 'توليد' : 'Generate'}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setCameraScanRowIndex(idx);
+                                  setIsCameraOpen(true);
+                                }}
+                                className="h-10 px-3 shrink-0"
+                                title={locale === 'ar' ? 'مسح بالكاميرا' : 'Camera Scan'}
+                              >
+                                <Camera className="w-4 h-4 text-operational-cyan" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        {errors.barcodes?.[idx]?.barcode?.message && (
+                          <p className="text-xs text-red-500 mt-1">{tv(errors.barcodes[idx]?.barcode?.message as never)}</p>
+                        )}
+                      </div>
+
+                      {/* UOM Selector */}
+                      <div className="col-span-1 w-full min-w-0 flex flex-col gap-1.5 text-start">
+                        <Label htmlFor={`barcode-uom-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">
+                          {locale === 'ar' ? 'الوحدة المرتبطة' : 'Target UOM'}
+                        </Label>
+                        <Controller
+                          name={`barcodes.${idx}.uomId`}
+                          control={control}
+                          render={({ field: uomField }) => (
+                            <select
+                              disabled={isReadOnly}
+                              value={uomField.value || ''}
+                              onChange={(e) => uomField.onChange(e.target.value)}
+                              className="w-full h-10 px-3 rounded-lg font-semibold text-xs bg-background border border-border text-foreground focus:border-brand-gold outline-none cursor-pointer"
+                            >
+                              <option value="">{locale === 'ar' ? '-- اختر الوحدة --' : '-- Select UOM --'}</option>
+                              {availableFormUoms.map((u) => (
+                                <option key={u.id} value={u.id}>
+                                  {u.name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        />
+                      </div>
+
+                      {/* Remove Button */}
+                      {!isReadOnly && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all mb-[1px]"
+                          onClick={() => removeBarcode(idx)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Status & Availability Section */}
           <div className="w-full min-w-0 flex flex-col gap-6">
             <div className="flex items-center gap-2 text-start border-b border-border pb-3 mb-4">
@@ -673,7 +848,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         isLoading={deleteMutation.isPending}
       />
 
-      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+      <Dialog open={isCameraOpen} onOpenChange={(open) => {
+        setIsCameraOpen(open);
+        if (!open) setCameraScanRowIndex(null);
+      }}>
         <DialogContent className="w-[min(440px,95vw)] bg-card border border-border shadow-lg p-0 rounded-2xl overflow-hidden">
           <DialogHeader className="px-6 pt-5 pb-4 border-b border-border">
             <DialogTitle className="text-label-sm font-bold uppercase text-foreground flex items-center gap-2">
@@ -686,7 +864,12 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
               <CameraBarcodeScanner
                 onScanSuccess={(barcode) => {
                   audioAlerts.playScanSuccess();
-                  setValue('barcode', barcode, { shouldDirty: true, shouldValidate: true });
+                  if (cameraScanRowIndex !== null) {
+                    setValue(`barcodes.${cameraScanRowIndex}.barcode`, barcode, { shouldDirty: true, shouldValidate: true });
+                    setCameraScanRowIndex(null);
+                  } else {
+                    setValue('barcode', barcode, { shouldDirty: true, shouldValidate: true });
+                  }
                   setIsCameraOpen(false);
                 }}
               />
@@ -697,3 +880,4 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     </>
   );
 }
+

@@ -9,10 +9,12 @@ import {
   Query,
   UseGuards,
   Req,
+  Res,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { PurchaseRequestsService } from './purchase-requests.service';
+import { PdfGeneratorService } from '../pdf/pdf-generator.service';
 import { WorkflowStateGuard } from '../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
@@ -30,7 +32,7 @@ import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { CreatePurchaseRequestDto } from './dto/create-purchase-request.dto';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 function mapPRDetail(pr: Record<string, unknown>) {
   const prLines = (pr.lines as Record<string, unknown>[]) || [];
@@ -149,7 +151,28 @@ export class PurchaseRequestsController {
     private readonly prService: PurchaseRequestsService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
   ) {}
+
+  @Get(':id/pdf')
+  @AllRoles()
+  async getPdf(
+    @Param('id') id: string,
+    @Query('locale') locale: 'ar' | 'en' = 'en',
+    @Res() res: Response,
+  ) {
+    const pr = await this.prService.findOne(id);
+    const buffer = await this.pdfGeneratorService.generatePurchaseRequestPdf(
+      id,
+      locale,
+    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=PR_${pr.requestNumber}.pdf`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
+  }
 
   @Post()
   @Roles(

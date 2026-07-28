@@ -31,6 +31,20 @@ export class UomConversionDto {
   factor!: number;
 }
 
+export class ItemBarcodeDto {
+  @IsString()
+  @IsNotEmpty()
+  barcode!: string;
+
+  @IsString()
+  @IsOptional()
+  uomId?: string;
+
+  @IsString()
+  @IsOptional()
+  uom_id?: string;
+}
+
 export class CreateItemDto {
   @IsString()
   @IsNotEmpty()
@@ -63,6 +77,18 @@ export class CreateItemDto {
   @IsString()
   @IsOptional()
   barcode?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ItemBarcodeDto)
+  barcodes?: ItemBarcodeDto[];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ItemBarcodeDto)
+  barcode_mappings?: ItemBarcodeDto[];
 
   @IsString()
   @IsOptional()
@@ -117,6 +143,18 @@ export class UpdateItemDto {
   @IsString()
   @IsOptional()
   barcode?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ItemBarcodeDto)
+  barcodes?: ItemBarcodeDto[];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ItemBarcodeDto)
+  barcode_mappings?: ItemBarcodeDto[];
 
   @IsString()
   @IsOptional()

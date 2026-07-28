@@ -131,8 +131,17 @@ export const UoMConversionSchema = z.object({
   toUomName: data.toUomName ?? '',
 }));
 
+export const BarcodeItemMappingSchema = z.object({
+  barcode: z.string(),
+  uomId: z.string().optional().nullable(),
+  uom_id: z.string().optional().nullable(),
+});
+
 export const ItemSchema = z.object({
-  id: z.string(), code: z.string(), barcode: z.string(), name: z.string(),
+  id: z.string(), code: z.string(), barcode: z.string().optional().nullable().default(''), name: z.string(),
+  barcodes: z.array(BarcodeItemMappingSchema).optional().default([]),
+  barcodeMappings: z.array(BarcodeItemMappingSchema).optional().default([]),
+  barcode_mappings: z.array(BarcodeItemMappingSchema).optional().default([]),
   categoryId: z.string(),
   category: CategorySchema.optional().nullable(),
   primaryUom: UoMSchema.optional().nullable(),
@@ -156,13 +165,26 @@ export const ItemSchema = z.object({
   /** Stock balance for a specific warehouse (populated when warehouse_id filter is used). */
   qtyOnHand: z.number().optional(),
   qty_on_hand: z.number().optional(),
-}).transform((data) => ({
-  ...data,
-  primaryUom: data.primaryUom || data.primary_uom || null,
-  uomConversions: (data.uomConversions && data.uomConversions.length > 0)
-    ? data.uomConversions
-    : (data.uom_conversions || []),
-}));
+}).transform((data) => {
+  const primaryUom = data.primaryUom || data.primary_uom || null;
+  const rawList = (data.barcodes && data.barcodes.length > 0)
+    ? data.barcodes
+    : (data.barcodeMappings && data.barcodeMappings.length > 0)
+      ? data.barcodeMappings
+      : (data.barcode_mappings && data.barcode_mappings.length > 0)
+        ? data.barcode_mappings
+        : (data.barcode ? [{ barcode: data.barcode, uomId: primaryUom?.id || null }] : []);
+
+  return {
+    ...data,
+    barcode: data.barcode || rawList[0]?.barcode || '',
+    barcodes: rawList.map(b => ({ barcode: b.barcode, uomId: b.uomId || b.uom_id || null })),
+    primaryUom,
+    uomConversions: (data.uomConversions && data.uomConversions.length > 0)
+      ? data.uomConversions
+      : (data.uom_conversions || []),
+  };
+});
 
 export const LotSchema = z.object({
   id: z.string(), itemId: z.string(), warehouseId: z.string(), lotNumber: z.string(),
@@ -321,7 +343,11 @@ export const CategoryFormSchema = z.object({
 export const ItemFormSchema = z.object({
   code: z.string().optional()
     .refine(val => !val || val.length >= 1, { message: 'master_data.items.validation.code_required' }),
-  barcode: z.string().min(1, 'master_data.items.validation.barcode_required'),
+  barcode: z.string().optional().nullable(),
+  barcodes: z.array(z.object({
+    barcode: z.string().min(1, 'master_data.items.validation.barcode_required'),
+    uomId: z.string().optional().nullable(),
+  })).default([]),
   name: z.string().min(1, 'master_data.items.validation.name_required'),
   categoryId: z.string().min(1, 'master_data.items.validation.category_required'),
   primaryUomId: z.string().min(1, 'master_data.items.validation.uom_required'),
@@ -378,6 +404,7 @@ export const FXRateFormSchema = z.object({
 export const BarcodeFormSchema = z.object({
   itemId: z.string().min(1, 'master_data.barcodes.validation.item_required'),
   code: z.string().min(1, 'master_data.barcodes.validation.code_required'),
+  uomId: z.string().optional().nullable(),
   version: z.number().optional()
 });
 

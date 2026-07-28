@@ -84,6 +84,7 @@ export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {
     items: data.items.map(item => ({
      itemId: item.itemId,
      quantityRequested: item.quantity,
+     uomId: item.uomId || undefined,
      notes: item.notes || null,
     }))
    };

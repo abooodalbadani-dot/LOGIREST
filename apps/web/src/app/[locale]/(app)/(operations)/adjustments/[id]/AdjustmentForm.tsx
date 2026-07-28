@@ -77,7 +77,8 @@ import {
   DocumentLockWrapper,
 } from "@/components/shared/DocumentLockBanner";
 import { FormFooter } from "@/components/layouts/FormLayout";
-import { formatQuantity, formatDate } from "@/utils/currency";
+import { formatCurrency, formatDate } from "@/utils/currency";
+import { resolveBarcodeAndUom } from "@/utils/barcode-resolver";
 import { audioAlerts } from "@/utils/audio";
 import { VoidButton } from "@/components/shared/VoidButton";
 import { PermissionGate } from "@/components/shared/PermissionGate";
@@ -494,25 +495,11 @@ export function AdjustmentForm({
       setScanStatus("idle");
       setStatusMessage(undefined);
 
-      const ItemSchema = z.object({
-        data: z.array(
-          z.object({
-            id: z.string(),
-            code: z.string(),
-            name: z.string(),
-            image: z.string().nullable().optional(),
-            primaryUom: z.object({ id: z.string(), code: z.string() }),
-          }),
-        ),
-      });
-      const res = await apiClient.get(
-        `/master-data/items?barcode=${barcode}`,
-        ItemSchema,
-        { signal: abortController.signal },
-      );
+      const resolved = await resolveBarcodeAndUom(barcode, undefined, abortController.signal);
 
-      if (res.data && res.data.length > 0) {
-        const item = res.data[0];
+      if (resolved) {
+        const { item, uomId: scannedUomId } = resolved;
+        const targetUomId = scannedUomId || item.primaryUom?.id || '';
 
         const BalanceSchema = z.object({
           data: z.array(
@@ -529,10 +516,10 @@ export function AdjustmentForm({
         const currentQty = balanceRes.data?.[0]?.qtyOnHand ?? 0;
 
         setLines((prev) => {
-          const existing = prev.find((l) => l.item.id === item.id);
+          const existing = prev.find((l) => l.item.id === item.id && l.uomId === targetUomId);
           if (existing) {
             return prev.map((l) =>
-              l.item.id === item.id
+              (l.item.id === item.id && l.uomId === targetUomId)
                 ? {
                   ...l,
                   qtyAdjusted: l.qtyAdjusted + 1,
@@ -550,18 +537,19 @@ export function AdjustmentForm({
                 code: item.code,
                 name: item.name,
                 image: item.image,
-                primaryUom: item.primaryUom,
+                primaryUom: item.primaryUom || { id: targetUomId, code: targetUomId },
               },
               direction: "INCREASE",
               qtyBefore: currentQty,
               qtyAdjusted: 1,
               unitCost: 0,
-              uomId: item.primaryUom.id,
+              uomId: targetUomId,
               reasonNotes: "",
             },
           ];
         });
 
+        audioAlerts.playScanSuccess();
         setScanStatus("success");
         setStatusMessage(undefined);
         resetAfterDelay();

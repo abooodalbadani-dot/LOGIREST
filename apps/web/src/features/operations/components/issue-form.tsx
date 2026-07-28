@@ -45,6 +45,7 @@ import { SmartCombobox, type ComboboxItem } from '@/components/shared/SmartCombo
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useWarehouseInventory } from '@/features/inventory/hooks/useWarehouseInventory';
 import { RelationalName } from '@/components/shared/RelationalName';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 
 interface IssueFormProps {
   issue?: StockIssue;
@@ -207,43 +208,17 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const primaryAction = canPost ? 'POST' : canSubmit ? 'SUBMIT' : null;
 
   const handleScan = async (barcode: string) => {
-
     try {
-      const ItemSchema = z.object({
-        data: z.array(z.object({
-          id: z.string(),
-          code: z.string(),
-          name: z.string(),
-          nameAr: z.string().optional(),
-          nameEn: z.string().optional(),
-          primaryUom: z.object({
-            id: z.string(),
-            code: z.string(),
-            name: z.string().optional(),
-            nameAr: z.string().optional(),
-            nameEn: z.string().optional()
-          }),
-          uomConversions: z.array(z.object({
-            fromUomId: z.string(),
-            toUomId: z.string(),
-            factor: z.coerce.number(),
-          })).optional().default([]),
-        }))
-      });
-      const clean = barcode.trim();
-      let res = await apiClient.get(`/items?search=${encodeURIComponent(clean)}`, ItemSchema, { signal: abortController.signal });
-      if (!res.data || res.data.length === 0) {
-        res = await apiClient.get(`/items?barcode=${encodeURIComponent(clean)}`, ItemSchema, { signal: abortController.signal });
-      }
-
-      if (!res.data || res.data.length === 0) {
+      const resolved = await resolveBarcodeAndUom(barcode, undefined, abortController.signal);
+      if (!resolved) {
         setScanError(t('no_item_found'));
         playSound('error');
         toast.error(t('no_item_found'));
         throw new Error('ItemNotFound');
       }
 
-      const item = res.data[0];
+      const { item, uomId: scannedUomId } = resolved;
+      const targetUomId = scannedUomId || item.primaryUom?.id || '';
 
       // Query available lots for the item
       const LotsResponseSchema = z.object({
@@ -283,7 +258,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         .filter(l => !l.isExpired && l.qtyAvailable > 0)
         .sort((a, b) => new Date(a.expiryDate || 0).getTime() - new Date(b.expiryDate || 0).getTime());
 
-      const existingLine = lines.find(l => l.item.id === item.id);
+      // Match existing line by BOTH item.id AND uomId
+      const existingLine = lines.find(l => l.item.id === item.id && l.uomId === targetUomId);
       const targetQty = existingLine ? existingLine.qty + 1 : 1;
       const totalAvailable = validLots.reduce((sum, lot) => sum + lot.qtyAvailable, 0);
 
@@ -306,9 +282,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         }];
 
         setLines(prev => {
-          const existing = prev.find(l => l.item.id === item.id);
+          const existing = prev.find(l => l.item.id === item.id && l.uomId === targetUomId);
           if (existing) {
-            return prev.map(l => l.item.id === item.id ? { ...l, qty: targetQty, lotAllocations: allocation } : l);
+            return prev.map(l => (l.item.id === item.id && l.uomId === targetUomId) ? { ...l, qty: targetQty, lotAllocations: allocation } : l);
           }
           return [...prev, {
             id: `new-${Date.now()}`,
@@ -318,12 +294,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               name: item.name || (locale === 'ar' ? item.nameAr : item.nameEn) || '',
               nameAr: item.nameAr,
               nameEn: item.nameEn,
-              primaryUom: { id: item.primaryUom.id, code: item.primaryUom.code }
+              primaryUom: { id: item.primaryUom?.id || targetUomId, code: item.primaryUom?.code || targetUomId }
             },
             qty: targetQty,
             baseQty: targetQty,
-            uomId: item.primaryUom.id,
-            baseUomId: item.primaryUom.id,
+            uomId: targetUomId,
+            baseUomId: item.primaryUom?.id || targetUomId,
             uomConversions: item.uomConversions ?? [],
             lotAllocations: allocation
           } as IssueLine];
@@ -343,7 +319,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         let lineToActivate: IssueLine;
         if (existingLine) {
           lineToActivate = { ...existingLine, qty: targetQty } as IssueLine;
-          setLines(prev => prev.map(l => l.id === existingLine.id ? lineToActivate : l));
+          setLines(prev => prev.map(l => (l.item.id === item.id && l.uomId === targetUomId) ? lineToActivate : l));
         } else {
           lineToActivate = {
             id: `new-${Date.now()}`,
@@ -353,12 +329,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               name: item.name || (locale === 'ar' ? item.nameAr : item.nameEn) || '',
               nameAr: item.nameAr,
               nameEn: item.nameEn,
-              primaryUom: { id: item.primaryUom.id, code: item.primaryUom.code }
+              primaryUom: { id: item.primaryUom?.id || targetUomId, code: item.primaryUom?.code || targetUomId }
             },
             qty: targetQty,
             baseQty: targetQty,
-            uomId: item.primaryUom.id,
-            baseUomId: item.primaryUom.id,
+            uomId: targetUomId,
+            baseUomId: item.primaryUom?.id || targetUomId,
             uomConversions: item.uomConversions ?? [],
             lotAllocations: []
           } as IssueLine;

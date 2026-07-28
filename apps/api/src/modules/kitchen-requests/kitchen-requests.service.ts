@@ -27,6 +27,7 @@ export class KitchenRequestsService {
       items: Array<{
         itemId: string;
         quantityRequested: number;
+        uomId?: string;
         notes?: string;
       }>;
     },
@@ -63,6 +64,7 @@ export class KitchenRequestsService {
               itemId: item.itemId,
               quantityRequested: item.quantityRequested,
               quantityFulfilled: 0,
+              uomId: item.uomId || null,
               notes: item.notes || null,
             })),
           },
@@ -70,6 +72,7 @@ export class KitchenRequestsService {
         include: {
           items: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
@@ -215,6 +218,7 @@ export class KitchenRequestsService {
       include: {
         items: {
           include: {
+            uom: true,
             item: {
               include: {
                 unitOfMeasure: true,
@@ -327,7 +331,7 @@ export class KitchenRequestsService {
         }
       }
 
-      const linesData: Array<{ itemId: string; quantity: number }> = [];
+      const linesData: Array<{ itemId: string; quantity: number; uomId?: string | null }> = [];
 
       if (body.fulfillments) {
         for (const itemInput of body.fulfillments) {
@@ -344,6 +348,7 @@ export class KitchenRequestsService {
           linesData.push({
             itemId: itemInput.itemId,
             quantity: itemInput.fulfilledQty,
+            uomId: dbItem.uomId,
           });
         }
       } else {
@@ -355,6 +360,7 @@ export class KitchenRequestsService {
           linesData.push({
             itemId: dbItem.itemId,
             quantity: Number(dbItem.quantityRequested),
+            uomId: dbItem.uomId,
           });
         }
       }
@@ -387,6 +393,7 @@ export class KitchenRequestsService {
             create: linesData.map((line) => ({
               itemId: line.itemId,
               quantity: line.quantity,
+              uomId: line.uomId || null,
             })),
           },
         },
@@ -417,6 +424,7 @@ export class KitchenRequestsService {
         include: {
           items: {
             include: {
+              uom: true,
               item: {
                 include: { unitOfMeasure: true },
               },

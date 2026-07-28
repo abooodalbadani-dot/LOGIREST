@@ -137,10 +137,47 @@ export class PdfGeneratorService {
     return `${Number(value).toFixed(2)} ${currencyCode}`;
   }
 
-  private formatDate(date: Date | string | null): string {
+  private async getTimeZone(): Promise<string> {
+    try {
+      const setting = await this.prisma.systemSetting.findUnique({
+        where: { key: 'system_settings' },
+      });
+      if (setting?.value) {
+        const parsed = JSON.parse(setting.value);
+        return (
+          parsed.timezone ??
+          parsed.timeZone ??
+          process.env.SYSTEM_TIMEZONE ??
+          'Asia/Riyadh'
+        );
+      }
+    } catch {
+      // fallback
+    }
+    return process.env.SYSTEM_TIMEZONE ?? 'Asia/Riyadh';
+  }
+
+  private formatDate(
+    date: Date | string | null,
+    timeZone: string = 'Asia/Riyadh',
+  ): string {
     if (!date) return '—';
     const d = new Date(date);
-    return d.toISOString().replace('T', ' ').substring(0, 16);
+    if (isNaN(d.getTime())) return '—';
+    try {
+      const formatter = new Intl.DateTimeFormat('sv-SE', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      return formatter.format(d).replace('T', ' ');
+    } catch {
+      return d.toISOString().replace('T', ' ').substring(0, 16);
+    }
   }
 
   private async renderHtmlToPdf(htmlString: string): Promise<Buffer> {
@@ -183,10 +220,11 @@ export class PdfGeneratorService {
     contentHtml: string,
     summaryHtml: string = '',
     logoHtml: string = `<img src="${otantikBase64Logo}" alt="Restaurant Logo" />`,
+    timeZone: string = 'Asia/Riyadh',
   ): string {
     const isAr = locale === 'ar';
     const direction = isAr ? 'rtl' : 'ltr';
-    const dateStr = this.formatDate(new Date());
+    const dateStr = this.formatDate(new Date(), timeZone);
 
     return `<!DOCTYPE html>
 <html dir="${direction}" lang="${locale}">
@@ -433,6 +471,7 @@ export class PdfGeneratorService {
     locale: 'ar' | 'en' = 'en',
   ): Promise<Buffer> {
     try {
+      const timeZone = await this.getTimeZone();
       const po = await this.prisma.purchaseOrder.findUnique({
         where: { id },
         include: {
@@ -441,6 +480,7 @@ export class PdfGeneratorService {
           currency: true,
           lines: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
@@ -481,6 +521,7 @@ export class PdfGeneratorService {
       for (const line of po.lines) {
         const lineTotal = Number(line.quantity) * Number(line.unitPrice);
         totalSum += lineTotal;
+        const lineUom = line.uom?.code || line.uom?.name || line.item?.unitOfMeasure?.code || '—';
         rowsHtml += `
           <tr>
             <td>${line.item?.sku || '—'}</td>
@@ -488,7 +529,7 @@ export class PdfGeneratorService {
               <div style="font-weight: 600;">${line.item?.name || '—'}</div>
             </td>
             <td class="align-center">${Number(line.quantity)}</td>
-            <td class="align-center">${line.item?.unitOfMeasure?.code || '—'}</td>
+            <td class="align-center">${lineUom}</td>
             <td class="align-right">${Number(line.unitPrice).toFixed(2)}</td>
             <td class="align-right">${lineTotal.toFixed(2)}</td>
           </tr>
@@ -530,6 +571,7 @@ export class PdfGeneratorService {
         contentHtml,
         summaryHtml,
         logoHtml,
+        timeZone,
       );
       return await this.renderHtmlToPdf(html);
     } catch (error) {
@@ -543,6 +585,7 @@ export class PdfGeneratorService {
     locale: 'ar' | 'en' = 'en',
   ): Promise<Buffer> {
     try {
+      const timeZone = await this.getTimeZone();
       const transfer = await this.prisma.transfer.findUnique({
         where: { id },
         include: {
@@ -550,6 +593,7 @@ export class PdfGeneratorService {
           toWarehouse: true,
           lines: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
@@ -583,20 +627,21 @@ export class PdfGeneratorService {
         <div class="details-column">
           <div class="details-column-title">${isAr ? 'معلومات التحويل' : 'Transfer Info'}</div>
           <div class="details-row"><span class="details-label">${isAr ? 'رقم المستند' : 'Doc No'}:</span> ${transfer.transferNumber}</div>
-          <div class="details-row"><span class="details-label">${isAr ? 'التاريخ' : 'Date'}:</span> ${this.formatDate(transfer.createdAt)}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'التاريخ' : 'Date'}:</span> ${this.formatDate(transfer.createdAt, timeZone)}</div>
           <div class="details-row"><span class="details-label">${isAr ? 'الحالة' : 'Status'}:</span> ${transfer.status}</div>
         </div>
       `;
 
       let rowsHtml = '';
       for (const line of transfer.lines) {
+        const lineUom = line.uom?.code || line.uom?.name || line.item?.unitOfMeasure?.code || '—';
         rowsHtml += `
           <tr>
             <td>${line.item?.sku || '—'}</td>
             <td>
               <div style="font-weight: 600;">${line.item?.name || '—'}</div>
             </td>
-            <td class="align-center">${line.item?.unitOfMeasure?.code || '—'}</td>
+            <td class="align-center">${lineUom}</td>
             <td class="align-center">${Number(line.quantityShipped)}</td>
             <td class="align-center">${line.quantityReceived !== null ? Number(line.quantityReceived) : '—'}</td>
           </tr>
@@ -637,6 +682,7 @@ export class PdfGeneratorService {
         contentHtml,
         '',
         logoHtml,
+        timeZone,
       );
       return await this.renderHtmlToPdf(html);
     } catch (error) {
@@ -650,9 +696,11 @@ export class PdfGeneratorService {
     locale: 'ar' | 'en' = 'en',
   ): Promise<Buffer> {
     try {
+      const timeZone = await this.getTimeZone();
       const grn = await this.prisma.goodsReceivedNote.findUnique({
         where: { id },
         include: {
+          supplier: true,
           warehouse: true,
           purchaseOrder: {
             include: {
@@ -662,6 +710,7 @@ export class PdfGeneratorService {
           },
           lines: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
@@ -683,11 +732,14 @@ export class PdfGeneratorService {
       const currency = grn.purchaseOrder?.currency?.code || '';
       const title = getDocumentTitle('grn', locale);
 
+      const supplierName = grn.supplier?.name || grn.purchaseOrder?.supplier?.name || '—';
+      const supplierCode = grn.supplier?.code || grn.purchaseOrder?.supplier?.code || '—';
+
       const detailsHtml = `
         <div class="details-column">
           <div class="details-column-title">${isAr ? 'المورد' : 'Supplier'}</div>
-          <div class="details-row"><span class="details-label">${isAr ? 'الاسم' : 'Name'}:</span> ${grn.purchaseOrder?.supplier?.name || '—'}</div>
-          <div class="details-row"><span class="details-label">${isAr ? 'الكود' : 'Code'}:</span> ${grn.purchaseOrder?.supplier?.code || '—'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'الاسم' : 'Name'}:</span> ${supplierName}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'الكود' : 'Code'}:</span> ${supplierCode}</div>
         </div>
         <div class="details-column">
           <div class="details-column-title">${isAr ? 'التسليم إلى' : 'Ship To'}</div>
@@ -699,7 +751,7 @@ export class PdfGeneratorService {
           <div class="details-row"><span class="details-label">${isAr ? 'رقم السند' : 'GRN No'}:</span> ${grn.grnNumber}</div>
           <div class="details-row"><span class="details-label">${isAr ? 'مرجع أمر الشراء' : 'PO Ref'}:</span> ${grn.purchaseOrder?.poNumber || '—'}</div>
           <div class="details-row"><span class="details-label">${isAr ? 'الحالة' : 'Status'}:</span> ${grn.status}</div>
-          <div class="details-row"><span class="details-label">${isAr ? 'تاريخ الترحيل' : 'Posted At'}:</span> ${grn.postedAt ? this.formatDate(grn.postedAt) : '—'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'تاريخ الترحيل' : 'Posted At'}:</span> ${grn.postedAt ? this.formatDate(grn.postedAt, timeZone) : '—'}</div>
         </div>
       `;
 
@@ -712,8 +764,10 @@ export class PdfGeneratorService {
         totalSum += lineTotal;
 
         const lotInfo = line.lot
-          ? `${line.lot.lotNumber}${line.lot.expiryDate ? ' (' + this.formatDate(line.lot.expiryDate).substring(0, 10) + ')' : ''}`
+          ? `${line.lot.lotNumber}${line.lot.expiryDate ? ' (' + this.formatDate(line.lot.expiryDate, timeZone).substring(0, 10) + ')' : ''}`
           : '—';
+
+        const lineUom = line.uom?.code || line.uom?.name || line.item?.unitOfMeasure?.code || '—';
 
         rowsHtml += `
           <tr>
@@ -723,7 +777,7 @@ export class PdfGeneratorService {
             </td>
             <td>${lotInfo}</td>
             <td class="align-center">${Number(line.quantityReceived)}</td>
-            <td class="align-center">${line.item?.unitOfMeasure?.code || '—'}</td>
+            <td class="align-center">${lineUom}</td>
             <td class="align-right">${Number(line.unitPrice).toFixed(2)}</td>
             <td class="align-right">${lineTotal.toFixed(2)}</td>
           </tr>
@@ -779,6 +833,7 @@ export class PdfGeneratorService {
     locale: 'ar' | 'en' = 'en',
   ): Promise<Buffer> {
     try {
+      const timeZone = await this.getTimeZone();
       const adj = await this.prisma.adjustment.findUnique({
         where: { id },
         include: {
@@ -788,6 +843,7 @@ export class PdfGeneratorService {
           },
           lines: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
@@ -839,6 +895,8 @@ export class PdfGeneratorService {
             ? this.formatCurrency(Number(line.unitCost), currency)
             : '—';
 
+        const lineUom = line.uom?.code || line.uom?.name || line.item?.unitOfMeasure?.code || '—';
+
         rowsHtml += `
           <tr>
             <td>${line.item?.sku || '—'}</td>
@@ -848,7 +906,7 @@ export class PdfGeneratorService {
             <td>${lotNumber}</td>
             <td class="align-center">${dirText}</td>
             <td class="align-center">${Number(line.quantity)}</td>
-            <td class="align-center">${line.item?.unitOfMeasure?.code || '—'}</td>
+            <td class="align-center">${lineUom}</td>
             <td class="align-right">${costVal}</td>
           </tr>
         `;
@@ -890,6 +948,7 @@ export class PdfGeneratorService {
         contentHtml,
         '',
         logoHtml,
+        timeZone,
       );
       return await this.renderHtmlToPdf(html);
     } catch (error) {
@@ -903,6 +962,7 @@ export class PdfGeneratorService {
     locale: 'ar' | 'en' = 'en',
   ): Promise<Buffer> {
     try {
+      const timeZone = await this.getTimeZone();
       const session = await this.prisma.stocktakeSession.findUnique({
         where: { id },
         include: {
@@ -945,7 +1005,7 @@ export class PdfGeneratorService {
         </div>
         <div class="details-column">
           <div class="details-column-title">${isAr ? 'التفاصيل' : 'Details'}</div>
-          <div class="details-row"><span class="details-label">${isAr ? 'تاريخ البدء' : 'Created Date'}:</span> ${this.formatDate(session.createdAt)}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'تاريخ البدء' : 'Created Date'}:</span> ${this.formatDate(session.createdAt, timeZone)}</div>
           <div class="details-row"><span class="details-label">${isAr ? 'الحالة' : 'Status'}:</span> ${session.status}</div>
         </div>
       `;
@@ -967,6 +1027,7 @@ export class PdfGeneratorService {
         totalVarianceValue += valVar;
 
         const lotNumber = snap.lot?.lotNumber || '—';
+        const lineUom = snap.item?.unitOfMeasure?.code || '—';
 
         rowsHtml += `
           <tr>
@@ -978,7 +1039,7 @@ export class PdfGeneratorService {
             <td class="align-center">${snapQty}</td>
             <td class="align-center">${countQty !== null ? countQty : '—'}</td>
             <td class="align-center">${variance !== null ? variance : '—'}</td>
-            <td class="align-center">${snap.item?.unitOfMeasure?.code || '—'}</td>
+            <td class="align-center">${lineUom}</td>
             <td class="align-right">${variance !== null ? valVar.toFixed(2) : '—'}</td>
           </tr>
         `;
@@ -1021,10 +1082,197 @@ export class PdfGeneratorService {
         contentHtml,
         summaryHtml,
         logoHtml,
+        timeZone,
       );
       return await this.renderHtmlToPdf(html);
     } catch (error) {
       console.error(`Error generating Stocktake PDF for ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async generatePurchaseRequestPdf(
+    id: string,
+    locale: 'ar' | 'en' = 'en',
+  ): Promise<Buffer> {
+    try {
+      const timeZone = await this.getTimeZone();
+      const pr = await this.prisma.purchaseRequest.findUnique({
+        where: { id },
+        include: {
+          warehouse: true,
+          branch: true,
+          createdBy: { select: { name: true, email: true } },
+          lines: {
+            include: {
+              uom: true,
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!pr) {
+        throw new NotFoundException(`Purchase Request with ID ${id} not found`);
+      }
+
+      const isAr = locale === 'ar';
+      const title = getDocumentTitle('pr', locale);
+
+      const detailsHtml = `
+        <div class="details-column">
+          <div class="details-column-title">${isAr ? 'معلومات الطلب' : 'Request Info'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'رقم المستند' : 'Doc No'}:</span> ${pr.requestNumber}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'أنشئ بواسطة' : 'Created By'}:</span> ${pr.createdBy?.name || 'System'}</div>
+        </div>
+        <div class="details-column">
+          <div class="details-column-title">${isAr ? 'الموقع' : 'Location'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'المستودع' : 'Warehouse'}:</span> ${pr.warehouse?.name || '—'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'الفرع' : 'Branch'}:</span> ${pr.branch?.name || '—'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'الحالة' : 'Status'}:</span> ${pr.status}</div>
+        </div>
+      `;
+
+      let rowsHtml = '';
+      for (const line of pr.lines) {
+        const lineUom = line.uom?.code || line.uom?.name || line.item?.unitOfMeasure?.code || '—';
+        rowsHtml += `
+          <tr>
+            <td>${line.item?.sku || '—'}</td>
+            <td>
+              <div style="font-weight: 600;">${line.item?.name || '—'}</div>
+            </td>
+            <td class="align-center">${Number(line.quantity)}</td>
+            <td class="align-center">${lineUom}</td>
+          </tr>
+        `;
+      }
+
+      const contentHtml = `
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20%;">${isAr ? 'كود الصنف' : 'SKU'}</th>
+              <th style="width: 50%;">${isAr ? 'اسم الصنف' : 'Description'}</th>
+              <th style="width: 15%;" class="align-center">${isAr ? 'الكمية المطلوبة' : 'Req Qty'}</th>
+              <th style="width: 15%;" class="align-center">${isAr ? 'الوحدة' : 'UoM'}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      `;
+
+      const logoHtml = await this.getRestaurantLogoHtml();
+      const html = this.wrapHtml(
+        title,
+        locale,
+        detailsHtml,
+        contentHtml,
+        '',
+        logoHtml,
+        timeZone,
+      );
+      return await this.renderHtmlToPdf(html);
+    } catch (error) {
+      console.error(`Error generating PR PDF for ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async generateIssuePdf(
+    id: string,
+    locale: 'ar' | 'en' = 'en',
+  ): Promise<Buffer> {
+    try {
+      const timeZone = await this.getTimeZone();
+      const issue = await this.prisma.inventoryIssue.findUnique({
+        where: { id },
+        include: {
+          warehouse: true,
+          createdBy: { select: { name: true, email: true } },
+          lines: {
+            include: {
+              uom: true,
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!issue) {
+        throw new NotFoundException(`Inventory Issue with ID ${id} not found`);
+      }
+
+      const isAr = locale === 'ar';
+      const title = getDocumentTitle('issue', locale);
+
+      const detailsHtml = `
+        <div class="details-column">
+          <div class="details-column-title">${isAr ? 'معلومات الصرف' : 'Issue Info'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'رقم المستند' : 'Doc No'}:</span> ${issue.issueNumber}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'المستودع' : 'Warehouse'}:</span> ${issue.warehouse?.name || '—'}</div>
+        </div>
+        <div class="details-column">
+          <div class="details-column-title">${isAr ? 'التفاصيل' : 'Details'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'أنشئ بواسطة' : 'Created By'}:</span> ${issue.createdBy?.name || 'System'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'الحالة' : 'Status'}:</span> ${issue.status}</div>
+        </div>
+      `;
+
+      let rowsHtml = '';
+      for (const line of issue.lines) {
+        const lineUom = line.uom?.code || line.uom?.name || line.item?.unitOfMeasure?.code || '—';
+        rowsHtml += `
+          <tr>
+            <td>${line.item?.sku || '—'}</td>
+            <td>
+              <div style="font-weight: 600;">${line.item?.name || '—'}</div>
+            </td>
+            <td class="align-center">${Number(line.quantity)}</td>
+            <td class="align-center">${lineUom}</td>
+          </tr>
+        `;
+      }
+
+      const contentHtml = `
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20%;">${isAr ? 'كود الصنف' : 'SKU'}</th>
+              <th style="width: 50%;">${isAr ? 'اسم الصنف' : 'Description'}</th>
+              <th style="width: 15%;" class="align-center">${isAr ? 'الكمية المصروفة' : 'Issued Qty'}</th>
+              <th style="width: 15%;" class="align-center">${isAr ? 'الوحدة' : 'UoM'}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      `;
+
+      const logoHtml = await this.getRestaurantLogoHtml();
+      const html = this.wrapHtml(
+        title,
+        locale,
+        detailsHtml,
+        contentHtml,
+        '',
+        logoHtml,
+        timeZone,
+      );
+      return await this.renderHtmlToPdf(html);
+    } catch (error) {
+      console.error(`Error generating Issue PDF for ID ${id}:`, error);
       throw error;
     }
   }

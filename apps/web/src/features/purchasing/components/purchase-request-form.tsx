@@ -52,6 +52,7 @@ import { DocumentLineItemTable, type LineItem } from '@/components/shared/Docume
 
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/layouts/FormLayout';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useAuth } from '@/providers/AuthProvider';
@@ -242,22 +243,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const watchLines = form.watch('lines') || [];
 
   const handleScan = async (barcode: string) => {
-    const clean = barcode.trim();
-    let item = itemsData?.data?.find((i: Item) => i.barcode === clean || i.code === clean);
-    if (!item) {
-      try {
-        const res = await apiClient.get(
-          `/items?search=${encodeURIComponent(clean)}`,
-          z.object({ data: z.array(z.unknown()) })
-        );
-        item = (res as { data: NonNullable<typeof itemsData>['data'] })?.data?.[0];
-      } catch {
-        // ignore fallback errors
-      }
-    }
+    const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data as any);
+    const item = resolved?.item;
+    const targetUomId = resolved?.uomId || item?.primaryUom?.id || 'EA';
+
     if (item) {
       const currentLines = form.getValues('lines') || [];
-      const index = currentLines.findIndex(l => l.item.id === item.id);
+      const index = currentLines.findIndex(l => (l.item_id === item.id || l.item?.id === item.id) && l.uom_id === targetUomId);
 
       if (index >= 0) {
         const existing = currentLines[index];
@@ -275,14 +267,14 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             name_en: item.name,
             image: item.image || null,
             primary_uom: {
-              code: item.primaryUom?.code || 'EA',
-              name: item.primaryUom?.name || item.primaryUom?.code || 'EA'
+              code: item.primaryUom?.code || targetUomId,
+              name: item.primaryUom?.name || item.primaryUom?.code || targetUomId
             },
             min_stock_level: item.minStockLevel,
             reorder_point: item.reorderPoint,
           },
           req_qty: 1,
-          uom_id: item.primaryUom?.id || 'EA',
+          uom_id: targetUomId,
         });
         playSound('success');
         toast.success(tc('item_added', { name: item.name }));

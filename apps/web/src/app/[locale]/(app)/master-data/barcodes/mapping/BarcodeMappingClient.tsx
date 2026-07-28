@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Barcode as BarcodeIcon,
@@ -14,9 +14,9 @@ import {
   History,
   AlertCircle,
   Database,
-  Printer,
   Camera,
-  ArrowLeft
+  ArrowLeft,
+  Ruler
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -28,8 +28,9 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useItems } from '@/features/items/hooks/useItems';
 import { useUoMs } from '@/features/uoms/hooks/useUoMs';
+import { useCreateBarcode } from '@/features/barcodes/hooks/useBarcodes';
+import { getAvailableUomsForItem, resolveUomCode } from '@/utils/uom-helper';
 import { type Item } from '@/types/master-data';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { toast } from 'sonner';
@@ -42,6 +43,8 @@ interface MappingEntry {
   id: string;
   item: Item;
   code: string;
+  uomId?: string;
+  uomName?: string;
   timestamp: string;
 }
 
@@ -54,15 +57,41 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
   const debouncedSearch = useDebounce(search, 300);
   const [scannedCode, setScannedCode] = useState('');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [selectedUomId, setSelectedUomId] = useState<string>('');
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [mappingHistory, setMappingHistory] = useState<MappingEntry[]>([]);
 
   const { data: itemsData, isLoading: isLoadingItems } = useItems({ search: debouncedSearch || undefined });
   const { data: uomsData } = useUoMs();
+  const createBarcode = useCreateBarcode();
 
   const items = itemsData?.data || [];
   const _uoms = uomsData?.data || [];
+
+  // Compute available UOM options dynamically for the selected item
+  const availableUoms = useMemo(() => {
+    if (!selectedItem) return [];
+    const options = getAvailableUomsForItem(selectedItem as any);
+    if (options.length === 0 && selectedItem.primaryUom?.id) {
+      options.push({
+        id: selectedItem.primaryUom.id,
+        code: selectedItem.primaryUom.code || 'UOM',
+        name: selectedItem.primaryUom.name || selectedItem.primaryUom.code || 'UOM',
+      });
+    }
+    return options;
+  }, [selectedItem]);
+
+  // Auto-default selectedUomId to the item's Primary UOM when selectedItem changes
+  useEffect(() => {
+    if (selectedItem) {
+      const primaryId = selectedItem.primaryUom?.id || (selectedItem as unknown as { uomId?: string }).uomId || '';
+      setSelectedUomId(primaryId);
+    } else {
+      setSelectedUomId('');
+    }
+  }, [selectedItem]);
 
   const pendingItems = useMemo(() => {
     return items.filter(item => !item.code?.startsWith('BC-'));
@@ -76,25 +105,43 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
     };
   }, [pendingItems, mappingHistory, items]);
 
-  const handleMap = () => {
-    if (!selectedItem || !scannedCode) {
-      toast.error(t('errors.missing_data'));
+  const handleMap = async () => {
+    if (!selectedItem || !scannedCode || !selectedUomId) {
+      toast.error(t('errors.missing_data', { defaultValue: 'Please select an item, scan a barcode, and choose a Unit of Measure.' }));
       return;
     }
 
-    const newMapping = {
-      id: Math.random().toString(36).substr(2, 9),
-      item: selectedItem,
-      code: scannedCode,
-      timestamp: new Date().toISOString()
-    };
+    try {
+      await createBarcode.mutateAsync({
+        values: {
+          itemId: selectedItem.id,
+          code: scannedCode,
+          uomId: selectedUomId,
+        },
+      });
 
-    setMappingHistory([newMapping, ...mappingHistory]);
-    toast.success(t('success.mapped', { item: selectedItem.name }));
+      const selectedUomObj = availableUoms.find(u => u.id === selectedUomId);
+      const uomName = selectedUomObj?.name || selectedUomObj?.code || resolveUomCode(selectedUomId, selectedItem as any, _uoms);
 
-    setScannedCode('');
-    setSelectedItem(null);
-    setSearch('');
+      const newMapping: MappingEntry = {
+        id: Math.random().toString(36).substr(2, 9),
+        item: selectedItem,
+        code: scannedCode,
+        uomId: selectedUomId,
+        uomName: uomName,
+        timestamp: new Date().toISOString()
+      };
+
+      setMappingHistory([newMapping, ...mappingHistory]);
+      toast.success(t('success.mapped', { item: `${selectedItem.name} (${uomName})` }));
+
+      setScannedCode('');
+      setSelectedItem(null);
+      setSelectedUomId('');
+      setSearch('');
+    } catch {
+      // Handled by mutation toast
+    }
   };
 
   const columns = useMemo<ColumnDef<Item, unknown>[]>(() => [
@@ -208,7 +255,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
           icon={AlertCircle}
           color="amber"
           dir="ltr"
-          className="rounded-[2rem] border border-white/5 bg-card border border-border shadow-sm shadow-sm"
+          className="rounded-[2rem] border border-white/5 bg-card border border-border shadow-sm"
         />
 
         <MetricCard
@@ -217,7 +264,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
           icon={CheckCircle2}
           color="emerald"
           dir="ltr"
-          className="rounded-[2rem] border border-white/5 bg-card border border-border shadow-sm shadow-sm"
+          className="rounded-[2rem] border border-white/5 bg-card border border-border shadow-sm"
         />
 
         <MetricCard
@@ -226,7 +273,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
           icon={Zap}
           color="cyan"
           dir="ltr"
-          className="rounded-[2rem] border border-white/5 bg-card border border-border shadow-sm shadow-sm"
+          className="rounded-[2rem] border border-white/5 bg-card border border-border shadow-sm"
         />
       </motion.div>
 
@@ -259,7 +306,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
               {/* Step 1: Scan Barcode */}
               <div className="space-y-4">
@@ -311,7 +358,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                   {t('fields.mapped_item')}
                 </label>
                 <div className={cn(
-                  "h-14 rounded-2xl border flex items-center px-4 transition-all duration-300 bg-card border border-border shadow-sm",
+                  "h-12 rounded-xl border flex items-center px-4 transition-all duration-300 bg-card border border-border shadow-sm",
                   selectedItem
                     ? "border-amber-500/30 bg-amber-500/5"
                     : "border-outline-low italic text-muted-foreground/30"
@@ -338,19 +385,52 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                   )}
                 </div>
               </div>
+
+              {/* Step 3: Select Unit of Measure */}
+              <div className="space-y-4">
+                <label className="text-label-xs font-bold uppercase text-muted-foreground/60 ps-1 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-card/5 border border-white/10 flex items-center justify-center text-[10px] font-mono text-operational-cyan">3</span>
+                  {t('fields.select_uom', { defaultValue: 'Select Unit of Measure' })}
+                </label>
+                <div className="relative group">
+                  <select
+                    disabled={!selectedItem}
+                    value={selectedUomId}
+                    onChange={(e) => setSelectedUomId(e.target.value)}
+                    className={cn(
+                      "w-full h-12 px-4 rounded-xl font-semibold text-sm bg-background border border-border text-foreground transition-all focus:border-brand-gold shadow-sm appearance-none outline-none cursor-pointer",
+                      !selectedItem && "opacity-50 cursor-not-allowed italic"
+                    )}
+                  >
+                    {!selectedItem ? (
+                      <option value="">{t('placeholders.select_item_first', { defaultValue: 'Select item first...' })}</option>
+                    ) : availableUoms.length === 0 ? (
+                      <option value="">{t('placeholders.no_uoms', { defaultValue: 'No UOMs available' })}</option>
+                    ) : (
+                      availableUoms.map((uom) => (
+                        <option key={uom.id} value={uom.id}>
+                          {uom.name || uom.code} {uom.id === (selectedItem.primaryUom?.id || (selectedItem as unknown as { uomId?: string }).uomId) ? ` (${tc('primary_uom', { defaultValue: 'Primary' })})` : ''}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <Ruler className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 pointer-events-none" />
+                </div>
+              </div>
+
             </div>
 
             <div className="pt-4 flex justify-end">
               <motion.div
-                whileHover={selectedItem && scannedCode ? { scale: 1.02 } : {}}
-                whileTap={selectedItem && scannedCode ? { scale: 0.98 } : {}}
+                whileHover={selectedItem && scannedCode && selectedUomId ? { scale: 1.02 } : {}}
+                whileTap={selectedItem && scannedCode && selectedUomId ? { scale: 0.98 } : {}}
               >
                 <Button
-                  disabled={!selectedItem || !scannedCode}
+                  disabled={!selectedItem || !scannedCode || !selectedUomId || createBarcode.isPending}
                   onClick={handleMap}
                   className={cn(
                     "h-13 px-10 text-label-xs font-bold uppercase rounded-2xl transition-all duration-300 shadow-sm cursor-pointer",
-                    selectedItem && scannedCode
+                    selectedItem && scannedCode && selectedUomId
                       ? "bg-operational-cyan hover:bg-operational-cyan/80 text-black shadow-operational-cyan/20"
                       : "bg-surface-container-medium text-muted-foreground/40 border border-white/5 grayscale cursor-not-allowed shadow-none"
                   )}
@@ -495,7 +575,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1.5 overflow-hidden">
                           <p className="text-label-xs font-bold truncate group-hover:text-operational-cyan transition-colors text-foreground">
-                            {entry.item.name}
+                            {entry.item.name} {entry.uomName ? ` - ${entry.uomName}` : ''}
                           </p>
                           <div className="flex items-center gap-2">
                             <BarcodeIcon className="w-3.5 h-3.5 text-muted-foreground/40" />
@@ -586,3 +666,4 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
     </div>
   );
 }
+

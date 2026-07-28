@@ -59,6 +59,9 @@ import {
 import { DocumentLockBanner, DocumentLockWrapper } from "@/components/shared/DocumentLockBanner";
 import { FormFooter } from "@/components/layouts/FormLayout";
 import { isDocumentLocked, type DocumentStatus } from "@logirest/shared-types";
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
+import type { LotAllocation } from '@/types/documents';
+import type { POStatus } from '@logirest/shared-types';
 import { PO_STATUS } from "@logirest/shared-types";
 
 export const lineItemSchema = z.object({
@@ -159,28 +162,16 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       return;
     }
 
-    const cleanBarcode = barcode.trim();
-    let item = itemsData?.data?.find(i =>
-      i.code?.toLowerCase() === cleanBarcode.toLowerCase() ||
-      i.barcode?.toLowerCase() === cleanBarcode.toLowerCase()
-    );
-    if (!item) {
-      try {
-        const res = await apiClient.get(
-          `/items?search=${encodeURIComponent(cleanBarcode)}`,
-          z.object({ data: z.array(z.unknown()) })
-        );
-        item = (res as { data: Item[] })?.data?.[0];
-      } catch {
-        // ignore fallback errors
-      }
-    }
+    const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data as any);
+    const item = resolved?.item;
+    const targetUomId = resolved?.uomId || item?.primaryUom?.id || 'PCS';
+
     if (item) {
       const currentLines = form.getValues('lines') as PurchaseOrderFormValues['lines'];
       // If the first line is empty, replace it instead of appending
       const isFirstLineEmpty = currentLines.length === 1 && !currentLines[0].itemId;
 
-      const existingIndex = currentLines.findIndex(l => l.itemId === item.id);
+      const existingIndex = currentLines.findIndex(l => l.itemId === item.id && l.uomId === targetUomId);
 
       if (existingIndex >= 0 && !isFirstLineEmpty) {
         const qty = (currentLines[existingIndex].quantity || 0) + 1;
@@ -194,7 +185,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           itemCode: item.code,
           quantity: 1,
           unitPrice: item.lastPurchasePrice || 0,
-          uomId: item.primaryUom?.id || 'PCS',
+          uomId: targetUomId,
           notes: ''
         });
         setScanStatus("success");
@@ -206,7 +197,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           itemCode: item.code,
           quantity: 1,
           unitPrice: item.lastPurchasePrice || 0,
-          uomId: item.primaryUom?.id || 'PCS',
+          uomId: targetUomId,
           notes: ''
         });
         setScanStatus("success");

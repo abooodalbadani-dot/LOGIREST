@@ -358,6 +358,8 @@ model UnitOfMeasure {
   issueLines      InventoryIssueLine[]
   transferLines   TransferLine[]
   adjustmentLines AdjustmentLine[]
+  barcodeMappings BarcodeMapping[]
+  kitchenRequestItems KitchenRequestItem[]
 
   @@map("units_of_measure")
 }
@@ -453,12 +455,14 @@ model Item {
 }
 
 model BarcodeMapping {
-  id      String @id @default(uuid())
+  id      String  @id @default(uuid())
   itemId  String
-  barcode String @unique
-  version Int    @default(1)
+  uomId   String? @map("uom_id")
+  barcode String  @unique
+  version Int     @default(1)
 
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  item Item           @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  uom  UnitOfMeasure? @relation(fields: [uomId], references: [id], onDelete: SetNull)
 
   @@map("barcode_mappings")
 }
@@ -820,9 +824,11 @@ model KitchenRequestItem {
   quantityRequested Decimal @db.Decimal(18, 4)
   quantityFulfilled Decimal @db.Decimal(18, 4)
   notes             String?
+  uomId             String? @map("uom_id")
 
   kitchenRequest KitchenRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   item           Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom            UnitOfMeasure? @relation(fields: [uomId], references: [id], onDelete: SetNull)
 
   @@map("kitchen_request_items")
 }

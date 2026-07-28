@@ -178,6 +178,7 @@ export function IssueForm() {
       const newLines = kitchenRequestData.items.map(item => ({
         itemId: item.itemId,
         requestedQty: item.quantity,
+        uomId: item.uomId || undefined,
         qty: 0,
         lotAllocations: [],
         notes: "",
@@ -220,6 +221,7 @@ export function IssueForm() {
   const tableLines = React.useMemo<CustomLineItem[]>(() => {
     return liveLines.map((lineVal, index) => {
       const selectedItem = items?.find(i => i.id === lineVal?.itemId);
+      const currentUomId = lineVal?.uomId || selectedItem?.primaryUom?.id || '';
       return {
         id: lineVal.id,
         item: {
@@ -228,11 +230,13 @@ export function IssueForm() {
           name: selectedItem?.name || '',
           image: selectedItem?.image || null,
           primaryUom: {
+            id: selectedItem?.primaryUom?.id || '',
             code: selectedItem?.primaryUom?.code || '',
-          }
+          },
+          uomConversions: selectedItem?.uomConversions || [],
         },
         qty: lineVal?.requestedQty ?? 1,
-        uomId: selectedItem?.primaryUom?.id || '',
+        uomId: currentUomId,
         lotAllocations: (lineVal?.lotAllocations || []).map(lot => ({
           lotId: lot.lotNumber,
           lotNumber: lot.lotNumber,

@@ -16,6 +16,12 @@ interface UomConversionDto {
   factor: number;
 }
 
+interface ItemBarcodeDto {
+  barcode: string;
+  uomId?: string;
+  uom_id?: string;
+}
+
 interface ItemCreateDto {
   name?: string;
   categoryId?: string;
@@ -34,6 +40,8 @@ interface ItemCreateDto {
   reorder_point?: number;
   is_active?: boolean;
   barcode?: string;
+  barcodes?: ItemBarcodeDto[];
+  barcode_mappings?: ItemBarcodeDto[];
   image?: string;
   uomConversions?: UomConversionDto[];
   uom_conversions?: UomConversionDto[];
@@ -108,6 +116,14 @@ export class ItemsService {
       id: item.id,
       code: item.sku,
       barcode: item.barcodeMappings?.[0]?.barcode || '',
+      barcodes: (item.barcodeMappings || []).map((bm: { barcode: string; uomId?: string | null }) => ({
+        barcode: bm.barcode,
+        uomId: bm.uomId || null,
+      })),
+      barcodeMappings: (item.barcodeMappings || []).map((bm: { barcode: string; uomId?: string | null }) => ({
+        barcode: bm.barcode,
+        uomId: bm.uomId || null,
+      })),
       name: item.name,
       name_ar: item.name,
       name_en: item.name,
@@ -217,7 +233,7 @@ export class ItemsService {
           version: true,
           category: { select: { id: true, code: true, name: true, version: true } },
           unitOfMeasure: { select: { id: true, code: true, name: true, version: true } },
-          barcodeMappings: { select: { barcode: true }, take: 1 },
+          barcodeMappings: { select: { barcode: true, uomId: true } },
           uomConversions: {
             include: {
               fromUom: { select: { id: true, code: true, name: true } },
@@ -369,11 +385,25 @@ export class ItemsService {
         },
       });
 
-      if (barcode) {
+      const barcodesList = body.barcodes || body.barcode_mappings;
+      if (barcodesList && barcodesList.length > 0) {
+        const validBarcodes = barcodesList.filter(b => b.barcode && b.barcode.trim() !== '');
+        if (validBarcodes.length > 0) {
+          await tx.barcodeMapping.createMany({
+            data: validBarcodes.map(b => ({
+              itemId: newItem.id,
+              barcode: b.barcode.trim(),
+              uomId: b.uomId || b.uom_id || primary_uom_id || null,
+              version: 1,
+            })),
+          });
+        }
+      } else if (barcode) {
         await tx.barcodeMapping.create({
           data: {
             itemId: newItem.id,
-            barcode,
+            barcode: barcode.trim(),
+            uomId: primary_uom_id || null,
             version: 1,
           },
         });
@@ -451,38 +481,147 @@ export class ItemsService {
     const image = body.image;
     const name = body.name || name_en || name_ar || existing.name;
     const rawConversions = body.uomConversions ?? body.uom_conversions;
+    const targetUomId = primary_uom_id || existing.uomId;
+    const isUomChanged = Boolean(targetUomId && targetUomId !== existing.uomId);
+
+    let uomConversionRatio: number | null = null;
+    if (isUomChanged) {
+      const dbConversions = await this.prisma.uomConversion.findMany({
+        where: { itemId: id },
+      });
+
+      let foundConv: { fromUomId: string; toUomId: string; factor: unknown } | undefined = dbConversions.find(
+        (c) =>
+          (c.fromUomId === existing.uomId && c.toUomId === targetUomId) ||
+          (c.fromUomId === targetUomId && c.toUomId === existing.uomId),
+      );
+
+      if (!foundConv && rawConversions) {
+        const payloadConv = rawConversions.find((c) => {
+          const fId = c.fromUomId || c.from_uom_id;
+          const tId = c.toUomId || c.to_uom_id;
+          return (
+            (fId === existing.uomId && tId === targetUomId) ||
+            (fId === targetUomId && tId === existing.uomId)
+          );
+        });
+        if (payloadConv) {
+          foundConv = {
+            fromUomId: payloadConv.fromUomId || payloadConv.from_uom_id || '',
+            toUomId: payloadConv.toUomId || payloadConv.to_uom_id || '',
+            factor: payloadConv.factor,
+          };
+        }
+      }
+
+      if (foundConv) {
+        const factorVal = parseFloat(String(foundConv.factor));
+        if (factorVal > 0) {
+          if (foundConv.fromUomId === existing.uomId && foundConv.toUomId === targetUomId) {
+            uomConversionRatio = factorVal;
+          } else {
+            uomConversionRatio = 1 / factorVal;
+          }
+        }
+      }
+    }
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      let nextMinStock = min_stock_level !== undefined ? min_stock_level : existing.minStockLevel;
+      let nextReorder = reorder_point !== undefined ? reorder_point : existing.reorderPoint;
+
+      if (isUomChanged && uomConversionRatio && uomConversionRatio > 0) {
+        if (min_stock_level === undefined && existing.minStockLevel) {
+          nextMinStock = Math.round(parseFloat(String(existing.minStockLevel)) * uomConversionRatio * 10000) / 10000 as unknown as number;
+        }
+        if (reorder_point === undefined && existing.reorderPoint) {
+          nextReorder = Math.round(parseFloat(String(existing.reorderPoint)) * uomConversionRatio * 10000) / 10000 as unknown as number;
+        }
+      }
+
       const res = await tx.item.update({
         where: { id },
         data: {
           sku: code || existing.sku,
           name,
           categoryId: category_id || existing.categoryId,
-          uomId: primary_uom_id || existing.uomId,
+          uomId: targetUomId,
           isBatched: track_lots !== undefined ? track_lots : existing.isBatched,
           hasExpiry: track_lots !== undefined ? track_lots : existing.hasExpiry,
           isActive: is_active !== undefined ? is_active : existing.isActive,
-          reorderPoint:
-            reorder_point !== undefined ? reorder_point : existing.reorderPoint,
-          minStockLevel:
-            min_stock_level !== undefined ? min_stock_level : existing.minStockLevel,
+          reorderPoint: nextReorder,
+          minStockLevel: nextMinStock,
           image: image !== undefined ? image || null : existing.image,
           version: existing.version + 1,
         },
       });
 
-      if (barcode) {
+      if (isUomChanged && uomConversionRatio && uomConversionRatio > 0) {
+        const warehouseItems = await tx.warehouseItem.findMany({
+          where: { itemId: id },
+        });
+        for (const wi of warehouseItems) {
+          const oldQty = parseFloat(String(wi.qtyOnHand || 0));
+          if (oldQty !== 0) {
+            const newQty = Math.round(oldQty * uomConversionRatio * 10000) / 10000;
+            await tx.warehouseItem.update({
+              where: {
+                warehouseId_itemId: {
+                  warehouseId: wi.warehouseId,
+                  itemId: wi.itemId,
+                },
+              },
+              data: { qtyOnHand: newQty },
+            });
+          }
+        }
+
+        const warehouseItemLots = await tx.warehouseItemLot.findMany({
+          where: { itemId: id },
+        });
+        for (const wil of warehouseItemLots) {
+          const oldQty = parseFloat(String(wil.qtyOnHand || 0));
+          if (oldQty !== 0) {
+            const newQty = Math.round(oldQty * uomConversionRatio * 10000) / 10000;
+            await tx.warehouseItemLot.update({
+              where: {
+                warehouseId_itemId_lotId: {
+                  warehouseId: wil.warehouseId,
+                  itemId: wil.itemId,
+                  lotId: wil.lotId,
+                },
+              },
+              data: { qtyOnHand: newQty },
+            });
+          }
+        }
+      }
+
+      const barcodesList = body.barcodes ?? body.barcode_mappings;
+      if (barcodesList !== undefined) {
+        await tx.barcodeMapping.deleteMany({ where: { itemId: id } });
+        const validBarcodes = barcodesList.filter(b => b.barcode && b.barcode.trim() !== '');
+        if (validBarcodes.length > 0) {
+          await tx.barcodeMapping.createMany({
+            data: validBarcodes.map(b => ({
+              itemId: id,
+              barcode: b.barcode.trim(),
+              uomId: b.uomId || b.uom_id || primary_uom_id || existing.uomId || null,
+              version: 1,
+            })),
+          });
+        }
+      } else if (barcode) {
         // Upsert barcode
         const existingBarcode = existing.barcodeMappings?.[0];
         if (existingBarcode) {
           await tx.barcodeMapping.update({
             where: { id: existingBarcode.id },
-            data: { barcode, version: existingBarcode.version + 1 },
+            data: { barcode: barcode.trim(), uomId: primary_uom_id || existing.uomId || null, version: existingBarcode.version + 1 },
           });
         } else {
           await tx.barcodeMapping.create({
-            data: { itemId: id, barcode, version: 1 },
+            data: { itemId: id, barcode: barcode.trim(), uomId: primary_uom_id || existing.uomId || null, version: 1 },
           });
         }
       }

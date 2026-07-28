@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
 import { getTokenCookie } from '@/lib/api/cookies';
+import { attemptRefresh } from '@/lib/api/client';
 import { checkReportCount } from '@/features/reports/api/reportsApi';
 import { translateToEnglish } from '../../lib/export/translate';
 
@@ -190,18 +191,40 @@ export function ReportExportMenu({
 
   if (exportRoute) {
    try {
-    const token = getTokenCookie();
+    let token = getTokenCookie();
+    if (!token) {
+     const refreshed = await attemptRefresh();
+     if (refreshed) {
+      token = getTokenCookie();
+     }
+    }
+
     const headers: Record<string, string> = {
      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     if (warehouseId) headers['x-warehouse-id'] = warehouseId;
     if (branchId) headers['x-branch-id'] = branchId;
 
-    const res = await fetch(`${BASE}${exportRoute}`, {
+    let res = await fetch(`${BASE}${exportRoute}`, {
      method: 'GET',
      credentials: 'include',
      headers,
     });
+
+    if (res.status === 401) {
+     const refreshed = await attemptRefresh();
+     if (refreshed) {
+      token = getTokenCookie();
+      if (token) {
+       headers['Authorization'] = `Bearer ${token}`;
+       res = await fetch(`${BASE}${exportRoute}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers,
+       });
+      }
+     }
+    }
 
     if (!res.ok) {
      const errorBody = await res.text().catch(() => '');

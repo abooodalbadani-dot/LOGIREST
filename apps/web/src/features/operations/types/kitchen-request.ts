@@ -9,6 +9,7 @@ export interface KitchenRequestItem {
  itemName: string;
  itemCode?: string;
  uom: string;
+ uomId?: string | null;
  quantity: number;
  notes?: string;
  fulfilledQuantity?: number;
@@ -43,6 +44,7 @@ export interface KitchenRequest {
 export const KitchenRequestItemSchema = z.object({
  itemId: z.string().min(1, 'required'),
  quantity: z.number().positive('must_be_positive'),
+ uomId: z.string().optional().or(z.literal('')),
  notes: z.string().optional().or(z.literal('')),
 });
 
@@ -71,6 +73,7 @@ export const KitchenRequestDetailSchema = z.object({
   barcode: z.string().optional(),
   itemBarcode: z.string().optional(),
   uom: z.string(),
+  uomId: z.string().optional().nullable(),
   quantity: z.number(),
   notes: z.string().optional(),
   fulfilledQuantity: z.number().optional(),

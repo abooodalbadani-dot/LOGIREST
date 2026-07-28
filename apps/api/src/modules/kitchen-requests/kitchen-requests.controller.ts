@@ -43,6 +43,9 @@ function mapKitchenRequestDetail(
   const items = krItems.map((item: Record<string, unknown>) => {
     const it = item.item as Record<string, unknown> | null;
     const unitOfMeasure = it?.unitOfMeasure as Record<string, unknown> | null;
+    const lineUom = item.uom as Record<string, unknown> | null;
+    const resolvedUom =
+      (lineUom?.code as string) || (unitOfMeasure?.code as string) || 'PCS';
     return {
       id: item.id as string,
       itemId: item.itemId as string,
@@ -50,7 +53,8 @@ function mapKitchenRequestDetail(
       itemCode: (it?.sku as string) || '',
       barcode: (it?.sku as string) || '',
       itemBarcode: (it?.sku as string) || '',
-      uom: (unitOfMeasure?.code as string) || 'PCS',
+      uom: resolvedUom,
+      uomId: (item.uomId as string) || (unitOfMeasure?.id as string) || null,
       image: (it?.image as string) || null,
       itemImage: (it?.image as string) || null,
       quantity: Number(item.quantityRequested),
@@ -129,6 +133,7 @@ export class KitchenRequestsController {
       items: Array<{
         itemId: string;
         quantityRequested: number;
+        uomId?: string;
         notes?: string;
       }>;
     },

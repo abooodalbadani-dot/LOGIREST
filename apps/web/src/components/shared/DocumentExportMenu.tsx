@@ -12,11 +12,12 @@ import {
  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { getTokenCookie } from '@/lib/api/cookies';
+import { attemptRefresh } from '@/lib/api/client';
 
 const BASE = (typeof window === 'undefined' ? process.env.API_URL : null) ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
 interface DocumentExportMenuProps {
- documentType: 'PO' | 'TRANSFER' | 'PR' | 'GRN' | 'ADJUSTMENT' | 'STOCKTAKE';
+ documentType: 'PO' | 'TRANSFER' | 'PR' | 'GRN' | 'ADJUSTMENT' | 'STOCKTAKE' | 'ISSUE';
  documentId?: string;
  documentNumber?: string;
 }
@@ -35,7 +36,14 @@ export function DocumentExportMenu({ documentType, documentId, documentNumber }:
   setIsExporting(true);
 
   try {
-   const token = getTokenCookie();
+   let token = getTokenCookie();
+   if (!token) {
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+     token = getTokenCookie();
+    }
+   }
+
    const headers: Record<string, string> = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
    };
@@ -69,15 +77,36 @@ export function DocumentExportMenu({ documentType, documentId, documentNumber }:
     case 'STOCKTAKE':
      endpoint = `/stocktake/sessions/${documentId}/pdf?locale=${locale}`;
      break;
+    case 'PR':
+     endpoint = `/procurement/purchase-requests/${documentId}/pdf?locale=${locale}`;
+     break;
+    case 'ISSUE':
+     endpoint = `/operations/issues/${documentId}/pdf?locale=${locale}`;
+     break;
     default:
      throw new Error(`Unsupported document type: ${documentType}`);
    }
 
-   const response = await fetch(`${BASE}${endpoint}`, {
+   let response = await fetch(`${BASE}${endpoint}`, {
     method: 'GET',
     credentials: 'include',
     headers,
    });
+
+   if (response.status === 401) {
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+     token = getTokenCookie();
+     if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      response = await fetch(`${BASE}${endpoint}`, {
+       method: 'GET',
+       credentials: 'include',
+       headers,
+      });
+     }
+    }
+   }
 
    if (!response.ok) {
     const errorText = await response.text().catch(() => '');

@@ -91,10 +91,17 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
    throw new Error('WarehouseLocked');
   }
 
-  const line = transfer?.lines.find(l => 
-    l.item?.code === barcode || 
-    l.item?.barcodes?.some(b => b.barcode === barcode)
-  );
+  const line = transfer?.lines.find(l => {
+    const matchedBarcode = l.item?.barcodes?.find(b => b.barcode === barcode);
+    if (matchedBarcode) {
+      const bmUomId = (matchedBarcode as { barcode: string; uomId?: string }).uomId;
+      if (bmUomId) {
+        return l.uomId === bmUomId;
+      }
+      return true;
+    }
+    return l.item?.code === barcode;
+  });
   if (line) {
    const currentScanned = scannedLines[line.id] ?? 0;
    if (currentScanned >= line.qty) {
