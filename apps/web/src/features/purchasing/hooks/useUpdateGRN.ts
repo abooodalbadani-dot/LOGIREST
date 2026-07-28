@@ -14,6 +14,7 @@ const UpdateGRNPayloadSchema = z.object({
  lines: z.array(z.object({
   id: z.string().optional(),
   itemId: z.string(),
+  uomId: z.string().optional().nullable(),
   lotId: z.string().nullable().optional(),
   lotNumber: z.string().nullable().optional(),
   expiryDate: z.string().nullable().optional(),

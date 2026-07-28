@@ -25,6 +25,7 @@ import { canPerformActionV2 } from '@logirest/shared-types';
 import { toast } from 'sonner';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ItemSchema, type Item, UoMSchema, type UoM } from '@/types/master-data';
+import { resolveUomCode, isRawUuid } from '@/utils/uom-helper';
 
 interface GRNDetailClientProps {
     id: string;
@@ -168,8 +169,8 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                             const itemImage = (l.item as { image?: string | null; imageUrl?: string | null }).image || (l.item as { image?: string | null; imageUrl?: string | null }).imageUrl || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.image || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.imageUrl || null;
                             const lineUom = (l as { uom?: { id: string; code: string; name?: string } }).uom;
                             const selectedUom = lineUom || (l.uomId ? uomsData?.data?.find((u: UoM) => u.id === l.uomId) : null);
-                            const uomCode = selectedUom?.code || l.item.primaryUom.code;
-                            const uomName = selectedUom?.name || selectedUom?.code || '';
+                            const uomCode = resolveUomCode(selectedUom?.id || l.uomId || l.item?.primaryUom?.id, l.item, uomsData?.data, 'PCS');
+                            const uomName = selectedUom?.name || (!isRawUuid(selectedUom?.code) ? selectedUom?.code : '') || uomCode;
                             return {
                                 id: l.id,
                                 documentId: '',

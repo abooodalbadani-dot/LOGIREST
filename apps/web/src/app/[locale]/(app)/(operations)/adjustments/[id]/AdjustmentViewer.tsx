@@ -95,6 +95,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
        item: line.item,
        qty: line.qtyAdjusted,
        uomId: line.uomId,
+       uom: line.uom || (line.item?.primaryUom ? { id: line.item.primaryUom.id, code: line.item.primaryUom.code, name: line.item.primaryUom.code } : undefined),
        direction: line.direction,
        // qtyBefore is computed by the backend:
        //   DRAFT  → live warehouseItem.qtyOnHand

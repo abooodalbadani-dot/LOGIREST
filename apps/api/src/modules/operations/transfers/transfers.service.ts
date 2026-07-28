@@ -58,7 +58,12 @@ export class TransfersService {
         include: {
           lines: {
             include: {
-              item: true,
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+              uom: true,
             },
           },
         },

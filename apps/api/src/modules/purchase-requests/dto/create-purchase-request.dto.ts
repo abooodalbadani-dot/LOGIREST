@@ -17,6 +17,10 @@ export class PrLineDto {
   @IsNumber()
   @Min(0.01)
   quantity!: number;
+
+  @IsString()
+  @IsOptional()
+  uomId?: string;
 }
 
 export class CreatePurchaseRequestDto {

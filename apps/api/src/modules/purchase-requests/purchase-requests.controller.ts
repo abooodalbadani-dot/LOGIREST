@@ -172,6 +172,7 @@ export class PurchaseRequestsController {
     const lines = (body.lines || []).map((line) => ({
       itemId: line.itemId,
       quantity: Number(line.quantity),
+      uomId: line.uomId,
     }));
 
     await this.scopeValidationService.validateWarehouse(

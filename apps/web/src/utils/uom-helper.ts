@@ -92,22 +92,34 @@ export function resolveUomCode(
   masterUoms?: Array<{ id: string; code: string; name?: string }> | null,
   fallback = 'UOM',
 ): string {
-  if (!uomId) return fallback;
-
-  // 1. Check primaryUom
-  const primary = item?.primaryUom || item?.primary_uom;
-  if (primary && primary.id === uomId && primary.code && !isRawUuid(primary.code)) {
-    return primary.code;
+  const safeFallback = isRawUuid(fallback) ? 'UOM' : (fallback || 'UOM');
+  if (!uomId) {
+    const primary = item?.primaryUom || item?.primary_uom;
+    if (primary?.code && !isRawUuid(primary.code)) return primary.code;
+    return safeFallback;
   }
 
-  // 2. Check available UOM options from item
+  // 1. If uomId itself is a clean short code (e.g. 'PCS', 'KG', 'BOX'), return it
+  if (!isRawUuid(uomId) && uomId.trim() !== '') {
+    return uomId;
+  }
+
+  // 2. Check primaryUom by ID
+  const primary = item?.primaryUom || item?.primary_uom;
+  if (primary && primary.code && !isRawUuid(primary.code)) {
+    if (primary.id && primary.id === uomId) {
+      return primary.code;
+    }
+  }
+
+  // 3. Check available UOM options from item (conversions)
   const options = getAvailableUomsForItem(item);
   const foundInOptions = options.find((o) => o.id === uomId);
   if (foundInOptions && foundInOptions.code && !isRawUuid(foundInOptions.code)) {
     return foundInOptions.code;
   }
 
-  // 3. Check master UOMs list
+  // 4. Check master UOMs list
   if (Array.isArray(masterUoms)) {
     const foundMaster = masterUoms.find((m) => m.id === uomId);
     if (foundMaster && foundMaster.code && !isRawUuid(foundMaster.code)) {
@@ -115,17 +127,12 @@ export function resolveUomCode(
     }
   }
 
-  // 4. If uomId itself is a clean short code (e.g. 'PCS', 'KG', 'BOX'), return it
-  if (!isRawUuid(uomId)) {
-    return uomId;
-  }
-
   // 5. If item has primaryUom code, fallback to that
   if (primary?.code && !isRawUuid(primary.code)) {
     return primary.code;
   }
 
-  return fallback;
+  return safeFallback;
 }
 
 /**

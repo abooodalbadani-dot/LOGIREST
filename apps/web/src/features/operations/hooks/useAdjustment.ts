@@ -28,6 +28,11 @@ export const AdjustmentLineSchema = z.object({
  qtyAdjusted: z.number(),
  snapshotQtyBefore: z.number().nullable().optional(),
  uomId: z.string(),
+ uom: z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string().optional(),
+ }).nullable().optional(),
  unitCost: z.number().nullable().optional(),
  reasonNotes: z.string().optional(),
  lot: z.object({

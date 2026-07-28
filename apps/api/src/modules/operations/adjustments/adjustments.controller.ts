@@ -245,6 +245,7 @@ export class AdjustmentsController {
         itemId: string;
         lotId?: string;
         quantity: number;
+        uomId?: string;
         direction: AdjustmentDirection;
         reason: AdjustmentReason;
         unitCost?: number;
@@ -399,6 +400,7 @@ export class AdjustmentsController {
       id: line.id,
       itemId: line.itemId ?? '',
       qty: Number(line.qty),
+      uomId: line.uomId,
       direction: line.direction as 'INCREASE' | 'DECREASE',
       unitCost: line.unitCost,
       lotId: line.lotId,

@@ -23,6 +23,10 @@ export class PoLineDto {
   @IsNumber()
   @Min(0)
   unitPrice!: number;
+
+  @IsString()
+  @IsOptional()
+  uomId?: string;
 }
 
 export class CreatePoDto {

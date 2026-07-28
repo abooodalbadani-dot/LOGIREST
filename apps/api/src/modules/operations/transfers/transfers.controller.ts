@@ -232,7 +232,7 @@ export class TransfersController {
       fromWarehouseId: string;
       toWarehouseId: string;
       notes?: string;
-      lines: Array<{ itemId: string; quantityShipped: number; notes?: string }>;
+      lines: Array<{ itemId: string; quantityShipped: number; uomId?: string; notes?: string }>;
     },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,

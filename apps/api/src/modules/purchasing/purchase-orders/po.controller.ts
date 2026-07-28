@@ -239,6 +239,7 @@ export class PurchaseOrderController {
         itemId,
         quantity,
         unitPrice,
+        uomId: line.uomId,
       };
     });
 
@@ -409,6 +410,7 @@ export class PurchaseOrderController {
           itemId: string;
           quantity: number;
           unitPrice: number;
+          uomId?: string;
         }>
       | undefined = undefined;
     if (body.lines) {
@@ -426,6 +428,7 @@ export class PurchaseOrderController {
           itemId,
           quantity,
           unitPrice,
+          uomId: line.uomId,
         };
       });
     }

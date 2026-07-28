@@ -26,6 +26,7 @@ import { Card } from '@/components/ui/card';
 import { RelationalName } from '@/components/shared/RelationalName';
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { formatCurrency, formatDate } from '@/utils/currency';
+import { resolveUomCode } from '@/utils/uom-helper';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 import type { GRN, GRNLineItem } from '@/types/documents';
@@ -226,7 +227,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
                   </div>
                   <div className="flex flex-col bg-surface/50 dark:bg-surface-container-low/30 p-2 rounded-lg border border-border/70">
                     <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">UOM</span>
-                    <span className="text-xs font-bold text-foreground uppercase"> {line.item.primaryUom?.code || 'PCS'}</span>
+                    <span className="text-xs font-bold text-foreground uppercase"> {resolveUomCode(line.uomId, line.item, null, 'PCS')}</span>
                   </div>
                 </div>
 

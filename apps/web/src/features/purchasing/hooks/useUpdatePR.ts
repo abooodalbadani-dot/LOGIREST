@@ -11,6 +11,7 @@ const UpdatePRPayloadSchema = z.object({
  lines: z.array(z.object({
   id: z.string().optional(),
   itemId: z.string(),
+  uomId: z.string().optional(),
   quantity: z.number().positive(),
  })).optional()
 });

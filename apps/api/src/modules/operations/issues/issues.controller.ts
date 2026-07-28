@@ -249,6 +249,7 @@ export class IssuesController {
         itemId: string;
         requestedQty?: number;
         quantity?: number;
+        uomId?: string;
         lotAllocations?: Array<{
           lotId?: string;
           lotNumber?: string;
@@ -314,6 +315,7 @@ export class IssuesController {
       return {
         itemId: line.itemId,
         quantity: Number(qty),
+        uomId: line.uomId,
         lotAllocations,
       };
     });

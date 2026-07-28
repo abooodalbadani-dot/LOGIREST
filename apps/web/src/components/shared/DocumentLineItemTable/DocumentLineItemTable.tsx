@@ -7,7 +7,7 @@ import { formatDate, formatQuantity } from '@/utils/currency';
 import type { LotAllocation } from '@/types/documents';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { RelationalName } from '@/components/shared/RelationalName';
-import { resolveUomCode } from '@/utils/uom-helper';
+import { isRawUuid, resolveUomCode } from '@/utils/uom-helper';
 
 export interface LineItem {
   id: string;
@@ -22,13 +22,13 @@ export interface LineItem {
 }
 
 export function getLineUomDisplay(line: LineItem): string {
-  if (typeof line.uom === 'string' && line.uom.trim() !== '') {
+  if (typeof line.uom === 'string' && line.uom.trim() !== '' && !isRawUuid(line.uom)) {
     return line.uom;
   }
-  if (typeof line.uom === 'object' && line.uom?.code) {
+  if (typeof line.uom === 'object' && line.uom?.code && !isRawUuid(line.uom.code)) {
     return line.uom.code;
   }
-  if (typeof line.uom === 'object' && line.uom?.name) {
+  if (typeof line.uom === 'object' && line.uom?.name && !isRawUuid(line.uom.name)) {
     return line.uom.name;
   }
   return resolveUomCode(line.uomId, line.item);
@@ -199,7 +199,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                       {renderQty ? renderQty(line) : formatQuantity(line.qty, locale as 'ar' | 'en')}
                     </div>
                     <span className="uppercase text-[10px] font-bold text-slate-400 shrink-0">
-                      {getLineUomDisplay(line) || 'TU'}
+                      {getLineUomDisplay(line) || 'PCS'}
                     </span>
                   </div>
                 </div>
@@ -247,7 +247,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   <span className="text-slate-900 dark:text-white shrink-0">{locale === 'ar' ? 'المعدل' : 'Adjustment'}</span>
                   <div className="font-semibold text-slate-900 dark:text-white flex items-center justify-end gap-1" dir="ltr">
                     <span className="font-mono">{formatQuantity(line.qty, locale as 'ar' | 'en')}</span>
-                    <span className="uppercase text-xs text-slate-500 ms-1">{getLineUomDisplay(line) || 'TU'}</span>
+                    <span className="uppercase text-xs text-slate-500 ms-1">{getLineUomDisplay(line) || 'PCS'}</span>
                     {adjLine && (
                       adjLine.direction === 'INCREASE' ? (
                         <span className="text-emerald-500 text-[10px] font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded ms-1">{locale === 'ar' ? 'زيادة ↑' : 'Inc ↑'}</span>
@@ -601,7 +601,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                       <span className="font-mono tracking-wider uppercase" dir="ltr">{line.item.code}</span>
                                       {hideUomColumn && (
                                         <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                          {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                          {getLineUomDisplay(line) || 'PCS'}
                                         </span>
                                       )}
                                     </div>
@@ -832,7 +832,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                           </div>
                                         ) : line.item.primaryUom && (
                                           <span className="text-[9px] bg-surface-container-highest text-muted-foreground px-1.5 py-0.5 rounded font-bold border border-border/40">
-                                            {line.item.primaryUom.code || line.item.primaryUom.name}
+                                            {getLineUomDisplay(line) || line.item.primaryUom.code || line.item.primaryUom.name}
                                           </span>
                                         )}
                                       </div>
@@ -1248,7 +1248,9 @@ export function DocumentLineItemTable<T extends LineItem>({
                               {renderUom ? (
                                 renderUom(line)
                               ) : (
-                                <RelationalName name={typeof line.uom === 'object' ? (line.uom?.name || line.uom?.code) : (typeof line.uom === 'string' ? line.uom : undefined)} rawId={line.uomId} fallback={getLineUomDisplay(line) || "N/A"} className="text-xs font-medium uppercase text-muted-foreground" />
+                                <span className="text-xs font-medium uppercase text-muted-foreground">
+                                  {getLineUomDisplay(line) || "N/A"}
+                                </span>
                               )}
                             </div>
                           </td>
@@ -1914,7 +1916,9 @@ export function DocumentLineItemTable<T extends LineItem>({
                       {renderUom ? (
                         renderUom(line)
                       ) : (
-                        <RelationalName name={typeof line.uom === 'object' ? (line.uom?.name || line.uom?.code) : (typeof line.uom === 'string' ? line.uom : undefined)} rawId={line.uomId} fallback={getLineUomDisplay(line) || "N/A"} className="text-xs font-medium uppercase text-muted-foreground" />
+                        <span className="text-xs font-medium uppercase text-muted-foreground">
+                          {getLineUomDisplay(line) || "N/A"}
+                        </span>
                       )}
                     </div>
                   </td>

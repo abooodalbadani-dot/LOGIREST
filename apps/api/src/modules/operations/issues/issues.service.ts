@@ -176,6 +176,7 @@ export class IssuesService {
                     lot: true,
                   },
                 },
+                uom: true,
               },
             },
             warehouse: true,

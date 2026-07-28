@@ -114,10 +114,11 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
    nameAr: l.item.nameAr,
    nameEn: l.item.nameEn,
    image: l.item.image,
-   primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
+   primaryUom: l.item.primaryUom ? { id: l.item.primaryUom.id, code: l.item.primaryUom.code, name: l.item.primaryUom.name } : null,
   },
   lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
   qty: l.qty,
+   uom: (l as { uom?: { id: string; code: string; name?: string } }).uom || (l.item?.primaryUom ? { id: l.item.primaryUom.id, code: l.item.primaryUom.code, name: l.item.primaryUom.name } : undefined),
   uomId: l.uomId,
   lotAllocations: l.lotAllocations,
  }));

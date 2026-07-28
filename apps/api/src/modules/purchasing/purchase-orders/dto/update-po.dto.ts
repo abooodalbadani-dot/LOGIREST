@@ -26,6 +26,10 @@ export class UpdatePoLineDto {
   @IsNumber()
   @Min(0)
   unitPrice!: number;
+
+  @IsString()
+  @IsOptional()
+  uomId?: string;
 }
 
 export class UpdatePoDto {

@@ -196,26 +196,32 @@ export function IssueForm() {
     name: "lines",
   });
 
-  const currentFields = fields || [];
-
   const watchedLines = useWatch({
     control: form.control,
     name: "lines",
   });
 
+  const liveLines = React.useMemo(() => {
+    return (fields || []).map((field, idx) => ({
+      ...field,
+      ...(watchedLines?.[idx] || {}),
+    }));
+  }, [fields, watchedLines]);
+
+  const currentFields = liveLines;
+
   const watchedWarehouse = useWatch({ control: form.control, name: "warehouseId" });
-  const activeItemId = activeLineIndex !== null ? currentFields[activeLineIndex]?.itemId : undefined;
+  const activeItemId = activeLineIndex !== null ? liveLines[activeLineIndex]?.itemId : undefined;
   const { data: availableLots } = useLotsByItem({
     itemId: activeItemId,
     warehouseId: watchedWarehouse,
   });
 
   const tableLines = React.useMemo<CustomLineItem[]>(() => {
-    return currentFields.map((field, index) => {
-      const lineVal = watchedLines?.[index];
+    return liveLines.map((lineVal, index) => {
       const selectedItem = items?.find(i => i.id === lineVal?.itemId);
       return {
-        id: field.id,
+        id: lineVal.id,
         item: {
           id: lineVal?.itemId || '',
           code: selectedItem?.barcode || selectedItem?.code || '',
@@ -238,7 +244,7 @@ export function IssueForm() {
         selectedItem,
       };
     });
-  }, [fields, watchedLines, items]);
+  }, [liveLines, items]);
 
   const extraColumns = React.useMemo<ExtraColumn<CustomLineItem>[]>(() => [
     {
@@ -330,14 +336,14 @@ export function IssueForm() {
   ), [form, t]);
 
   const renderUom = React.useCallback((line: LineItem & { index: number; selectedItem?: Item }) => {
-    const selectedItem = line.selectedItem;
-    const availableUoms = getAvailableUomsForItem(selectedItem);
+    const selectedItem = line.selectedItem || items?.find(i => i.id === line.item?.id);
+    const availableUoms = getAvailableUomsForItem(selectedItem || line.item);
     const currentUomId = form.watch(`lines.${line.index}.uomId`) || selectedItem?.primaryUom?.id || '';
-    const resolvedCode = resolveUomCode(currentUomId, selectedItem, uomsData?.data);
+    const resolvedCode = resolveUomCode(currentUomId, selectedItem || line.item, uomsData?.data);
 
     if (availableUoms.length <= 1) {
       return (
-        <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2 py-1 bg-surface-container rounded font-mono font-bold">
+        <span className="text-label-xs font-bold text-muted-foreground uppercase px-2.5 py-1 bg-surface-container rounded-md border border-border/50 font-mono inline-block">
           {resolvedCode}
         </span>
       );
@@ -348,12 +354,13 @@ export function IssueForm() {
         items={availableUoms}
         value={currentUomId}
         onSelect={(uom) => {
-          form.setValue(`lines.${line.index}.uomId`, uom.id, { shouldDirty: true, shouldValidate: true });
+          form.setValue(`lines.${line.index}.uomId`, String(uom.id), { shouldDirty: true, shouldValidate: true });
         }}
+        placeholder={resolvedCode}
         triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
       />
     );
-  }, [form]);
+  }, [form, items, uomsData]);
 
   const { data: lockState } = useWarehouseLock(watchedWarehouse || null);
   const isWarehouseLocked = lockState?.isLocked ?? false;
@@ -365,13 +372,9 @@ export function IssueForm() {
 
   const handleAllocate = (lotAllocations: IssueLot[]) => {
     if (activeLineIndex === null) return;
-    const line = fields[activeLineIndex];
     const allocated = lotAllocations.reduce((s, l) => s + l.allocatedQty, 0);
-    update(activeLineIndex, {
-      ...line,
-      qty: allocated,
-      lotAllocations,
-    });
+    form.setValue(`lines.${activeLineIndex}.qty`, allocated, { shouldDirty: true, shouldValidate: true });
+    form.setValue(`lines.${activeLineIndex}.lotAllocations`, lotAllocations, { shouldDirty: true, shouldValidate: true });
   };
 
   const isLineFulfilled = React.useCallback((f: { itemId: string; qty?: number; requestedQty?: number }) => {
@@ -380,7 +383,7 @@ export function IssueForm() {
     return (f.qty ?? 0) >= (f.requestedQty ?? 0);
   }, [items]);
 
-  const allLinesAllocated = fields.length > 0 && fields.every(isLineFulfilled);
+  const allLinesAllocated = liveLines.length > 0 && liveLines.every(isLineFulfilled);
 
   const handleScan = (barcode: string) => {
     const matchedItem = items?.find(i => i.barcode === barcode || i.code === barcode);
@@ -694,6 +697,7 @@ export function IssueForm() {
           isOpen={allocatorOpen}
           onClose={() => setAllocatorOpen(false)}
           itemId={currentFields[activeLineIndex]?.itemId || ''}
+          itemLabel={items?.find(i => i.id === currentFields[activeLineIndex]?.itemId)?.name}
           requestedQty={currentFields[activeLineIndex]?.requestedQty || 1}
           onAllocate={handleAllocate}
           lots={availableLots?.map(l => ({

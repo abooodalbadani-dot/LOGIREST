@@ -48,7 +48,7 @@ import { CreateCustomItemDialog } from '@/components/shared/CreateCustomItemDial
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { formatCurrency } from '@/utils/currency';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { Item, ItemSchema } from '@/types/master-data';
+import { Item, ItemSchema, UoM, UoMSchema } from '@/types/master-data';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -338,6 +338,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          : (fxRates?.[0]?.rate || 1);
 
    const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
+   const { data: uomsData } = useMasterDataList<UoM>('units-of-measure', UoMSchema);
 
    const totalForeign = useMemo(() => {
       return (watchedLines || []).reduce((acc, line) => acc + (line.receivedQty * (line.unitCostForeign || 0)), 0);
@@ -386,7 +387,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                const itemCode = line.item?.code || line.itemSku || '';
                const itemName = line.item?.name || line.itemName || '';
                const uomId = line.item?.primaryUom?.id || line.uomId || '';
-               const uomCode = line.item?.primaryUom?.code || line.uomId || '';
+               const uomCode = resolveUomCode(uomId, line.item, null, 'PCS');
                const itemImage = line.item?.image || line.item?.imageUrl || itemsData?.data?.find(i => i.id === itemId)?.image || itemsData?.data?.find(i => i.id === itemId)?.imageUrl || null;
                return {
                   id: line.id,
@@ -521,14 +522,12 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
    const handleLotConfirm = (lot: LotAllocation) => {
       if (!lotDialogState) return;
-      const existing = fields[lotDialogState.lineIndex];
-      update(lotDialogState.lineIndex, { ...existing, lot });
+      setValue(`lines.${lotDialogState.lineIndex}.lot`, lot, { shouldDirty: true });
    };
 
    const handleLotClear = () => {
       if (!lotDialogState) return;
-      const existing = fields[lotDialogState.lineIndex];
-      update(lotDialogState.lineIndex, { ...existing, lot: null });
+      setValue(`lines.${lotDialogState.lineIndex}.lot`, null, { shouldDirty: true });
    };
 
 
@@ -967,38 +966,38 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                  };
                               })}
                               isReadOnly={isLocked || isWarehouseLocked}
-                              dense={true}
                               layoutMode="table"
                               mobileLayoutPattern="goods-received-form"
                               hideLotColumns={true}
                               renderUom={(line) => {
-                                 const matchedItem = itemsData?.data?.find(i => i.id === line.item.id);
-                                 const availableUoms = getAvailableUomsForItem(matchedItem || line.item);
-                                 const lineIdx = fields.findIndex(f => f.id === line.id);
-                                 const currentUomId = line.uomId || matchedItem?.primaryUom?.id || '';
-                                 const resolvedCode = resolveUomCode(currentUomId, matchedItem || line.item);
+                                  const matchedItem = itemsData?.data?.find(i => i.id === line.item.id);
+                                  const availableUoms = getAvailableUomsForItem(matchedItem || line.item);
+                                  const lineIdx = fields.findIndex(f => f.id === line.id);
+                                  const currentUomId = line.uomId || matchedItem?.primaryUom?.id || '';
+                                  const resolvedCode = resolveUomCode(currentUomId, matchedItem || line.item, uomsData?.data);
 
-                                 if (availableUoms.length <= 1 || isLocked || isWarehouseLocked) {
-                                    return (
-                                       <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2 py-1 bg-surface-container rounded font-mono">
-                                          {resolvedCode}
-                                       </span>
-                                    );
-                                 }
+                                  if (availableUoms.length <= 1 || isLocked || isWarehouseLocked) {
+                                     return (
+                                        <span className="text-label-xs font-bold text-muted-foreground uppercase px-2.5 py-1 bg-surface-container rounded-md border border-border/50 font-mono inline-block">
+                                           {resolvedCode}
+                                        </span>
+                                     );
+                                  }
 
-                                 return (
-                                    <SmartCombobox
-                                       items={availableUoms}
-                                       value={currentUomId}
-                                       onSelect={(uom) => {
-                                          if (lineIdx !== -1) {
-                                             setValue(`lines.${lineIdx}.uomId`, uom.id, { shouldDirty: true, shouldValidate: true });
-                                          }
-                                       }}
-                                       triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
-                                    />
-                                 );
-                              }}
+                                  return (
+                                     <SmartCombobox
+                                        items={availableUoms}
+                                        value={currentUomId}
+                                        onSelect={(uom) => {
+                                           if (lineIdx !== -1) {
+                                              setValue(`lines.${lineIdx}.uomId`, String(uom.id), { shouldDirty: true, shouldValidate: true });
+                                           }
+                                        }}
+                                        placeholder={resolvedCode}
+                                        triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
+                                     />
+                                  );
+                               }}
                               borderless={true}
                               noCollapse={false}
                               enableVirtualization={false}

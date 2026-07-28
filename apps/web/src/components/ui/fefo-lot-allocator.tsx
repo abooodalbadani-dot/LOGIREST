@@ -21,12 +21,14 @@ interface FEFOLotAllocatorProps {
  isOpen: boolean;
  onClose: () => void;
  itemId: string;
+ itemLabel?: string;
+ itemName?: string;
  requestedQty: number;
  onAllocate: (lots: IssueLot[]) => void;
  lots?: AvailableLot[];
 }
 
-export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllocate, lots }: FEFOLotAllocatorProps) {
+export function FEFOLotAllocator({ isOpen, onClose, itemId, itemLabel, itemName, requestedQty, onAllocate, lots }: FEFOLotAllocatorProps) {
  const t = useTranslations("common.fefo");
  const locale = useLocale();
  const availableLots = lots ?? [];
@@ -77,10 +79,10 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
-   <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:max-w-2xl bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-2xl p-0 overflow-hidden rounded-t-2xl rounded-b-none sm:rounded-b-2xl">
-    <div className="bg-muted/10 p-4 sm:p-8 border-b">
+   <DialogContent className="w-full inset-x-0 bottom-0 sm:bottom-auto mb-0 sm:mb-auto sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col bg-white dark:bg-card border border-gray-200 dark:border-gray-800 shadow-2xl p-0 overflow-hidden rounded-t-2xl sm:rounded-2xl">
+    <div className="bg-muted/10 p-4 sm:p-6 border-b shrink-0">
      <DialogHeader>
-      <div className="flex items-center gap-3 sm:gap-4 mb-2">
+      <div className="flex items-center gap-3 sm:gap-4 mb-1">
        <div className="p-2 sm:p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan border border-operational-cyan/20 shrink-0">
         <PackageSearch className="w-5 h-5 sm:w-6 sm:h-6" />
        </div>
@@ -89,7 +91,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
          {t("title")}
         </DialogTitle>
         <p className="text-[10px] sm:text-label-xs font-semibold text-muted-foreground/40 uppercase mt-0.5 truncate">
-         {t("protocol_for")} <span className="text-operational-cyan font-mono">{itemId}</span>
+         {t("protocol_for")} <span className="text-operational-cyan font-mono">{itemLabel || itemName || itemId}</span>
         </p>
        </div>
        <Badge className="hidden sm:inline-flex ms-auto bg-muted border-none text-label-xs font-semibold uppercase px-3 h-8 rounded-lg shrink-0">
@@ -99,7 +101,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
      </DialogHeader>
     </div>
 
-    <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 flex-1 overflow-y-auto min-h-0 custom-scrollbar">
      {/* Allocation Progress Bar */}
      <div className="bg-muted/5 p-4 sm:p-6 rounded-2xl">
       <div className="flex items-center justify-between mb-4">
@@ -154,7 +156,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
         <p className="text-label-xs font-bold text-muted-foreground/30 uppercase">{t("no_lots_available")}</p>
        </div>
       ) : (
-       <div className="grid grid-cols-1 gap-3 max-h-[300px] sm:max-h-[400px] overflow-y-auto pe-1 sm:pe-2 custom-scrollbar">
+       <div className="grid grid-cols-1 gap-3">
         {availableLots.map((lot) => {
          const lotExpiryDate = new Date(lot.expiryDate);
          const isExpiredFlag = lot.isExpired || lotExpiryDate < now;
@@ -225,7 +227,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
      </div>
     </div>
 
-    <div className="p-4 sm:p-8 bg-muted/10 border-t flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+    <div className="p-4 sm:p-6 bg-muted/10 border-t flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shrink-0 mt-auto">
      <Button 
       variant="ghost" 
       onClick={onClose}

@@ -213,6 +213,7 @@ export class AdjustmentsService {
             include: {
               item: { include: { unitOfMeasure: true, category: true } },
               lot: true,
+              uom: true,
             },
           },
           warehouse: true,
@@ -428,6 +429,7 @@ export class AdjustmentsService {
         id?: string;
         itemId: string;
         qty: number;
+        uomId?: string;
         direction: 'INCREASE' | 'DECREASE';
         unitCost?: number | null;
         lotId?: string | null;
@@ -557,6 +559,7 @@ export class AdjustmentsService {
                   itemId: line.itemId,
                   lotId: line.lotId || null,
                   quantity: line.qty,
+                  uomId: line.uomId ?? null,
                   direction: isIncrease
                     ? AdjustmentDirection.IN
                     : AdjustmentDirection.OUT,
@@ -576,6 +579,7 @@ export class AdjustmentsService {
             include: {
               item: { include: { unitOfMeasure: true, category: true } },
               lot: true,
+              uom: true,
             },
           },
           warehouse: true,
