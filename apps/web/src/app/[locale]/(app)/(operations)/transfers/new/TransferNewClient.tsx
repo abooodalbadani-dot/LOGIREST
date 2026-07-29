@@ -22,10 +22,11 @@ import { audioAlerts } from '@/utils/audio';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 
-import { Save, Warehouse, PackagePlus, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
+import { Save, Warehouse, PackagePlus, Sparkles, ArrowLeft, Loader2, Truck } from 'lucide-react';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { Item, ItemSchema } from '@/types/master-data';
-import { getAvailableUomsForItem, resolveUomCode, handleUomChange } from '@/utils/uom-helper';
+import { getAvailableUomsForItem, resolveUomCode, handleUomChange, getScaledQtyBefore } from '@/utils/uom-helper';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -66,12 +67,17 @@ function TransferLineNotesCell({ locale, lineId, notes, onChange }: TransferLine
     setLocalNotes(notes || '');
   }, [notes]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalNotes(val);
+    onChange(val);
+  };
+
   return (
     <div className="w-full">
       <Input
         value={localNotes}
-        onChange={(e) => setLocalNotes(e.target.value)}
-        onBlur={() => onChange(localNotes)}
+        onChange={handleChange}
         placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
         className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-700 text-[#0B1220] dark:text-white placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
       />
@@ -276,8 +282,42 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
       .map(w => mapWarehouseToCombobox(w));
   }, [destWarehouses, fromWarehouseId]);
 
-  // Unsaved changes guard
-  const isDirty = fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
+  // Unsaved changes guard calculation
+  const isNew = !initialData;
+
+  const initialLinesFormatted = useMemo(() => {
+    if (!initialData?.lines) return [];
+    return initialData.lines.map((l) => ({
+      id: l.id,
+      itemId: l.itemId || l.item?.id || '',
+      qty: l.qty || l.shippedQty || 1,
+      uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+      notes: l.notes || '',
+    }));
+  }, [initialData]);
+
+  const currentLinesFormatted = useMemo(() => {
+    return lines.map((l) => ({
+      id: l.id,
+      itemId: l.itemId,
+      qty: l.qty,
+      uomId: l.uomId,
+      notes: l.notes || '',
+    }));
+  }, [lines]);
+
+  const isDirty = useMemo(() => {
+    if (isNew) {
+      return fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
+    }
+    const fromChanged = fromWarehouseId !== (initialData?.fromWarehouseId || '');
+    const toChanged = toWarehouseId !== (initialData?.toWarehouseId || '');
+    const notesChanged = notes !== (initialData?.notes || '');
+    const linesChanged = JSON.stringify(currentLinesFormatted) !== JSON.stringify(initialLinesFormatted);
+
+    return fromChanged || toChanged || notesChanged || linesChanged;
+  }, [isNew, fromWarehouseId, toWarehouseId, notes, lines, initialData, currentLinesFormatted, initialLinesFormatted]);
+
   const { router } = useUnsavedChangesGuard(isDirty);
 
   // Warehouse locks
@@ -308,9 +348,9 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
 
     // Check available balance in cache
     const balance = inventoryBalances?.data?.find(b => b.itemId === item.id);
-    const availableQty = balance ? balance.qtyAvailable : 0;
+    const rawAvailableQty = balance ? balance.qtyAvailable : 0;
 
-    if (availableQty <= 0) {
+    if (rawAvailableQty <= 0) {
       toast.error(locale === 'ar'
         ? `رصيد الصنف غير كافٍ في مستودع المصدر (الرصيد: 0)`
         : `Insufficient stock in source warehouse (Stock: 0)`
@@ -319,12 +359,13 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
     }
 
     const targetUomId = scannedUomId || (item as { primaryUom?: { id?: string } }).primaryUom?.id || '';
+    const scaledAvailableQty = getScaledQtyBefore(rawAvailableQty, targetUomId, item, itemsMaster?.data);
     const existing = lines.find(l => l.itemId === item.id && l.uomId === targetUomId);
     const newQty = existing ? existing.qty + 1 : 1;
-    if (newQty > availableQty) {
+    if (newQty > scaledAvailableQty) {
       toast.error(locale === 'ar'
-        ? `الكمية المدخلة تتجاوز الرصيد المتوفر (${availableQty})`
-        : `Quantity exceeds available stock (${availableQty})`
+        ? `الكمية المدخلة تتجاوز الرصيد المتوفر (${scaledAvailableQty})`
+        : `Quantity exceeds available stock (${scaledAvailableQty})`
       );
       throw new Error('InsufficientStock');
     }
@@ -432,15 +473,24 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
     }, {
       onSuccess: (data) => {
         playSound('success');
+        toast.success(locale === 'ar' ? 'تم حفظ عملية النقل بنجاح' : 'Transfer saved successfully');
         router.push(`/transfers/${data.id}`, { skipGuard: true });
+      },
+      onError: (error: any) => {
+        playSound('error');
+        toast.error(locale === 'ar' ? 'فشل حفظ عملية النقل' : 'Failed to save transfer', {
+          description: error?.message || (locale === 'ar' ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred'),
+        });
       }
     });
   };
 
   const hasQuantityErrors = !!inventoryBalances?.data && lines.some(line => {
     const balance = inventoryBalances.data.find(b => b.itemId === line.itemId);
-    const availableQty = balance ? balance.qtyAvailable : 0;
-    return line.qty > availableQty || line.qty <= 0;
+    const rawAvailableQty = balance ? balance.qtyAvailable : 0;
+    const matchedItem = itemsMaster?.data?.find((i: Item) => i.id === line.itemId);
+    const scaledAvailableQty = getScaledQtyBefore(rawAvailableQty, line.uomId, matchedItem, itemsMaster?.data);
+    return line.qty > scaledAvailableQty || line.qty <= 0;
   });
 
   const handleNotesChange = useCallback((lineId: string, val: string) => {
@@ -453,19 +503,26 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
 
   const renderQty = useCallback((line: NewTransferLine) => {
     const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
-    const availableQty = balance ? balance.qtyAvailable : 0;
-    const isExceeded = balance ? line.qty > availableQty : false;
+    const rawAvailableQty = balance ? balance.qtyAvailable : 0;
+    const matchedItem = itemsMaster?.data?.find((i: Item) => i.id === line.itemId);
+    const scaledAvailableQty = getScaledQtyBefore(
+      rawAvailableQty,
+      line.uomId,
+      matchedItem,
+      itemsMaster?.data
+    );
+    const isExceeded = balance ? line.qty > scaledAvailableQty : false;
     return (
       <TransferLineQtyCell
         lineId={line.id}
         qty={line.qty}
-        availableQty={availableQty}
+        availableQty={scaledAvailableQty}
         isExceeded={isExceeded}
         onChange={(val) => handleQtyChange(line.id, val)}
         locale={locale}
       />
     );
-  }, [inventoryBalances?.data, handleQtyChange, locale]);
+  }, [inventoryBalances?.data, itemsMaster?.data, handleQtyChange, locale]);
 
   const renderUom = useCallback((line: { id: string; item?: { primaryUom?: { code?: string } } }) => {
     const lineItem = lines.find(l => l.id === line.id);
@@ -554,19 +611,8 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
         </div>
 
         <PageHeader
-          title={t('create_new')}
+          title={id ? (locale === 'ar' ? 'مسودة عملية نقل' : 'Transfer Draft') : t('create_new')}
           subtitle={t('description')}
-          actions={
-            <Button
-              type="button"
-              onClick={handleSave}
-              disabled={createTransfer.isPending || !isValid || isEitherLocked}
-              className="bg-brand-gold hover:bg-brand-gold/90 text-slate-950 font-bold px-8 h-12 rounded-xl flex items-center gap-2 transition-all shadow-sm"
-            >
-              {createTransfer.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {t('save_transfer')}
-            </Button>
-          }
         />
       </div>
 
@@ -726,6 +772,39 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
           </div>
         </div>
       </div>
+
+      <FormFooter>
+        <div className="flex items-center justify-end gap-3 w-full max-w-6xl mx-auto px-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/transfers', { skipGuard: true })}
+            className="px-6 h-11 font-bold rounded-xl flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+            {locale === 'ar' ? 'رجوع' : 'Back'}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={createTransfer.isPending || !isValid || isEitherLocked}
+            className="bg-brand-gold hover:bg-brand-gold/90 text-slate-950 font-bold px-8 h-11 rounded-xl flex items-center gap-2 transition-all shadow-sm"
+          >
+            {createTransfer.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {t('save_transfer')}
+          </Button>
+          {id && (
+            <Button
+              type="button"
+              onClick={() => router.push(`/transfers/${id}/ship`, { skipGuard: true })}
+              className="bg-slate-900 dark:bg-amber-600 text-white font-bold px-8 h-11 rounded-xl flex items-center gap-2 transition-all shadow-sm"
+            >
+              <Truck className="w-4 h-4" />
+              {locale === 'ar' ? 'شحن / ترحيل العملية' : 'Ship / Process Transfer'}
+            </Button>
+          )}
+        </div>
+      </FormFooter>
     </form>
   );
 }

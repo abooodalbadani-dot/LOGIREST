@@ -129,8 +129,9 @@ export class ReconciliationJob {
               const ledgerQty = ledgerMap.get(key) || new Prisma.Decimal(0);
               const currentQty = new Prisma.Decimal(whItem.qtyOnHand);
 
-              // Check A: Qty On Hand vs Stock Ledger Sum (hard check, freezes item)
-              if (!currentQty.equals(ledgerQty)) {
+              // Check A: Qty On Hand vs Stock Ledger Sum (hard check, freezes item if discrepancy > 0.001)
+              const diff = currentQty.sub(ledgerQty).abs();
+              if (diff.greaterThan(new Prisma.Decimal('0.001'))) {
                 discrepancyCount++;
                 this.logger.warn(
                   `Discrepancy detected for Item ${whItem.item.sku} in Warehouse ${whItem.warehouse.name} (${whItem.warehouse.code}). qtyOnHand: ${currentQty.toString()}, ledgerQty: ${ledgerQty.toString()}`,

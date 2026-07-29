@@ -23,11 +23,17 @@ export class ScopeValidationService {
     }
     const whItem = await this.prisma.warehouseItem.findUnique({
       where: { warehouseId_itemId: { warehouseId, itemId } },
-      select: { isFrozen: true },
+      select: {
+        isFrozen: true,
+        warehouse: { select: { name: true, code: true } },
+        item: { select: { name: true, sku: true } },
+      },
     });
     if (whItem?.isFrozen) {
+      const whName = whItem.warehouse?.name || whItem.warehouse?.code || warehouseId;
+      const itemName = whItem.item?.name || whItem.item?.sku || sku || itemId;
       throw new BadRequestException(
-        `Item ${sku ?? itemId} is frozen/locked in warehouse ${warehouseId}`,
+        `Item "${itemName}" is frozen/locked in warehouse "${whName}"`,
       );
     }
   }

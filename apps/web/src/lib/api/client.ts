@@ -463,6 +463,29 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
         toast.error(toastMessage);
         normalizedErr._isToastShown = true;
       }
+
+      const isItemFrozen = typeof normalizedErr.message === 'string' &&
+        (normalizedErr.message.toLowerCase().includes('frozen/locked') ||
+         normalizedErr.message.toLowerCase().includes('is frozen'));
+
+      if (isItemFrozen && typeof window !== 'undefined') {
+        const lang = (typeof document !== 'undefined' ? document.documentElement.lang : 'ar') === 'en' ? 'en' : 'ar';
+        const match = normalizedErr.message.match(/Item "(.*?)" is frozen\/locked in warehouse "(.*?)"/i);
+        let toastMessage = '';
+        if (match && match[1] && match[2]) {
+          const itemName = match[1];
+          const whName = match[2];
+          toastMessage = lang === 'en'
+            ? `Operation blocked: Item "${itemName}" is frozen/locked in warehouse "${whName}". Please unfreeze the item or complete active inventory reconciliation.`
+            : `تعذر إتمام العملية: الصنف "${itemName}" مجمّد/مقفل في مستودع "${whName}". يرجى إلغاء تجميد الصنف أو إنهاء الجرد المخزني القائم.`;
+        } else {
+          toastMessage = lang === 'en'
+            ? `Operation blocked: ${normalizedErr.message}`
+            : `تعذر إتمام العملية: ${normalizedErr.message}`;
+        }
+        toast.error(toastMessage, { duration: 6000 });
+        normalizedErr._isToastShown = true;
+      }
       
       if (isNestValidationMessage(normalizedErr)) {
         const fieldErrors: Record<string, string[]> = {};

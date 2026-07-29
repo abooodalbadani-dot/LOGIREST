@@ -30,10 +30,11 @@ export function useReceiveTransfer(options?: { onConflict?: () => void }) {
    invalidateTransferQueries(queryClient, id);
    invalidateInventoryQueries(queryClient);
   },
-  onError: (error) => {
+  onError: (error: any) => {
    console.error('Failed to receive transfer:', error);
-   const message = error instanceof Error ? error.message : 'Operation failed';
-   toast.error(message);
+   if (error?._isToastShown) return;
+   const message = error?.message || (error instanceof Error ? error.message : 'Operation failed');
+   toast.error(typeof message === 'string' ? message : 'Failed to receive transfer');
   }
  });
 }
