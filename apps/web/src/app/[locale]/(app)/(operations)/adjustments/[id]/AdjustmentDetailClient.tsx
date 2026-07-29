@@ -6,6 +6,7 @@ import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { isLocked } from '@/domain/status-guards';
 import { AdjustmentForm } from './AdjustmentForm';
+import { AdjustmentViewer } from './AdjustmentViewer';
 import { useTranslations } from 'next-intl';
 import { AlertCircle } from 'lucide-react';
 
@@ -30,15 +31,25 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
   return {
    ...rawAdjustment,
    lines: rawAdjustment.lines.map((line) => {
-    const itemAny = line.item as unknown as { id?: string; image?: string | null; imageUrl?: string | null };
-    const masterItem = itemsData.data.find((i: Item) => i.id === itemAny?.id);
-    const img = itemAny?.image || itemAny?.imageUrl || masterItem?.image || masterItem?.imageUrl || null;
+    const masterItem = itemsData.data.find((i: Item) => i.id === line.item.id);
+    const img = line.item.image || masterItem?.image || masterItem?.imageUrl || null;
+    const rawConversions = line.item.uomConversions || masterItem?.uomConversions || [];
+    const conversions = rawConversions.map((c) => ({
+     fromUomId: c.fromUomId,
+     toUomId: c.toUomId,
+     factor: Number(c.factor),
+     fromUomCode: 'fromUomCode' in c ? String(c.fromUomCode || '') : undefined,
+     fromUomName: 'fromUomName' in c ? String(c.fromUomName || '') : undefined,
+     toUomCode: 'toUomCode' in c ? String(c.toUomCode || '') : undefined,
+     toUomName: 'toUomName' in c ? String(c.toUomName || '') : undefined,
+    }));
     return {
      ...line,
      item: {
       ...line.item,
       image: img,
       imageUrl: img,
+      uomConversions: conversions,
      },
     };
    }),
@@ -48,9 +59,18 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
  if (isLoading) return <PageSkeleton variant="detail" />;
 
  const status = adjustment?.status ?? ADJUSTMENT_STATUS.DRAFT;
- const locked = isLocked('ADJUSTMENT', status);
+ const isTerminal = ['POSTED', 'CANCELLED', 'VOIDED'].includes(status);
+
+ if (isTerminal && adjustment) {
+  return (
+   <ScopeGuard warehouseId={adjustment.warehouseId}>
+    <AdjustmentViewer document={adjustment} />
+   </ScopeGuard>
+  );
+ }
 
  const isRejected = status === ADJUSTMENT_STATUS.REJECTED;
+ const isFormLocked = status !== ADJUSTMENT_STATUS.DRAFT;
 
  return (
   <ScopeGuard warehouseId={adjustment?.warehouseId}>
@@ -65,7 +85,7 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
    <AdjustmentForm 
     document={adjustment}
     id={id}
-    isLocked={locked}
+    isLocked={isFormLocked}
     onConflict={conflict.triggerConflict}
    />
    <ConflictDialog 

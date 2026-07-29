@@ -27,6 +27,8 @@ import { StatusTimeline, type Status } from "@/components/shared/StatusTimeline"
 import { DocumentStatus } from "@/types/DocumentStatus";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { STOCKTAKE_STATUS } from "@logirest/shared-types";
+import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
+import { ItemSchema, type Item } from "@/types/master-data";
 import { isStocktakeCounting, isStocktakeInReview } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
@@ -53,6 +55,8 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
   const router = useRouter();
   const { user } = useAuth();
   const { data: lockState } = useWarehouseLock(session?.warehouseId ?? null);
+  const { data: masterItemsData } = useMasterDataList<Item>('items', ItemSchema);
+  const masterItems = React.useMemo(() => masterItemsData?.data || [], [masterItemsData]);
 
   const status = session.status as DocumentStatus;
   const warehouseName = session.warehouseName;
@@ -206,7 +210,34 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                   headers={{ qty: t('counted_qty') }}
                   renderQty={(line) => {
                     const hasCounted = line.countedQty !== null && line.countedQty !== undefined;
-                    return hasCounted ? line.countedQty : common('dash');
+                    if (!hasCounted) return common('dash');
+
+                    const masterItem = masterItems.find(i => i.id === line.item.id || i.code === line.item.code);
+                    const primaryUomCode = line.uom || masterItem?.primaryUom?.code || 'PCS';
+                    const conversions = masterItem?.uomConversions || [];
+                    const conversion = conversions.find(c => Number(c.factor) > 1);
+
+                    let breakdownTag = '';
+                    if (conversion && line.countedQty && line.countedQty > 0) {
+                      const factor = Number(conversion.factor);
+                      const boxCode = conversion.fromUomCode || 'BOX';
+                      const boxes = Math.floor(line.countedQty / factor);
+                      const rem = line.countedQty % factor;
+                      if (boxes > 0) {
+                        breakdownTag = rem > 0 ? `${boxes} ${boxCode}, ${rem} ${primaryUomCode}` : `${boxes} ${boxCode}`;
+                      }
+                    }
+
+                    return (
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <span className="font-mono font-bold text-sm text-foreground">{line.countedQty} {primaryUomCode}</span>
+                        {breakdownTag && (
+                          <span className="font-mono text-[10px] font-bold text-brand-gold bg-brand-gold/10 border border-brand-gold/20 px-2 py-0.5 rounded-full inline-block" dir="ltr">
+                            [{breakdownTag}]
+                          </span>
+                        )}
+                      </div>
+                    );
                   }}
                   extraColumns={[
                     {

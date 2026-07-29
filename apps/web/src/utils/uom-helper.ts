@@ -150,3 +150,68 @@ export function handleUomChange<T extends { uomId?: string; qty?: number; baseQt
     uomId: newUomId,
   };
 }
+
+/**
+ * Calculates scaled "Qty Before" in terms of the selected UOM.
+ * Formula: DisplayQtyBefore = BaseStockQty / ConversionFactor
+ * Where ConversionFactor = getConversionFactor(selectedUomId, primaryBaseUomId, conversions)
+ */
+export function getScaledQtyBefore(
+  rawQtyBefore: number | undefined | null,
+  selectedUomId: string | undefined | null,
+  item?: ItemUomMeta | null,
+  masterItems?: Array<{ id: string; code?: string; primaryUom?: { id?: string; code?: string } | null; uomConversions?: Array<{ fromUomId?: string; toUomId?: string; factor?: number | unknown }> | null }> | null,
+): number {
+  let baseQty = Number(rawQtyBefore ?? 0);
+  if (baseQty === 0) return 0;
+
+  // Eliminate tiny floating-point conversion artifacts (e.g. 50.0004 -> 50, 49.9996 -> 50)
+  if (Math.abs(baseQty - Math.round(baseQty)) < 0.001) {
+    baseQty = Math.round(baseQty);
+  }
+
+  if (!selectedUomId) return baseQty;
+
+  const primary = item?.primaryUom || item?.primary_uom;
+  const primaryUomId = primary?.id || '';
+  const primaryUomCode = primary?.code || '';
+
+  // Look up item in masterItems if needed for conversions
+  const matchedMaster = Array.isArray(masterItems)
+    ? masterItems.find((i) => (item && 'id' in item && i.id === (item as { id: string }).id) || (item && 'code' in item && i.code === (item as { code: string }).code))
+    : null;
+
+  const baseUomId = primaryUomId || matchedMaster?.primaryUom?.id || '';
+  const baseUomCode = primaryUomCode || matchedMaster?.primaryUom?.code || '';
+
+  // Check if selectedUomId is the base UOM (either by ID or by Code)
+  if (
+    !baseUomId ||
+    selectedUomId === baseUomId ||
+    (baseUomCode && selectedUomId.trim().toLowerCase() === baseUomCode.trim().toLowerCase())
+  ) {
+    return baseQty;
+  }
+
+  const rawConversions = item?.uomConversions || item?.uom_conversions || matchedMaster?.uomConversions || [];
+  const conversions: UomConversionEntry[] = (rawConversions || []).map((c) => ({
+    fromUomId: c.fromUomId || (c as { from_uom_id?: string }).from_uom_id || (c as { fromUomCode?: string }).fromUomCode || '',
+    toUomId: c.toUomId || (c as { to_uom_id?: string }).to_uom_id || (c as { toUomCode?: string }).toUomCode || '',
+    factor: typeof c.factor === 'number' ? c.factor : Number(c.factor) || 1,
+    fromUomCode: (c as { fromUomCode?: string }).fromUomCode,
+    toUomCode: (c as { toUomCode?: string }).toUomCode,
+  }));
+
+  const factor = getConversionFactor(selectedUomId, baseUomId, conversions);
+  if (!factor || factor <= 0 || factor === 1) return baseQty;
+
+  const scaled = baseQty / factor;
+  const finalVal = Math.round(scaled * 10000) / 10000;
+  if (Math.abs(finalVal - Math.round(finalVal)) < 0.001) {
+    return Math.round(finalVal);
+  }
+  return finalVal;
+}
+
+
+

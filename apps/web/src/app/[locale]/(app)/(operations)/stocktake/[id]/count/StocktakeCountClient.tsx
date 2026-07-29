@@ -27,7 +27,6 @@ import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { ScopeGuard } from "@/components/shared/ScopeGuard";
 import { SmartCombobox } from "@/components/shared/SmartCombobox"
-import { resolveUomCode } from "@/utils/uom-helper";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -37,6 +36,31 @@ import { useAbortController } from "@/hooks/useAbortController";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { LockBanner } from "@/components/shared/LockBanner";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+
+import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
+import { ItemSchema, type Item } from "@/types/master-data";
+import { getAvailableUomsForItem, resolveUomCode, type UomOption } from "@/utils/uom-helper";
+import { resolveBarcodeAndUom, type ResolvedBarcodeItem } from "@/utils/barcode-resolver";
+import { toBaseQty, type UomConversionEntry } from "@logirest/shared-types";
+
+export function findMatchingUomOption(
+  targetUomIdOrCode: string | undefined | null,
+  options: UomOption[]
+): UomOption | null {
+  if (!targetUomIdOrCode || options.length === 0) return null;
+  const clean = targetUomIdOrCode.trim().toLowerCase();
+
+  const byId = options.find((o) => o.id.toLowerCase() === clean);
+  if (byId) return byId;
+
+  const byCode = options.find((o) => o.code.toLowerCase() === clean);
+  if (byCode) return byCode;
+
+  const byName = options.find((o) => o.name?.toLowerCase() === clean);
+  if (byName) return byName;
+
+  return null;
+}
 
 export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
@@ -54,6 +78,9 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const { playSound } = useAudioFeedback();
   const { user } = useAuth();
 
+  const { data: masterItemsData } = useMasterDataList<Item>('items', ItemSchema);
+  const masterItems = React.useMemo(() => masterItemsData?.data || [], [masterItemsData]);
+
   const [idempotencyKey] = React.useState(() => crypto.randomUUID());
   const { isOnline, wasReconnecting } = useNetworkStatus();
 
@@ -63,9 +90,13 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const [scanStatus, setScanStatus] = React.useState<"idle" | "success" | "error">("idle")
   const [statusMessage, setStatusMessage] = React.useState("")
   const [localCounts, setLocalCounts] = React.useState<Record<string, number>>({})
+  // Track Multi-UOM counts per line: { [lineId]: { [uomIdOrCode]: number } }
+  const [multiUomCounts, setMultiUomCounts] = React.useState<Record<string, Record<string, number>>>({});
+  // Track active selected UOM per line: { [lineId]: uomIdOrCode }
+  const [selectedLineUoms, setSelectedLineUoms] = React.useState<Record<string, string>>({});
+  const [pendingScannedUom, setPendingScannedUom] = React.useState<string | null>(null);
+
   // Track which rows the user has explicitly interacted with (typed or scanned).
-  // A 0-count IS valid — it means the physical item is absent. We use this set
-  // to distinguish "touched but zero" from "never touched".
   const [touchedItems, setTouchedItems] = React.useState<Set<string>>(new Set())
   const [focusedRowIndex, setFocusedRowIndex] = React.useState<number>(-1)
   const [isBatchModalOpen, setIsBatchModalOpen] = React.useState(false)
@@ -73,6 +104,57 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
   const rowVirtualizerRef = React.useRef<{ scrollToIndex: (index: number, options?: { align?: string }) => void } | null>(null)
   const inputRefs = React.useRef<Map<number, HTMLInputElement>>(new Map())
+
+  // Compute total base quantity across all entered UOM counts for a line item
+  const computeLineTotalBaseQty = React.useCallback(
+    (lineId: string, itemId: string, baseUomCode: string, countsMap: Record<string, number>): number => {
+      const masterItem = masterItems.find((i) => i.id === itemId || i.code === itemId);
+      const baseUomId = masterItem?.primaryUom?.id || baseUomCode;
+      const uomOptions = getAvailableUomsForItem(masterItem);
+
+      const conversions: UomConversionEntry[] = (masterItem?.uomConversions || []).map((c) => ({
+        fromUomId: c.fromUomId || c.fromUomCode || '',
+        toUomId: c.toUomId || c.toUomCode || '',
+        factor: typeof c.factor === 'number' ? c.factor : Number(c.factor) || 1,
+        fromUomCode: c.fromUomCode,
+        toUomCode: c.toUomCode,
+      }));
+
+      let totalBase = 0;
+      for (const [uomKey, countVal] of Object.entries(countsMap)) {
+        if (typeof countVal === 'number' && countVal > 0) {
+          const matchedOpt = findMatchingUomOption(uomKey, uomOptions);
+          const uomIdToUse = matchedOpt?.id || uomKey;
+          let converted = toBaseQty(countVal, uomIdToUse, baseUomId, conversions);
+          if (converted === countVal && matchedOpt?.code && matchedOpt.code !== baseUomCode) {
+            converted = toBaseQty(countVal, matchedOpt.code, baseUomCode, conversions);
+          }
+          totalBase += converted;
+        }
+      }
+      return totalBase;
+    },
+    [masterItems]
+  );
+
+  // Formatted string breakdown of counts by UOM for display (e.g., "2 BOX, 5 PCS")
+  const getLineUomBreakdown = React.useCallback(
+    (lineId: string, itemId: string, baseUomCode: string): string => {
+      const countsMap = multiUomCounts[lineId];
+      if (!countsMap) return '';
+      const masterItem = masterItems.find((i) => i.id === itemId);
+
+      const parts: string[] = [];
+      for (const [uomKey, countVal] of Object.entries(countsMap)) {
+        if (typeof countVal === 'number' && countVal > 0) {
+          const uomCode = resolveUomCode(uomKey, masterItem, null, baseUomCode);
+          parts.push(`${countVal} ${uomCode}`);
+        }
+      }
+      return parts.join(', ');
+    },
+    [multiUomCounts, masterItems]
+  );
 
   const items = session?.items || []
 
@@ -160,7 +242,6 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       const alreadyTouched = new Set<string>()
       session.items.forEach((i) => {
         counts[i.id] = i.countedQty ?? 0
-        // If the backend already has a non-null countedQty, the item was previously touched
         if (i.countedQty !== null && i.countedQty !== undefined) {
           alreadyTouched.add(i.id)
         }
@@ -180,41 +261,59 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   if (sessionLoading || isLoadingWarehouses) return <PageSkeleton variant="list" />;
   if (sessionError || errorWarehouses || !session) return <ErrorState onRetry={() => window.location.reload()} />;
 
-  const warehouse = warehouses?.find((w) => w.id === session.warehouseId);
-  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
+  const warehouse = warehouses.find(w => w.id === session?.warehouseId);
+  const warehouseName = warehouse ? warehouse.name : (session?.warehouseName || session?.warehouseId);
 
-  if (session.status !== 'STARTED' && session.status !== 'COUNTING') {
+  if (!session || (session.status !== 'STARTED' && session.status !== 'COUNTING')) {
     return null;
   }
 
   const handleSelectBatch = (item: StocktakeItemVM) => {
-    const currentQty = localCounts[item.id] || 0
-    const newQty = currentQty + 1
+    const masterItem = masterItems.find((i) => i.id === item.itemId || i.code === item.barcode);
+    const availableUoms = getAvailableUomsForItem(masterItem);
+    const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: item.uom, code: resolveUomCode(item.uom, null, null, 'PCS') }];
+    const matchedOpt = findMatchingUomOption(pendingScannedUom, uomOptions) || uomOptions[0];
+    const activeUomKey = matchedOpt.id;
 
-    setLocalCounts(prev => ({ ...prev, [item.id]: newQty }))
-    setTouchedItems(prev => new Set(prev).add(item.id))
+    setSelectedLineUoms((prev) => ({ ...prev, [item.id]: activeUomKey }));
+
+    const currentCounts = multiUomCounts[item.id] || {};
+    const currentCountForUom = currentCounts[activeUomKey] || 0;
+    const newCountForUom = currentCountForUom + 1;
+
+    const updatedCountsMap = {
+      ...currentCounts,
+      [activeUomKey]: newCountForUom,
+    };
+
+    const newTotalBaseQty = computeLineTotalBaseQty(item.id, item.itemId, item.uom, updatedCountsMap);
+
+    setMultiUomCounts((prev) => ({ ...prev, [item.id]: updatedCountsMap }));
+    setLocalCounts((prev) => ({ ...prev, [item.id]: newTotalBaseQty }));
+    setTouchedItems((prev) => new Set(prev).add(item.id));
     updateCount.mutate({
       stocktakeId: id,
       itemId: item.itemId,
       lineId: item.id,
-      countedQty: newQty,
+      countedQty: newTotalBaseQty,
       signal: abortController.signal,
       headers: {
-        'X-Idempotency-Key': idempotencyKey
-      }
-    })
+        'X-Idempotency-Key': idempotencyKey,
+      },
+    });
 
     playSound('success');
-    setScanStatus("success")
-    setStatusMessage(`${item.itemName} (${item.lotNumber || (locale === 'ar' ? 'بدون رقم دفعة' : 'No Lot')}): ${newQty}`)
+    setScanStatus("success");
+    setStatusMessage(`${item.itemName} (${item.lotNumber || (locale === 'ar' ? 'بدون رقم دفعة' : 'No Lot')}): +1 ${matchedOpt.code} (Total: ${newTotalBaseQty} ${item.uom})`);
 
-    const originalIndex = items.findIndex(i => i.id === item.id)
+    const originalIndex = items.findIndex((i) => i.id === item.id)
     if (originalIndex !== -1) {
       setFocusedRowIndex(originalIndex)
     }
 
     setIsBatchModalOpen(false)
     setDisambiguationRows([])
+    setPendingScannedUom(null);
 
     setTimeout(() => {
       setScanStatus("idle")
@@ -227,55 +326,105 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       toast.error(t('offline_error', { defaultValue: 'Offline: Scanning disabled' }));
       throw new Error('Offline');
     }
-    const matchingRows = items.filter((i) => i.barcode === barcode)
-    if (matchingRows.length === 0) {
-      setScanStatus("error")
-      setStatusMessage(t('no_item_found'))
+
+    // Try resolving barcode to item and mapped UOM using master data
+    const resolved = await resolveBarcodeAndUom(
+      barcode,
+      masterItems as unknown as ResolvedBarcodeItem[]
+    );
+
+    let targetItemId: string | null = null;
+    let targetUomIdOrCode: string | null = null;
+
+    if (resolved && resolved.item) {
+      targetItemId = resolved.item.id;
+      targetUomIdOrCode = resolved.uomId;
+    } else {
+      const matchedLine = items.find((i) => i.barcode === barcode);
+      if (matchedLine) {
+        targetItemId = matchedLine.itemId;
+        const masterItem = masterItems.find((m) => m.id === matchedLine.itemId || m.code === matchedLine.barcode);
+        const matchedBm = masterItem?.barcodeMappings?.find((bm: { barcode: string; uomId?: string | null }) => bm.barcode.toLowerCase() === barcode.trim().toLowerCase());
+        targetUomIdOrCode = matchedBm?.uomId || matchedLine.uom;
+      }
+    }
+
+    if (!targetItemId) {
+      setScanStatus("error");
+      setStatusMessage(t('no_item_found'));
       setTimeout(() => {
-        setScanStatus("idle")
-        setStatusMessage("")
-      }, 3000)
-      throw new Error('ItemNotFound')
+        setScanStatus("idle");
+        setStatusMessage("");
+      }, 3000);
+      throw new Error('ItemNotFound');
+    }
+
+    const matchingRows = items.filter((i) => i.itemId === targetItemId);
+    if (matchingRows.length === 0) {
+      setScanStatus("error");
+      setStatusMessage(t('no_item_found'));
+      setTimeout(() => {
+        setScanStatus("idle");
+        setStatusMessage("");
+      }, 3000);
+      throw new Error('ItemNotFound');
     }
 
     if (matchingRows.length === 1) {
-      // Condition A: Single Batch
-      const item = matchingRows[0]
-      const currentQty = localCounts[item.id] || 0
-      const newQty = currentQty + 1
+      const item = matchingRows[0];
+      const masterItem = masterItems.find((i) => i.id === item.itemId || i.code === item.barcode);
+      const availableUoms = getAvailableUomsForItem(masterItem);
+      const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: item.uom, code: resolveUomCode(item.uom, null, null, 'PCS') }];
 
-      setLocalCounts(prev => ({ ...prev, [item.id]: newQty }))
-      setTouchedItems(prev => new Set(prev).add(item.id))
+      const matchedOpt = findMatchingUomOption(targetUomIdOrCode, uomOptions) || uomOptions[0];
+      const activeUomKey = matchedOpt.id;
+
+      // Programmatically update row's selected UOM state to mapped UOM
+      setSelectedLineUoms((prev) => ({ ...prev, [item.id]: activeUomKey }));
+
+      const currentCounts = multiUomCounts[item.id] || {};
+      const currentCountForUom = currentCounts[activeUomKey] || 0;
+      const newCountForUom = currentCountForUom + 1;
+
+      const updatedCountsMap = {
+        ...currentCounts,
+        [activeUomKey]: newCountForUom,
+      };
+
+      const newTotalBaseQty = computeLineTotalBaseQty(item.id, item.itemId, item.uom, updatedCountsMap);
+
+      setMultiUomCounts((prev) => ({ ...prev, [item.id]: updatedCountsMap }));
+      setLocalCounts((prev) => ({ ...prev, [item.id]: newTotalBaseQty }));
+      setTouchedItems((prev) => new Set(prev).add(item.id));
+
       updateCount.mutate({
         stocktakeId: id,
         itemId: item.itemId,
         lineId: item.id,
-        countedQty: newQty,
+        countedQty: newTotalBaseQty,
         signal: abortController.signal,
         headers: {
-          'X-Idempotency-Key': idempotencyKey
-        }
-      })
+          'X-Idempotency-Key': idempotencyKey,
+        },
+      });
 
-      playSound('success')
-      setScanStatus("success")
-      setStatusMessage(`${item.itemName}: ${newQty}`)
+      playSound('success');
+      setScanStatus("success");
+      setStatusMessage(`${item.itemName} (+1 ${matchedOpt.code}) — Total: ${newTotalBaseQty} ${item.uom}`);
 
-      const originalIndex = items.findIndex(i => i.id === item.id)
-      if (originalIndex !== -1) {
-        setFocusedRowIndex(originalIndex)
-      }
+      const originalIndex = items.findIndex((i) => i.id === item.id);
+      if (originalIndex !== -1) setFocusedRowIndex(originalIndex);
 
       setTimeout(() => {
-        setScanStatus("idle")
-        setStatusMessage("")
-      }, 2000)
+        setScanStatus("idle");
+        setStatusMessage("");
+      }, 2000);
     } else {
-      // Condition B: Multiple Batches (Disambiguation)
-      setDisambiguationRows(matchingRows)
-      setIsBatchModalOpen(true)
+      setPendingScannedUom(targetUomIdOrCode);
+      setDisambiguationRows(matchingRows);
+      setIsBatchModalOpen(true);
     }
-  }
+  };
 
   const handleFinish = () => {
     completeCounting.mutate({
@@ -402,40 +551,82 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                   renderQty={(line) => {
                     const index = tableLines.findIndex(l => l.id === line.id);
                     const isTouched = touchedItems.has(line.id);
-                    const countValue = localCounts[line.id];
+                    const masterItem = masterItems.find((i) => i.id === line.itemId || i.code === line.barcode);
+                    const availableUoms = getAvailableUomsForItem(masterItem);
+                    const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: line.uom, code: resolveUomCode(line.uom, null, null, 'PCS') }];
+                    
+                    const activeUomId = selectedLineUoms[line.id] || uomOptions[0].id;
+                    const uomCounts = multiUomCounts[line.id] || {};
+                    const activeUomCount = uomCounts[activeUomId] ?? (localCounts[line.id] ?? 0);
+                    const breakdownText = getLineUomBreakdown(line.id, line.itemId, line.uom);
+                    const baseUomCode = resolveUomCode(line.uom, masterItem, null, 'PCS');
+
                     return (
-                      <div className="relative flex items-center justify-center">
-                        <Input
-                          ref={(el) => {
-                            if (el) inputRefs.current.set(index, el);
-                            else inputRefs.current.delete(index);
-                          }}
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          lang="en"
-                          dir="ltr"
-                          value={countValue !== null && countValue !== undefined ? String(countValue) : "0"}
-                          placeholder="0"
-                          onFocus={() => setFocusedRowIndex(index)}
-                          disabled={completeCounting.isPending || !isOnline}
-                          onChange={(e) => {
-                            const normalized = normalizeDigits(e.target.value).replace(/[^0-9.]/g, '');
-                            const val = normalized ? parseFloat(normalized) : 0;
-                            setLocalCounts(prev => ({ ...prev, [line.id]: val }));
-                            setTouchedItems(prev => new Set(prev).add(line.id));
-                            debouncedUpdate(line.itemId, line.id, val);
-                          }}
-                          className={cn(
-                            "text-right font-mono tabular-nums w-full h-10 transition-all rounded-lg max-w-[120px] mx-auto focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] outline-none",
-                            isTouched
-                              ? "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                              : "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100",
-                            focusedRowIndex === index && "border-[#0B1220] dark:border-[#b48e67] ring-1 ring-[#0B1220] dark:ring-[#b48e67]"
+                      <div className="relative flex flex-col items-center justify-center gap-1.5 w-full max-w-[220px] mx-auto py-1">
+                        <div className="flex items-center justify-center gap-1.5 w-full">
+                          <Input
+                            ref={(el) => {
+                              if (el) inputRefs.current.set(index, el);
+                              else inputRefs.current.delete(index);
+                            }}
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9.]*"
+                            lang="en"
+                            dir="ltr"
+                            value={activeUomCount !== null && activeUomCount !== undefined ? String(activeUomCount) : "0"}
+                            placeholder="0"
+                            onFocus={() => setFocusedRowIndex(index)}
+                            disabled={completeCounting.isPending || !isOnline}
+                            onChange={(e) => {
+                              const normalized = normalizeDigits(e.target.value).replace(/[^0-9.]/g, '');
+                              const val = normalized ? parseFloat(normalized) : 0;
+                              const updatedUomCounts = {
+                                ...(multiUomCounts[line.id] || {}),
+                                [activeUomId]: val,
+                              };
+                              const newTotalBase = computeLineTotalBaseQty(line.id, line.itemId, line.uom, updatedUomCounts);
+                              setMultiUomCounts((prev) => ({ ...prev, [line.id]: updatedUomCounts }));
+                              setLocalCounts((prev) => ({ ...prev, [line.id]: newTotalBase }));
+                              setTouchedItems((prev) => new Set(prev).add(line.id));
+                              debouncedUpdate(line.itemId, line.id, newTotalBase);
+                            }}
+                            className={cn(
+                              "text-center font-mono font-bold tabular-nums w-20 h-10 transition-all rounded-lg outline-none",
+                              isTouched
+                                ? "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+                                : "bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100",
+                              focusedRowIndex === index && "border-[#0B1220] dark:border-[#b48e67] ring-1 ring-[#0B1220] dark:ring-[#b48e67]"
+                            )}
+                          />
+
+                          {uomOptions.length > 1 ? (
+                            <select
+                              value={activeUomId}
+                              onChange={(e) => setSelectedLineUoms((prev) => ({ ...prev, [line.id]: e.target.value }))}
+                              className="h-10 px-2 text-xs font-bold bg-card border border-border rounded-lg text-foreground cursor-pointer focus:ring-1 focus:ring-primary"
+                            >
+                              {uomOptions.map((opt) => (
+                                <option key={opt.id} value={opt.id}>
+                                  {opt.code}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-xs font-bold text-muted-foreground uppercase px-1">
+                              {uomOptions[0]?.code || baseUomCode}
+                            </span>
                           )}
-                        />
-                        {isTouched && (
-                          <CheckCircle2 className="absolute -end-5 h-3 w-3 text-slate-400 dark:text-[#b48e67]/60 shrink-0" />
+
+                          {isTouched && (
+                            <CheckCircle2 className="h-4 w-4 text-slate-400 dark:text-[#b48e67]/80 shrink-0 ms-1" />
+                          )}
+                        </div>
+
+                        {breakdownText && uomOptions.length > 1 && (
+                          <div className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-0.5 rounded-full border border-brand-gold/20 truncate max-w-full" dir="ltr">
+                            [{breakdownText}] = {localCounts[line.id] ?? 0} {baseUomCode}
+                          </div>
                         )}
                       </div>
                     );
@@ -451,7 +642,16 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               className="pb-24 mt-4"
               renderCard={(line) => {
                 const isTouched = touchedItems.has(line.id);
-                const countValue = localCounts[line.id];
+                const masterItem = masterItems.find((i) => i.id === line.itemId || i.code === line.barcode);
+                const availableUoms = getAvailableUomsForItem(masterItem);
+                const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: line.uom, code: resolveUomCode(line.uom, null, null, 'PCS') }];
+                
+                const activeUomId = selectedLineUoms[line.id] || uomOptions[0].id;
+                const uomCounts = multiUomCounts[line.id] || {};
+                const activeUomCount = uomCounts[activeUomId] ?? (localCounts[line.id] ?? 0);
+                const breakdownText = getLineUomBreakdown(line.id, line.itemId, line.uom);
+                const baseUomCode = resolveUomCode(line.uom, masterItem, null, 'PCS');
+
                 return (
                   <div
                     key={line.id}
@@ -469,7 +669,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                       </div>
                       <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded shrink-0">
                         <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase">
-                          {resolveUomCode(line.uom, null, null, 'PCS')}
+                          {baseUomCode}
                         </span>
                       </div>
                     </div>
@@ -490,34 +690,69 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                       </div>
                     </div>
 
-                    {/* BOTTOM TIER: The Active Input (Giant Target) */}
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">الكمية الفعلية</span>
-                      <div className="flex items-center gap-2 flex-1 justify-end">
-                        {isTouched && <CheckCircle2 className="w-5 h-5 text-slate-400 dark:text-[#b48e67] shrink-0" />}
-                        <Input
-                          type="text"
-                          inputMode="decimal"
-                          pattern="[0-9.]*"
-                          lang="en-u-nu-latn"
-                          className={cn(
-                            "w-24 h-10 text-center font-black text-lg text-gray-900 dark:text-gray-100 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none [font-variant-numeric:lining-nums_tabular-nums]",
-                            isTouched
-                              ? "bg-white dark:bg-slate-800/50 border-gray-300 dark:border-gray-600"
-                              : "bg-white dark:bg-slate-800/50 border-gray-300 dark:border-gray-600"
+                    {/* BOTTOM TIER: Multi-UOM Active Input */}
+                    <div className="mt-2 flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                          {locale === 'ar' ? 'الكمية الفعلية' : 'Counted Qty'}
+                        </span>
+                        <div className="flex items-center gap-2 flex-1 justify-end">
+                          {isTouched && <CheckCircle2 className="w-5 h-5 text-slate-400 dark:text-[#b48e67] shrink-0" />}
+                          
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            pattern="[0-9.]*"
+                            lang="en-u-nu-latn"
+                            className={cn(
+                              "w-20 h-10 text-center font-black text-lg text-gray-900 dark:text-gray-100 focus:border-[#0B1220] dark:focus:border-[#b48e67] focus:ring-1 focus:ring-[#0B1220] dark:focus:ring-[#b48e67] rounded-lg outline-none [font-variant-numeric:lining-nums_tabular-nums]",
+                              isTouched
+                                ? "bg-white dark:bg-slate-800/50 border-gray-300 dark:border-gray-600"
+                                : "bg-white dark:bg-slate-800/50 border-gray-300 dark:border-gray-600"
+                            )}
+                            dir="ltr"
+                            value={activeUomCount !== null && activeUomCount !== undefined ? String(activeUomCount) : "0"}
+                            disabled={completeCounting.isPending || !isOnline}
+                            onChange={(e) => {
+                              const normalized = normalizeDigits(e.target.value).replace(/[^0-9.]/g, '');
+                              const val = normalized ? parseFloat(normalized) : 0;
+                              const updatedUomCounts = {
+                                ...(multiUomCounts[line.id] || {}),
+                                [activeUomId]: val,
+                              };
+                              const newTotalBase = computeLineTotalBaseQty(line.id, line.itemId, line.uom, updatedUomCounts);
+                              setMultiUomCounts((prev) => ({ ...prev, [line.id]: updatedUomCounts }));
+                              setLocalCounts((prev) => ({ ...prev, [line.id]: newTotalBase }));
+                              setTouchedItems((prev) => new Set(prev).add(line.id));
+                              debouncedUpdate(line.itemId, line.id, newTotalBase);
+                            }}
+                          />
+
+                          {uomOptions.length > 1 ? (
+                            <select
+                              value={activeUomId}
+                              onChange={(e) => setSelectedLineUoms((prev) => ({ ...prev, [line.id]: e.target.value }))}
+                              className="h-10 px-2 text-xs font-bold bg-card border border-border rounded-lg text-foreground cursor-pointer"
+                            >
+                              {uomOptions.map((opt) => (
+                                <option key={opt.id} value={opt.id}>
+                                  {opt.code}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-xs font-bold text-muted-foreground uppercase px-1">
+                              {uomOptions[0]?.code || baseUomCode}
+                            </span>
                           )}
-                          dir="ltr"
-                          value={countValue !== null && countValue !== undefined ? String(countValue) : "0"}
-                          disabled={completeCounting.isPending || !isOnline}
-                          onChange={(e) => {
-                            const normalized = normalizeDigits(e.target.value).replace(/[^0-9.]/g, '');
-                            const val = normalized ? parseFloat(normalized) : 0;
-                            setLocalCounts(prev => ({ ...prev, [line.id]: val }));
-                            setTouchedItems(prev => new Set(prev).add(line.id));
-                            debouncedUpdate(line.itemId, line.id, val);
-                          }}
-                        />
+                        </div>
                       </div>
+
+                      {breakdownText && uomOptions.length > 1 && (
+                        <div className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 text-center" dir="ltr">
+                          [{breakdownText}] = {localCounts[line.id] ?? 0} {baseUomCode}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

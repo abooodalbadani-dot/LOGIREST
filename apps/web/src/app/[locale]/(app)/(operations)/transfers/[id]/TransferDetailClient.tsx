@@ -1,8 +1,7 @@
 "use client";
 
 import { useTransfer } from '@/features/operations/hooks/useTransfer';
-import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
-import { TransferForm } from '@/features/operations/components/transfer-form';
+import { TransferNewClient } from '../new/TransferNewClient';
 import { TransferViewer } from '@/features/operations/components/transfer-viewer';
 import { TRANSFER_STATUS } from '@logirest/shared-types';
 
@@ -19,35 +18,34 @@ export function TransferDetailClient({ id }: { id: string }) {
  const conflict = useConflictHandler('transfer', id);
 
  if (isLoading) return <PageSkeleton variant="detail" />;
+ if (!transfer) return null;
 
- const transferStatus = transfer?.transferStatus ?? TRANSFER_STATUS.DRAFT;
- const isDocLocked = isDocumentLocked("TRANSFER", transferStatus as DocumentStatus);
+ const transferStatus = transfer.transferStatus ?? TRANSFER_STATUS.DRAFT;
 
- if (isDocLocked && transfer) {
-  const targetScope = activeWarehouseId === transfer.toWarehouseId
-   ? transfer.toWarehouseId
-   : transfer.fromWarehouseId;
+ if (transferStatus === TRANSFER_STATUS.DRAFT) {
   return (
-   <ScopeGuard warehouseId={targetScope}>
-    <TransferViewer transfer={transfer} />
+   <ScopeGuard warehouseId={transfer.fromWarehouseId}>
+    <TransferNewClient 
+     initialData={transfer} 
+     id={id} 
+     onConflict={conflict.triggerConflict}
+    />
+    <ConflictDialog 
+     open={conflict.open}
+     onClose={conflict.handleClose}
+     onReload={conflict.handleReload}
+    />
    </ScopeGuard>
   );
  }
 
- if (!transfer) return null;
+ const targetScope = activeWarehouseId === transfer.toWarehouseId
+  ? transfer.toWarehouseId
+  : transfer.fromWarehouseId;
 
  return (
-  <ScopeGuard warehouseId={transfer.fromWarehouseId}>
-   <TransferForm 
-    transfer={transfer} 
-    id={id} 
-    onConflict={conflict.triggerConflict}
-   />
-   <ConflictDialog 
-    open={conflict.open}
-    onClose={conflict.handleClose}
-    onReload={conflict.handleReload}
-   />
+  <ScopeGuard warehouseId={targetScope}>
+   <TransferViewer transfer={transfer} />
   </ScopeGuard>
  );
 }

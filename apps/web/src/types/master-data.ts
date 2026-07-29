@@ -46,6 +46,7 @@ export interface Item {
   isActive: boolean;
   version?: number;
   hasTransactions?: boolean;
+  barcodeMappings?: Array<{ barcode: string; uomId?: string | null }>;
   category?: Category | null;
   image?: string | null;
   imageUrl?: string | null;
@@ -175,10 +176,13 @@ export const ItemSchema = z.object({
         ? data.barcode_mappings
         : (data.barcode ? [{ barcode: data.barcode, uomId: primaryUom?.id || null }] : []);
 
+  const normalizedMappings = rawList.map(b => ({ barcode: b.barcode, uomId: b.uomId || b.uom_id || null }));
+
   return {
     ...data,
     barcode: data.barcode || rawList[0]?.barcode || '',
-    barcodes: rawList.map(b => ({ barcode: b.barcode, uomId: b.uomId || b.uom_id || null })),
+    barcodes: normalizedMappings,
+    barcodeMappings: normalizedMappings,
     primaryUom,
     uomConversions: (data.uomConversions && data.uomConversions.length > 0)
       ? data.uomConversions

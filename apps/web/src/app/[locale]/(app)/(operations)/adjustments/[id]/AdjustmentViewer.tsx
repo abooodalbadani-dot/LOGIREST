@@ -20,9 +20,13 @@ import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
-import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
+import type { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+
 import { RelationalName } from '@/components/shared/RelationalName';
+import { useItems } from '@/features/items/hooks/useItems';
+import { getScaledQtyBefore } from '@/utils/uom-helper';
+
 
 interface AdjustmentViewerProps {
  document: AdjustmentDetail;
@@ -113,6 +117,9 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
   }, [documentLines]);
 
 
+  const { data: itemsData } = useItems({ limit: 1000 });
+  const items = itemsData?.data || [];
+
   const extraColumns = useMemo(() => [
    {
     header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
@@ -140,11 +147,19 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
    },
    {
     header: t('qty_before') || 'Qty Before',
-    cell: (line: MappedAdjustmentLine) => (
-     <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
-      {formatQuantity(line.qtyBefore, locale as 'ar' | 'en')}
-     </span>
-    )
+    cell: (line: MappedAdjustmentLine) => {
+     const scaledQtyBefore = getScaledQtyBefore(
+      line.qtyBefore,
+      line.uomId,
+      line.item,
+      items,
+     );
+     return (
+      <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
+       {formatQuantity(scaledQtyBefore, locale as 'ar' | 'en')}
+      </span>
+     );
+    }
    },
    {
     header: tc('table_headers.lot') || 'Lot',
@@ -160,9 +175,15 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
    {
     header: t('qty_after') || 'Qty After',
     cell: (line: MappedAdjustmentLine) => {
+     const scaledQtyBefore = getScaledQtyBefore(
+      line.qtyBefore,
+      line.uomId,
+      line.item,
+      items,
+     );
      const afterVal = line.direction === 'INCREASE'
-      ? line.qtyBefore + line.qtyAdjusted
-      : line.qtyBefore - line.qtyAdjusted;
+      ? scaledQtyBefore + line.qtyAdjusted
+      : scaledQtyBefore - line.qtyAdjusted;
      return (
       <span className={cn("text-body-md font-bold", afterVal < 0 ? "text-red-500" : "text-foreground")} lang="en" dir="ltr">
        {formatQuantity(afterVal, locale as 'ar' | 'en')}
@@ -170,7 +191,8 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
      );
     }
    }
-  ], [t, tc, locale]);
+  ], [t, tc, locale, items]);
+
 
  return (
   <div className="min-h-screen print:bg-card print:min-h-0">

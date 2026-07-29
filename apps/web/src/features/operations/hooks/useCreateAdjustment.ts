@@ -58,6 +58,7 @@ export function useCreateAdjustment(options?: { onConflict?: () => void }) {
      itemId: l.itemId,
       lotId: isValidUuid(l.lotAllocations?.[0]?.lotId) ? l.lotAllocations![0].lotId : undefined,
      quantity: l.qty,
+     uomId: l.uomId,
      direction: isIncrease ? ('IN' as const) : ('OUT' as const),
      reason: mapToBackendReason(parsed.reason),
      unitCost: l.unitCost ?? undefined

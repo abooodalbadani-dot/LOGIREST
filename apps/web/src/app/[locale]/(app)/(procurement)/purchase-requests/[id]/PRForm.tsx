@@ -31,6 +31,7 @@ import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Item, Warehouse, ItemSchema, WarehouseSchema, UoMSchema } from '@/types/master-data';
 import { getAvailableUomsForItem, resolveUomCode } from '@/utils/uom-helper';
 import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 import { onFormError } from '@/hooks/useFormError';
 
 const lineItemSchema = z.object({
@@ -106,15 +107,19 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
     name: 'lines',
   });
 
-  const handleScan = (barcode: string) => {
-    const item = itemsData?.data?.find((i: Item) => i.barcode === barcode || i.code === barcode);
-    if (item) {
+  const handleScan = async (barcode: string) => {
+    const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data);
+    if (resolved) {
+      const { item: resolvedItem, uomId: scannedUomId } = resolved;
+      const item = itemsData?.data?.find((i: Item) => i.id === resolvedItem.id) || (resolvedItem as unknown as Item);
+      const itemObj = item as unknown as { id: string; name: string; code: string; primaryUom?: { id?: string }; uomId?: string };
+      const targetUomId = scannedUomId || itemObj.primaryUom?.id || itemObj.uomId || 'EA';
       append({
         item_id: item.id,
         item_name: item.name,
         item_code: item.code,
         req_qty: 1,
-        uom_id: item.primaryUom?.id || 'EA',
+        uom_id: targetUomId,
       });
       playSound('success');
       toast.success(tc('items') + ': ' + item.name);

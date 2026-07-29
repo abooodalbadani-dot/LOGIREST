@@ -7,7 +7,7 @@ import { formatDate, formatQuantity } from '@/utils/currency';
 import type { LotAllocation } from '@/types/documents';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { RelationalName } from '@/components/shared/RelationalName';
-import { isRawUuid, resolveUomCode } from '@/utils/uom-helper';
+import { isRawUuid, resolveUomCode, getScaledQtyBefore } from '@/utils/uom-helper';
 
 export interface LineItem {
   id: string;
@@ -143,9 +143,16 @@ export function DocumentLineItemTable<T extends LineItem>({
     };
     const adjLine = isAdjustmentLine(line) ? line : undefined;
 
+    const scaledQtyBefore = getScaledQtyBefore(
+      adjLine?.qtyBefore,
+      line.uomId,
+      line.item,
+    );
+
     const afterQty = adjLine?.direction === 'INCREASE'
-      ? (adjLine?.qtyBefore ?? 0) + line.qty
-      : (adjLine?.qtyBefore ?? 0) - line.qty;
+      ? scaledQtyBefore + line.qty
+      : scaledQtyBefore - line.qty;
+
 
     return (
       <div className="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-800/40 dark:border-slate-700/50 flex flex-col w-full mb-4 relative overflow-hidden">
@@ -295,7 +302,7 @@ export function DocumentLineItemTable<T extends LineItem>({
         {/* Footer Section: Stock Impact */}
         <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-b-xl flex justify-between items-center text-sm border-t border-slate-100 dark:border-slate-700/50 w-full">
           <div className="flex items-center gap-2 font-mono" dir="ltr">
-            <span className="text-slate-500">{formatQuantity(adjLine?.qtyBefore ?? 0, locale as 'ar' | 'en')}</span>
+            <span className="text-slate-500">{formatQuantity(scaledQtyBefore, locale as 'ar' | 'en')}</span>
             <span className="text-slate-400">➔</span>
             <span className={cn("font-bold text-base", afterQty < 0 ? "text-red-500" : "text-emerald-500 dark:text-emerald-400")}>
               {formatQuantity(afterQty, locale as 'ar' | 'en')}

@@ -42,6 +42,7 @@ import { useItems } from '@/features/items/hooks/useItems';
 import { onFormError } from '@/hooks/useFormError';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { getAvailableUomsForItem, resolveUomCode, handleUomChange } from '@/utils/uom-helper';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 import { toast } from 'sonner';
 
 type KitchenRequestFormValues = CreateKitchenRequestDTO;
@@ -298,20 +299,26 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
     });
   }, [items, locale]);
 
-  const handleScan = (barcode: string) => {
-    const matchedItem = allItems?.find(i => i.barcode === barcode || i.code === barcode);
-    if (matchedItem) {
+  const handleScan = async (barcode: string) => {
+    const resolved = await resolveBarcodeAndUom(barcode, allItems);
+    if (resolved) {
+      const { item: resolvedItem, uomId: scannedUomId } = resolved;
+      const matchedItem = allItems?.find(i => i.id === resolvedItem.id) || (resolvedItem as unknown as Item);
       const scopedItem = items?.find(i => i.id === matchedItem.id);
       if (!scopedItem) {
         toast.error(locale === 'ar' ? 'الصنف غير موجود أو غير متوفر في هذا المستودع' : 'Item not available in this warehouse');
         return;
       }
-      const existingIndex = watchedItems?.findIndex(i => i?.itemId === matchedItem.id) ?? -1;
+      const targetUomId = scannedUomId || scopedItem.primaryUom?.id || matchedItem.primaryUom?.id || '';
+      const existingIndex = watchedItems?.findIndex(i => i?.itemId === matchedItem.id && (i?.uomId === targetUomId || !i?.uomId)) ?? -1;
       if (existingIndex !== -1) {
         const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
         form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+        if (targetUomId) {
+          form.setValue(`items.${existingIndex}.uomId`, targetUomId, { shouldDirty: true });
+        }
       } else {
-        append({ itemId: matchedItem.id, quantity: 1, uomId: scopedItem.primaryUom?.id || matchedItem.primaryUom?.id || '', notes: '' });
+        append({ itemId: matchedItem.id, quantity: 1, uomId: targetUomId, notes: '' });
       }
       toast.success(locale === 'ar' ? `تمت إضافة ${matchedItem.name}` : `Added ${matchedItem.name}`);
     } else {

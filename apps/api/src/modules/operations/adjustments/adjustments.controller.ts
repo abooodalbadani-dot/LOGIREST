@@ -15,6 +15,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { AdjustmentPostService } from '../adjustment-post.service';
 import { AdjustmentsService } from './adjustments.service';
+import { CreateAdjustmentDto } from './dto/create-adjustment.dto';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -103,6 +104,7 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
         ? {
             id: item.id,
             code: item.sku,
+            name: item.name,
             nameAr: item.name,
             nameEn: item.name,
             image: item.image || null,
@@ -110,8 +112,18 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
               ? {
                   id: item.unitOfMeasure.id,
                   code: item.unitOfMeasure.code,
+                  name: item.unitOfMeasure.name || item.unitOfMeasure.code,
                 }
               : { id: '', code: '' },
+            uomConversions: ((item as unknown as { uomConversions?: Array<{ fromUomId: string; toUomId: string; factor: unknown; fromUom?: { code?: string; name?: string }; toUom?: { code?: string; name?: string } }> }).uomConversions || []).map((c) => ({
+              fromUomId: c.fromUomId,
+              toUomId: c.toUomId,
+              factor: Number(c.factor),
+              fromUomCode: c.fromUom?.code || '',
+              fromUomName: c.fromUom?.name || '',
+              toUomCode: c.toUom?.code || '',
+              toUomName: c.toUom?.name || '',
+            })),
           }
         : {
             id: '',
@@ -238,28 +250,21 @@ export class AdjustmentsController {
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
-    @Body()
-    body: {
-      warehouseId: string;
-      lines: Array<{
-        itemId: string;
-        lotId?: string;
-        quantity: number;
-        uomId?: string;
-        direction: AdjustmentDirection;
-        reason: AdjustmentReason;
-        unitCost?: number;
-      }>;
-    },
+    @Body() body: CreateAdjustmentDto,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
-    await this.scopeValidationService.validateWarehouse(
-      userId,
-      role,
-      body.warehouseId,
-    );
-    const adj = await this.adjustmentsService.create(body, userId);
+    const normalizedLines = (body.lines || []).map((line) => {
+      const q = Number(line.quantity ?? line.qty ?? 0);
+      return {
+        ...line,
+        quantity: q,
+        qty: q,
+        uomId: line.uomId,
+        unitCost: line.unitCost ?? undefined,
+      };
+    });
+    const adj = await this.adjustmentsService.create({ ...body, lines: normalizedLines }, userId);
     return mapAdjustmentDetail(adj);
   }
 

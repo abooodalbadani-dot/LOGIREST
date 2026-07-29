@@ -16,18 +16,48 @@ export const BarcodeItemSchema = z.object({
   }).optional().nullable(),
   uomId: z.string().optional(),
   barcode: z.string().optional(),
+  barcodes: z.array(z.object({
+    barcode: z.string(),
+    uomId: z.string().nullable().optional(),
+    uom_id: z.string().nullable().optional(),
+  })).optional().default([]),
   barcodeMappings: z.array(z.object({
     barcode: z.string(),
     uomId: z.string().nullable().optional(),
+    uom_id: z.string().nullable().optional(),
+  })).optional().default([]),
+  barcode_mappings: z.array(z.object({
+    barcode: z.string(),
+    uomId: z.string().nullable().optional(),
+    uom_id: z.string().nullable().optional(),
   })).optional().default([]),
   uomConversions: z.array(z.object({
-    fromUomId: z.string(),
-    toUomId: z.string(),
-    factor: z.coerce.number(),
+    fromUomId: z.string().optional(),
+    toUomId: z.string().optional(),
+    factor: z.coerce.number().optional().default(1),
   })).optional().default([]),
   minStockLevel: z.number().optional(),
   reorderPoint: z.number().optional(),
   lastPurchasePrice: z.number().optional(),
+}).transform((data) => {
+  const rawList = (data.barcodeMappings && data.barcodeMappings.length > 0)
+    ? data.barcodeMappings
+    : (data.barcodes && data.barcodes.length > 0)
+      ? data.barcodes
+      : (data.barcode_mappings && data.barcode_mappings.length > 0)
+        ? data.barcode_mappings
+        : (data.barcode ? [{ barcode: data.barcode, uomId: data.primaryUom?.id || data.uomId || null }] : []);
+
+  const normalized = rawList.map((b) => ({
+    barcode: b.barcode,
+    uomId: b.uomId || b.uom_id || null,
+  }));
+
+  return {
+    ...data,
+    barcodeMappings: normalized,
+    barcodes: normalized,
+  };
 });
 
 export type ResolvedBarcodeItem = z.infer<typeof BarcodeItemSchema>;
@@ -45,7 +75,7 @@ export interface BarcodeResolutionResult {
  */
 export async function resolveBarcodeAndUom(
   barcode: string,
-  localItemsList?: ResolvedBarcodeItem[],
+  localItemsList?: unknown[],
   abortSignal?: AbortSignal,
 ): Promise<BarcodeResolutionResult | null> {
   const clean = barcode.trim().toLowerCase();
@@ -53,19 +83,41 @@ export async function resolveBarcodeAndUom(
 
   // 1. Try local list if available
   if (localItemsList && localItemsList.length > 0) {
-    for (const item of localItemsList) {
-      const matchedBm = item.barcodeMappings?.find(bm => bm.barcode.toLowerCase() === clean);
+    for (const rawItem of localItemsList) {
+      const item = rawItem as Record<string, unknown>;
+      const mappings = (
+        (Array.isArray(item.barcodeMappings) && item.barcodeMappings.length > 0)
+          ? item.barcodeMappings
+          : (Array.isArray(item.barcodes) && item.barcodes.length > 0)
+            ? item.barcodes
+            : (Array.isArray(item.barcode_mappings) && item.barcode_mappings.length > 0)
+              ? item.barcode_mappings
+              : []
+      ) as Array<{ barcode?: string; uomId?: string | null; uom_id?: string | null }>;
+
+      const matchedBm = mappings.find(
+        (bm) => typeof bm.barcode === 'string' && bm.barcode.trim().toLowerCase() === clean
+      );
+
       if (matchedBm) {
+        const primaryUomObj = item.primaryUom as { id?: string } | undefined;
+        const uomId = matchedBm.uomId || matchedBm.uom_id || primaryUomObj?.id || (item.uomId as string) || '';
         return {
-          item,
-          uomId: matchedBm.uomId || item.primaryUom?.id || item.uomId || '',
+          item: item as unknown as ResolvedBarcodeItem,
+          uomId,
           matchedBarcode: clean,
         };
       }
-      if (item.code?.toLowerCase() === clean || item.barcode?.toLowerCase() === clean) {
+
+      const itemCode = typeof item.code === 'string' ? item.code.trim().toLowerCase() : '';
+      const itemBarcode = typeof item.barcode === 'string' ? item.barcode.trim().toLowerCase() : '';
+      const itemSku = typeof item.sku === 'string' ? item.sku.trim().toLowerCase() : '';
+
+      if (itemCode === clean || itemBarcode === clean || itemSku === clean) {
+        const primaryUomObj = item.primaryUom as { id?: string } | undefined;
         return {
-          item,
-          uomId: item.primaryUom?.id || item.uomId || '',
+          item: item as unknown as ResolvedBarcodeItem,
+          uomId: primaryUomObj?.id || (item.uomId as string) || '',
           matchedBarcode: clean,
         };
       }
@@ -102,7 +154,8 @@ export async function resolveBarcodeAndUom(
 
     if (res.data && res.data.length > 0) {
       const item = res.data[0];
-      const matchedBm = item.barcodeMappings?.find(bm => bm.barcode.toLowerCase() === clean);
+      const mappings = item.barcodeMappings && item.barcodeMappings.length > 0 ? item.barcodeMappings : item.barcodes;
+      const matchedBm = mappings.find(bm => bm.barcode.trim().toLowerCase() === clean);
       const uomId = matchedBm?.uomId || item.primaryUom?.id || item.uomId || '';
       return {
         item,

@@ -20,6 +20,7 @@ import { FormFooter } from '@/components/layouts/FormLayout';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 
 import { Save, Warehouse, PackagePlus, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
@@ -146,7 +147,15 @@ function TransferLineQtyCell({ lineId, qty, availableQty, isExceeded, onChange, 
   );
 }
 
-export function TransferNewClient() {
+import type { Transfer } from '@/types/documents';
+
+interface TransferNewClientProps {
+  initialData?: Transfer;
+  id?: string;
+  onConflict?: () => void;
+}
+
+export function TransferNewClient({ initialData, id, onConflict }: TransferNewClientProps = {}) {
   const params = useParams();
   const locale = (params.locale as 'ar' | 'en') || 'en';
   const t = useTranslations('operations.transfer');
@@ -154,12 +163,51 @@ export function TransferNewClient() {
   const abortController = useAbortController();
   const { user } = useAuth();
 
-  const [fromWarehouseId, setFromWarehouseId] = useState('');
-  const [toWarehouseId, setToWarehouseId] = useState('');
-  const [notes, setNotes] = useState('');
-  const [lines, setLines] = useState<NewTransferLine[]>([]);
+  const [fromWarehouseId, setFromWarehouseId] = useState(() => initialData?.fromWarehouseId || '');
+  const [toWarehouseId, setToWarehouseId] = useState(() => initialData?.toWarehouseId || '');
+  const [notes, setNotes] = useState(() => initialData?.notes || '');
+  const [lines, setLines] = useState<NewTransferLine[]>(() =>
+    initialData?.lines ? initialData.lines.map((l) => ({
+      id: l.id,
+      itemId: l.itemId || l.item?.id || '',
+      item: {
+        id: l.item?.id || '',
+        code: l.item?.code || '',
+        name: (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || l.item?.name || '',
+        image: l.item?.image || null,
+        primaryUom: { code: l.item?.primaryUom?.code || l.uomId || 'PCS' },
+      },
+      qty: l.qty || l.shippedQty || 1,
+      uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+      notes: l.notes || '',
+    })) : []
+  );
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
+
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.fromWarehouseId) setFromWarehouseId(initialData.fromWarehouseId);
+      if (initialData.toWarehouseId) setToWarehouseId(initialData.toWarehouseId);
+      if (initialData.notes !== undefined) setNotes(initialData.notes || '');
+      if (initialData.lines && initialData.lines.length > 0) {
+        setLines(initialData.lines.map((l) => ({
+          id: l.id,
+          itemId: l.itemId || l.item?.id || '',
+          item: {
+            id: l.item?.id || '',
+            code: l.item?.code || '',
+            name: (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || l.item?.name || '',
+            image: l.item?.image || null,
+            primaryUom: { code: l.item?.primaryUom?.code || l.uomId || 'PCS' },
+          },
+          qty: l.qty || l.shippedQty || 1,
+          uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+          notes: l.notes || '',
+        })));
+      }
+    }
+  }, [initialData, locale]);
 
   const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const warehouses = warehousesData?.data || [];
@@ -244,40 +292,16 @@ export function TransferNewClient() {
     }
 
     const clean = barcode.trim();
-    let item = allItems?.find(
-      (i) => i.barcode?.toLowerCase() === clean.toLowerCase() || i.code?.toLowerCase() === clean.toLowerCase()
-    );
-
-    if (!item) {
-      try {
-        const res = await apiClient.get(
-          `/items?search=${encodeURIComponent(clean)}`,
-          z.object({ data: z.array(z.unknown()) })
-        );
-        const apiFound = (res as { data: Array<{ id: string; code: string; name: string; barcode?: string; primaryUom?: { id?: string; code?: string }; unitOfMeasureId?: string }> })?.data?.[0];
-        if (apiFound) {
-          item = {
-            id: apiFound.id,
-            code: apiFound.code,
-            barcode: apiFound.barcode || apiFound.code,
-            name: apiFound.name,
-            qtyAvailable: 999999,
-            primaryUom: { id: apiFound.primaryUom?.id || apiFound.unitOfMeasureId || apiFound.primaryUom?.code || 'EA', code: apiFound.primaryUom?.code || 'EA' },
-            isActive: true,
-            image: null,
-          };
-        }
-      } catch {
-        // ignore fallback error
-      }
-    }
+    const resolved = await resolveBarcodeAndUom(clean, allItems);
+    let item = resolved?.item ? (allItems?.find(i => i.id === resolved.item.id) || resolved.item) : null;
+    const scannedUomId = resolved?.uomId || (item as { primaryUom?: { id?: string } })?.primaryUom?.id || '';
 
     if (!item) {
       toast.error(`${tCommon('no_item_found') || "Item not found"}: "${clean}"`);
       throw new Error('ItemNotFound');
     }
 
-    if (item.isActive === false) {
+    if ((item as { isActive?: boolean }).isActive === false) {
       toast.error(locale === 'ar' ? `الصنف "${item.code}" غير نشط` : `Item "${item.code}" is inactive`);
       throw new Error('InactiveItem');
     }
@@ -294,7 +318,8 @@ export function TransferNewClient() {
       throw new Error('NoStock');
     }
 
-    const existing = lines.find(l => l.itemId === item.id);
+    const targetUomId = scannedUomId || (item as { primaryUom?: { id?: string } }).primaryUom?.id || '';
+    const existing = lines.find(l => l.itemId === item.id && l.uomId === targetUomId);
     const newQty = existing ? existing.qty + 1 : 1;
     if (newQty > availableQty) {
       toast.error(locale === 'ar'
@@ -305,22 +330,23 @@ export function TransferNewClient() {
     }
 
     setLines(prev => {
-      const existingLine = prev.find(l => l.itemId === item.id);
+      const existingLine = prev.find(l => l.itemId === item.id && l.uomId === targetUomId);
       if (existingLine) {
-        return prev.map(l => l.itemId === item.id ? { ...l, qty: l.qty + 1 } : l);
+        return prev.map(l => (l.itemId === item.id && l.uomId === targetUomId) ? { ...l, qty: l.qty + 1 } : l);
       }
+      const itemObj = item as { id: string; code: string; name: string; image?: string | null; primaryUom?: { id?: string; code?: string } };
       return [...prev, {
-        id: `temp-${item.id}-${Date.now()}`,
-        itemId: item.id,
+        id: `temp-${itemObj.id}-${Date.now()}`,
+        itemId: itemObj.id,
         item: {
-          id: item.id,
-          code: item.code,
-          name: item.name,
-          image: item.image || null,
-          primaryUom: { id: item.primaryUom.id, code: item.primaryUom.code }
+          id: itemObj.id,
+          code: itemObj.code,
+          name: itemObj.name,
+          image: itemObj.image || null,
+          primaryUom: { id: itemObj.primaryUom?.id || targetUomId, code: itemObj.primaryUom?.code || targetUomId }
         },
         qty: 1,
-        uomId: item.primaryUom.id,
+        uomId: targetUomId,
         notes: ''
       }];
     });

@@ -24,6 +24,8 @@ import { StickyGlassHeader } from "@/components/shared/StickyGlassHeader";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { StatusTimeline, Status } from "@/components/shared/StatusTimeline";
 import { ClientOnlyTime } from "@/components/shared/ClientOnlyTime";
+import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
+import { ItemSchema, type Item } from "@/types/master-data";
 import { Stocktake, StocktakeItem } from "@/features/operations/types/stocktake";
 
 interface StocktakeViewerProps {
@@ -40,6 +42,8 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
 
   const [manifestSearch, setManifestSearch] = React.useState('')
   const warehouseName = session.warehouseName;
+  const { data: masterItemsData } = useMasterDataList<Item>('items', ItemSchema);
+  const masterItems = React.useMemo(() => masterItemsData?.data || [], [masterItemsData]);
 
   const filteredItems = React.useMemo(() => {
     if (!manifestSearch) return session.items
@@ -195,15 +199,38 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
               isReadOnly={true}
               hideLotColumns={true}
               headers={{ qty: t('counted_qty') }}
-              renderQty={(line) => (
-                line.countedQty !== null ? (
-                  <span className="font-mono text-label-sm font-bold text-foreground">
-                    {line.countedQty}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground/30">—</span>
-                )
-              )}
+              renderQty={(line) => {
+                if (line.countedQty === null || line.countedQty === undefined) {
+                  return <span className="text-muted-foreground/30">—</span>;
+                }
+
+                const masterItem = masterItems.find(i => i.id === line.item.id || i.code === line.item.code);
+                const primaryUomCode = line.uom || masterItem?.primaryUom?.code || 'PCS';
+                const conversions = masterItem?.uomConversions || [];
+                const conversion = conversions.find(c => Number(c.factor) > 1);
+
+                let breakdownTag = '';
+                if (conversion && line.countedQty && line.countedQty > 0) {
+                  const factor = Number(conversion.factor);
+                  const boxCode = conversion.fromUomCode || 'BOX';
+                  const boxes = Math.floor(line.countedQty / factor);
+                  const rem = line.countedQty % factor;
+                  if (boxes > 0) {
+                    breakdownTag = rem > 0 ? `${boxes} ${boxCode}, ${rem} ${primaryUomCode}` : `${boxes} ${boxCode}`;
+                  }
+                }
+
+                return (
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span className="font-mono text-label-sm font-bold text-foreground">{line.countedQty} {primaryUomCode}</span>
+                    {breakdownTag && (
+                      <span className="font-mono text-[10px] font-bold text-brand-gold bg-brand-gold/10 border border-brand-gold/20 px-2 py-0.5 rounded-full inline-block" dir="ltr">
+                        [{breakdownTag}]
+                      </span>
+                    )}
+                  </div>
+                );
+              }}
               renderUom={(line) => (
                 <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
                   {line.uom}

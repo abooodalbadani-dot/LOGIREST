@@ -67,7 +67,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
   const timelineEntries = document?.auditLog?.map((e: AuditLogEntry) => ({
     status: e.status.toLowerCase() as Status,
     at: e.createdAt,
-    by: e.userName || tc('system')
+    by: e.userName || tc('system_user')
   })) || [
       { status: (document?.status || 'DRAFT').toLowerCase() as Status, at: document?.createdAt || new Date().toISOString(), by: 'System' }
     ];

@@ -31,8 +31,8 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
  const router = useRouter();
 
  const timelineEntries = [
-  { status: 'draft' as Status, at: document.createdAt || '', by: document.createdBy || tc('system') },
-  { status: document.status.toLowerCase() as Status, at: document.updatedAt || document.createdAt || '', by: tc('system') },
+  { status: 'draft' as Status, at: document.createdAt || '', by: document.createdBy || tc('system_user') },
+  { status: document.status.toLowerCase() as Status, at: document.updatedAt || document.createdAt || '', by: tc('system_user') },
  ];
 
  return (

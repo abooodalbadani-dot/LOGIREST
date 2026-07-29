@@ -17,7 +17,8 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { SmartCombobox, type ComboboxItem } from '@/components/shared/SmartCombobox';
-import { resolveUomCode } from '@/utils/uom-helper';
+import { resolveUomCode, getScaledQtyBefore } from '@/utils/uom-helper';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 import { FormFooter } from '@/components/layouts/FormLayout';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
@@ -484,36 +485,41 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     });
   }, [paramItemId, paramBatch, allItems]);
 
-  const handleAddItem = (barcode: string) => {
-    const item = allItems.find((i: ItemOption) => i.barcode === barcode || i.code === barcode);
-    if (!item) {
+  const handleAddItem = async (barcode: string) => {
+    const resolved = await resolveBarcodeAndUom(barcode, allItems);
+    if (!resolved) {
       audioAlerts.playScanInvalid();
       toast.error(tCommon('no_item_found') || "Item not found.");
       return;
     }
 
+    const { item: resolvedItem, uomId: scannedUomId } = resolved;
+    const item = allItems.find(i => i.id === resolvedItem.id) || resolvedItem;
+    const itemWithStock = item as unknown as { id: string; code: string; name: string; image?: string | null; primaryUom?: { id?: string; code?: string }; uomId?: string; qtyOnHand?: number; qty_on_hand?: number };
+    const targetUomId = scannedUomId || itemWithStock.primaryUom?.id || itemWithStock.uomId || '';
+
     setLines(prev => {
-      const existing = prev.find(l => l.itemId === item.id);
+      const existing = prev.find(l => l.itemId === itemWithStock.id && l.uomId === targetUomId);
       if (existing) {
-        return prev.map(l => l.itemId === item.id ? { ...l, qty: l.qty + 1 } : l);
+        return prev.map(l => (l.itemId === itemWithStock.id && l.uomId === targetUomId) ? { ...l, qty: l.qty + 1 } : l);
       }
       return [...prev, {
-        id: `temp-${item.id}-${Date.now()}`,
-        itemId: item.id,
+        id: `temp-${itemWithStock.id}-${Date.now()}`,
+        itemId: itemWithStock.id,
         item: {
-          id: item.id,
-          code: item.code,
-          name: item.name,
-          image: item.image,
+          id: itemWithStock.id,
+          code: itemWithStock.code,
+          name: itemWithStock.name,
+          image: itemWithStock.image || null,
           primaryUom: {
-            id: item.primaryUom.id,
-            code: item.primaryUom.code
+            id: itemWithStock.primaryUom?.id || targetUomId,
+            code: itemWithStock.primaryUom?.code || targetUomId
           }
         },
         qty: 1,
         baseQty: 1,
-        qtyBefore: item.qtyOnHand ?? item.qty_on_hand ?? 0,
-        uomId: item.primaryUom.id,
+        qtyBefore: itemWithStock.qtyOnHand ?? itemWithStock.qty_on_hand ?? 0,
+        uomId: targetUomId,
         direction: isDecreaseOnlyReason(reasonCategory) ? 'DECREASE' : 'INCREASE',
         lotNumber: '',
         unitCost: 0
@@ -537,11 +543,12 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           const targetLotId = l.lotId || l.lotNumber;
           return {
             itemId: l.itemId,
-            qty: l.baseQty ?? l.qty,
+            quantity: l.qty,
+            qty: l.qty,
             uomId: l.uomId,
             direction: l.direction,
             lotId: targetLotId || undefined,
-            lotAllocations: targetLotId ? [{ lotId: targetLotId, qty: l.baseQty ?? l.qty }] : undefined,
+            lotAllocations: targetLotId ? [{ lotId: targetLotId, qty: l.qty }] : undefined,
             isCustom: l.itemId.startsWith('cust-') ? true : undefined,
             unitCost: l.direction === 'INCREASE' ? l.unitCost : null
           };
@@ -650,13 +657,23 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     },
     {
       header: t('qty_before') || (locale === 'ar' ? 'قبل' : 'Qty Before'),
-      cell: (line: NewAdjustmentLine) => (
-        <div className="flex flex-col items-center gap-0.5 tabular-nums">
-          <span className="text-body-md font-bold text-muted-foreground/45" lang="en" dir="ltr">
-            {Number(line.qtyBefore || 0).toLocaleString("en-US")}
-          </span>
-        </div>
-      ),
+      cell: (line: NewAdjustmentLine) => {
+        const scaledQtyBefore = getScaledQtyBefore(
+          line.qtyBefore,
+          line.uomId,
+          line.item,
+          allItems,
+        );
+        return (
+          <div className="flex flex-col items-center gap-0.5 tabular-nums">
+            <span className="text-body-md font-bold text-muted-foreground/45" lang="en" dir="ltr">
+              {Number(scaledQtyBefore).toLocaleString("en-US", {
+                maximumFractionDigits: 4,
+              })}
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: tCommon('table_headers.lot') || tCommon('lot_number') || (locale === 'ar' ? 'رقم الدفعة' : 'Lot Number'),
@@ -681,9 +698,14 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     {
       header: t('qty_after') || (locale === 'ar' ? 'بعد' : 'Qty After'),
       cell: (line: NewAdjustmentLine) => {
-        const qBefore = line.qtyBefore || 0;
+        const scaledQtyBefore = getScaledQtyBefore(
+          line.qtyBefore,
+          line.uomId,
+          line.item,
+          allItems,
+        );
         const qAdj = line.qty || 0;
-        const after = line.direction === "INCREASE" ? qBefore + qAdj : qBefore - qAdj;
+        const after = line.direction === "INCREASE" ? scaledQtyBefore + qAdj : scaledQtyBefore - qAdj;
         return (
           <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 sm:min-w-[180px] sm:max-w-[220px] text-center whitespace-normal">
             <span
@@ -694,7 +716,9 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
               lang="en"
               dir="ltr"
             >
-              {Number(after).toLocaleString("en-US")}
+              {Number(after).toLocaleString("en-US", {
+                maximumFractionDigits: 4,
+              })}
             </span>
             {after < 0 && (
               <span className="qty-error absolute top-[calc(100%+6px)] ltr:right-0 rtl:left-0 sm:static sm:top-auto sm:right-auto sm:left-auto w-max sm:w-auto text-[10px] md:text-xs text-status-error leading-tight font-semibold uppercase mt-0 sm:mt-1 z-10">
@@ -705,7 +729,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         );
       },
     }
-  ], [locale, t, tCommon, reasonCategory, warehouseId]);
+  ], [locale, t, tCommon, reasonCategory, warehouseId, allItems]);
+
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-5rem)] w-full max-w-[1920px] mx-auto fade-in duration-1000 animate-in pb-32">
@@ -947,7 +972,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                     </div>
                   )}
                   renderUom={(line) => {
-                    const matchedItem = items.find(i => i.id === line.itemId || i.code === line.itemId);
+                    const matchedItem = allItems.find(i => i.id === line.itemId || i.code === line.itemId) || items.find(i => i.id === line.itemId || i.code === line.itemId) || line.item;
 
                     const allowedUomIds = new Set<string>();
                     if (matchedItem?.primaryUom?.id) allowedUomIds.add(matchedItem.primaryUom.id);
@@ -955,7 +980,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                     if (lineUomId) allowedUomIds.add(lineUomId);
                     if (line.uomId) allowedUomIds.add(line.uomId);
 
-                    (matchedItem?.uomConversions || []).forEach(conv => {
+                    const matchedConversions = (matchedItem as unknown as { uomConversions?: Array<{ fromUomId?: string; toUomId?: string }> })?.uomConversions || [];
+                    matchedConversions.forEach((conv: { fromUomId?: string; toUomId?: string }) => {
                       if (conv.fromUomId) allowedUomIds.add(conv.fromUomId);
                       if (conv.toUomId) allowedUomIds.add(conv.toUomId);
                     });

@@ -60,8 +60,13 @@ export class IssuesService {
             select: { qtyOnHand: true, isFrozen: true },
           });
           if (whItem?.isFrozen) {
+            const frozenItem = await tx.item.findUnique({
+              where: { id: line.itemId },
+              select: { name: true, sku: true },
+            });
+            const itemName = frozenItem?.name || frozenItem?.sku || line.itemId;
             throw new BadRequestException(
-              `Cannot create issue: item ${line.itemId} is frozen in this warehouse.`,
+              `Cannot create issue: item "${itemName}" is frozen due to an active stocktake in this warehouse.`,
             );
           }
           // Normalize quantity to base UOM before comparing with on-hand stock

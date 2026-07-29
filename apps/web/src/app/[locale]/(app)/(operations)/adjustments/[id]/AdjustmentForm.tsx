@@ -82,6 +82,7 @@ import { resolveBarcodeAndUom } from "@/utils/barcode-resolver";
 import { audioAlerts } from "@/utils/audio";
 import { VoidButton } from "@/components/shared/VoidButton";
 import { PermissionGate } from "@/components/shared/PermissionGate";
+import { getScaledQtyBefore, getAvailableUomsForItem, resolveUomCode } from "@/utils/uom-helper";
 
 interface AdjustmentFormProps {
   document?: AdjustmentDetail;
@@ -221,12 +222,19 @@ export function AdjustmentForm({
 
   const hasNegativeStock = useMemo(
     () =>
-      lines.some(
-        (line) =>
+      lines.some((line) => {
+        const scaledQtyBefore = getScaledQtyBefore(
+          line.qtyBefore,
+          line.uomId,
+          line.item,
+          items,
+        );
+        return (
           line.direction === "DECREASE" &&
-          line.qtyAdjusted > (line.qtyBefore ?? 0),
-      ),
-    [lines],
+          line.qtyAdjusted > scaledQtyBefore
+        );
+      }),
+    [lines, items],
   );
 
   const hasInvalidCosts = useMemo(
@@ -394,6 +402,7 @@ export function AdjustmentForm({
           return {
             id: l.id.startsWith("new-") ? undefined : l.id,
             itemId: l.item.id,
+            quantity: l.qtyAdjusted,
             qty: l.qtyAdjusted,
             uomId: l.uomId,
             direction: l.direction,
@@ -736,17 +745,27 @@ export function AdjustmentForm({
       },
       {
         header: t("qty_before") || "Qty Before",
-        cell: (line: AdjustmentFormLine) => (
-          <div className="flex flex-col items-center gap-0.5 tabular-nums">
-            <span
-              className="text-body-md font-bold text-muted-foreground/45"
-              lang="en"
-              dir="ltr"
-            >
-              {Number(line.qtyBefore).toLocaleString("en-US")}
-            </span>
-          </div>
-        ),
+        cell: (line: AdjustmentFormLine) => {
+          const scaledQtyBefore = getScaledQtyBefore(
+            line.qtyBefore,
+            line.uomId,
+            line.item,
+            items,
+          );
+          return (
+            <div className="flex flex-col items-center gap-0.5 tabular-nums">
+              <span
+                className="text-body-md font-bold text-muted-foreground/45"
+                lang="en"
+                dir="ltr"
+              >
+                {Number(scaledQtyBefore).toLocaleString("en-US", {
+                  maximumFractionDigits: 4,
+                })}
+              </span>
+            </div>
+          );
+        },
       },
       {
         header: tc("table_headers.lot") || "Lot",
@@ -791,10 +810,16 @@ export function AdjustmentForm({
       {
         header: t("qty_after") || "Qty After",
         cell: (line: AdjustmentFormLine) => {
+          const scaledQtyBefore = getScaledQtyBefore(
+            line.qtyBefore,
+            line.uomId,
+            line.item,
+            items,
+          );
           const after =
             line.direction === "INCREASE"
-              ? line.qtyBefore + line.qtyAdjusted
-              : line.qtyBefore - line.qtyAdjusted;
+              ? scaledQtyBefore + line.qtyAdjusted
+              : scaledQtyBefore - line.qtyAdjusted;
           return (
             <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 sm:min-w-[180px] sm:max-w-[220px] text-center whitespace-normal">
               <span
@@ -805,7 +830,9 @@ export function AdjustmentForm({
                 lang="en"
                 dir="ltr"
               >
-                {Number(after).toLocaleString("en-US")}
+                {Number(after).toLocaleString("en-US", {
+                  maximumFractionDigits: 4,
+                })}
               </span>
               {after < 0 && (
                 <span className="qty-error absolute top-[calc(100%+6px)] ltr:right-0 rtl:left-0 sm:static sm:top-auto sm:right-auto sm:left-auto w-max sm:w-auto text-[10px] md:text-xs text-red-500 leading-tight font-semibold uppercase mt-0 sm:mt-1 z-10">
@@ -817,8 +844,9 @@ export function AdjustmentForm({
         },
       },
     ],
-    [locale, t, tc, canEdit, updateLine, warehouseId, lockState?.isLocked, reason],
+    [locale, t, tc, canEdit, updateLine, warehouseId, lockState?.isLocked, reason, items],
   );
+
 
   return (
     <div className="min-h-screen pb-12 animate-in fade-in duration-500 print:bg-card print:p-0 print:m-0 print:pb-0 print:animate-none">
@@ -900,7 +928,7 @@ export function AdjustmentForm({
           <div className="flex-1 w-full p-1 sm:p-4 lg:p-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 print:block items-start max-w-[1920px] mx-auto">
               {/* Main Content: Unified Master Container (Document Details + Items Table) */}
-              <div className="col-span-12 lg:col-span-9 flex flex-col gap-6">
+              <div className="col-span-12 flex flex-col gap-6">
                 <div className="bg-card backdrop-blur-3xl p-3.5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-border/70 space-y-6 lg:space-y-8 transition-all duration-500 group">
                   {/* Decorative background glow */}
                   <div className="absolute top-0 end-0 w-96 h-96 bg-brand-gold/5 blur-[100px] pointer-events-none rounded-full" />
@@ -1114,6 +1142,43 @@ export function AdjustmentForm({
                               </div>
                             )
                           }
+                          renderUom={(line) => {
+                            const matchedItem = items.find(
+                              (i) => i.id === line.item?.id || i.code === line.item?.code,
+                            ) || line.item;
+                            const availableUoms = getAvailableUomsForItem(matchedItem);
+
+                            if (!canEdit || availableUoms.length <= 1) {
+                              const resolvedCode = resolveUomCode(line.uomId, matchedItem);
+                              return (
+                                <div className="flex items-center justify-center w-full">
+                                  <span className="h-9 px-3 text-xs font-bold font-mono text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-xl flex items-center justify-center min-w-[70px]">
+                                    {resolvedCode}
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            const comboboxItems = availableUoms.map((u) => ({
+                              id: u.id,
+                              name: u.name || u.code,
+                              code: u.code,
+                            }));
+
+                            return (
+                              <div className="flex items-center justify-center w-full">
+                                <SmartCombobox
+                                  items={comboboxItems}
+                                  value={line.uomId}
+                                  onSelect={(uom) => {
+                                    updateLine(line.id, { uomId: uom.id });
+                                  }}
+                                  placeholder={line.item?.primaryUom?.code || "UOM"}
+                                  triggerClassName="h-9 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
+                                />
+                              </div>
+                            );
+                          }}
                           extraColumns={extraColumns}
                         />
                       </div>

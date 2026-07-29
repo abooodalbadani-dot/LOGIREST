@@ -36,7 +36,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
  const timeline = document?.auditLog?.map((log: AuditLog) => ({
   status: log.status.toLowerCase() as Status,
   at: log.createdAt,
-  by: log.userName || tCommon('system')
+  by: log.userName || tCommon('system_user')
  })) || [];
 
  interface MappedPOLine {

@@ -1,11 +1,12 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { usePO } from '@/features/purchasing/hooks/usePO';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/purchase-order-form';
+import { POViewer } from './POViewer';
 
 import { CheckCircle, Mail, Trash2, FileText, Send, ShieldCheck } from 'lucide-react';
 import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
@@ -32,6 +33,7 @@ interface PODetailClientProps {
 export function PODetailClient({ id }: PODetailClientProps) {
  const t = useTranslations('procurement.po');
  const tCommon = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
  const { user } = useAuth();
  const { data: po, isLoading } = usePO(id || '');
@@ -160,6 +162,21 @@ export function PODetailClient({ id }: PODetailClientProps) {
    </ActionGuard>
   </div>
  );
+
+ const isDraft = status === PO_STATUS.DRAFT || isNew;
+
+ if (!isDraft && po) {
+  return (
+   <>
+    <POViewer document={po} locale={locale} actions={actions} />
+    <ConflictDialog 
+     open={open}
+     onReload={handleReload}
+     onClose={handleClose}
+    />
+   </>
+  );
+ }
 
  return (
   <>

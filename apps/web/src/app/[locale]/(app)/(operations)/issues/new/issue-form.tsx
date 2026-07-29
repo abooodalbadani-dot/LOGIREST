@@ -43,6 +43,7 @@ import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { toast } from "sonner";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { getAvailableUomsForItem, resolveUomCode } from '@/utils/uom-helper';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 import { DocumentLineItemTable, type LineItem, type ExtraColumn } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { cn } from "@/lib/utils";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -389,15 +390,23 @@ export function IssueForm() {
 
   const allLinesAllocated = liveLines.length > 0 && liveLines.every(isLineFulfilled);
 
-  const handleScan = (barcode: string) => {
-    const matchedItem = items?.find(i => i.barcode === barcode || i.code === barcode);
-    if (matchedItem) {
-      const existingIndex = watchedLines?.findIndex(i => i?.itemId === matchedItem.id) ?? -1;
+  const handleScan = async (barcode: string) => {
+    const resolved = await resolveBarcodeAndUom(barcode, items);
+    if (resolved) {
+      const { item: resolvedItem, uomId: scannedUomId } = resolved;
+      const matchedItem = items?.find(i => i.id === resolvedItem.id) || (resolvedItem as unknown as Item);
+      const itemObj = matchedItem as unknown as { id: string; name: string; primaryUom?: { id?: string }; uomId?: string };
+      const targetUomId = scannedUomId || itemObj.primaryUom?.id || itemObj.uomId || '';
+
+      const existingIndex = watchedLines?.findIndex(i => i?.itemId === matchedItem.id && (i?.uomId === targetUomId || !i?.uomId)) ?? -1;
       if (existingIndex !== -1) {
         const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
         form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+        if (targetUomId) {
+          form.setValue(`lines.${existingIndex}.uomId`, targetUomId, { shouldDirty: true });
+        }
       } else {
-        append({ itemId: matchedItem.id, requestedQty: 1, qty: 0, uomId: matchedItem.primaryUom?.id, lotAllocations: [] });
+        append({ itemId: matchedItem.id, requestedQty: 1, qty: 0, uomId: targetUomId, lotAllocations: [] });
       }
       playSound('success');
       toast.success(isAr ? `تمت إضافة ${matchedItem.name}` : `Added ${matchedItem.name}`);

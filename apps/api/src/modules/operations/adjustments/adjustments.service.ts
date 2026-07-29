@@ -99,8 +99,9 @@ export class AdjustmentsService {
             toUomId: c.toUomId,
             factor: Number(c.factor),
           }));
+          const rawLineQty = Number((line as { quantity?: number; qty?: number }).quantity ?? (line as { quantity?: number; qty?: number }).qty ?? 0);
           const normalizedQtyForCheck = toBaseQty(
-            line.quantity,
+            rawLineQty,
             (line as { uomId?: string }).uomId ?? baseUomId,
             baseUomId,
             conversions,
@@ -196,8 +197,8 @@ export class AdjustmentsService {
             create: preparedLines.map((line) => ({
               itemId: line.itemId,
               lotId: line.lotId || null,
-              quantity: line.quantity,
-              uomId: line.resolvedUomId || null,
+              quantity: Number((line as { quantity?: number; qty?: number }).quantity ?? (line as { quantity?: number; qty?: number }).qty ?? 0),
+              uomId: line.resolvedUomId ?? line.uomId ?? null,
               direction: line.direction,
               reason: line.reason,
               unitCost:
@@ -211,7 +212,13 @@ export class AdjustmentsService {
         include: {
           lines: {
             include: {
-              item: { include: { unitOfMeasure: true, category: true } },
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                  category: true,
+                  uomConversions: { include: { fromUom: true, toUom: true } },
+                },
+              },
               lot: true,
               uom: true,
             },
@@ -256,8 +263,15 @@ export class AdjustmentsService {
         include: {
           lines: {
             include: {
-              item: { include: { unitOfMeasure: true, category: true } },
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                  category: true,
+                  uomConversions: { include: { fromUom: true, toUom: true } },
+                },
+              },
               lot: true,
+              uom: true,
             },
           },
           warehouse: true,
@@ -348,7 +362,13 @@ export class AdjustmentsService {
       include: {
         lines: {
           include: {
-            item: { include: { unitOfMeasure: true, category: true } },
+            item: {
+              include: {
+                unitOfMeasure: true,
+                category: true,
+                uomConversions: { include: { fromUom: true, toUom: true } },
+              },
+            },
             lot: true,
             uom: true,
           },
@@ -577,7 +597,13 @@ export class AdjustmentsService {
         include: {
           lines: {
             include: {
-              item: { include: { unitOfMeasure: true, category: true } },
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                  category: true,
+                  uomConversions: { include: { fromUom: true, toUom: true } },
+                },
+              },
               lot: true,
               uom: true,
             },
