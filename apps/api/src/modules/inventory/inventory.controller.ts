@@ -87,7 +87,7 @@ export class InventoryController {
   }
 
   @Patch(':id/unfreeze')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.INV_MGR)
   @HttpCode(HttpStatus.OK)
   async unfreeze(
     @Param('id') itemId: string,

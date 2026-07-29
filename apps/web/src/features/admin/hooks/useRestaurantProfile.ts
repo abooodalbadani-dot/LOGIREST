@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { useAdminSettings } from './useAdminSettings';
 import { apiClient } from '@/lib/api/client';
+import { otantikBase64Logo } from '@/lib/export/otantikLogoBase64';
 
 export const RestaurantProfileSchema = z.object({
  name: z.string().min(1, 'admin.restaurant_profile.validation.name_required'),
@@ -42,7 +43,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
      address: profile.address || '',
      phone: profile.phone || '',
      email: profile.email || '',
-     logo: profile.logo || '',
+     logo: profile.logo || otantikBase64Logo,
      taxNumber: profile.taxNumber || '',
      commercialRegistration: profile.commercialRegistration || '',
      updatedAt: profile.updatedAt || new Date().toISOString(),
@@ -65,7 +66,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
      address: '',
      phone: '',
      email: '',
-     logo: '',
+     logo: otantikBase64Logo,
      taxNumber: '',
      commercialRegistration: '',
      updatedAt: new Date().toISOString(),

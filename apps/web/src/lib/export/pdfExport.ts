@@ -9,6 +9,8 @@ import { apiClient } from '@/lib/api/client';
 import { RestaurantProfileSchema } from '@/features/admin/hooks/useRestaurantProfile';
 import { z } from 'zod';
 
+import { otantikBase64Logo } from './otantikLogoBase64';
+
 export type { PDFColumn };
 
 interface PDFExportOptions {
@@ -63,7 +65,7 @@ export async function generatePDF(
           address: profile.address || '',
           phone: profile.phone || '',
           email: profile.email || '',
-          logo: profile.logoUrl || profile.logo || '',
+          logo: profile.logoUrl || profile.logo || branding?.logo || otantikBase64Logo,
           taxNumber: profile.taxNumber || '',
           commercialRegistration: profile.commercialRegistration || '',
         };

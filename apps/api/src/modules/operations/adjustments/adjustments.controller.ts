@@ -503,10 +503,8 @@ export class AdjustmentsController {
   @Roles(
     Role.ADMIN,
     Role.GM,
-    Role.INV_MGR,
     Role.APPROVER,
     Role.BRANCH_MGR,
-    Role.STORE_MGR,
   )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
@@ -540,10 +538,8 @@ export class AdjustmentsController {
   @Roles(
     Role.ADMIN,
     Role.GM,
-    Role.INV_MGR,
     Role.APPROVER,
     Role.BRANCH_MGR,
-    Role.STORE_MGR,
   )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({

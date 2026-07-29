@@ -72,7 +72,34 @@ function translateApiErrorMessage(message: string, lang: string): string {
       : 'Database connection lost. Please verify server status and try again.';
   }
 
-  // 6. Insufficient stock
+  // 6. Insufficient stock regex patterns
+  const stockExceedsRegex = /Insufficient stock: requested quantity \((.+?)\) exceeds available on hand for item (.+)\./i;
+  const stockMatch = message.match(stockExceedsRegex);
+  if (stockMatch) {
+    const [, qtyInfo, itemLabel] = stockMatch;
+    return isAr
+      ? `الكمية المتوفرة غير كافية: الكمية المطلوبة (${qtyInfo}) تتجاوز الرصيد المتاح للصنف ${itemLabel}.`
+      : `Insufficient stock: requested quantity (${qtyInfo}) exceeds available on hand for item ${itemLabel}.`;
+  }
+
+  const stockFulfillRegex = /Insufficient stock: cannot fulfill item (.+?)\.\s*Requested:\s*(.+?),\s*Available \(net of allocations\):\s*(.+)\./i;
+  const fulfillMatch = message.match(stockFulfillRegex);
+  if (fulfillMatch) {
+    const [, itemLabel, reqQty, availQty] = fulfillMatch;
+    return isAr
+      ? `الكمية المتوفرة غير كافية: تعذر تلبية الصنف ${itemLabel}. المطلوبة: ${reqQty}، المتاحة (بعد تخصيصات الحجز): ${availQty}.`
+      : `Insufficient stock: cannot fulfill item ${itemLabel}. Requested: ${reqQty}, Available (net of allocations): ${availQty}.`;
+  }
+
+  const stockAdjRegex = /Insufficient stock for DECREASE adjustment: item (.+?) has (.+?) on hand, requested (.+)/i;
+  const adjMatch = message.match(stockAdjRegex);
+  if (adjMatch) {
+    const [, itemLabel, onHand, reqQty] = adjMatch;
+    return isAr
+      ? `الكمية غير كافية للتسوية بالسالب: الصنف ${itemLabel} يحتوي على ${onHand} في المخزون، والكمية المطلوبة ${reqQty}.`
+      : `Insufficient stock for DECREASE adjustment: item ${itemLabel} has ${onHand} on hand, requested ${reqQty}.`;
+  }
+
   if (message.includes('INSUFFICIENT_STOCK')) {
     return isAr
       ? 'الرصيد غير كافٍ لإتمام هذه العملية.'

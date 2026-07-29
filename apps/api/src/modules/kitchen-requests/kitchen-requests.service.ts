@@ -281,7 +281,7 @@ export class KitchenRequestsService {
     return this.prisma.$transaction(async (tx) => {
       const kr = await tx.kitchenRequest.findUnique({
         where: { id },
-        include: { items: true },
+        include: { items: { include: { item: { select: { name: true, sku: true } } } } },
       });
 
       if (!kr) {
@@ -311,7 +311,6 @@ export class KitchenRequestsService {
           warehouseId: kr.warehouseId,
           itemId: { in: itemIds },
         },
-        select: { itemId: true, qtyOnHand: true, qtyAllocated: true },
       });
 
       const whItemMap = new Map(
@@ -324,8 +323,10 @@ export class KitchenRequestsService {
       for (const lineInput of linesToCheck) {
         const available = whItemMap.get(lineInput.itemId) ?? 0;
         if (available < lineInput.fulfilledQty) {
+          const dbItem = kr.items.find((i) => i.itemId === lineInput.itemId);
+          const itemLabel = dbItem?.item ? `"${dbItem.item.name}" (${dbItem.item.sku})` : `ID ${lineInput.itemId}`;
           throw new BadRequestException(
-            `Insufficient stock: cannot fulfill item ${lineInput.itemId}. ` +
+            `Insufficient stock: cannot fulfill item ${itemLabel}. ` +
               `Requested: ${lineInput.fulfilledQty}, Available (net of allocations): ${available}.`,
           );
         }

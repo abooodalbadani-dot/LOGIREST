@@ -76,31 +76,32 @@ export class IssuesService {
           }
           // Normalize quantity to base UOM before comparing with on-hand stock
           let normalizedQtyForCheck = line.quantity;
-          if (line.uomId) {
-            const itemForCheck = await tx.item.findUnique({
-              where: { id: line.itemId },
-              select: {
-                uomId: true,
-                uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
-              },
-            });
-            if (itemForCheck) {
-              const conversions = itemForCheck.uomConversions.map((c) => ({
-                fromUomId: c.fromUomId,
-                toUomId: c.toUomId,
-                factor: Number(c.factor),
-              }));
-              normalizedQtyForCheck = toBaseQty(
-                line.quantity,
-                line.uomId,
-                itemForCheck.uomId,
-                conversions,
-              );
-            }
+          const itemForCheck = await tx.item.findUnique({
+            where: { id: line.itemId },
+            select: {
+              name: true,
+              sku: true,
+              uomId: true,
+              uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+            },
+          });
+          if (itemForCheck && line.uomId && itemForCheck.uomId) {
+            const conversions = itemForCheck.uomConversions.map((c) => ({
+              fromUomId: c.fromUomId,
+              toUomId: c.toUomId,
+              factor: Number(c.factor),
+            }));
+            normalizedQtyForCheck = toBaseQty(
+              line.quantity,
+              line.uomId,
+              itemForCheck.uomId,
+              conversions,
+            );
           }
           if (!whItem || Number(whItem.qtyOnHand) < normalizedQtyForCheck) {
+            const itemLabel = itemForCheck ? `"${itemForCheck.name}" (${itemForCheck.sku})` : `ID ${line.itemId}`;
             throw new BadRequestException(
-              `Insufficient stock: requested quantity (${normalizedQtyForCheck} base units) exceeds available on hand for item ${line.itemId}.`,
+              `Insufficient stock: requested quantity (${normalizedQtyForCheck} base units) exceeds available on hand for item ${itemLabel}.`,
             );
           }
         }

@@ -428,7 +428,7 @@ export class StocktakeController {
   }
 
   @Post(':id/approve')
-  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -459,7 +459,7 @@ export class StocktakeController {
   }
 
   @Post(':id/reject')
-  @Roles(Role.ADMIN, Role.GM, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',

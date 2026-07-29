@@ -117,8 +117,13 @@ export class AdjustmentsService {
           });
           const available = Number(whItem?.qtyOnHand ?? 0);
           if (available < normalizedQtyForCheck) {
+            const itemDb = await tx.item.findUnique({
+              where: { id: line.itemId },
+              select: { name: true, sku: true },
+            });
+            const itemLabel = itemDb ? `"${itemDb.name}" (${itemDb.sku})` : `ID ${line.itemId}`;
             throw new BadRequestException(
-              `Insufficient stock for DECREASE adjustment: item ${line.itemId} ` +
+              `Insufficient stock for DECREASE adjustment: item ${itemLabel} ` +
                 `has ${available} on hand, requested ${normalizedQtyForCheck} (base UOM).`,
             );
           }

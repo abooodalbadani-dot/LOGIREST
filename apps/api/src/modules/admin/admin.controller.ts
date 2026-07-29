@@ -14,6 +14,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
@@ -92,6 +93,7 @@ export class AdminController {
   }
 
   @Get('settings')
+  @AllRoles()
   async getSettings() {
     return this.adminService.getSettings();
   }
@@ -291,6 +293,7 @@ export class AdminController {
   }
 
   @Get('restaurant-profile')
+  @AllRoles()
   async getRestaurantProfile() {
     return this.adminService.getRestaurantProfile();
   }

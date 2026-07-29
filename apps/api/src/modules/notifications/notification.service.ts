@@ -13,6 +13,19 @@ export class NotificationService {
     documentType?: DocumentType;
     documentId?: string;
   }) {
+    // Ensure all WH_KEEPER notifications are also sent to INV_MGR
+    if (data.targetRole === Role.WH_KEEPER) {
+      await this.prisma.notificationLog.create({
+        data: {
+          targetRole: Role.INV_MGR,
+          warehouseId: data.warehouseId || null,
+          message: data.message,
+          documentType: data.documentType || null,
+          documentId: data.documentId || null,
+        },
+      });
+    }
+
     return this.prisma.notificationLog.create({
       data: {
         targetRole: data.targetRole,
@@ -25,9 +38,12 @@ export class NotificationService {
   }
 
   async getNotifications(role: Role, warehouseId?: string) {
+    const roles: Role[] =
+      role === Role.INV_MGR ? [Role.INV_MGR, Role.WH_KEEPER] : [role];
+
     return this.prisma.notificationLog.findMany({
       where: {
-        targetRole: role,
+        targetRole: { in: roles },
         isRead: false,
         OR: [{ warehouseId: null }, { warehouseId: warehouseId || undefined }],
       },
@@ -46,9 +62,12 @@ export class NotificationService {
   }
 
   async markAllAsRead(role: Role, warehouseId?: string) {
+    const roles: Role[] =
+      role === Role.INV_MGR ? [Role.INV_MGR, Role.WH_KEEPER] : [role];
+
     const result = await this.prisma.notificationLog.updateMany({
       where: {
-        targetRole: role,
+        targetRole: { in: roles },
         isRead: false,
         OR: [{ warehouseId: null }, { warehouseId: warehouseId || undefined }],
       },

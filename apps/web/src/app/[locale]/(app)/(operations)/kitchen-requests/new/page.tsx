@@ -9,7 +9,7 @@ export default async function NewKitchenRequestPage({
 }) {
  const { locale } = await params;
  return (
-  <ProtectedRoute requiredAction="create" requiredResource="issue">
+  <ProtectedRoute requiredAction="create" requiredResource="kitchen_requests">
    <KitchenRequestFormClient locale={locale as 'ar' | 'en'} />
   </ProtectedRoute>
  );

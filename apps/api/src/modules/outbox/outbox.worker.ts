@@ -395,7 +395,11 @@ export class OutboxWorker extends WorkerHost {
           },
           select: { email: true },
         });
-        return keepers.map((u) => u.email);
+        const managers = await this.prisma.user.findMany({
+          where: { role: Role.INV_MGR, isActive: true },
+          select: { email: true },
+        });
+        return Array.from(new Set([...keepers.map((u) => u.email), ...managers.map((u) => u.email)]));
       }
       case 'TRANSFER_SHIPPED': {
         const receivingWhId = data.warehouseId || data.toWarehouseId;
@@ -410,7 +414,11 @@ export class OutboxWorker extends WorkerHost {
           },
           select: { email: true },
         });
-        return keepers.map((u) => u.email);
+        const managers = await this.prisma.user.findMany({
+          where: { role: Role.INV_MGR, isActive: true },
+          select: { email: true },
+        });
+        return Array.from(new Set([...keepers.map((u) => u.email), ...managers.map((u) => u.email)]));
       }
       case 'TRANSFER_RECEIVED': {
         const sendingWhId = data.fromWarehouseId;
@@ -458,6 +466,10 @@ export class OutboxWorker extends WorkerHost {
         return [];
       default:
         return [];
+    }
+
+    if (targetRoles.includes(Role.WH_KEEPER) && !targetRoles.includes(Role.INV_MGR)) {
+      targetRoles.push(Role.INV_MGR);
     }
 
     const users = await this.prisma.user.findMany({

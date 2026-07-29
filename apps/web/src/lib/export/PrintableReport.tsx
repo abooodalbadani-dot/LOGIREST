@@ -1,4 +1,5 @@
 import React from 'react';
+import { otantikBase64Logo } from './otantikLogoBase64';
 import { format } from 'date-fns';
 import { getDocumentTitle } from '@logirest/shared-types';
 
@@ -195,7 +196,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
     internalDoc: lang === 'ar' ? 'وثيقة داخلية' : 'Internal Document'
   };
 
-  const src = brandingConfig?.logoUrl || branding?.logo || "/logo.svg";
+  const src = brandingConfig?.logoUrl || branding?.logo || otantikBase64Logo;
   const type = brandingConfig?.logoType || 'MARK';
 
   // Patching backend typo if present in database configuration

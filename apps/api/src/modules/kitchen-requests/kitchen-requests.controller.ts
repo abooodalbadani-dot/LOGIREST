@@ -116,7 +116,6 @@ export class KitchenRequestsController {
   @Post()
   @Roles(
     Role.ADMIN,
-    Role.INV_MGR,
     Role.STORE_MGR,
     Role.WH_KEEPER,
     Role.BRANCH_MGR,
@@ -214,7 +213,6 @@ export class KitchenRequestsController {
   @Put(':id')
   @Roles(
     Role.ADMIN,
-    Role.INV_MGR,
     Role.WH_KEEPER,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
@@ -261,7 +259,6 @@ export class KitchenRequestsController {
   @Post(':id/submit')
   @Roles(
     Role.ADMIN,
-    Role.INV_MGR,
     Role.WH_KEEPER,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
