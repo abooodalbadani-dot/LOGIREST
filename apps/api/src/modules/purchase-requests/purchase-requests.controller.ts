@@ -43,6 +43,8 @@ function mapPRDetail(pr: Record<string, unknown>) {
   const lines = prLines.map((line: Record<string, unknown>) => {
     const item = line.item as Record<string, unknown> | null;
     const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
+    const rawConversions = (item?.uomConversions as Array<Record<string, unknown>>) || [];
+    const lineUom = line.uom as Record<string, unknown> | null;
 
     return {
       id: line.id as string,
@@ -57,17 +59,27 @@ function mapPRDetail(pr: Record<string, unknown>) {
           ? {
               id: unitOfMeasure.id as string,
               code: unitOfMeasure.code as string,
+              name: (unitOfMeasure.name as string) || (unitOfMeasure.code as string),
             }
           : { id: '', code: '' },
+        uomConversions: rawConversions.map((c) => ({
+          fromUomId: ((c.fromUom as Record<string, unknown>)?.id as string) || (c.fromUomId as string) || '',
+          fromUomCode: ((c.fromUom as Record<string, unknown>)?.code as string) || '',
+          fromUomName: ((c.fromUom as Record<string, unknown>)?.name as string) || '',
+          toUomId: ((c.toUom as Record<string, unknown>)?.id as string) || (c.toUomId as string) || '',
+          toUomCode: ((c.toUom as Record<string, unknown>)?.code as string) || '',
+          toUomName: ((c.toUom as Record<string, unknown>)?.name as string) || '',
+          factor: Number(c.factor),
+        })),
       },
       reqQty: Number(line.quantity),
       quantity: Number(line.quantity),
-      uomId: (line.uomId as string) || (item?.uomId as string) || '',
-      uom: line.uom
+      uomId: (line.uomId as string) || (unitOfMeasure?.id as string) || '',
+      uom: lineUom
         ? {
-            id: (line.uom as Record<string, unknown>).id as string,
-            code: (line.uom as Record<string, unknown>).code as string,
-            name: ((line.uom as Record<string, unknown>).name as string) || ((line.uom as Record<string, unknown>).code as string),
+            id: lineUom.id as string,
+            code: lineUom.code as string,
+            name: (lineUom.name as string) || (lineUom.code as string),
           }
         : unitOfMeasure
           ? {
@@ -108,11 +120,30 @@ function mapPRDetail(pr: Record<string, unknown>) {
     branchName: (branch?.name as string) || null,
     expectedDate: createdAtIso,
     version: pr.version as number,
-    notes: '',
+    notes: (pr.notes as string) || '',
     createdAt: createdAtIso,
     createdBy: (createdBy?.name as string) || 'System',
     updatedAt: updatedAtIso,
     lines,
+    approvalEvents: events.map((e) => {
+      const user = e.user as Record<string, unknown> | null;
+      return {
+        id: e.id as string,
+        action: ((e.actionPerformed || e.action) as string) || '',
+        comments: (e.comments as string) || null,
+        createdAt: (
+          e.createdAt instanceof Date
+            ? e.createdAt
+            : new Date(e.createdAt as string)
+        ).toISOString(),
+        user: user
+          ? {
+              name: (user.name as string) || null,
+              role: (user.role as string) || null,
+            }
+          : null,
+      };
+    }),
   };
 }
 
@@ -192,6 +223,7 @@ export class PurchaseRequestsController {
     const branchId = body.branchId;
     const warehouseId = body.warehouseId;
     const departmentId = body.departmentId;
+    const notes = body.notes;
     const lines = (body.lines || []).map((line) => ({
       itemId: line.itemId,
       quantity: Number(line.quantity),
@@ -204,7 +236,7 @@ export class PurchaseRequestsController {
       warehouseId,
     );
     const pr = await this.prService.create(
-      { branchId, warehouseId, departmentId, lines },
+      { branchId, warehouseId, departmentId, notes, lines },
       userId,
     );
     return { data: mapPRDetail(pr) };
@@ -271,7 +303,8 @@ export class PurchaseRequestsController {
     @Body()
     body: {
       version: number;
-      lines?: Array<{ itemId: string; quantity: number }>;
+      notes?: string;
+      lines?: Array<{ itemId: string; quantity: number; uomId?: string }>;
     },
   ) {
     const pr = await this.prisma.purchaseRequest.findUnique({
@@ -288,10 +321,12 @@ export class PurchaseRequestsController {
     const lines = (body.lines || []).map((line) => ({
       itemId: line.itemId,
       quantity: Number(line.quantity),
+      uomId: line.uomId,
     }));
 
     const updated = await this.prService.update(id, {
       version: body.version,
+      notes: body.notes,
       lines,
     });
     return { data: mapPRDetail(updated) };
@@ -403,7 +438,7 @@ export class PurchaseRequestsController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: string,
-    @Body() body: { comments?: string; version?: number },
+    @Body() body: { comments?: string; reason?: string; version?: number },
     @Req() req: Request,
   ) {
     const ipAddress =
@@ -412,8 +447,10 @@ export class PurchaseRequestsController {
         : req.headers['x-forwarded-for']) ||
       req.ip ||
       undefined;
+    const comments = body.comments || body.reason || undefined;
     const pr = await this.prService.reject(id, userId, role as Role, {
-      ...body,
+      comments,
+      version: body.version,
       ipAddress,
     });
     return { data: mapPRDetail(pr) };
@@ -438,7 +475,7 @@ export class PurchaseRequestsController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: string,
-    @Body() body: { comments?: string; version?: number },
+    @Body() body: { comments?: string; reason?: string; version?: number },
     @Req() req: Request,
   ) {
     const ipAddress =
@@ -447,12 +484,16 @@ export class PurchaseRequestsController {
         : req.headers['x-forwarded-for']) ||
       req.ip ||
       undefined;
+    const comments = body.comments || body.reason || undefined;
     const pr = await this.prService.cancel(id, userId, role as Role, {
-      ...body,
+      comments,
+      version: body.version,
       ipAddress,
     });
     return { data: mapPRDetail(pr) };
   }
+
+
 
   @Post(':id/convert-to-po')
   @Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.BRANCH_MGR)

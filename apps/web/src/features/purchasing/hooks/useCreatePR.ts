@@ -11,7 +11,9 @@ const CreatePRPayloadSchema = z.object({
  departmentId: z.string().optional(),
  notes: z.string().optional().or(z.literal('')),
  lines: z.array(z.object({
+  id: z.string().optional(),
   itemId: z.string(),
+  uomId: z.string().optional(),
   quantity: z.number().positive(),
  }))
 });

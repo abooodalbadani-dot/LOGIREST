@@ -10,12 +10,15 @@ import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../sequencing/document-number.service';
 import { DocumentType, Prisma, PRStatus } from '@prisma/client';
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 @Injectable()
 export class PurchaseRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
     private readonly documentNumberService: DocumentNumberService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(
@@ -23,6 +26,7 @@ export class PurchaseRequestsService {
       branchId: string;
       warehouseId: string;
       departmentId?: string;
+      notes?: string;
       lines: Array<{ itemId: string; quantity: number; uomId?: string }>;
     },
     userId: string,
@@ -48,6 +52,7 @@ export class PurchaseRequestsService {
             branchId: body.branchId,
             warehouseId: body.warehouseId,
             departmentId,
+            notes: body.notes || null,
             createdById: userId,
             status: 'DRAFT',
             lines: {
@@ -223,6 +228,7 @@ export class PurchaseRequestsService {
     id: string,
     body: {
       version: number;
+      notes?: string;
       lines?: Array<{ itemId: string; quantity: number; uomId?: string }>;
     },
   ) {
@@ -258,6 +264,7 @@ export class PurchaseRequestsService {
         where: { id },
         data: {
           version: { increment: 1 },
+          ...(body.notes !== undefined && { notes: body.notes }),
           ...(body.lines && {
             lines: {
               create: body.lines.map((line) => ({
@@ -330,7 +337,7 @@ export class PurchaseRequestsService {
     userRole: Role,
     body: { comments?: string; version?: number; ipAddress?: string },
   ) {
-    return this.workflowService.executeTransition(
+    const result = await this.workflowService.executeTransition(
       id,
       'purchaseRequest',
       'SUBMIT',
@@ -340,6 +347,37 @@ export class PurchaseRequestsService {
       body.version,
       body.ipAddress,
     );
+
+    const pr = await this.prisma.purchaseRequest.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        branchId: true,
+        createdById: true,
+        requestNumber: true,
+        lines: {
+          select: {
+            quantity: true,
+          },
+        },
+      },
+    });
+
+    if (pr) {
+      const totalQuantity = pr.lines.reduce(
+        (sum, line) => sum + Number(line.quantity),
+        0,
+      );
+      this.eventEmitter.emit('pr.submitted', {
+        prId: pr.id,
+        branchId: pr.branchId,
+        creatorId: pr.createdById,
+        requestNumber: pr.requestNumber,
+        totalValue: totalQuantity,
+      });
+    }
+
+    return result;
   }
 
   async approve(
@@ -486,6 +524,7 @@ export class PurchaseRequestsService {
                   return {
                     itemId: prLine.itemId,
                     quantity: prLine.quantity,
+                    uomId: prLine.uomId || null,
                     unitPrice: unitPrice,
                   };
                 }),

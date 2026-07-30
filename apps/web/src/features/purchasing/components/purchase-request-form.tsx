@@ -53,10 +53,23 @@ import { DocumentLineItemTable, type LineItem } from '@/components/shared/Docume
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/layouts/FormLayout';
 import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
+import { getAvailableUomsForItem, resolveUomCode, type ItemUomMeta } from '@/utils/uom-helper';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/badge';
+
+const uomConversionSchema = z.object({
+  fromUomId: z.string().optional(),
+  from_uom_id: z.string().optional(),
+  fromUomCode: z.string().optional(),
+  fromUomName: z.string().optional(),
+  toUomId: z.string().optional(),
+  to_uom_id: z.string().optional(),
+  toUomCode: z.string().optional(),
+  toUomName: z.string().optional(),
+  factor: z.union([z.number(), z.string(), z.unknown()]).optional(),
+});
 
 const lineItemSchema = z.object({
   id: z.string().optional(), // For existing lines
@@ -69,9 +82,12 @@ const lineItemSchema = z.object({
     name_en: z.string().optional(),
     image: z.string().optional().nullable(),
     primary_uom: z.object({
+      id: z.string().optional(),
       code: z.string(),
       name: z.string().optional()
     }),
+    uomConversions: z.array(uomConversionSchema).optional(),
+    uom_conversions: z.array(uomConversionSchema).optional(),
     min_stock_level: z.number().optional(),
     reorder_point: z.number().optional(),
   }),
@@ -215,9 +231,12 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           name_en: l.item.nameEn || '',
           image: l.item.image || null,
           primary_uom: {
+            id: l.item.primaryUom?.id || '',
             code: l.item.primaryUom?.code || 'EA',
             name: l.item.primaryUom?.name || l.item.primaryUom?.code || 'EA'
           },
+          uomConversions: l.item.uomConversions || [],
+          uom_conversions: l.item.uomConversions || [],
           min_stock_level: l.item.minStockLevel,
           reorder_point: l.item.reorderPoint,
         },
@@ -243,7 +262,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const watchLines = form.watch('lines') || [];
 
   const handleScan = async (barcode: string) => {
-    const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data as any);
+    const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data as Item[]);
     const item = resolved?.item;
     const targetUomId = resolved?.uomId || item?.primaryUom?.id || 'EA';
 
@@ -267,9 +286,12 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             name_en: item.name,
             image: item.image || null,
             primary_uom: {
+              id: item.primaryUom?.id || targetUomId,
               code: item.primaryUom?.code || targetUomId,
               name: item.primaryUom?.name || item.primaryUom?.code || targetUomId
             },
+            uomConversions: item.uomConversions || [],
+            uom_conversions: item.uomConversions || [],
             min_stock_level: item.minStockLevel,
             reorder_point: item.reorderPoint,
           },
@@ -305,6 +327,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           id: l.id,
           itemId: l.item_id,
           quantity: l.req_qty,
+          uomId: l.uom_id,
         }))
       };
 
@@ -425,7 +448,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                 if (!confirmed) return;
                 try {
                   await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
-                  toast.success('Draft request deleted successfully');
+                  toast.success(t('deleted_success'));
                   router.push('/purchase-requests', { skipGuard: true });
                 } catch (error) {
                   const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
@@ -638,6 +661,40 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                     onRemoveLine={(id) => {
                       const idx = fields.findIndex(f => f.id === id);
                       if (idx >= 0) remove(idx);
+                    }}
+                    renderUom={(line) => {
+                      const index = fields.findIndex(f => f.id === line.id);
+                      const live = watchLines[index] || {};
+                      const itemId = live.item_id || line.item?.id;
+                      const selectedItem = itemsData?.data?.find((i: Item) => i.id === itemId) || live.item || line.item;
+                      const availableUoms = getAvailableUomsForItem(selectedItem);
+                      const itemObj = selectedItem as (Item & ItemUomMeta) | undefined;
+                      const primaryUomId = itemObj?.primaryUom?.id || itemObj?.primary_uom?.id;
+                      const currentUomId = live.uom_id || line.uomId || primaryUomId || '';
+                      const resolvedCode = resolveUomCode(currentUomId, selectedItem);
+
+                      if (isFormDisabled || availableUoms.length <= 1) {
+                        return (
+                          <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2.5 py-1 bg-surface-container rounded font-mono font-bold">
+                            {resolvedCode}
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <SmartCombobox
+                          items={availableUoms}
+                          value={currentUomId}
+                          onSelect={(uom) => {
+                            if (index >= 0) {
+                              form.setValue(`lines.${index}.uom_id`, String(uom.id), { shouldDirty: true, shouldValidate: true });
+                            }
+                          }}
+                          getPrimaryLabel={(uom) => uom.code || uom.name || 'UOM'}
+                          triggerClassName="h-9 min-w-[90px] bg-card border border-border text-foreground rounded-lg text-xs font-bold uppercase shadow-sm focus:ring-1 focus:ring-operational-cyan"
+                          disabled={isFormDisabled || isSubmitting}
+                        />
+                      );
                     }}
                     renderQty={(line) => {
                       const index = fields.findIndex(f => f.id === line.id);

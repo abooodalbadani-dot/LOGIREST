@@ -36,6 +36,10 @@ export class CreatePurchaseRequestDto {
   @IsOptional()
   departmentId?: string;
 
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PrLineDto)

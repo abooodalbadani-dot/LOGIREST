@@ -83,7 +83,7 @@ services:
       - ./apps/web/public/uploads:/app/apps/web/public/uploads
       - ./backups:/backups:ro
     working_dir: /app/apps/api
-    command: sh -c "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; fi && ../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma migrate deploy && npm run start:dev"
+    command: sh -c "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; fi && ../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma migrate deploy && node dist/apps/api/src/main"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"const http = require('http'); const req = http.request({host: 'localhost', port: 4000, path: '/health', timeout: 2000}, (res) => { if (res.statusCode === 200) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();\""]
       interval: 10s

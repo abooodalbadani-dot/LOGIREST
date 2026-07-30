@@ -54,6 +54,7 @@ import { LandedCostModule } from './modules/procurement/landed-cost/landed-cost.
 import { SettingsModule } from './modules/settings/settings.module';
 import { ImportsModule } from './modules/imports/imports.module';
 
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CorrelationMiddleware } from './common/correlation.middleware';
 import { correlationStorage } from './common/correlation.context';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -65,6 +66,7 @@ const rootDir = process.cwd().includes('apps')
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
@@ -89,7 +91,7 @@ const rootDir = process.cwd().includes('apps')
         },
         level: process.env.LOG_LEVEL || 'info',
         transport:
-          process.env.NODE_ENV !== 'production'
+          process.env.LOG_PRETTY === 'true'
             ? { target: 'pino-pretty', options: { colorize: true } }
             : undefined,
       },

@@ -489,6 +489,7 @@ model PurchaseRequest {
   branchId      String
   warehouseId   String
   departmentId  String?
+  notes         String?  @map("notes")
   status        PRStatus @default(DRAFT)
   createdById   String
   version       Int      @default(1)

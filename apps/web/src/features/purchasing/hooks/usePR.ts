@@ -18,12 +18,37 @@ const PRLineSchema = z.object({
    code: z.string(),
    name: z.string().optional(),
   }),
+  uomConversions: z.array(z.object({
+   fromUomId: z.string().optional(),
+   fromUomCode: z.string().optional(),
+   fromUomName: z.string().optional(),
+   toUomId: z.string().optional(),
+   toUomCode: z.string().optional(),
+   toUomName: z.string().optional(),
+   factor: z.number().optional(),
+  })).optional(),
   minStockLevel: z.number().optional(),
   reorderPoint: z.number().optional(),
   image: z.string().nullable().optional(),
  }),
  reqQty: z.number(),
  uomId: z.string(),
+ uom: z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string().optional(),
+ }).nullable().optional(),
+});
+
+export const PRApprovalEventSchema = z.object({
+ id: z.string(),
+ action: z.string(),
+ comments: z.string().nullable().optional(),
+ createdAt: z.string(),
+ user: z.object({
+  name: z.string().optional().nullable(),
+  role: z.string().optional().nullable(),
+ }).nullable().optional(),
 });
 
 export const PRDetailSchema = z.object({
@@ -42,6 +67,7 @@ export const PRDetailSchema = z.object({
  createdBy: z.string().optional(),
  updatedAt: z.string().optional(),
  lines: z.array(PRLineSchema),
+ approvalEvents: z.array(PRApprovalEventSchema).optional().default([]),
 });
 
 export type PRDetail = z.infer<typeof PRDetailSchema>;

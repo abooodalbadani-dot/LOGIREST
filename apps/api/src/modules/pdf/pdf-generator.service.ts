@@ -3,6 +3,7 @@ import { chromium } from 'playwright';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PrismaService } from '../../database/prisma.service';
+import { DocumentType } from '@prisma/client';
 import { otantikBase64Logo } from './logo-base64';
 import { getDocumentTitle } from '@logirest/shared-types';
 
@@ -1102,7 +1103,7 @@ export class PdfGeneratorService {
         include: {
           warehouse: true,
           branch: true,
-          createdBy: { select: { name: true, email: true } },
+          createdBy: { select: { name: true, email: true, role: true } },
           lines: {
             include: {
               uom: true,
@@ -1120,46 +1121,78 @@ export class PdfGeneratorService {
         throw new NotFoundException(`Purchase Request with ID ${id} not found`);
       }
 
+      const approvalEvents = await this.prisma.approvalEvent.findMany({
+        where: {
+          documentId: pr.id,
+          documentType: DocumentType.PURCHASE_REQUEST,
+        },
+        include: {
+          user: { select: { name: true, role: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+
       const isAr = locale === 'ar';
-      const title = getDocumentTitle('pr', locale);
+      const baseTitle = isAr ? 'طلب شراء' : 'PURCHASE REQUISITION';
+      const title = `${baseTitle} - ${pr.requestNumber}`;
+
+      const statusMap: Record<string, string> = {
+        DRAFT: isAr ? 'مسودة' : 'DRAFT',
+        SUBMITTED: isAr ? 'تم الإرسال' : 'SUBMITTED',
+        APPROVED: isAr ? 'معتمد' : 'APPROVED',
+        REJECTED: isAr ? 'مرفوض' : 'REJECTED',
+        CANCELLED: isAr ? 'ملغى' : 'CANCELLED',
+      };
+      const statusDisplay = statusMap[pr.status] || pr.status;
 
       const detailsHtml = `
         <div class="details-column">
           <div class="details-column-title">${isAr ? 'معلومات الطلب' : 'Request Info'}</div>
-          <div class="details-row"><span class="details-label">${isAr ? 'رقم المستند' : 'Doc No'}:</span> ${pr.requestNumber}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'رقم المستند' : 'Doc No'}:</span> <strong>${pr.requestNumber}</strong></div>
           <div class="details-row"><span class="details-label">${isAr ? 'أنشئ بواسطة' : 'Created By'}:</span> ${pr.createdBy?.name || 'System'}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'تاريخ الطلب' : 'Date'}:</span> ${this.formatDate(pr.createdAt, timeZone)}</div>
         </div>
         <div class="details-column">
-          <div class="details-column-title">${isAr ? 'الموقع' : 'Location'}</div>
+          <div class="details-column-title">${isAr ? 'الموقع والنطاق' : 'Location & Scope'}</div>
           <div class="details-row"><span class="details-label">${isAr ? 'المستودع' : 'Warehouse'}:</span> ${pr.warehouse?.name || '—'}</div>
           <div class="details-row"><span class="details-label">${isAr ? 'الفرع' : 'Branch'}:</span> ${pr.branch?.name || '—'}</div>
-          <div class="details-row"><span class="details-label">${isAr ? 'الحالة' : 'Status'}:</span> ${pr.status}</div>
+          <div class="details-row"><span class="details-label">${isAr ? 'الحالة' : 'Status'}:</span> <strong>${statusDisplay}</strong></div>
         </div>
       `;
 
       let rowsHtml = '';
+      let index = 1;
       for (const line of pr.lines) {
-        const lineUom = line.uom?.code || line.uom?.name || line.item?.unitOfMeasure?.code || '—';
+        const lineUom =
+          line.uom?.name ||
+          line.uom?.code ||
+          line.item?.unitOfMeasure?.name ||
+          line.item?.unitOfMeasure?.code ||
+          '—';
+        const itemName = line.item?.name || '—';
+
         rowsHtml += `
           <tr>
-            <td>${line.item?.sku || '—'}</td>
+            <td style="text-align: center;">${index++}</td>
+            <td style="font-family: monospace;">${line.item?.sku || '—'}</td>
             <td>
-              <div style="font-weight: 600;">${line.item?.name || '—'}</div>
+              <div style="font-weight: 600;">${itemName}</div>
             </td>
-            <td class="align-center">${Number(line.quantity)}</td>
-            <td class="align-center">${lineUom}</td>
+            <td style="text-align: center; font-weight: 600;">${Number(line.quantity)}</td>
+            <td style="text-align: center;">${lineUom}</td>
           </tr>
         `;
       }
 
-      const contentHtml = `
+      let contentHtml = `
         <table>
           <thead>
             <tr>
+              <th style="width: 5%; text-align: center;">#</th>
               <th style="width: 20%;">${isAr ? 'كود الصنف' : 'SKU'}</th>
-              <th style="width: 50%;">${isAr ? 'اسم الصنف' : 'Description'}</th>
-              <th style="width: 15%;" class="align-center">${isAr ? 'الكمية المطلوبة' : 'Req Qty'}</th>
-              <th style="width: 15%;" class="align-center">${isAr ? 'الوحدة' : 'UoM'}</th>
+              <th style="width: 45%;">${isAr ? 'اسم الصنف' : 'Item Description'}</th>
+              <th style="width: 15%; text-align: center;">${isAr ? 'الكمية المطلوبة' : 'Req Qty'}</th>
+              <th style="width: 15%; text-align: center;">${isAr ? 'الوحدة' : 'UoM'}</th>
             </tr>
           </thead>
           <tbody>
@@ -1167,6 +1200,63 @@ export class PdfGeneratorService {
           </tbody>
         </table>
       `;
+
+      if (pr.notes) {
+        contentHtml += `
+          <div style="margin-top: 15px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #f8fafc; font-size: 9pt;">
+            <strong style="color: #b48e67;">${isAr ? 'ملاحظات الطلب' : 'Request Notes'}:</strong> ${pr.notes}
+          </div>
+        `;
+      }
+
+      if (approvalEvents && approvalEvents.length > 0) {
+        let eventRows = '';
+        for (const ev of approvalEvents) {
+          const actionName =
+            ev.actionPerformed === 'SUBMIT'
+              ? isAr ? 'إرسال' : 'Submitted'
+              : ev.actionPerformed === 'APPROVE'
+              ? isAr ? 'اعتماد' : 'Approved'
+              : ev.actionPerformed === 'REJECT'
+              ? isAr ? 'رفض' : 'Rejected'
+              : ev.actionPerformed === 'CANCEL'
+              ? isAr ? 'إلغاء' : 'Cancelled'
+              : ev.actionPerformed;
+          const userName = ev.user?.name || ev.user?.role || (isAr ? 'النظام' : 'System');
+          const commentsText = ev.comments || '—';
+          const evDate = this.formatDate(ev.createdAt, timeZone);
+
+          eventRows += `
+            <tr>
+              <td><strong>${actionName}</strong></td>
+              <td>${userName}</td>
+              <td>${evDate}</td>
+              <td>${commentsText}</td>
+            </tr>
+          `;
+        }
+
+        contentHtml += `
+          <div style="margin-top: 20px;">
+            <div style="font-weight: 700; font-size: 9.5pt; color: #b48e67; margin-bottom: 6px; border-bottom: 1.5px solid #b48e67; padding-bottom: 3px;">
+              ${isAr ? 'سجل الاعتماد والملاحظات' : 'Approval History & Comments'}
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 15%;">${isAr ? 'الإجراء' : 'Action'}</th>
+                  <th style="width: 25%;">${isAr ? 'المستخدم' : 'User'}</th>
+                  <th style="width: 25%;">${isAr ? 'التاريخ' : 'Date'}</th>
+                  <th style="width: 35%;">${isAr ? 'الملاحظات / سبب الرفض' : 'Notes / Rejection Reason'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${eventRows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
 
       const logoHtml = await this.getRestaurantLogoHtml();
       const html = this.wrapHtml(

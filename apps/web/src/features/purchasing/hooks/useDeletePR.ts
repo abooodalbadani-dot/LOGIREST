@@ -9,7 +9,8 @@ import { ApiError } from '@/types/api';
 
 export function useDeletePR() {
  const queryClient = useQueryClient();
- const t = useTranslations('procurement.purchase_requests');
+ const t = useTranslations('procurement.pr');
+ const tc = useTranslations('common');
 
  return useMutation({
   mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
@@ -22,10 +23,9 @@ export function useDeletePR() {
   },
   onError: (error: unknown) => {
    if (error instanceof Error && error.name === 'AbortError') return;
-   
-   const errorCode = (error as ApiError)?.code || (error as Error)?.message || 'delete_failed';
-   const translationKey = `errors.${errorCode}`;
-   toast.error(t.has(translationKey) ? t(translationKey) : t('errors.delete_failed'));
+   const errObj = error as Record<string, unknown>;
+   if (errObj?._isToastShown) return;
+   toast.error(tc('error'));
   }
  });
 }
