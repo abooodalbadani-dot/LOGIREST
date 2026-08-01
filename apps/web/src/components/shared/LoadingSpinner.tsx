@@ -27,7 +27,7 @@ export default function LoadingSpinner({
             />
 
             {/* Central Glassmorphic Luxury Card (Fixed Responsive Width) */}
-            <div className="relative z-10 flex flex-col items-center text-center w-[92vw] sm:w-[480px] md:w-[520px] backdrop-blur-2xl bg-[#0b0e17]/85 border border-[#CAAE85]/30 shadow-[0_30px_100px_-20px_rgba(0,0,0,0.95),0_0_60px_rgba(202,174,133,0.15)] rounded-[2.5rem] px-6 py-10 md:px-10 md:py-12 transition-all">
+            <div className="relative z-10 flex flex-col items-center text-center w-[92vw] sm:w-[480px] md:w-[520px] backdrop-blur-2xl bg-[#06070a]/85 border border-[#CAAE85]/30 shadow-[0_30px_100px_-20px_rgba(0,0,0,0.95),0_0_60px_rgba(202,174,133,0.15)] rounded-[2.5rem] px-6 py-10 md:px-10 md:py-12 transition-all">
 
                 {/* Logo & Circular Orbital Rings */}
                 <div className="relative flex items-center justify-center w-32 h-32 md:w-36 md:h-36 mb-6">
@@ -37,9 +37,9 @@ export default function LoadingSpinner({
                     <div className="absolute inset-2 rounded-full border border-[#CAAE85]/40 border-t-transparent border-b-transparent animate-[spin_8s_linear_infinite_reverse]" />
 
                     {/* Central Gold Emblem Box */}
-                    <div className="relative flex items-center justify-center w-20 h-20 md:w-22 md:h-22 rounded-2xl bg-gradient-to-b from-[#1c2233] via-[#101422] to-[#070910] border border-[#CAAE85]/60 shadow-[0_0_35px_rgba(202,174,133,0.3)] p-4 overflow-hidden">
+                    <div className="relative flex items-center justify-center w-20 h-20 md:w-22 md:h-22 rounded-2xl bg-gradient-to-b from-[#05070c] via-[#06070a] to-[#06070a] border border-[#CAAE85]/60 shadow-[0_0_35px_rgba(202,174,133,0.3)] p-4 overflow-hidden">
                         {/* Inner Shimmer overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-[#CAAE85]/25 via-transparent to-[#CAAE85]/15 opacity-80" />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-[#CAAE85]/10 via-transparent to-[#CAAE85]/5 opacity-80" />
                         <Image
                             src="/logoicon.svg"
                             alt="Otantik Logo"

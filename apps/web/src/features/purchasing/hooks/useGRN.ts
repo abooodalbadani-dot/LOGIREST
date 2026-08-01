@@ -28,6 +28,11 @@ export const LineItemSchema = z.object({
  qty: z.number(),
  receivedQty: z.number().min(0, 'Must not be less than 0'),
  uomId: z.string(),
+ uom: z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string().optional(),
+ }).optional(),
  unitCostForeign: z.number().nullable().refine(val => val === null || val >= 0, {
   message: 'Must not be less than 0'
  }),
@@ -57,6 +62,7 @@ export const GRNDetailSchema = z.object({
  notes: z.string().nullable(),
  createdAt: z.string().optional(),
  createdBy: z.string().optional(),
+ createdById: z.string().optional().nullable(),
  updatedAt: z.string().optional(),
  lines: z.array(LineItemSchema)
 });
@@ -145,6 +151,7 @@ const GRNDetailResponseSchema = z.object({
  notes: z.string().nullish(),
  createdAt: RobustDateSchema,
  createdBy: z.string().nullish(),
+ createdById: z.string().nullish(),
  updatedAt: RobustDateSchema,
  lines: z.array(GRNLineItemResponseSchema).default([])
 }).transform((val) => {
@@ -171,6 +178,7 @@ const GRNDetailResponseSchema = z.object({
   notes: val.notes ?? null,
   createdAt: val.createdAt ?? undefined,
   createdBy: val.createdBy ?? undefined,
+  createdById: val.createdById ?? undefined,
   updatedAt: val.updatedAt ?? undefined,
   lines: val.lines
  };

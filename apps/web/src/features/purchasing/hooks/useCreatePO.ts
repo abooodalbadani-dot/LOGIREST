@@ -15,13 +15,13 @@ const CreatePOPayloadSchema = z.object({
  exchangeRate: z.number(),
  expectedDate: z.string(),
  isSubmitted: z.boolean().optional(),
- notes: z.string().optional().or(z.literal('')),
+ notes: z.string().nullable().optional().or(z.literal('')),
  lines: z.array(z.object({
   itemId: z.string(),
   quantity: z.number().positive(),
   unitPrice: z.number().nonnegative(),
   uomId: z.string(),
-  notes: z.string().optional().or(z.literal(''))
+  notes: z.string().nullable().optional().or(z.literal(''))
  }))
 });
 

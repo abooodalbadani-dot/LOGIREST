@@ -1296,7 +1296,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
   if (normalizedPath === '/procurement/purchase-orders') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.po.findAll());
-    if (method === 'POST') return db.po.save(MockFactory.createPO(body as PurchaseOrder));
+    if (method === 'POST') {
+      const saved = await db.po.save(MockFactory.createPO(body as PurchaseOrder));
+      return { data: saved };
+    }
   }
   if (normalizedPath.startsWith('/procurement/purchase-orders/')) {
     const parts = normalizedPath.split('/');
@@ -1305,7 +1308,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (!doc) return undefined;
 
     if (method === 'GET') return { data: doc };
-    if (method === 'PUT') return db.po.save({ ...(body as PurchaseOrder), id });
+    if (method === 'PUT') {
+      const saved = await db.po.save({ ...doc, ...(body as Record<string, unknown>), id });
+      return { data: saved };
+    }
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
@@ -1317,7 +1323,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       const nextStatus = getNextStatusV2('PO', doc.status, action as DocumentAction);
       if (nextStatus) {
-        return db.po.save({ ...doc, status: nextStatus });
+        const saved = await db.po.save({ ...doc, status: nextStatus });
+        return { data: saved };
       }
     }
   }

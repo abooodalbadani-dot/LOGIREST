@@ -30,6 +30,7 @@ export const StocktakeSessionSchema = z.object({
  snapshotAt: z.string(),
  startedBy: z.string(),
  startedAt: z.string().optional(),
+ createdById: z.string().optional().nullable(),
  postedAt: z.string().nullable(),
  postedBy: z.string().nullable(),
  items: z.array(StocktakeItemSchema),

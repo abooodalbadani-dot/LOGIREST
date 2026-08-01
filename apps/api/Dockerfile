@@ -61,8 +61,6 @@ RUN --mount=type=cache,target=/root/.npm \
 # ─────────────────────────────────────────────────────────────────────────────
 FROM deps AS builder
 
-# Prisma binary mirror — reliable CDN for native query-engine downloads
-ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 # Cap memory to avoid OOM-kill on low-RAM VPS during TS compilation
 ENV NODE_OPTIONS="--max-old-space-size=1024"
 
@@ -73,8 +71,7 @@ COPY apps/api/  apps/api/
 # Step 1: Generate Prisma Client (MUST run before nest build).
 # Schema is at apps/api/prisma/schema.prisma (local to the API workspace).
 # Outputs the generated client into node_modules/@prisma/client.
-RUN ./node_modules/.bin/prisma generate \
-        --schema=apps/api/prisma/schema.prisma
+RUN for i in 1 2 3 4 5; do ./node_modules/.bin/prisma generate --schema=apps/api/prisma/schema.prisma && break || sleep 2; done
 
 # Step 2: Compile TypeScript → dist/
 # nest-cli.json: entryFile = "apps/api/src/main"
@@ -98,7 +95,6 @@ RUN apk add --no-cache curl openssl chromium
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 # Path to the Chromium binary installed by apk (used by Playwright)
 ENV CHROMIUM_PATH=/usr/bin/chromium
 ENV NODE_OPTIONS="--max-old-space-size=1024"

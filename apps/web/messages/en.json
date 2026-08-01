@@ -1,5 +1,6 @@
 {
   "errors": {
+    "anti_self_approval": "Separation of Duties: You cannot approve or reject a document you created.",
     "unauthorized": "Session expired. Please log in again.",
     "forbidden": "Access denied. You do not have the required permissions.",
     "network": "Network error. Please check your connection.",
@@ -458,6 +459,8 @@
     "qty_after": "Qty After",
     "void_reason_placeholder": "Enter explanation...",
     "void_success": "Document voided successfully.",
+    "subtotal": "Subtotal",
+    "order_details": "Order Details",
     "actions": {
       "all_branches": "All Branches",
       "approve": "Approve",
@@ -470,14 +473,17 @@
       "delete": "Delete",
       "done": "Done",
       "edit": "Edit",
+      "fulfill": "Fulfill",
       "go_back": "Go Back",
       "no_data": "No Data",
       "post": "Post",
+      "receive": "Receive",
       "reject": "Reject",
       "reload_page": "Reload Page",
       "remove_line": "Remove line",
       "retry": "Retry",
       "save": "Save",
+      "ship": "Ship",
       "submit": "Submit",
       "view_all": "View All",
       "void": "Void Document",
@@ -619,6 +625,7 @@
       "something_went_wrong": "Something went wrong",
       "title": "Error Encountered",
       "unauthorized": "You do not have permission to access this page.",
+      "anti_self_approval": "Separation of Duties: You cannot approve or reject a document you created.",
       "unexpected_error": "The application encountered an unexpected error."
     },
     "excel": "Excel",
@@ -3555,6 +3562,8 @@
       "supplier": "Supplier"
     },
     "po": {
+      "reject_confirm_title": "Reject Purchase Order",
+      "reject_reason_placeholder": "Enter rejection reason...",
       "actions": {
         "approve": "Approve",
         "approve_success": "Purchase Order approved successfully",

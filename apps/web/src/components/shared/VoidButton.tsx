@@ -25,7 +25,7 @@ import { DocumentStatus } from '@/types/documents';
 
 interface VoidButtonProps {
   documentId: string;
-  documentType: 'GRN' | 'ISSUE' | 'ADJUSTMENT' | 'TRANSFER' | 'KITCHEN_REQUEST';
+  documentType: 'GRN' | 'ISSUE' | 'ADJUSTMENT' | 'TRANSFER' | 'KITCHEN_REQUEST' | 'STOCKTAKE';
   status: DocumentStatus;
   version: number;
   onSuccess?: () => void;

@@ -71,21 +71,22 @@ export const lineItemSchema = z.object({
   quantity: z.coerce.number().min(0),
   unitPrice: z.coerce.number().min(0),
   uomId: z.string().min(1),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional().or(z.literal('')),
 });
 
 export const formSchema = z.object({
   supplierId: z.string().min(1),
-  prId: z.string().optional(),
+  prId: z.string().optional().or(z.literal('')),
   currencyId: z.string().min(1),
   exchangeRate: z.coerce.number().positive().min(0.000001),
   expectedDate: z.string().min(1),
-  targetWarehouseId: z.string().min(1),
-  notes: z.string().optional(),
+  targetWarehouseId: z.string().optional().or(z.literal('')),
+  notes: z.string().nullable().optional().or(z.literal('')),
   lines: z.array(lineItemSchema).min(1),
 });
 
 export type PurchaseOrderFormValues = z.infer<typeof formSchema>;
+
 
 
 interface PurchaseOrderFormProps {
@@ -110,10 +111,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       currencyId: initialData?.currencyId || "",
       exchangeRate: initialData?.exchangeRate || 1,
       expectedDate: initialData?.expectedDate ? initialData.expectedDate.split("T")[0] : new Date().toISOString().split("T")[0],
-      targetWarehouseId: initialData?.targetWarehouseId || "",
+      targetWarehouseId: initialData?.targetWarehouseId || (initialData as Record<string, unknown>)?.warehouseId as string || "",
       notes: initialData?.notes || "",
       lines: initialData?.lines ? initialData.lines.map(l => ({
-        itemId: l.item?.id || "",
+        itemId: l.item?.id || l.itemId || "",
         itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || "",
         itemCode: l.item?.code || "",
         quantity: l.quantity || 1,
@@ -123,6 +124,31 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       })) : []
     },
   });
+
+  // Re-hydrate form whenever initialData changes/loads
+  React.useEffect(() => {
+    if (initialData) {
+      form.reset({
+        supplierId: initialData.supplierId || "",
+        prId: initialData.prId || "",
+        currencyId: initialData.currencyId || "",
+        exchangeRate: initialData.exchangeRate || 1,
+        expectedDate: initialData.expectedDate ? initialData.expectedDate.split("T")[0] : new Date().toISOString().split("T")[0],
+        targetWarehouseId: initialData.targetWarehouseId || (initialData as Record<string, unknown>)?.warehouseId as string || "",
+        notes: initialData.notes || "",
+        lines: initialData.lines ? initialData.lines.map(l => ({
+          itemId: l.item?.id || l.itemId || "",
+          itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || "",
+          itemCode: l.item?.code || "",
+          quantity: l.quantity || 1,
+          unitPrice: l.unitPrice || 0,
+          uomId: l.uomId || l.item?.primaryUom?.id || "PCS",
+          notes: l.notes || ""
+        })) : []
+      });
+    }
+  }, [initialData, form, locale]);
+
 
   // Sync dirty state
   React.useEffect(() => {
@@ -162,7 +188,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       return;
     }
 
-    const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data as any);
+    const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data);
     const item = resolved?.item;
     const targetUomId = resolved?.uomId || item?.primaryUom?.id || 'PCS';
 
@@ -407,37 +433,44 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   }, [currencies]);
 
   React.useEffect(() => {
-    if (selectedCurrencyCode) {
-      const isUserChange = currencyId !== initialCurrencyId.current;
-      const shouldAutoPopulate = !initialData || isUserChange;
+    if (!selectedCurrencyCode || !baseCurrency) return;
 
-      if (shouldAutoPopulate) {
-        if (selectedCurrencyCode === baseCurrency) {
-          form.setValue("exchangeRate", 1, { shouldValidate: true, shouldDirty: true });
-        } else if (fxRates && fxRates.length > 0) {
-          const fetchedRate = fxRates[0]?.rate;
-          if (fetchedRate && !Number.isNaN(fetchedRate)) {
-            form.setValue("exchangeRate", fetchedRate, { shouldValidate: true, shouldDirty: true });
-          }
-        }
+    if (selectedCurrencyCode === baseCurrency) {
+      form.setValue("exchangeRate", 1, { shouldValidate: true, shouldDirty: true });
+      return;
+    }
+
+    if (fxRates && fxRates.length > 0) {
+      const baseCurrId = currencies?.find(c => c.code === baseCurrency)?.id;
+
+      const directMatch = fxRates.find(r => {
+        const fromCode = r.fromCurrency?.code || currencies?.find(c => c.id === r.fromCurrencyId)?.code;
+        const toCode = r.toCurrency?.code || currencies?.find(c => c.id === r.toCurrencyId)?.code;
+        return (fromCode === selectedCurrencyCode || r.fromCurrencyId === currencyId) &&
+               (toCode === baseCurrency || (baseCurrId && r.toCurrencyId === baseCurrId));
+      });
+
+      const inverseMatch = !directMatch ? fxRates.find(r => {
+        const fromCode = r.fromCurrency?.code || currencies?.find(c => c.id === r.fromCurrencyId)?.code;
+        const toCode = r.toCurrency?.code || currencies?.find(c => c.id === r.toCurrencyId)?.code;
+        return (fromCode === baseCurrency || (baseCurrId && r.fromCurrencyId === baseCurrId)) &&
+               (toCode === selectedCurrencyCode || r.toCurrencyId === currencyId);
+      }) : undefined;
+
+      let fetchedRate: number | undefined;
+      if (directMatch?.rate) {
+        fetchedRate = directMatch.rate;
+      } else if (inverseMatch?.rate && inverseMatch.rate > 0) {
+        fetchedRate = Math.round((1 / inverseMatch.rate) * 100000) / 100000;
+      } else if (fxRates[0]?.rate) {
+        fetchedRate = fxRates[0].rate;
+      }
+
+      if (fetchedRate && !Number.isNaN(fetchedRate) && fetchedRate > 0) {
+        form.setValue("exchangeRate", fetchedRate, { shouldValidate: true, shouldDirty: true });
       }
     }
-  }, [fxRates, form, initialData, selectedCurrencyCode, baseCurrency, currencyId]);
-
-  React.useEffect(() => {
-    if (currencyId !== lastCurrencyIdRef.current) {
-      const nextCode = currencies?.find(c => c.id === currencyId)?.code || '';
-      lastCurrencyIdRef.current = currencyId;
-
-      if (currencyId) {
-        if (nextCode === baseCurrency) {
-          form.setValue("exchangeRate", 1, { shouldValidate: true, shouldDirty: true });
-        } else {
-          form.setValue("exchangeRate", undefined as unknown as number, { shouldValidate: true, shouldDirty: true });
-        }
-      }
-    }
-  }, [currencyId, currencies, baseCurrency, form]);
+  }, [fxRates, form, selectedCurrencyCode, baseCurrency, currencyId, currencies]);
 
   React.useEffect(() => {
     if (currencies && baseCurrency && !form.getValues('currencyId') && !initialData) {
@@ -535,7 +568,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         <SmartCombobox
                           items={supplierItems}
                           value={field.value}
-                          onSelect={(item) => field.onChange(item.id)}
+                          onSelect={(item) => {
+                            field.onChange(item.id);
+                            const selectedSupplier = suppliers?.find(s => s.id === item.id);
+                            if (selectedSupplier?.currencyId) {
+                              form.setValue('currencyId', selectedSupplier.currencyId, { shouldValidate: true, shouldDirty: true });
+                            }
+                          }}
                           placeholder={t('select_supplier')}
                           className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
@@ -740,7 +779,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <FormItem className="md:col-span-2 text-start">
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('general_notes')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
+                        <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

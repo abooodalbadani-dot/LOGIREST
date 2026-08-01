@@ -652,6 +652,7 @@ function LineItemRow({
                                                                disabled={isLocked}
                                                                className="bg-background border border-border text-foreground h-10 rounded-xl text-xs font-medium transition-all focus:ring-2 focus:ring-cyan-500/20"
                                                                {...inputField}
+                                                               value={inputField.value || ''}
                                                         />
                                                  </FormControl>
                                                  <FormMessage className="text-[10px] mt-1" />

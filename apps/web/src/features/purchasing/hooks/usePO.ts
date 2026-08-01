@@ -31,7 +31,12 @@ const POLineSchema = z.object({
  quantity: z.number().optional(),
  unitPrice: z.number().optional(),
  uomId: z.string(),
- notes: z.string().optional(),
+ uom: z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string().optional(),
+ }).optional(),
+ notes: z.string().nullable().optional(),
 });
 
 export const PODetailSchema = z.object({
@@ -57,6 +62,7 @@ export const PODetailSchema = z.object({
  auditLog: z.array(AuditLogSchema).optional(),
  createdAt: z.string().optional(),
  createdBy: z.string().optional(),
+ createdById: z.string().optional().nullable(),
  updatedAt: z.string().optional(),
 });
 

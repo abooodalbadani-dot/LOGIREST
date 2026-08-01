@@ -27,39 +27,22 @@ import { RelationalName } from '@/components/shared/RelationalName';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import type { LotAllocation, StockIssue } from '@/types/documents';
 import { useAuth } from '@/providers/AuthProvider';
-import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
-import { canPerformActionV2 } from '@logirest/shared-types';
-import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 
 interface IssueViewerProps {
  issue: StockIssue;
  locale: 'ar' | 'en';
+ actions?: React.ReactNode;
 }
 
-export function IssueViewer({ issue, locale }: IssueViewerProps) {
+export function IssueViewer({ issue, locale, actions }: IssueViewerProps) {
  const t = useTranslations('operations.issue');
  const tCommon = useTranslations('common');
  const router = useRouter();
  const { user } = useAuth();
  const { data: settings, isLoading: isLoadingSettings } = useSystemPrintSettings();
  const [thermalConfig, setThermalConfig] = useState<{ paperSize: '80mm' | '58mm'; showLogo: boolean } | null>(null);
- const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
- const postIssueMutation = usePostIssue();
 
  const issueStatus = issue?.status ?? 'DRAFT';
- 
- const handlePost = async () => {
-  try {
-   await postIssueMutation.mutateAsync({
-    id: issue.id,
-    confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
-    version: issue.version
-   });
-   setIsPostDialogOpen(false);
-  } catch (err) {
-   console.error(err);
-  }
- };
 
   // Adapt timeline entries
   const timelineEntries = useMemo(() => {
@@ -157,6 +140,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
         </div>
        </div>
        <div className="flex items-center gap-3 shrink-0">
+        {actions}
         <Button
          variant="outline"
          disabled={isLoadingSettings}
@@ -372,29 +356,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
     />
    )}
 
-   {/* Action Toolbar / Footer */}
-   {issueStatus === 'SUBMITTED' && canPerformActionV2('issue', 'SUBMITTED', 'POST', user?.role) && (
-    <div className="w-full flex items-center justify-end gap-4 px-6 lg:px-10 py-4 bg-muted/30 border-t border-border mt-auto print:hidden">
-     <Button 
-      onClick={() => setIsPostDialogOpen(true)}
-      disabled={postIssueMutation.isPending}
-      className="bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-11 px-8 rounded-xl font-bold uppercase"
-     >
-      {t('post_issue') || 'Post Issue'}
-     </Button>
-    </div>
-   )}
-
-   <PostConfirmDialog
-    open={isPostDialogOpen}
-    onOpenChange={setIsPostDialogOpen}
-    title={t('post_confirm_title') || 'Post Confirmation'}
-    description={t('post_confirm_desc') || 'Are you sure you want to post this issue? This action is irreversible.'}
-    warningText=""
-    requiresTextConfirmation={true}
-    onConfirm={handlePost}
-    isLoading={postIssueMutation.isPending}
-   />
+   {/* Action Toolbar / Footer removed in favor of WorkflowActionBar in top header */}
   </div>
  );
 }

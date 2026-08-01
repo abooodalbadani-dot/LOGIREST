@@ -72,6 +72,7 @@ export const TransferDetailSchema = z.object({
  receivedAt: z.string().nullable(),
  varianceReason: z.string().nullable().optional(),
  createdBy: z.string().default(''),
+ createdById: z.string().optional().nullable(),
  createdAt: z.string().default(''),
  postedAt: z.string().nullable(),
  postedBy: z.string().nullable(),

@@ -65,6 +65,7 @@ export const PRDetailSchema = z.object({
  notes: z.string().nullable().optional(),
  createdAt: z.string().optional(),
  createdBy: z.string().optional(),
+ createdById: z.string().optional().nullable(),
  updatedAt: z.string().optional(),
  lines: z.array(PRLineSchema),
  approvalEvents: z.array(PRApprovalEventSchema).optional().default([]),

@@ -69,6 +69,8 @@ export const AdjustmentDetailSchema = z.object({
  approvedBy: z.string().nullable().optional(),
  postedAt: z.string().nullable().optional(),
  createdAt: z.string().optional(),
+ createdBy: z.string().optional(),
+ createdById: z.string().optional().nullable(),
  updatedAt: z.string().optional().default(''),
  version: z.number().optional(),
 

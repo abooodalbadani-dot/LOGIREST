@@ -50,6 +50,8 @@ export const FXRateSchema = z.preprocess(
   toCurrencyId: z.string(),
   rate: z.number(),
   effectiveDate: z.string(),
+  fromCurrency: z.object({ id: z.string(), code: z.string(), name: z.string() }).optional().nullable(),
+  toCurrency: z.object({ id: z.string(), code: z.string(), name: z.string() }).optional().nullable(),
  })
 );
 

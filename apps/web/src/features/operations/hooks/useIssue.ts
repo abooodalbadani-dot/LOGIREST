@@ -66,6 +66,7 @@ export const StockIssueDetailSchema = z.object({
  branchId: z.string().default(''),
  notes: z.string().nullable(),
  createdBy: z.string().default(''),
+ createdById: z.string().optional().nullable(),
  createdAt: z.string().default(''),
  updatedAt: z.string().default(''),
  postedAt: z.string().nullable(),

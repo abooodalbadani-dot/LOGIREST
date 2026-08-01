@@ -4,46 +4,54 @@ import { useTranslations } from 'next-intl';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
-import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
+import { WorkflowActionBar } from '@/components/shared/WorkflowActionBar';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { ArrowLeft, Truck, PackageCheck, Loader2 } from 'lucide-react';
+import { ArrowLeft, Truck, PackageCheck } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useLocale } from '@/hooks/useLocale';
 import { useRouter } from '@/i18n/navigation';
-import { TRANSFER_STATUS } from '@logirest/shared-types';
+import { TRANSFER_STATUS, type DocumentStatus } from '@logirest/shared-types';
 import type { Transfer } from '@/types/documents';
 import { VoidButton } from '@/components/shared/VoidButton';
-import { Button } from '@/components/ui/button';
 import { useReceiveTransfer } from '@/features/operations/hooks/useReceiveTransfer';
-import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useCancelTransfer } from '@/features/operations/hooks/useCancelTransfer';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface TransferViewerProps {
     transfer: Transfer;
 }
 
 export function TransferViewer({ transfer }: TransferViewerProps) {
-
     const t = useTranslations('operations.transfer');
     const tCommon = useTranslations('common');
     const router = useRouter();
-    const { gradientClass, locale } = useLocale();
+    const { user } = useAuth();
+    const { locale } = useLocale();
 
     const transferStatus = transfer?.transferStatus ?? TRANSFER_STATUS.DRAFT;
 
     const receiveMutation = useReceiveTransfer();
+    const cancelMutation = useCancelTransfer();
 
-    const handleConfirmReceipt = () => {
+    const handleConfirmReceipt = async () => {
         const linesReceived = (transfer?.lines ?? []).map((line) => ({
             lineId: line.id,
             quantityReceived: line.shippedQty ?? line.qty,
         }));
-        receiveMutation.mutate({
+        await receiveMutation.mutateAsync({
             id: transfer.id,
             body: {
                 version: transfer.version || 1,
                 linesReceived,
             },
+        });
+    };
+
+    const handleCancelTransfer = async () => {
+        await cancelMutation.mutateAsync({
+            id: transfer.id,
+            version: transfer.version || 1,
         });
     };
 
@@ -71,36 +79,34 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
                     </div>
 
                     <div className="flex flex-col md:flex-row md:items-center justify-start md:justify-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
-                        <div className="flex items-center gap-2">
-                            <StatusBadge status={transferStatus as BadgeStatus} />
-                            <DocumentExportMenu
-                                documentType="TRANSFER"
-                                documentId={transfer.id}
-                                documentNumber={transfer.documentNumber}
-                            />
-                            <VoidButton
-                                documentId={transfer.id}
-                                documentType="TRANSFER"
-                                status={transferStatus}
-                                version={transfer.version || 1}
-                            />
-                        </div>
-                        <PermissionGate action="receive" resource="operations_transfers">
-                            {transferStatus === TRANSFER_STATUS.IN_TRANSIT && (
-                                <Button
-                                    className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                                    onClick={handleConfirmReceipt}
-                                    disabled={receiveMutation.isPending}
-                                >
-                                    {receiveMutation.isPending ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <PackageCheck className="w-4 h-4" />
-                                    )}
-                                    {t('confirm_receipt')}
-                                </Button>
-                            )}
-                        </PermissionGate>
+                        <WorkflowActionBar
+                            documentType="TRANSFER"
+                            status={transferStatus as DocumentStatus}
+                            documentCreatorId={transfer.createdById || transfer.createdBy}
+                            currentUserId={user?.id}
+                            userRole={user?.role}
+                            onReceive={handleConfirmReceipt}
+                            isReceivePending={receiveMutation.isPending}
+                            onCancel={handleCancelTransfer}
+                            isCancelPending={cancelMutation.isPending}
+                            extraActions={
+                                <div className="flex items-center gap-2">
+                                    <StatusBadge status={transferStatus as BadgeStatus} />
+                                    <DocumentExportMenu
+                                        documentType="TRANSFER"
+                                        documentId={transfer.id}
+                                        documentNumber={transfer.documentNumber}
+                                    />
+                                    <VoidButton
+                                        documentId={transfer.id}
+                                        documentType="TRANSFER"
+                                        status={transferStatus}
+                                        version={transfer.version || 1}
+                                    />
+                                </div>
+                            }
+                            className="border-none shadow-none p-0 bg-transparent"
+                        />
                     </div>
                 </div>
             </div>

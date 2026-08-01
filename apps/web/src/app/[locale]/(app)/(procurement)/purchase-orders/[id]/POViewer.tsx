@@ -53,6 +53,18 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
   unitCost: number;
  }
 
+ const formattedDeliveryDate = React.useMemo(() => {
+  const rawDate = document?.expectedDeliveryDate || document?.expectedDate;
+  if (!rawDate) return '—';
+  try {
+    const d = new Date(rawDate);
+    if (isNaN(d.getTime())) return String(rawDate).split('T')[0];
+    return d.toISOString().split('T')[0];
+  } catch {
+    return String(rawDate).split('T')[0];
+  }
+ }, [document?.expectedDeliveryDate, document?.expectedDate]);
+
  const documentLines = document?.lines;
  const mappedLines = React.useMemo(() => {
   return documentLines?.map((line: POLine, idx: number) => ({
@@ -65,6 +77,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
     image: line.item?.image || null,
     primaryUom: { code: line.item?.primaryUom?.code || line.uomId || 'EA' }
    },
+   uom: line.uom || (line.uomId ? { id: line.uomId, code: line.uomId } : undefined),
    qty: line.quantity ?? 0,
    uomId: line.uomId || 'EA',
    unitCost: line.unitPrice ?? 0
@@ -82,7 +95,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
    )
   },
   {
-   header: tCommon('subtotal') || 'Subtotal',
+   header: (tCommon.has('subtotal') ? tCommon('subtotal') : null) || (locale === 'ar' ? 'المجموع الفرعي' : 'Subtotal'),
    cell: (line: MappedPOLine) => (
     <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
      {formatCurrency((line.qty || 0) * (line.unitCost || 0), currencyCode, locale)}
@@ -129,14 +142,14 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
        { label: tCommon('supplier'), value: <RelationalName name={document?.supplierName} rawId={document?.supplierId} />, icon: User, color: 'text-primary' },
        { label: tCommon('order_currency'), value: <RelationalName name={document?.currencyCode} rawId={document?.currencyId} />, icon: Wallet, color: 'text-operational-cyan' },
        { label: t('target_warehouse'), value: <RelationalName name={document?.warehouseName} rawId={document?.targetWarehouseId} />, icon: Warehouse, color: 'text-foreground' },
-       { label: t('expected_delivery_date'), value: document?.expectedDeliveryDate || '—', icon: Clock, color: 'text-amber-500' },
+       { label: t('expected_delivery_date'), value: formattedDeliveryDate, icon: Clock, color: 'text-amber-500' },
       ].map((item, idx) => (
-       <Card key={idx} className="p-5 bg-card border border-border shadow-sm border-none shadow-sm flex flex-col gap-3 rounded-2xl relative overflow-hidden group">
-        <div className="flex items-center justify-between relative z-10">
-         <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center", item.color)}>
+       <Card key={idx} className="p-5 bg-card border border-border shadow-sm flex flex-col gap-3 rounded-2xl relative overflow-hidden group">
+        <div className="flex items-center gap-3 relative z-10">
+         <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center shrink-0", item.color)}>
           <item.icon className="w-5 h-5" />
          </div>
-         <span className="text-xs font-bold text-muted-foreground uppercase">{item.label}</span>
+         <span className="text-xs font-bold text-muted-foreground uppercase truncate">{item.label}</span>
         </div>
         <div className="flex flex-col relative z-10">
           <span className="text-title-sm font-bold text-foreground line-clamp-1 not-italic">{item.value}</span>
@@ -153,7 +166,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
        </div>
        <div>
         <h3 className="text-xs font-bold uppercase text-muted-foreground">{tCommon('items')}</h3>
-        <p className="text-xs font-bold text-muted-foreground uppercase mt-0.5">{tCommon('order_details')}</p>
+        <p className="text-xs font-bold text-muted-foreground uppercase mt-0.5">{(tCommon.has('order_details') ? tCommon('order_details') : null) || (locale === 'ar' ? 'تفاصيل الطلب' : 'Order Details')}</p>
        </div>
       </div>
 

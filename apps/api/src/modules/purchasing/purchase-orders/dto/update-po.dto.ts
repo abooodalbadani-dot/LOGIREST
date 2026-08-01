@@ -7,6 +7,7 @@ import {
   ValidateNested,
   IsArray,
   IsInt,
+  ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -30,6 +31,11 @@ export class UpdatePoLineDto {
   @IsString()
   @IsOptional()
   uomId?: string;
+
+  @ValidateIf((_, v) => v !== null)
+  @IsString()
+  @IsOptional()
+  notes?: string | null;
 }
 
 export class UpdatePoDto {
@@ -48,6 +54,17 @@ export class UpdatePoDto {
   @IsString()
   @IsOptional()
   warehouseId?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0.000001)
+  @Type(() => Number)
+  exchangeRate?: number;
+
+  @ValidateIf((_, v) => v !== null)
+  @IsString()
+  @IsOptional()
+  notes?: string | null;
 
   @IsInt()
   @IsNotEmpty()

@@ -27,6 +27,7 @@ export interface StocktakeSessionVM {
  status: DocumentStatus;
  snapshotAt: string;
  startedBy: string;
+ createdById?: string | null;
  postedAt: string | null;
  postedBy: string | null;
  items: StocktakeItemVM[];
@@ -73,6 +74,7 @@ export function mapToSessionVM(session: StocktakeSession): StocktakeSessionVM {
   status: session.status,
   snapshotAt: session.snapshotAt,
   startedBy: session.startedBy,
+  createdById: session.createdById ?? null,
   postedAt: session.postedAt,
   postedBy: session.postedBy,
   items: (session.items || []).map(mapToItemVM),

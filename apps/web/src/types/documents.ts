@@ -15,6 +15,7 @@ export const BaseDocumentSchema = z.object({
   branchId: z.string(),
   notes: z.string().nullable(),
   createdBy: z.string(),
+  createdById: z.string().optional().nullable(),
   createdAt: z.string().default(() => new Date().toISOString()),
   updatedAt: z.string().default(() => new Date().toISOString()),
   postedAt: z.string().nullable(),
@@ -239,7 +240,7 @@ export const AdjustmentSchema = BaseDocumentSchema.extend({
   warehouseName: z.string().optional().nullable(),
 });
 
-export interface BaseDocument { id: string; documentNumber: string; type: DocumentType; status: DocumentStatus; warehouseId: string; branchId: string; notes: string | null; createdBy: string; createdAt: string; updatedAt: string; postedAt: string | null; postedBy: string | null; version: number; }
+export interface BaseDocument { id: string; documentNumber: string; type: DocumentType; status: DocumentStatus; warehouseId: string; branchId: string; notes: string | null; createdBy: string; createdById?: string | null; createdAt: string; updatedAt: string; postedAt: string | null; postedBy: string | null; version: number; }
 export interface LotAllocation { lotId: string; lotNumber: string; expiryDate?: string | null; allocatedQty: number; overrideReason?: string | null; }
 export interface GRN extends BaseDocument { type: 'GRN'; poId: string | null; supplierId: string; supplierName?: string | null; warehouseName?: string | null; currencyId: string; currencyCode?: string | null; fxRate: number | null; fxRateCapturedAt: string | null; lines: GRNLineItem[]; }
 export interface GRNLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; image?: string | null; imageUrl?: string | null; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; }; category?: { id: string; name: string; } | null; }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; poQty: number | null; receivedQty: number; unitCostForeign: number; unitCostBase: number; }

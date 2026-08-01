@@ -26,7 +26,9 @@ export class PurchaseOrderService {
       prId?: string;
       isSubmitted?: boolean;
       warehouseId?: string;
-      lines: Array<{ itemId: string; quantity: number; unitPrice: number; uomId?: string }>;
+      exchangeRate?: number;
+      notes?: string | null;
+      lines: Array<{ itemId: string; quantity: number; unitPrice: number; uomId?: string; notes?: string | null }>;
     },
     userId: string,
     userRole: Role = Role.PROC_OFFICER,
@@ -108,12 +110,15 @@ export class PurchaseOrderService {
           currencyId: body.currencyId,
           warehouseId: warehouseId || null,
           status,
+          notes: body.notes ?? null,
+          exchangeRate: body.exchangeRate ?? 1,
           lines: {
             create: body.lines.map((line) => ({
               itemId: line.itemId,
               quantity: line.quantity,
               unitPrice: line.unitPrice,
               uomId: line.uomId || null,
+              notes: line.notes ?? null,
             })),
           },
         },
@@ -238,6 +243,7 @@ export class PurchaseOrderService {
           warehouse: { select: { id: true, name: true } },
           currency: { select: { id: true, code: true, symbol: true } },
           purchaseRequest: { select: { id: true, requestNumber: true } },
+          lines: { select: { quantity: true, unitPrice: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -312,12 +318,15 @@ export class PurchaseOrderService {
       currencyId?: string;
       warehouseId?: string;
       version: number;
+      exchangeRate?: number;
+      notes?: string | null;
       lines?: Array<{
         id?: string;
         itemId: string;
         quantity: number;
         unitPrice: number;
         uomId?: string;
+        notes?: string | null;
       }>;
     },
   ) {
@@ -356,6 +365,8 @@ export class PurchaseOrderService {
           supplierId: body.supplierId,
           currencyId: body.currencyId,
           warehouseId: body.warehouseId,
+          notes: body.notes !== undefined ? (body.notes ?? null) : undefined,
+          exchangeRate: body.exchangeRate !== undefined ? body.exchangeRate : undefined,
           version: { increment: 1 },
           ...(body.lines && {
             lines: {
@@ -364,6 +375,7 @@ export class PurchaseOrderService {
                 quantity: line.quantity,
                 unitPrice: line.unitPrice,
                 uomId: line.uomId || null,
+                notes: line.notes ?? null,
               })),
             },
           }),

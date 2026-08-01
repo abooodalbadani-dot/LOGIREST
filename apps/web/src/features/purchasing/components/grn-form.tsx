@@ -387,8 +387,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                const itemId = line.item?.id || line.itemId || '';
                const itemCode = line.item?.code || line.itemSku || '';
                const itemName = line.item?.name || line.itemName || '';
-               const uomId = line.item?.primaryUom?.id || line.uomId || '';
-               const uomCode = resolveUomCode(uomId, line.item, null, 'PCS');
+               const lineSelectedUom = line.uom || (line.uomId ? { id: line.uomId, code: resolveUomCode(line.uomId, line.item, null, 'PCS') } : undefined);
+               const uomId = lineSelectedUom?.id || line.uomId || line.item?.primaryUom?.id || '';
+               const uomCode = lineSelectedUom?.code || resolveUomCode(uomId, line.item, null, 'PCS');
                const itemImage = line.item?.image || line.item?.imageUrl || itemsData?.data?.find(i => i.id === itemId)?.image || itemsData?.data?.find(i => i.id === itemId)?.imageUrl || null;
                return {
                   id: line.id,
@@ -399,11 +400,12 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                      nameAr: line.item?.nameAr || itemName,
                      nameEn: line.item?.nameEn || itemName,
                      image: itemImage,
-                     primaryUom: {
+                     primaryUom: line.item?.primaryUom || {
                         id: uomId,
                         code: uomCode
                      }
                   },
+                  uom: lineSelectedUom || (uomId ? { id: uomId, code: uomCode } : undefined),
                   lot: null,
                   qty: line.quantity || 0,
                   receivedQty: line.quantity || 0,
@@ -459,7 +461,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          toast.error(ts('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
          throw new Error('WarehouseLocked');
       }
-      const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data as any);
+      const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data);
       const item = resolved?.item;
       const targetUomId = resolved?.uomId || item?.primaryUom?.id || 'EA';
 
@@ -933,11 +935,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                  const live = watchedLines?.[idx] || {};
                                  const matchedItem = itemsData?.data?.find(i => i.id === f.item.id);
                                  const liveUomId = live.uomId || f.uomId;
+                                 const fRecord = f as Record<string, unknown>;
+                                 const liveRecord = live as Record<string, unknown>;
+                                 const liveUom = (fRecord.uom as { id: string; code: string; name?: string } | undefined) || 
+                                                 (liveRecord.uom as { id: string; code: string; name?: string } | undefined) || 
+                                                 (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
                                  return {
                                     id: f.id,
                                     qty: live.qty ?? f.qty,
                                     receivedQty: live.receivedQty ?? f.receivedQty,
                                     uomId: liveUomId,
+                                    uom: liveUom,
                                     unitCostForeign: live.unitCostForeign ?? f.unitCostForeign,
                                     unitCostBase: live.unitCostBase ?? f.unitCostBase,
                                     item: {
@@ -1059,10 +1067,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
             <FormFooter
                isLocked={isLocked || isWarehouseLocked}
-               onCancel={() => router.push('/goods-received', { skipGuard: !isDirty })}
+               onCancel={actions ? undefined : () => router.push('/goods-received', { skipGuard: !isDirty })}
                cancelLabel={isSaved ? tc('back') || 'BACK' : tc('cancel') || 'CANCEL'}
                actions={actions || workflowActions}
-               onSubmit={handleSubmit(onSubmit, onFormError)}
+               onSubmit={actions ? undefined : handleSubmit(onSubmit, onFormError)}
                isPending={isPending}
                submitLabel={isNew ? t('actions.submit') : tc('save')}
             />

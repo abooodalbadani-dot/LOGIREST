@@ -248,3 +248,22 @@ export function useRecountItems(options?: { onConflict?: () => void }) {
   },
  });
 }
+
+export function useCloseStocktake(options?: { onConflict?: () => void }) {
+ const qc = useQueryClient();
+ return useSafeMutation({
+  onConflict: options?.onConflict,
+  mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) =>
+   apiClient.post(`/stocktake/sessions/${id}/close`, StocktakeSessionSchema, null, { signal }),
+  onSuccess: (_, { id }) => {
+   qc.invalidateQueries({ queryKey: ['stocktakes'] });
+   qc.invalidateQueries({ queryKey: ['stocktakes', id] });
+   qc.invalidateQueries({ queryKey: ['warehouse-lock'] });
+  },
+  onError: (error: unknown) => {
+   const message = error instanceof Error ? error.message : 'Operation failed';
+   toast.error(message);
+  },
+ });
+}
+

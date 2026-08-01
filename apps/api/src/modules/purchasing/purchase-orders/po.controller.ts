@@ -89,7 +89,7 @@ function mapPODetail(po: Record<string, unknown>) {
               name: (unitOfMeasure.name as string) || (unitOfMeasure.code as string),
             }
           : undefined,
-      notes: '',
+      notes: (line.notes as string) || '',
     };
   });
 
@@ -146,7 +146,7 @@ function mapPODetail(po: Record<string, unknown>) {
           code: currency.code as string,
         }
       : undefined,
-    exchangeRate: 1.0,
+    exchangeRate: po.exchangeRate !== undefined && po.exchangeRate !== null ? Number(po.exchangeRate) : 1.0,
     expectedDate: createdAtIso,
     expectedDeliveryDate: createdAtIso,
     targetWarehouseId: (po.warehouseId as string) || undefined,
@@ -154,7 +154,7 @@ function mapPODetail(po: Record<string, unknown>) {
     supplierTotalAmount: supplierTotalAmount,
     baseTotalAmount: supplierTotalAmount,
     total: supplierTotalAmount,
-    notes: '',
+    notes: (po.notes as string) || '',
     auditLog: [],
     createdAt: createdAtIso,
     createdBy,
@@ -194,6 +194,8 @@ function mapPOSummary(po: Record<string, unknown>) {
     currencyCode: (currency?.code as string) || '',
     expectedDate: createdAtIso,
     supplierTotalAmount: supplierTotalAmount,
+    totalAmount: supplierTotalAmount,
+    total: supplierTotalAmount,
     createdAt: createdAtIso,
   };
 }
@@ -240,6 +242,7 @@ export class PurchaseOrderController {
         quantity,
         unitPrice,
         uomId: line.uomId,
+        notes: line.notes,
       };
     });
 
@@ -272,6 +275,8 @@ export class PurchaseOrderController {
         lines,
         isSubmitted: body.isSubmitted,
         warehouseId: body.targetWarehouseId || body.warehouseId,
+        notes: body.notes,
+        exchangeRate: body.exchangeRate,
       },
       userId,
       role,
@@ -411,6 +416,7 @@ export class PurchaseOrderController {
           quantity: number;
           unitPrice: number;
           uomId?: string;
+          notes?: string | null;
         }>
       | undefined = undefined;
     if (body.lines) {
@@ -429,6 +435,7 @@ export class PurchaseOrderController {
           quantity,
           unitPrice,
           uomId: line.uomId,
+          notes: line.notes,
         };
       });
     }
@@ -438,6 +445,8 @@ export class PurchaseOrderController {
       currencyId,
       warehouseId: body.targetWarehouseId || body.warehouseId,
       version: body.version,
+      notes: body.notes,
+      exchangeRate: body.exchangeRate,
       lines,
     });
     return { data: mapPODetail(updated) };
