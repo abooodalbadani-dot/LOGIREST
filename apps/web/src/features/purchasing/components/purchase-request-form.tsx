@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Edit3,
   ArrowRight,
-  History
+  History,
+  ArrowLeft
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -522,11 +523,23 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           <DocumentLockWrapper isLocked={isFormDisabled}>
             <div className="space-y-4 md:space-y-10 w-full bg-card text-card-foreground sm:border border-border shadow-sm px-4 py-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative transition-all duration-200">
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-title-md md:text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-2 md:gap-3">
-                    {t('detail_title')}
-                    {isFormDisabled && <Badge variant="outline" className="bg-surface-container-high/50 border-none text-muted-foreground/60 scale-90 md:scale-100 origin-left"><History className="w-3 h-3 me-1" /> {tc('read_only')}</Badge>}
-                  </h3>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => router.push('/purchase-requests')}
+                    className="rounded-lg shrink-0 hover:bg-surface-container-high"
+                    aria-label="Back"
+                  >
+                    <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+                  </Button>
+                  <div className="space-y-1">
+                    <h3 className="text-title-md md:text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-2 md:gap-3">
+                      {t('detail_title')}
+                      {isFormDisabled && <Badge variant="outline" className="bg-surface-container-high/50 border-none text-muted-foreground/60 scale-90 md:scale-100 origin-left"><History className="w-3 h-3 me-1" /> {tc('read_only')}</Badge>}
+                    </h3>
+                  </div>
                 </div>
                 {initialData?.documentNumber && (
                   <span className="font-mono text-label-xs md:text-label-sm font-semibold text-muted-foreground/40 bg-card border border-border shadow-sm px-3 py-1 md:px-4 md:py-1.5 rounded-full">
@@ -750,8 +763,6 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
           <FormFooter
             isLocked={isFormDisabled}
-            cancelLabel={tc('back')}
-            onCancel={() => router.push('/purchase-requests')}
             actions={workflowActions}
             isSaving={isSubmitting}
             isDirty={form.formState.isDirty}

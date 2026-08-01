@@ -441,6 +441,7 @@
     "sign_in": "دخول"
   },
   "common": {
+    "by": "بواسطة",
     "primary_uom": "الوحدة الأساسية",
     "scan_placeholder": "امسح أو اكتب الباركود...",
     "no_results": "لم يتم العثور على نتائج.",
@@ -900,6 +901,8 @@
       "all": "الكل",
       "approved": "معتمد",
       "cancelled": "ملغي",
+      "convert_to_po": "تحويل إلى أمر شراء",
+      "converted_to_po": "تم التحويل إلى أمر شراء",
       "disputed": "متنازع عليه",
       "closed": "مغلق",
       "completed": "مكتمل",

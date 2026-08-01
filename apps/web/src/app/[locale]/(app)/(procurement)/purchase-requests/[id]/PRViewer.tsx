@@ -125,7 +125,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
      </p>
      {rejectionEvent && (
       <div className="text-xs text-muted-foreground/80 ps-1">
-       {tc('by') || 'بواسطة'}: <strong>{rejectionEvent.user?.name || rejectionEvent.user?.role || 'المسؤول'}</strong> • {new Date(rejectionEvent.createdAt).toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')}
+       {tc.has('by') ? tc('by') : (locale === 'ar' ? 'بواسطة' : 'By')}: <strong>{rejectionEvent.user?.name || rejectionEvent.user?.role || 'المسؤول'}</strong> • {new Date(rejectionEvent.createdAt).toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')}
       </div>
      )}
     </div>

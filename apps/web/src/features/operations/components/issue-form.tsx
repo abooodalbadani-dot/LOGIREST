@@ -736,7 +736,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
         <FormFooter
           isLocked={effectiveIsLocked && primaryAction === null}
-          onCancel={() => guardedRouter.push('/issues')}
           onSubmit={primaryAction === 'POST' ? () => setIsPostDialogOpen(true) : handleSubmitIssue}
           isPending={primaryAction === 'POST' ? isPostPending : submitIssue.isPending}
           submitLabel={primaryAction === 'POST' ? t('post_issue') : t('submit_for_approval')}

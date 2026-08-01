@@ -21,7 +21,9 @@ export type Status =
  | 'in_transit' 
  | 'open' 
  | 'counting' 
- | 'review';
+ | 'review'
+ | 'convert_to_po'
+ | 'converted_to_po';
 
 export interface StatusTimelineEntry {
  status: Status;
@@ -40,6 +42,8 @@ const STATUS_CONFIG: Record<Status, { icon: ElementType, color: string, glow: st
  open: { icon: Clock, color: 'text-cyan-500', glow: 'bg-cyan-500/20' },
  counting: { icon: Clock, color: 'text-cyan-500', glow: 'bg-cyan-500/20' },
  review: { icon: Clock, color: 'text-cyan-500', glow: 'bg-cyan-500/20' },
+ convert_to_po: { icon: CheckCircle2, color: 'text-amber-500', glow: 'bg-amber-500/20' },
+ converted_to_po: { icon: CheckCircle2, color: 'text-amber-500', glow: 'bg-amber-500/20' },
 };
 
 export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) {
@@ -49,9 +53,14 @@ export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) 
  return (
  <div className="relative space-y-8 before:absolute before:inset-y-0 before:start-[19px] before:w-[2px] before:bg-surface-container-highest/50">
  {entries.map((entry, idx) => {
- const config = STATUS_CONFIG[entry.status.toLowerCase() as Status] || STATUS_CONFIG.draft;
+ const statusKey = (entry.status || 'draft').toLowerCase() as Status;
+ const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG.draft;
  const Icon = config.icon;
  const isLatest = idx === entries.length - 1;
+
+ const statusLabel = tCommon.has(`statuses.${statusKey}`)
+   ? tCommon(`statuses.${statusKey}`)
+   : statusKey.replace(/_/g, ' ').toUpperCase();
 
  return (
  <div key={idx} className="relative flex gap-6 animate-in fade-in slide-in-from-start-4 duration-200" style={{ animationDelay: `${idx * 100}ms` }}>
@@ -67,7 +76,7 @@ export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) 
  config.color,
  isLatest && "drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
  )}>
- {tCommon(`statuses.${entry.status.toLowerCase() as Status}`) || entry.status}
+ {statusLabel}
  </p>
  {isLatest && (
  <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-500 animate-ping" />

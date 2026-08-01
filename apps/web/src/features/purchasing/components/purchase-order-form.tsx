@@ -10,7 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle, Loader2 } from "lucide-react";
+import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api/client";
 import { onFormError } from "@/hooks/useFormError";
@@ -527,9 +527,21 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         <div className="px-0 sm:px-6 md:px-8 pt-0 sm:pt-6 md:pt-8 max-w-6xl mx-auto w-full">
           <div className="bg-card text-card-foreground border-y border-x-0 sm:border border-border shadow-sm px-4 py-6 sm:p-6 md:p-8 rounded-none sm:rounded-2xl relative">
             <div className="flex flex-wrap items-center justify-between pb-6 mb-6 gap-4 min-w-0 w-full">
-              <h3 className="text-lg md:text-title-lg font-semibold text-operational-cyan uppercase truncate flex-1 min-w-0">
-                {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
-              </h3>
+              <div className="flex items-center gap-3 min-w-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.push('/purchase-orders')}
+                  className="rounded-lg shrink-0 hover:bg-surface-container-high"
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+                </Button>
+                <h3 className="text-lg md:text-title-lg font-semibold text-operational-cyan uppercase truncate flex-1 min-w-0">
+                  {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
+                </h3>
+              </div>
               <div className="flex gap-2 items-center flex-shrink-0 min-w-0 max-w-full">
                 {initialData?.id && (
                   <DocumentExportMenu
@@ -851,8 +863,6 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
         <FormFooter
           isLocked={isLocked}
-          onCancel={() => router.push('/purchase-orders', { skipGuard: !form.formState.isDirty })}
-          cancelLabel={tc('back') || 'BACK'}
           onSubmit={mode === "edit"
             ? form.handleSubmit((values) => handleSavePO(values, false), onFormError)
             : form.handleSubmit((values) => handleSavePO(values, true), onFormError)

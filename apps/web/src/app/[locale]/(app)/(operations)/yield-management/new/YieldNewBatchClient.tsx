@@ -134,7 +134,6 @@ export function YieldNewBatchClient() {
    </div>
 
    <FormFooter 
-    onCancel={() => guardedRouter.push('/yield-management', { skipGuard: true })}
     onSubmit={handleSubmit}
     isPending={isPending}
     submitLabel={tc('actions.save')}

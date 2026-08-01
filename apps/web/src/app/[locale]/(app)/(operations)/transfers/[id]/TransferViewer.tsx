@@ -45,18 +45,11 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
                             { label: t('detail_title') }
                         ]}
                     />
-                    <Button
-                        variant="ghost"
-                        onClick={() => router.back()}
-                        className="text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors border border-border/50 rounded-lg px-4 bg-muted/20 hover:bg-muted/40"
-                    >
-                        <ArrowLeft className="w-3 h-3 me-2" />
-                        {tCommon('back')}
-                    </Button>
                 </div>
 
                 <PageHeader
                     title={t('detail_title')}
+                    onBack={() => router.push('/transfers')}
                     subtitle={
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
                             <span className="font-semibold">{tCommon('doc_number')}</span>

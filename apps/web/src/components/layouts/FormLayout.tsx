@@ -25,6 +25,7 @@ export function FormHeader({
  subtitle, 
  icon: Icon, 
  backHref, 
+ onBack,
  actions,
  className 
 }: { 
@@ -32,19 +33,31 @@ export function FormHeader({
  subtitle?: string; 
  icon?: React.ElementType; 
  backHref?: string;
+ onBack?: () => void;
  actions?: ReactNode;
  className?: string;
 }) {
  return (
   <div className={cn("w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-6 py-5 border-b border-border bg-card/50", className)}>
    <div className="flex items-center gap-4">
-    {backHref && (
-     <Link 
-      href={backHref}
-      className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0"
-     >
-      <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
-     </Link>
+    {(onBack || backHref) && (
+     onBack ? (
+      <button
+       type="button"
+       onClick={onBack}
+       className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0"
+       aria-label="Back"
+      >
+       <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+      </button>
+     ) : (
+      <Link 
+       href={backHref!}
+       className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0"
+      >
+       <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+      </Link>
+     )
     )}
     <div className="flex items-center gap-3">
      {Icon && <Icon className="w-5 h-5 text-muted-foreground/60" />}

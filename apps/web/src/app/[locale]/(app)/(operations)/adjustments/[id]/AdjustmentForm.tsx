@@ -873,6 +873,7 @@ export function AdjustmentForm({
       {/* Sticky Glass Header */}
       <StickyGlassHeader
         title={isNew ? t("create_new") : document?.documentNumber || "..."}
+        onBack={() => router.push('/adjustments')}
         statusBadge={
           !isNew ? (
             <>

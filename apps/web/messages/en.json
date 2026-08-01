@@ -441,6 +441,7 @@
     "sign_in": "Sign In"
   },
   "common": {
+    "by": "By",
     "primary_uom": "Primary UoM",
     "scan_placeholder": "Scan or type barcode...",
     "no_results": "No results found.",
@@ -900,6 +901,8 @@
       "all": "All Statuses",
       "approved": "Approved",
       "cancelled": "Cancelled",
+      "convert_to_po": "Converted to PO",
+      "converted_to_po": "Converted to PO",
       "disputed": "Disputed",
       "closed": "Closed",
       "completed": "Completed",

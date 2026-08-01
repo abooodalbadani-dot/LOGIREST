@@ -104,6 +104,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
     <div className="min-h-screen pb-48 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
       <StickyGlassHeader
+        onBack={() => router.push('/stocktake')}
         title={
           <div className="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
             <Breadcrumb
@@ -397,8 +398,6 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
         </div>
 
         <FormFooter
-          onCancel={() => router.push('/stocktake')}
-          cancelLabel={locale === 'ar' ? 'عودة للقائمة' : 'Back to List'}
           isLocked={isLocked}
           isDirty={false}
           actions={actions}

@@ -147,8 +147,9 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     supplierName: (supplier?.name as string) || '',
     poId: grn.poId as string,
     poNumber: (purchaseOrder?.poNumber as string) || '',
-    poFxRate: 1.0,
-    currencyId,
+    poFxRate: purchaseOrder?.exchangeRate !== undefined && purchaseOrder?.exchangeRate !== null
+      ? Number(purchaseOrder.exchangeRate)
+      : (grn.fxRate !== undefined && grn.fxRate !== null ? Number(grn.fxRate) : 1.0),
     currencyCode: (currency?.code as string) || '',
     warehouseId: grn.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',

@@ -14,6 +14,7 @@ export interface PageHeaderProps {
   className?: string;
   // Legacy props kept for safe migration to children or to handle specific cases:
   backHref?: string;
+  onBack?: () => void;
   status?: string;
   showStatus?: boolean;
   icon?: React.ReactNode;
@@ -28,6 +29,7 @@ export function PageHeader({
   children,
   className,
   backHref,
+  onBack,
   status,
   showStatus,
   icon,
@@ -52,13 +54,24 @@ export function PageHeader({
     <div data-slot="page-header" className={cn("flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full border-b border-border/50 pb-4 mb-2 flex-wrap", className)}>
       <div className="flex flex-col items-start text-start gap-2 min-w-0">
         <div className="flex items-start sm:items-center gap-4 flex-wrap flex-1 min-w-0 w-full">
-          {backHref && (
-            <Link
-              href={backHref}
-              className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 mt-1 sm:mt-0"
-            >
-              <ArrowLeft className="w-6 h-6 rtl:rotate-180" />
-            </Link>
+          {(onBack || backHref) && (
+            onBack ? (
+              <button
+                type="button"
+                onClick={onBack}
+                className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 mt-1 sm:mt-0"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-6 h-6 rtl:rotate-180" />
+              </button>
+            ) : (
+              <Link
+                href={backHref!}
+                className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0 mt-1 sm:mt-0"
+              >
+                <ArrowLeft className="w-6 h-6 rtl:rotate-180" />
+              </Link>
+            )
           )}
           {icon && <div className="flex-shrink-0 mt-2 sm:mt-0">{icon}</div>}
           <h1 className="text-2xl font-black text-[#0B1220] dark:text-white tracking-tight uppercase whitespace-nowrap truncate max-w-full block min-w-0">
