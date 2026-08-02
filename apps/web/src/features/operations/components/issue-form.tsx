@@ -13,6 +13,7 @@ import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/Doc
 import { FormFooter } from '@/components/layouts/FormLayout';
 import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
 import { useSubmitIssue } from '@/features/operations/hooks/useSubmitIssue';
+import { useUpdateIssue } from '@/features/operations/hooks/useUpdateIssue';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
@@ -30,15 +31,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { isDocumentLocked, canPerformActionV2, getConversionFactor, toBaseQty, type DocumentStatus } from '@logirest/shared-types';
-import { resolveUomCode } from '@/utils/uom-helper';
+import { isDocumentLocked, canPerformActionV2, getConversionFactor, toBaseQty, type DocumentStatus, type UomConversionEntry } from '@logirest/shared-types';
+import { resolveUomCode, getAvailableUomsForItem } from '@/utils/uom-helper';
 import { useAuth } from '@/providers/AuthProvider';
 import type { LotAllocation, StockIssue, IssueLineItem } from '@/types/documents';
 import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
 import { ISSUE_STATUS } from '@logirest/shared-types';
 import { useAbortController } from '@/hooks/useAbortController';
-import { isItemBatchTracked } from '@/types/master-data';
+import { isItemBatchTracked, ItemSchema, type Item } from '@/types/master-data';
+import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { useUoMs } from '@/features/uoms/hooks/useUoMs';
 import { SmartCombobox, type ComboboxItem } from '@/components/shared/SmartCombobox';
 
@@ -110,10 +112,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const postIssue = usePostIssue({ onConflict });
   const isPostPending = postIssue.isPending;
   const submitIssue = useSubmitIssue({ onConflict });
+  const updateIssue = useUpdateIssue({ onConflict });
   const cancelIssue = useCancelIssue({ onConflict });
   const { playSound } = useAudioFeedback();
   const { data: uomsResult } = useUoMs();
   const uoms = uomsResult?.data || [];
+  const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
 
   const { data: inventoryData } = useWarehouseInventory(warehouseId, { enabled: !!warehouseId });
   const inventoryItems = inventoryData?.data || [];
@@ -351,6 +355,56 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     }
   };
 
+  const handleUomChangeForLine = (lineId: string, newUomId: string) => {
+    setLines(prev => prev.map(l => {
+      if (l.id !== lineId) return l;
+
+      const matchedItem = itemsData?.data?.find(i => i.id === l.item.id);
+      const baseUomId = l.baseUomId || matchedItem?.primaryUom?.id || l.item.primaryUom?.id || l.uomId;
+      const rawConversions = matchedItem?.uomConversions || l.uomConversions || [];
+      const conversions: UomConversionEntry[] = (rawConversions || []).map((c: { fromUomId?: string; from_uom_id?: string; toUomId?: string; to_uom_id?: string; factor?: number | unknown }) => ({
+        fromUomId: c.fromUomId || c.from_uom_id || '',
+        toUomId: c.toUomId || c.to_uom_id || '',
+        factor: typeof c.factor === 'number' ? c.factor : (typeof c.factor === 'string' ? parseFloat(c.factor) : 1) || 1,
+      }));
+
+      const factor = getConversionFactor(newUomId, baseUomId, conversions);
+      const newBaseQty = l.qty * (factor > 0 ? factor : 1);
+
+      return {
+        ...l,
+        uomId: newUomId,
+        qty: l.qty,
+        baseQty: newBaseQty,
+      } as IssueLine;
+    }));
+  };
+
+  const handleQtyChange = (lineId: string, val: number | string) => {
+    const numVal = typeof val === 'number' ? val : parseFloat(val) || 0;
+    setLines(prev => prev.map(l => {
+      if (l.id !== lineId) return l;
+
+      const matchedItem = itemsData?.data?.find(i => i.id === l.item.id);
+      const baseUomId = l.baseUomId || matchedItem?.primaryUom?.id || l.item.primaryUom?.id || l.uomId;
+      const rawConversions = matchedItem?.uomConversions || l.uomConversions || [];
+      const conversions: UomConversionEntry[] = (rawConversions || []).map((c: { fromUomId?: string; from_uom_id?: string; toUomId?: string; to_uom_id?: string; factor?: number | unknown }) => ({
+        fromUomId: c.fromUomId || c.from_uom_id || '',
+        toUomId: c.toUomId || c.to_uom_id || '',
+        factor: typeof c.factor === 'number' ? c.factor : (typeof c.factor === 'string' ? parseFloat(c.factor) : 1) || 1,
+      }));
+
+      const factor = getConversionFactor(l.uomId, baseUomId, conversions);
+      const newBaseQty = numVal * (factor > 0 ? factor : 1);
+
+      return {
+        ...l,
+        qty: numVal,
+        baseQty: newBaseQty,
+      } as IssueLine;
+    }));
+  };
+
   const removeLine = (lineId: string) => {
     setLines(prev => prev.filter(l => l.id !== lineId) as IssueLine[]);
   };
@@ -374,14 +428,55 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
   const handleSubmitIssue = async () => {
     if (!issue) return;
+    if (lines.length === 0) {
+      toast.error(t('no_lines_error') || 'At least one line item is required');
+      return;
+    }
     try {
-      await submitIssue.mutateAsync({ id, version: issue.version, signal: abortController.signal });
+      const linePayload = lines.map(l => ({
+        itemId: l.item.id,
+        requestedQty: Number(l.qty),
+        quantity: Number(l.qty),
+        uomId: l.uomId,
+        lotAllocations: (l.lotAllocations || []).map(alloc => ({
+          lotId: alloc.lotId,
+          lotNumber: alloc.lotNumber,
+          allocatedQty: alloc.allocatedQty,
+          quantityAllocated: alloc.allocatedQty,
+        })),
+      }));
+
+      // STEP 1: Persist all form data (qty, uom, notes, lot allocations) via the
+      // dedicated update endpoint. This MUST complete successfully before submit.
+      // mutateAsync throws on error, so if this fails, step 2 never executes.
+      const updatedDoc = await updateIssue.mutateAsync({
+        id,
+        payload: {
+          version: issue.version,
+          destinationDeptId: destinationId,
+          notes,
+          lines: linePayload,
+        },
+        signal: abortController.signal,
+      });
+
+      // STEP 2: Trigger the workflow transition using the version returned by step 1.
+      // The submit hook sends ONLY { version } — no data payload — because the
+      // document is already up-to-date in the database.
+      await submitIssue.mutateAsync({
+        id,
+        version: updatedDoc.version,
+        signal: abortController.signal,
+      });
+
+      // Do NOT redirect — query invalidation in useSubmitIssue.onSuccess drives the
+      // re-render. IssueDetailClient detects isDocLocked === true and switches to IssueViewer.
       setIsSubmitted(true);
       toast.success(t('submit_success') || 'Issue submitted successfully');
     } catch (err: unknown) {
-      const apiErr = err as { code?: string; name?: string };
+      const apiErr = err as { code?: string; name?: string; message?: string };
       if (apiErr?.name === 'AbortError') return;
-      toast.error(t('submit_error') || 'Failed to submit issue');
+      toast.error(apiErr?.message || t('submit_error') || 'Failed to submit issue');
     }
   };
 
@@ -595,27 +690,36 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                 dense={true}
                 noCollapse={false}
                 mobileLayoutPattern="issue-form"
+                renderQty={(line) => {
+                  if (effectiveIsLocked) {
+                    return (
+                      <div className="text-sm font-medium text-foreground font-mono bg-surface-container/40 border border-border/50 rounded-xl px-2 h-9 flex items-center justify-center w-full" dir="ltr">
+                        {line.qty}
+                      </div>
+                    );
+                  }
+                  return (
+                    <Input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={line.qty}
+                      onChange={(e) => handleQtyChange(line.id, e.target.value)}
+                      className="h-9 text-center font-mono font-bold text-sm bg-background border border-border/70 rounded-lg w-full focus-visible:ring-brand-gold"
+                      dir="ltr"
+                    />
+                  );
+                }}
                 renderUom={(line) => {
                   const issueLine = line as IssueLine;
-                  const uomOptions = [
-                    // Always include primary UOM
-                    ...(issueLine.baseUomId ? [{
-                      id: issueLine.baseUomId,
-                      name: issueLine.item.primaryUom?.code || issueLine.baseUomId,
-                    }] : []),
-                    // Add alternate UOMs from conversions
-                    ...uoms
-                      .filter(u => u.id !== issueLine.baseUomId &&
-                        issueLine.uomConversions.some(c => c.fromUomId === u.id || c.toUomId === u.id)
-                      )
-                      .map(u => ({ id: u.id, name: u.code || u.name })),
-                  ];
+                  const matchedItem = itemsData?.data?.find(i => i.id === line.item.id);
+                  const availableUoms = getAvailableUomsForItem(matchedItem || line.item);
+                  const currentUomId = issueLine.uomId || matchedItem?.primaryUom?.id || line.item.primaryUom?.id || '';
+                  const resolvedCode = resolveUomCode(currentUomId, matchedItem || line.item, uoms);
 
-                  const resolvedCode = resolveUomCode(issueLine.uomId, issueLine.item, uoms);
-
-                  if (uomOptions.length <= 1 || isDocLocked) {
+                  if (availableUoms.length <= 1 || effectiveIsLocked) {
                     return (
-                      <span className="text-label-xs font-bold uppercase text-muted-foreground px-2 py-0.5 bg-surface-container rounded-lg font-mono">
+                      <span className="text-xs font-bold uppercase text-foreground bg-surface-container-highest/50 px-2 h-9 rounded-lg border border-border/50 font-mono inline-flex items-center justify-center w-full">
                         {resolvedCode}
                       </span>
                     );
@@ -623,23 +727,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
                   return (
                     <SmartCombobox
-                      items={uomOptions}
-                      value={issueLine.uomId}
+                      items={availableUoms}
+                      value={currentUomId}
                       onSelect={(uom) => {
-                        const factor = getConversionFactor(
-                          uom.id,
-                          issueLine.baseUomId,
-                          issueLine.uomConversions,
-                        );
-                        const currentBaseQty = issueLine.baseQty ?? issueLine.qty;
-                        const newDisplayQty = parseFloat((currentBaseQty / factor).toFixed(4));
-                        setLines(prev => prev.map(l =>
-                          l.id === line.id
-                            ? { ...l, uomId: uom.id, qty: newDisplayQty, baseQty: currentBaseQty } as IssueLine
-                            : l
-                        ));
+                        handleUomChangeForLine(line.id, String(uom.id));
                       }}
-                      placeholder={issueLine.item.primaryUom?.code || 'UOM'}
+                      placeholder={resolvedCode}
                       triggerClassName="h-9 px-2 text-xs border border-border/70 bg-surface-container-highest/30 text-foreground text-center rounded-lg w-full font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
                     />
                   );

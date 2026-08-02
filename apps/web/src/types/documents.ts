@@ -157,6 +157,11 @@ export const IssueLineItemSchema = z.object({
   }).nullable(),
   qty: z.number(),
   uomId: z.string(),
+  uom: z.object({
+    id: z.string(),
+    code: z.string(),
+    name: z.string().optional().nullable(),
+  }).optional().nullable(),
   unitCost: z.number().nullable(),
   requestedQty: z.number(),
   issuedQty: z.number(),

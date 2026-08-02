@@ -146,10 +146,19 @@ export class IssuesService {
               }
             }
 
+            let uomIdToSave = line.uomId;
+            if (!uomIdToSave) {
+              const itemRec = await tx.item.findUnique({
+                where: { id: line.itemId },
+                select: { uomId: true },
+              });
+              uomIdToSave = itemRec?.uomId || undefined;
+            }
+
             return {
               itemId: line.itemId,
               quantity: line.quantity,
-              uomId: line.uomId ?? null,
+              uomId: uomIdToSave ?? null,
               ...(allocationsToCreate.length > 0 && {
                 lotAllocations: {
                   create: allocationsToCreate,
@@ -165,6 +174,7 @@ export class IssuesService {
             warehouseId: activeWarehouseId,
             departmentId: body.departmentId,
             status: 'DRAFT',
+            createdById: userId,
             notes: body.notes,
             lines: {
               create: linesToCreate,
@@ -193,8 +203,230 @@ export class IssuesService {
             warehouse: true,
             department: true,
             kitchenRequest: true,
+            createdBy: {
+              select: { id: true, name: true, email: true },
+            },
           },
         });
+      },
+      { timeout: 30000 },
+    );
+  }
+
+  async update(
+    id: string,
+    body: {
+      departmentId?: string;
+      destinationDeptId?: string;
+      lines?: Array<{
+        itemId: string;
+        quantity?: number;
+        requestedQty?: number;
+        uomId?: string;
+        lotAllocations?: Array<{
+          lotId?: string;
+          lotNumber?: string;
+          quantityAllocated?: number;
+          allocatedQty?: number;
+        }>;
+      }>;
+      notes?: string;
+      version?: number;
+    },
+    userId: string,
+    activeWarehouseId: string,
+  ) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.inventoryIssue.findUnique({
+          where: { id },
+          include: { lines: true },
+        });
+
+        if (!existing) {
+          throw new NotFoundException(`Inventory Issue with ID ${id} not found`);
+        }
+
+        if (existing.status !== 'DRAFT') {
+          throw new BadRequestException(
+            `Cannot update issue ${id}: only DRAFT issues can be updated (current status: ${existing.status}).`,
+          );
+        }
+
+        if (body.version !== undefined && existing.version !== body.version) {
+          throw new BadRequestException(
+            `Concurrency error: document version mismatch. Expected ${existing.version}, received ${body.version}.`,
+          );
+        }
+
+        const targetWarehouseId = activeWarehouseId || existing.warehouseId;
+        const deptId = body.departmentId || body.destinationDeptId || existing.departmentId;
+
+        let linesToCreate;
+        if (body.lines && Array.isArray(body.lines) && body.lines.length > 0) {
+          for (const line of body.lines) {
+            const qtyVal = Number(line.requestedQty ?? line.quantity ?? 0);
+            if (qtyVal <= 0) {
+              throw new BadRequestException(`Quantity must be greater than 0 for item ${line.itemId}`);
+            }
+
+            const whItem = await tx.warehouseItem.findUnique({
+              where: {
+                warehouseId_itemId: {
+                  warehouseId: targetWarehouseId,
+                  itemId: line.itemId,
+                },
+              },
+              select: { qtyOnHand: true, isFrozen: true },
+            });
+
+            if (whItem?.isFrozen) {
+              const frozenItem = await tx.item.findUnique({
+                where: { id: line.itemId },
+                select: { name: true, sku: true },
+              });
+              const itemName = frozenItem?.name || frozenItem?.sku || line.itemId;
+              throw new BadRequestException(
+                `Cannot update issue: item "${itemName}" is frozen due to an active stocktake.`,
+              );
+            }
+
+            let normalizedQtyForCheck = qtyVal;
+            const itemForCheck = await tx.item.findUnique({
+              where: { id: line.itemId },
+              select: {
+                name: true,
+                sku: true,
+                uomId: true,
+                uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+              },
+            });
+
+            if (itemForCheck && line.uomId && itemForCheck.uomId) {
+              const conversions = itemForCheck.uomConversions.map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              normalizedQtyForCheck = toBaseQty(
+                qtyVal,
+                line.uomId,
+                itemForCheck.uomId,
+                conversions,
+              );
+            }
+
+            if (!whItem || Number(whItem.qtyOnHand) < normalizedQtyForCheck) {
+              const itemLabel = itemForCheck ? `"${itemForCheck.name}" (${itemForCheck.sku})` : `ID ${line.itemId}`;
+              throw new BadRequestException(
+                `Insufficient stock: requested quantity (${normalizedQtyForCheck} base units) exceeds available on hand for item ${itemLabel}.`,
+              );
+            }
+          }
+
+          linesToCreate = await Promise.all(
+            body.lines.map(async (line) => {
+              const qtyVal = Number(line.requestedQty ?? line.quantity ?? 0);
+              const rawAllocations = line.lotAllocations || [];
+              const allocationsToCreate: Array<{
+                lotId: string;
+                quantityAllocated: number;
+              }> = [];
+
+              for (const alloc of rawAllocations) {
+                const quantityAllocated = Number(alloc.quantityAllocated ?? alloc.allocatedQty ?? 0);
+                if (quantityAllocated > 0) {
+                  let lotId = alloc.lotId;
+                  if (!lotId && alloc.lotNumber) {
+                    const lot = await tx.lot.findFirst({
+                      where: {
+                        itemId: line.itemId,
+                        lotNumber: alloc.lotNumber,
+                      },
+                      select: { id: true, status: true },
+                    });
+                    if (lot) {
+                      if (lot.status === 'QUARANTINE') {
+                        throw new BadRequestException(`Cannot allocate quarantined lot: ${alloc.lotNumber}`);
+                      }
+                      lotId = lot.id;
+                    }
+                  }
+                  if (lotId) {
+                    allocationsToCreate.push({
+                      lotId,
+                      quantityAllocated,
+                    });
+                  }
+                }
+              }
+
+              let uomIdToSave = line.uomId;
+              if (!uomIdToSave) {
+                const itemRec = await tx.item.findUnique({
+                  where: { id: line.itemId },
+                  select: { uomId: true },
+                });
+                uomIdToSave = itemRec?.uomId || undefined;
+              }
+
+              return {
+                itemId: line.itemId,
+                quantity: qtyVal,
+                uomId: uomIdToSave ?? null,
+                ...(allocationsToCreate.length > 0 && {
+                  lotAllocations: {
+                    create: allocationsToCreate,
+                  },
+                }),
+              };
+            }),
+          );
+
+          await tx.inventoryIssueLine.deleteMany({
+            where: { issueId: id },
+          });
+        }
+
+        const updated = await tx.inventoryIssue.update({
+          where: { id },
+          data: {
+            departmentId: deptId,
+            notes: body.notes !== undefined ? body.notes : existing.notes,
+            version: { increment: 1 },
+            ...(linesToCreate && {
+              lines: {
+                create: linesToCreate,
+              },
+            }),
+          },
+          include: {
+            lines: {
+              include: {
+                item: {
+                  include: {
+                    unitOfMeasure: true,
+                    category: true,
+                  },
+                },
+                lotAllocations: {
+                  include: {
+                    lot: true,
+                  },
+                },
+                uom: true,
+              },
+            },
+            warehouse: true,
+            department: true,
+            kitchenRequest: true,
+            createdBy: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        });
+
+        return updated;
       },
       { timeout: 30000 },
     );
@@ -335,7 +567,7 @@ export class IssuesService {
           select: { id: true, requestNumber: true },
         },
         createdBy: {
-          select: { name: true, email: true },
+          select: { id: true, name: true, email: true },
         },
       },
     });
@@ -346,8 +578,8 @@ export class IssuesService {
 
     const approvalEvents = await this.prisma.approvalEvent.findMany({
       where: { documentId: id },
-      include: { user: { select: { name: true, role: true } } },
-      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { id: true, name: true, role: true } } },
+      orderBy: { createdAt: 'asc' },
     });
 
     return { ...issue, approvalEvents };

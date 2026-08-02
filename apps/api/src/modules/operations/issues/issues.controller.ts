@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Put,
   Get,
   Param,
   Body,
@@ -138,6 +139,40 @@ function mapIssueDetail(issue: Record<string, unknown>) {
   const department = issue.department as Record<string, unknown> | null;
   const kitchenRequest = issue.kitchenRequest as Record<string, unknown> | null;
 
+  const approvalEvents = (issue.approvalEvents as Array<Record<string, unknown>>) || [];
+  const creatorName =
+    ((issue.createdBy as Record<string, unknown>)?.name as string) ||
+    'System';
+
+  const timeline = [
+    {
+      status: 'draft',
+      at: createdAtIso,
+      by: creatorName,
+    },
+    ...approvalEvents.map((event) => {
+      const userObj = event.user as Record<string, unknown> | undefined;
+      const eventAt = event.createdAt
+        ? (event.createdAt instanceof Date ? event.createdAt : new Date(event.createdAt as string)).toISOString()
+        : createdAtIso;
+      const toStatus = String(event.toStatus || event.action || '').toLowerCase();
+      // Use the actor name directly from the approval event user relation.
+      // Fall back to 'System' only if the user relation is genuinely missing.
+      const actorName = (userObj?.name as string) || 'System';
+      return {
+        status: toStatus === 'posted' ? 'posted' : toStatus === 'submitted' ? 'submitted' : toStatus,
+        at: eventAt,
+        by: actorName,
+      };
+    }),
+  ];
+
+  const postedEvent = approvalEvents.find(
+    (e) => e.action === 'POST' || e.toStatus === 'POSTED',
+  );
+  const postedByName =
+    ((postedEvent?.user as Record<string, unknown>)?.name as string) || null;
+
   return {
     id: issue.id as string,
     documentNumber: issue.issueNumber as string,
@@ -147,22 +182,17 @@ function mapIssueDetail(issue: Record<string, unknown>) {
     destinationDepartmentId: issue.departmentId as string,
     destinationDepartmentName: (department?.name as string) || '',
     departmentName: (department?.name as string) || '',
-    requestedBy:
-      ((issue.createdBy as Record<string, unknown>)?.name as string) ||
-      'System',
+    requestedBy: creatorName,
     warehouseId: issue.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     branchId:
       ((issue.warehouse as Record<string, unknown> | undefined)
         ?.branchId as string) || '',
     notes: (issue.notes as string) || '',
-    createdBy:
-      ((issue.createdBy as Record<string, unknown>)?.name as string) ||
-      'System',
+    createdBy: creatorName,
     createdAt: createdAtIso,
     updatedAt: (() => {
-      const events = (issue.approvalEvents as Array<Record<string, unknown>>) || [];
-      const lastEvent = events.length > 0 ? events[0] : null; // approvalEvents sorted desc in findOne
+      const lastEvent = approvalEvents.length > 0 ? approvalEvents[0] : null;
       return lastEvent?.createdAt
         ? (lastEvent.createdAt instanceof Date
             ? lastEvent.createdAt
@@ -176,9 +206,10 @@ function mapIssueDetail(issue: Record<string, unknown>) {
           : new Date(issue.postedAt as string | number)
         ).toISOString()
       : null,
-    postedBy: null,
+    postedBy: postedByName,
     version: issue.version as number,
     lines,
+    timeline,
     kitchenRequest: kitchenRequest
       ? {
           id: kitchenRequest.id as string,
@@ -398,6 +429,57 @@ export class IssuesController {
     return mapIssueDetail(issue);
   }
 
+  @Put(':id')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.KITCHEN_CHIEF,
+  )
+  async update(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      destinationDeptId?: string;
+      departmentId?: string;
+      warehouseId?: string;
+      lines?: Array<{
+        itemId: string;
+        requestedQty?: number;
+        quantity?: number;
+        uomId?: string;
+        lotAllocations?: Array<{
+          lotId?: string;
+          lotNumber?: string;
+          allocatedQty?: number;
+          quantityAllocated?: number;
+        }>;
+      }>;
+      notes?: string;
+      version?: number;
+    },
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @ActiveScope('warehouseId') headerWarehouseId?: string,
+  ) {
+    const issue = await this.issuesService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      issue.warehouseId,
+    );
+
+    const updated = await this.issuesService.update(
+      id,
+      body,
+      userId,
+      body.warehouseId || headerWarehouseId || issue.warehouseId,
+    );
+    return mapIssueDetail(updated);
+  }
+
   @Post(':id/submit')
   @Roles(
     Role.ADMIN,
@@ -418,9 +500,43 @@ export class IssuesController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body() body: { comments?: string; version?: number },
+    @Body()
+    body: {
+      comments?: string;
+      version?: number;
+      destinationDeptId?: string;
+      departmentId?: string;
+      warehouseId?: string;
+      notes?: string;
+      lines?: Array<{
+        itemId: string;
+        requestedQty?: number;
+        quantity?: number;
+        uomId?: string;
+        lotAllocations?: Array<{
+          lotId?: string;
+          lotNumber?: string;
+          allocatedQty?: number;
+          quantityAllocated?: number;
+        }>;
+      }>;
+    },
     @Req() req: Request,
+    @ActiveScope('warehouseId') headerWarehouseId?: string,
   ) {
+    const currentIssue = await this.issuesService.findOne(id);
+    let targetVersion = body.version;
+
+    if ((body.lines && body.lines.length > 0) || body.destinationDeptId || body.notes !== undefined) {
+      const updatedDoc = await this.issuesService.update(
+        id,
+        body,
+        userId,
+        body.warehouseId || headerWarehouseId || currentIssue.warehouseId,
+      );
+      targetVersion = updatedDoc.version;
+    }
+
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -429,7 +545,8 @@ export class IssuesController {
       undefined;
 
     const issue = await this.issuesService.submit(id, userId, role, {
-      ...body,
+      comments: body.comments,
+      version: targetVersion,
       ipAddress,
     });
     return mapIssueDetail(issue);

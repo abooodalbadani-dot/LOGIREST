@@ -489,7 +489,10 @@
       "view_all": "عرض الكل",
       "void": "إبطال المستند",
       "cancel_success": "تم إلغاء المستند بنجاح",
-      "review": "مراجعة"
+      "review": "مراجعة",
+      "post_success": "تم ترحيل المستند بنجاح",
+      "approved_success": "تم اعتماد المستند بنجاح",
+      "rejected_success": "تم رفض المستند بنجاح"
     },
     "languages": {
       "arabic": "العربية",
@@ -980,7 +983,8 @@
       "qty": "الكمية",
       "received_qty": "الكمية المستلمة",
       "total": "الإجمالي",
-      "uom": "الوحدة"
+      "uom": "الوحدة",
+      "allocate": "تخصيص"
     },
     "target_unit": "الوحدة الهدف",
     "threshold_parameters": "معايير العتبة",
@@ -1129,7 +1133,12 @@
       "normal": "عادي"
     },
     "monthly_spend": "الإنفاق الشهري",
-    "total_amount": "إجمالي المبلغ"
+    "total_amount": "إجمالي المبلغ",
+    "no_lot": "لا توجد دفعة",
+    "post_success": "تم ترحيل المستند بنجاح",
+    "posted_success": "تم ترحيل المستند بنجاح",
+    "approved_success": "تم اعتماد المستند بنجاح",
+    "rejected_success": "تم رفض المستند بنجاح"
   },
   "communications": {
     "notifications": {

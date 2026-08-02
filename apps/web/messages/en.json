@@ -489,7 +489,10 @@
       "view_all": "View All",
       "void": "Void Document",
       "cancel_success": "Document cancelled successfully",
-      "review": "Review"
+      "review": "Review",
+      "post_success": "Document posted successfully",
+      "approved_success": "Document approved successfully",
+      "rejected_success": "Document rejected successfully"
     },
     "languages": {
       "arabic": "Arabic",
@@ -980,7 +983,8 @@
       "qty": "Qty",
       "received_qty": "Received Qty",
       "total": "Total",
-      "uom": "UoM"
+      "uom": "UoM",
+      "allocate": "Allocate"
     },
     "target_unit": "TARGET UNIT",
     "threshold_parameters": "Threshold Parameters",
@@ -1129,7 +1133,12 @@
       "normal": "Normal"
     },
     "monthly_spend": "Monthly Spend",
-    "total_amount": "Total Amount"
+    "total_amount": "Total Amount",
+    "no_lot": "No lot",
+    "post_success": "Document posted successfully",
+    "posted_success": "Document posted successfully",
+    "approved_success": "Document approved successfully",
+    "rejected_success": "Document rejected successfully"
   },
   "communications": {
     "notifications": {

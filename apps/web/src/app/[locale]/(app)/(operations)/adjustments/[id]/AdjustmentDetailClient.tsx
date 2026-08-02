@@ -85,7 +85,7 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
     if (!adjustment) return;
     try {
       await postAdjustment.mutateAsync({ id: adjustment.id, version: adjustment.version ?? 1 });
-      toast.success(tc('post_success') || 'Adjustment posted successfully');
+      toast.success(t('posted_success') || 'Adjustment posted successfully');
     } catch (err) {
       console.error(err);
     }
@@ -95,7 +95,7 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
     if (!adjustment) return;
     try {
       await approveAdjustment.mutateAsync({ id: adjustment.id, version: adjustment.version ?? 1 });
-      toast.success(tc('approved_success') || 'Adjustment approved');
+      toast.success(t('approved_success') || 'Adjustment approved');
     } catch (err) {
       console.error(err);
     }
@@ -105,7 +105,7 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
     if (!adjustment || !rejectReason.trim()) return;
     try {
       await rejectAdjustment.mutateAsync({ id: adjustment.id, reject: rejectReason, version: adjustment.version ?? 1 });
-      toast.success(tc('rejected_success') || 'Adjustment rejected');
+      toast.success(t('rejected_success') || 'Adjustment rejected');
       setRejectModalOpen(false);
       setRejectReason('');
     } catch (err) {

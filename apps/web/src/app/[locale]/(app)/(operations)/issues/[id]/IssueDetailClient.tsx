@@ -58,7 +58,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
         version: issue.version,
       });
-      toast.success(tc('post_success') || 'Stock issue posted successfully');
+      toast.success(t('posted_success') || 'Stock issue posted successfully');
     } catch (err) {
       console.error(err);
     }
@@ -71,7 +71,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
         id: issue.id,
         version: issue.version,
       });
-      toast.success(tc('actions.cancel_success') || 'Stock issue cancelled');
+      toast.success(t('cancel_success') || 'Stock issue cancelled');
     } catch (err) {
       console.error(err);
     }
@@ -120,7 +120,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
   return (
     <ScopeGuard warehouseId={issue?.warehouseId}>
       <IssueForm 
-        key={issue?.version || id}
+        key={id}
         issue={issue} 
         id={id} 
         isNew={isNew} 
