@@ -6,9 +6,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
-import { Role } from '@logirest/shared-types';
+import { Role, DocumentType, Prisma, GRStatus } from '@prisma/client';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType, Prisma, GRStatus } from '@prisma/client';
 
 @Injectable()
 export class GrnService {
@@ -37,6 +36,7 @@ export class GrnService {
       }>;
     },
     userId: string,
+    userRole?: Role,
   ) {
     return this.prisma.$transaction(async (tx) => {
       let branchId: string | undefined = undefined;
@@ -142,7 +142,7 @@ export class GrnService {
         });
       }
 
-      return tx.goodsReceivedNote.create({
+      const createdGrn = await tx.goodsReceivedNote.create({
         data: {
           grnNumber,
           poId: body.poId || undefined,
@@ -179,8 +179,26 @@ export class GrnService {
           supplier: true,
           currency: true,
           warehouse: true,
+          createdBy: {
+            select: { id: true, name: true, email: true },
+          },
         },
       });
+
+      await tx.approvalEvent.create({
+        data: {
+          documentId: createdGrn.id,
+          documentType: DocumentType.GOODS_RECEIVED_NOTE,
+          fromStatus: 'DRAFT',
+          toStatus: 'DRAFT',
+          actionPerformed: 'CREATE',
+          userId,
+          userRole: userRole || Role.WH_KEEPER,
+          stepNumber: 1,
+        },
+      });
+
+      return createdGrn;
     });
   }
 
@@ -244,10 +262,14 @@ export class GrnService {
           grnNumber: true,
           status: true,
           warehouseId: true,
+          supplierId: true,
+          currencyId: true,
           poId: true,
           version: true,
           createdAt: true,
           postedAt: true,
+          supplier: { select: { id: true, name: true, code: true } },
+          currency: { select: { id: true, code: true, symbol: true } },
           warehouse: { select: { id: true, name: true } },
           purchaseOrder: {
             select: {
@@ -258,6 +280,7 @@ export class GrnService {
               currency: { select: { id: true, code: true, symbol: true } },
             },
           },
+          createdBy: { select: { id: true, name: true, email: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -320,7 +343,7 @@ export class GrnService {
         documentType: DocumentType.GOODS_RECEIVED_NOTE,
       },
       include: {
-        user: { select: { id: true, name: true } },
+        user: { select: { id: true, name: true, role: true } },
       },
       orderBy: { stepNumber: 'asc' },
     });
@@ -438,6 +461,9 @@ export class GrnService {
           supplier: true,
           currency: true,
           warehouse: true,
+          createdBy: {
+            select: { id: true, name: true, email: true },
+          },
         },
       });
     });

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations, useLocale } from 'next-intl';
 import { VoidConfirmationModal } from '@/components/shared/VoidConfirmationModal';
 import { isDocumentLocked, type DocumentStatus, GRN_STATUS } from '@logirest/shared-types';
@@ -50,17 +51,26 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
   const cancelGRN = useCancelGRN({ onConflict: triggerConflict });
   const voidGRN = useVoidGRN(id);
   const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
+  const saveFormRef = useRef<() => Promise<boolean>>(null);
+  const queryClient = useQueryClient();
 
   if (isLoading) return <PageSkeleton variant="detail" />;
   if (error || (!isNew && !grn)) return <ErrorState onRetry={() => window.location.reload()} />;
 
   const status = (grn?.status || GRN_STATUS.DRAFT) as DocumentStatus;
   const isLocked = isDocumentLocked('GRN', status);
+  const isLockedForView = ['POSTED', 'VOIDED', 'CANCELLED', 'RECEIVED'].includes(status);
 
   const handleSubmit = async () => {
-    if (grn?.version === undefined) return;
+    if (saveFormRef.current && (!isLocked && !isLockedForView)) {
+      const isSaved = await saveFormRef.current();
+      if (!isSaved) return;
+    }
+    const currentGrnData = queryClient.getQueryData<{ version: number }>(['grn', id]);
+    const currentVersion = currentGrnData?.version ?? grn?.version;
+    if (currentVersion === undefined && !isNew) return;
     try {
-      await submitGRN.mutateAsync({ id, version: grn.version });
+      await submitGRN.mutateAsync({ id, version: currentVersion ?? 1 });
       toast.success(t('submit_success') || 'GRN submitted for receipt review');
     } catch (err) {
       console.error('[GRNDetailClient] Submit failed:', err);
@@ -109,8 +119,6 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
     />
   );
 
-  const isLockedForView = ['POSTED', 'VOIDED', 'CANCELLED', 'RECEIVED'].includes(status);
-
   if (isLocked || isLockedForView) {
     if (!grn) return null;
     return (
@@ -154,6 +162,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                     name: uomName,
                   },
                 },
+                uom: lineUom || (selectedUom ? { id: selectedUom.id, code: uomCode, name: uomName } : null),
                 lotId: l.lot?.id ?? null,
                 lot: l.lot ? { ...l.lot, isExpired: false } : null,
                 qty: l.qty,
@@ -198,6 +207,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
         id={id}
         actions={renderActions()}
         onConflict={triggerConflict}
+        onBindSaveForm={(fn) => { saveFormRef.current = fn; }}
       />
       <ConflictDialog
         open={open}

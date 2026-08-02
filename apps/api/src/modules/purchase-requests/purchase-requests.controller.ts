@@ -32,7 +32,43 @@ import { AllRoles } from '../../auth/decorators/all-roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { CreatePurchaseRequestDto } from './dto/create-purchase-request.dto';
+import { UpdatePurchaseRequestDto } from './dto/update-purchase-request.dto';
 import type { Request, Response } from 'express';
+
+export function parsePRNotesAndExpectedDate(rawNotes: string | null | undefined, createdAtIso: string) {
+  if (!rawNotes) {
+    return { expectedDate: createdAtIso, notes: '' };
+  }
+  const match = rawNotes.match(/^\[EXPECTED_DATE:([^\]]+)\]\n?(.*)/s);
+  if (match) {
+    const dateStr = match[1];
+    const notesContent = match[2] || '';
+    const parsedDate = new Date(dateStr);
+    const expectedDate = !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : createdAtIso;
+    return { expectedDate, notes: notesContent };
+  }
+  return { expectedDate: createdAtIso, notes: rawNotes };
+}
+
+export function formatPRNotesWithExpectedDate(notes: string | undefined | null, expectedDate: string | undefined | null, existingRawNotes?: string | null): string | null {
+  let cleanNotes = (notes !== undefined ? (notes || '') : '').trim();
+  let targetExpectedDate = expectedDate;
+
+  if (existingRawNotes && (expectedDate === undefined || notes === undefined)) {
+    const parsed = parsePRNotesAndExpectedDate(existingRawNotes, '');
+    if (notes === undefined) cleanNotes = parsed.notes;
+    if (expectedDate === undefined) targetExpectedDate = parsed.expectedDate;
+  }
+
+  if (!targetExpectedDate || targetExpectedDate.trim() === '') {
+    return cleanNotes || null;
+  }
+  const dateOnly = targetExpectedDate.split('T')[0];
+  if (cleanNotes) {
+    return `[EXPECTED_DATE:${dateOnly}]\n${cleanNotes}`;
+  }
+  return `[EXPECTED_DATE:${dateOnly}]`;
+}
 
 function mapPRDetail(pr: Record<string, unknown>) {
   const prLines = (pr.lines as Record<string, unknown>[]) || [];
@@ -109,18 +145,20 @@ function mapPRDetail(pr: Record<string, unknown>) {
       ).toISOString()
     : createdAtIso;
 
+  const parsedNotesAndDate = parsePRNotesAndExpectedDate(pr.notes as string | null, createdAtIso);
+
   return {
     id: pr.id as string,
     documentNumber: pr.requestNumber as string,
     status: pr.status as string,
-    departmentId: (pr.departmentId as string) || (pr.warehouseId as string), // Fallback since no department_id is stored directly
+    departmentId: (pr.departmentId as string) || (pr.warehouseId as string),
     warehouseId: pr.warehouseId as string,
     warehouseName: (warehouse?.name as string) || null,
     branchId: (pr.branchId as string) || null,
     branchName: (branch?.name as string) || null,
-    expectedDate: createdAtIso,
+    expectedDate: parsedNotesAndDate.expectedDate,
     version: pr.version as number,
-    notes: (pr.notes as string) || '',
+    notes: parsedNotesAndDate.notes,
     createdAt: createdAtIso,
     createdBy: (createdBy?.name as string) || 'System',
     updatedAt: updatedAtIso,
@@ -230,13 +268,14 @@ export class PurchaseRequestsController {
       uomId: line.uomId,
     }));
 
+    const formattedNotes = formatPRNotesWithExpectedDate(body.notes, body.expectedDate) || undefined;
     await this.scopeValidationService.validateWarehouse(
       userId,
       role,
       warehouseId,
     );
     const pr = await this.prService.create(
-      { branchId, warehouseId, departmentId, notes, lines },
+      { branchId, warehouseId, departmentId, notes: formattedNotes, lines },
       userId,
     );
     return { data: mapPRDetail(pr) };
@@ -300,16 +339,11 @@ export class PurchaseRequestsController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body()
-    body: {
-      version: number;
-      notes?: string;
-      lines?: Array<{ itemId: string; quantity: number; uomId?: string }>;
-    },
+    @Body() body: UpdatePurchaseRequestDto,
   ) {
     const pr = await this.prisma.purchaseRequest.findUnique({
       where: { id },
-      select: { warehouseId: true },
+      select: { warehouseId: true, notes: true },
     });
     if (pr) {
       await this.scopeValidationService.validateWarehouse(
@@ -318,15 +352,20 @@ export class PurchaseRequestsController {
         pr.warehouseId,
       );
     }
-    const lines = (body.lines || []).map((line) => ({
+    const lines = body.lines ? body.lines.map((line) => ({
       itemId: line.itemId,
       quantity: Number(line.quantity),
       uomId: line.uomId,
-    }));
+    })) : undefined;
+
+    const formattedNotes = formatPRNotesWithExpectedDate(body.notes, body.expectedDate, pr?.notes) || undefined;
 
     const updated = await this.prService.update(id, {
       version: body.version,
-      notes: body.notes,
+      branchId: body.branchId,
+      warehouseId: body.warehouseId,
+      departmentId: body.departmentId,
+      notes: formattedNotes,
       lines,
     });
     return { data: mapPRDetail(updated) };

@@ -488,6 +488,7 @@
       "submit": "Submit",
       "view_all": "View All",
       "void": "Void Document",
+      "cancel_success": "Document cancelled successfully",
       "review": "Review"
     },
     "languages": {
@@ -3710,7 +3711,7 @@
         "approve_pr": "Approve Request",
         "approve_success": "PR Approved Successfully",
         "confirm_rejection": "Confirm Rejection",
-        "department": "Department",
+        "department": "Requesting Warehouse",
         "description": "Review items and confirm or reject the request",
         "expected_date": "Expected Date",
         "invalid_state": "Invalid Request State",
@@ -3759,7 +3760,7 @@
       "cancel_confirm_title": "Confirm Cancel Request",
       "cancel_confirm_desc": "Are you sure you want to cancel this request? This action cannot be undone.",
       "deleted_success": "Purchase Request deleted successfully",
-      "department": "Department",
+      "department": "Requesting Warehouse",
       "description": "Internal procurement requests and approval workflow",
       "detail_title": "Purchase Request Details",
       "doc_number": "Document No",

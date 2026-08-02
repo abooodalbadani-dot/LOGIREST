@@ -16,7 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn, useWatch, FieldArrayWithId } from "react-hook-form";
 import { Item } from "@/types/master-data";
-import { getAvailableUomsForItem, resolveUomCode, handleUomChange } from "@/utils/uom-helper";
+import { getAvailableUomsForItem, resolveUomCode, handleUomChange, isRawUuid } from "@/utils/uom-helper";
 import { PurchaseOrderFormValues } from "./purchase-order-form";
 
 interface PurchaseOrderLineItemsProps {
@@ -204,62 +204,61 @@ function LineItemCard({
        const matchedItem = itemsData?.data?.find((i) => i.id === rowValues?.itemId);
 
        return (
-              <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden p-3 space-y-2.5 transition-all">
-                     {/* Header: Product Image + SmartCombobox Item Selector + Delete Button */}
-                     <div className="flex items-center gap-2.5">
-                            {/* Product Image */}
-                            {(matchedItem?.image || matchedItem?.imageUrl) ? (
-                                   <img src={(matchedItem?.image || matchedItem?.imageUrl)!} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
-                            ) : (
-                                   <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-lg border border-border text-[9px] text-muted-foreground font-mono shrink-0">
-                                          N/A
+              <div className="bg-card border border-border rounded-[var(--radius-md)] p-3 flex flex-col gap-2 transition-all">
+                     {/* Row 1: Product Image + SmartCombobox Item Selector + Delete Button */}
+                     <div className="flex justify-between items-start gap-2.5 w-full">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                   {(matchedItem?.image || matchedItem?.imageUrl) ? (
+                                          <img src={(matchedItem?.image || matchedItem?.imageUrl)!} alt="Product" className="w-9 h-9 object-cover rounded-md border border-border shrink-0" />
+                                   ) : (
+                                          <div className="w-9 h-9 bg-surface flex items-center justify-center rounded-md border border-border text-[9px] text-muted-foreground font-mono shrink-0">
+                                                 N/A
+                                          </div>
+                                   )}
+
+                                   <div className="flex-1 min-w-0">
+                                          <FormField
+                                                 control={form.control}
+                                                 name={`lines.${index}.itemId`}
+                                                 render={({ field: inputField }) => (
+                                                        <FormItem className="space-y-0 w-full">
+                                                               <FormControl>
+                                                                      <SmartCombobox
+                                                                             items={comboboxItems}
+                                                                             value={inputField.value}
+                                                                             onSelect={(item) => {
+                                                                                    const selected = itemsData?.data?.find((i: Item) => i.id === item.id);
+                                                                                    if (selected) {
+                                                                                           const rawPrice = selected.lastPurchasePrice;
+                                                                                           const safePrice = (rawPrice === undefined || rawPrice === null || Number.isNaN(rawPrice)) ? "" : rawPrice;
+
+                                                                                           update(index, {
+                                                                                                  itemId: selected.id,
+                                                                                                  itemName: selected.name,
+                                                                                                  itemCode: selected.code,
+                                                                                                  uomId: selected.primaryUom?.id || 'PCS',
+                                                                                                  unitPrice: safePrice as unknown as number,
+                                                                                                  quantity: rowValues?.quantity || 1,
+                                                                                                  notes: rowValues?.notes || ''
+                                                                                           });
+                                                                                    }
+                                                                             }}
+                                                                             placeholder={tc('select_item')}
+                                                                             triggerClassName="h-9 bg-background border border-border text-foreground rounded-md text-title-sm font-semibold uppercase shadow-sm focus:ring-2 focus:ring-cyan-500/20"
+                                                                             disabled={isLocked}
+                                                                      />
+                                                               </FormControl>
+                                                               <FormMessage className="text-[10px] mt-0.5" />
+                                                        </FormItem>
+                                                 )}
+                                          />
                                    </div>
-                            )}
-
-                            {/* Item Selector (Combobox) */}
-                            <div className="flex-1 min-w-0">
-                                   <FormField
-                                          control={form.control}
-                                          name={`lines.${index}.itemId`}
-                                          render={({ field: inputField }) => (
-                                                 <FormItem className="space-y-0 w-full">
-                                                        <FormControl>
-                                                               <SmartCombobox
-                                                                      items={comboboxItems}
-                                                                      value={inputField.value}
-                                                                      onSelect={(item) => {
-                                                                             const selected = itemsData?.data?.find((i: Item) => i.id === item.id);
-                                                                             if (selected) {
-                                                                                    const rawPrice = selected.lastPurchasePrice;
-                                                                                    const safePrice = (rawPrice === undefined || rawPrice === null || Number.isNaN(rawPrice)) ? "" : rawPrice;
-
-                                                                                    update(index, {
-                                                                                           itemId: selected.id,
-                                                                                           itemName: selected.name,
-                                                                                           itemCode: selected.code,
-                                                                                           uomId: selected.primaryUom?.id || 'PCS',
-                                                                                           unitPrice: safePrice as unknown as number,
-                                                                                           quantity: rowValues?.quantity || 1,
-                                                                                           notes: rowValues?.notes || ''
-                                                                                    });
-                                                                             }
-                                                                      }}
-                                                                      placeholder={tc('select_item')}
-                                                                      triggerClassName="h-10 bg-background border border-border text-foreground rounded-lg text-xs font-bold uppercase shadow-sm focus:ring-2 focus:ring-cyan-500/20"
-                                                                      disabled={isLocked}
-                                                               />
-                                                        </FormControl>
-                                                        <FormMessage className="text-[10px] mt-0.5" />
-                                                 </FormItem>
-                                          )}
-                                   />
                             </div>
 
-                            {/* Delete Action Button */}
                             {!isLocked && (
                                    <button
                                           type="button"
-                                          className="h-9 w-9 text-destructive hover:bg-destructive/10 border border-transparent rounded-lg transition-colors flex items-center justify-center shrink-0"
+                                          className="h-8 w-8 text-destructive hover:bg-destructive/10 border border-transparent rounded-md transition-colors flex items-center justify-center shrink-0"
                                           onClick={() => remove(index)}
                                           aria-label={tc('actions.remove_line')}
                                    >
@@ -268,149 +267,154 @@ function LineItemCard({
                             )}
                      </div>
 
-                     {/* Compact Body Container: QTY, UOM, Unit Price, Notes */}
-                     <div className="bg-muted/30 border border-border/50 rounded-lg p-2.5 space-y-2">
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                                   {/* Quantity */}
-                                   <div className="flex flex-col col-span-1">
-                                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">
-                                                 {t('quantity')}
-                                          </span>
-                                          <FormField
-                                                 control={form.control}
-                                                 name={`lines.${index}.quantity`}
-                                                 render={({ field: inputField }) => (
-                                                        <FormItem className="space-y-0 w-full">
-                                                               <FormControl>
-                                                                      <Input
-                                                                             type="text"
-                                                                             inputMode="decimal"
-                                                                             disabled={isLocked}
-                                                                             className="h-8 w-full text-center font-mono text-xs font-bold text-foreground bg-background border border-border rounded-md focus:ring-1 focus:ring-cyan-500/30 outline-none"
-                                                                             value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
-                                                                             onChange={(e) => {
-                                                                                    let val = e.target.value.replace(/[^0-9.]/g, '');
-                                                                                    const parts = val.split('.');
-                                                                                    if (parts.length > 2) {
-                                                                                           val = parts[0] + '.' + parts.slice(1).join('');
-                                                                                    }
-                                                                                    inputField.onChange(val);
-                                                                             }}
-                                                                      />
-                                                               </FormControl>
-                                                               <FormMessage className="text-[10px] mt-0.5" />
-                                                        </FormItem>
-                                                 )}
-                                          />
-                                   </div>
+                     {/* Row 2: grid grid-cols-3 gap-2 */}
+                     <div className="grid grid-cols-3 gap-2 w-full">
+                            {/* Quantity Cell */}
+                            <div className="flex flex-col gap-1 w-full">
+                                   <span className="text-label-xs text-muted-foreground truncate">
+                                          {t('quantity')}
+                                   </span>
+                                   <FormField
+                                          control={form.control}
+                                          name={`lines.${index}.quantity`}
+                                          render={({ field: inputField }) => (
+                                                 <FormItem className="space-y-0 w-full">
+                                                        <FormControl>
+                                                               <Input
+                                                                      type="text"
+                                                                      inputMode="decimal"
+                                                                      dir="ltr"
+                                                                      lang="en"
+                                                                      disabled={isLocked}
+                                                                      className="h-8 w-full text-center font-mono text-body-sm force-latin-numbers text-foreground bg-background border border-border rounded-md focus:ring-1 focus:ring-cyan-500/30 outline-none"
+                                                                      value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
+                                                                      onChange={(e) => {
+                                                                             let val = e.target.value.replace(/[^0-9.]/g, '');
+                                                                             const parts = val.split('.');
+                                                                             if (parts.length > 2) {
+                                                                                    val = parts[0] + '.' + parts.slice(1).join('');
+                                                                             }
+                                                                             inputField.onChange(val);
+                                                                      }}
+                                                               />
+                                                        </FormControl>
+                                                        <FormMessage className="text-[10px] mt-0.5" />
+                                                 </FormItem>
+                                          )}
+                                   />
+                            </div>
 
-                                   {/* UOM */}
-                                   <div className="flex flex-col col-span-1">
-                                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">
-                                                 {tc('uom.label')}
-                                          </span>
-                                          <FormField
-                                                 control={form.control}
-                                                 name={`lines.${index}.uomId`}
-                                                 render={({ field: inputField }) => {
-                                                        const availableUoms = getAvailableUomsForItem(matchedItem);
-                                                        const resolvedCode = resolveUomCode(inputField.value, matchedItem);
+                            {/* UOM Cell */}
+                            <div className="flex flex-col gap-1 w-full">
+                                   <span className="text-label-xs text-muted-foreground truncate">
+                                          {tc('uom.label')}
+                                   </span>
+                                   <FormField
+                                          control={form.control}
+                                          name={`lines.${index}.uomId`}
+                                          render={({ field: inputField }) => {
+                                                 const availableUoms = getAvailableUomsForItem(matchedItem);
+                                                 const resolvedCode = resolveUomCode(inputField.value, matchedItem);
+                                                 const displayUomText = !isRawUuid(resolvedCode) ? resolvedCode : (matchedItem?.primaryUom?.code || 'UOM');
 
-                                                        if (availableUoms.length <= 1 || isLocked) {
-                                                               return (
-                                                                      <FormItem className="space-y-0 w-full">
-                                                                             <FormControl>
-                                                                                    <div className="h-8 w-full flex items-center justify-center bg-background border border-border text-foreground rounded-md font-mono uppercase text-[10px] font-bold">
-                                                                                           {resolvedCode}
-                                                                                    </div>
-                                                                             </FormControl>
-                                                                             <FormMessage className="text-[10px] mt-0.5" />
-                                                                      </FormItem>
-                                                               );
-                                                        }
+                                                 if (availableUoms.length <= 1 || isLocked) {
                                                         return (
                                                                <FormItem className="space-y-0 w-full">
-                                                                      <Select
-                                                                             disabled={isLocked}
-                                                                             value={inputField.value || ''}
-                                                                             onValueChange={(newUomId) => {
-                                                                                    inputField.onChange(newUomId || '');
-                                                                             }}
-                                                                      >
-                                                                             <FormControl>
-                                                                                    <SelectTrigger className="h-8 w-full bg-background border border-border text-foreground rounded-md font-mono uppercase text-[10px] font-bold px-1 text-center">
-                                                                                           <SelectValue placeholder={resolvedCode}>{resolvedCode}</SelectValue>
-                                                                                    </SelectTrigger>
-                                                                             </FormControl>
-                                                                             <SelectContent>
-                                                                                    {availableUoms.map((u) => (
-                                                                                           <SelectItem key={u.id} value={u.id}>
-                                                                                                  {u.code}{u.name && u.name !== u.code ? ` (${u.name})` : ''}
-                                                                                           </SelectItem>
-                                                                                    ))}
-                                                                             </SelectContent>
-                                                                      </Select>
+                                                                      <FormControl>
+                                                                             <div className="h-8 w-full flex items-center justify-center bg-background border border-border text-foreground rounded-md font-mono uppercase text-body-sm force-latin-numbers font-bold">
+                                                                                    {displayUomText}
+                                                                             </div>
+                                                                      </FormControl>
                                                                       <FormMessage className="text-[10px] mt-0.5" />
                                                                </FormItem>
                                                         );
-                                                 }}
-                                          />
-                                   </div>
-
-                                   {/* Unit Price */}
-                                   <div className="flex flex-col col-span-1">
-                                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">
-                                                 {t('unit_price')}
-                                          </span>
-                                          <FormField
-                                                 control={form.control}
-                                                 name={`lines.${index}.unitPrice`}
-                                                 render={({ field: inputField }) => (
+                                                 }
+                                                 return (
                                                         <FormItem className="space-y-0 w-full">
-                                                               <FormControl>
-                                                                      <Input
-                                                                             type="text"
-                                                                             inputMode="decimal"
-                                                                             disabled={isLocked}
-                                                                             className="h-8 w-full text-center font-mono text-xs font-bold text-foreground bg-background border border-border rounded-md focus:ring-1 focus:ring-cyan-500/30 outline-none"
-                                                                             value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
-                                                                             onChange={(e) => {
-                                                                                    let val = e.target.value.replace(/[^0-9.]/g, '');
-                                                                                    const parts = val.split('.');
-                                                                                    if (parts.length > 2) {
-                                                                                           val = parts[0] + '.' + parts.slice(1).join('');
-                                                                                    }
-                                                                                    inputField.onChange(val);
-                                                                             }}
-                                                                      />
-                                                               </FormControl>
+                                                               <Select
+                                                                      disabled={isLocked}
+                                                                      value={inputField.value || ''}
+                                                                      onValueChange={(newUomId) => {
+                                                                             inputField.onChange(newUomId || '');
+                                                                      }}
+                                                               >
+                                                                      <FormControl>
+                                                                             <SelectTrigger className="h-8 w-full bg-background border border-border text-foreground rounded-md font-mono uppercase text-body-sm force-latin-numbers font-bold px-1 text-center">
+                                                                                    <SelectValue placeholder={displayUomText}>
+                                                                                           {displayUomText}
+                                                                                    </SelectValue>
+                                                                             </SelectTrigger>
+                                                                      </FormControl>
+                                                                      <SelectContent>
+                                                                             {availableUoms.map((u) => (
+                                                                                    <SelectItem key={u.id} value={u.id}>
+                                                                                           {u.code && !isRawUuid(u.code) ? u.code : (u.name && !isRawUuid(u.name) ? u.name : 'UOM')}
+                                                                                    </SelectItem>
+                                                                             ))}
+                                                                      </SelectContent>
+                                                               </Select>
                                                                <FormMessage className="text-[10px] mt-0.5" />
                                                         </FormItem>
-                                                 )}
-                                          />
-                                   </div>
+                                                 );
+                                          }}
+                                   />
                             </div>
 
-                            {/* Notes Input */}
-                            <FormField
-                                   control={form.control}
-                                   name={`lines.${index}.notes`}
-                                   render={({ field: inputField }) => (
-                                          <FormItem className="space-y-0 w-full">
-                                                 <FormControl>
-                                                        <Input
-                                                               placeholder={t('notes_placeholder') || tc('table_headers.notes')}
-                                                               disabled={isLocked}
-                                                               className="h-8 w-full px-2.5 text-xs font-medium text-foreground bg-background border border-border rounded-md focus:ring-1 focus:ring-cyan-500/30 outline-none"
-                                                               value={inputField.value || ''}
-                                                               onChange={(e) => inputField.onChange(e.target.value)}
-                                                        />
-                                                 </FormControl>
-                                                 <FormMessage className="text-[10px] mt-0.5" />
-                                          </FormItem>
-                                   )}
-                            />
+                            {/* Unit Price Cell */}
+                            <div className="flex flex-col gap-1 w-full">
+                                   <span className="text-label-xs text-muted-foreground truncate">
+                                          {t('unit_price')}
+                                   </span>
+                                   <FormField
+                                          control={form.control}
+                                          name={`lines.${index}.unitPrice`}
+                                          render={({ field: inputField }) => (
+                                                 <FormItem className="space-y-0 w-full">
+                                                        <FormControl>
+                                                               <Input
+                                                                      type="text"
+                                                                      inputMode="decimal"
+                                                                      dir="ltr"
+                                                                      lang="en"
+                                                                      disabled={isLocked}
+                                                                      className="h-8 w-full text-center font-mono text-body-sm force-latin-numbers text-foreground bg-background border border-border rounded-md focus:ring-1 focus:ring-cyan-500/30 outline-none"
+                                                                      value={inputField.value === undefined || inputField.value === null || (typeof inputField.value === 'number' && Number.isNaN(inputField.value)) ? "" : inputField.value}
+                                                                      onChange={(e) => {
+                                                                             let val = e.target.value.replace(/[^0-9.]/g, '');
+                                                                             const parts = val.split('.');
+                                                                             if (parts.length > 2) {
+                                                                                    val = parts[0] + '.' + parts.slice(1).join('');
+                                                                             }
+                                                                             inputField.onChange(val);
+                                                                      }}
+                                                               />
+                                                        </FormControl>
+                                                        <FormMessage className="text-[10px] mt-0.5" />
+                                                 </FormItem>
+                                          )}
+                                   />
+                            </div>
                      </div>
+
+                     {/* Row 3: Notes Input */}
+                     <FormField
+                            control={form.control}
+                            name={`lines.${index}.notes`}
+                            render={({ field: inputField }) => (
+                                   <FormItem className="space-y-0 w-full">
+                                          <FormControl>
+                                                 <Input
+                                                        placeholder={t('notes_placeholder') || tc('table_headers.notes')}
+                                                        disabled={isLocked}
+                                                        className="h-8 w-full px-2.5 text-sm font-medium text-foreground bg-background border border-border rounded-md focus:ring-1 focus:ring-cyan-500/30 outline-none"
+                                                        value={inputField.value || ''}
+                                                        onChange={(e) => inputField.onChange(e.target.value)}
+                                                 />
+                                          </FormControl>
+                                          <FormMessage className="text-[10px] mt-0.5" />
+                                   </FormItem>
+                            )}
+                     />
               </div>
        );
 }
@@ -541,13 +545,14 @@ function LineItemRow({
                                    render={({ field: inputField }) => {
                                           const availableUoms = getAvailableUomsForItem(matchedItem);
                                           const resolvedCode = resolveUomCode(inputField.value, matchedItem);
+                                          const displayUomText = !isRawUuid(resolvedCode) ? resolvedCode : (matchedItem?.primaryUom?.code || 'UOM');
 
                                           if (availableUoms.length <= 1 || isLocked) {
                                                  return (
                                                         <FormItem className="space-y-0 w-full">
                                                                <FormControl>
                                                                       <div className="h-10 w-full flex items-center justify-center px-2 bg-background border border-border text-foreground rounded-xl font-mono uppercase text-[11px] font-bold">
-                                                                             {resolvedCode}
+                                                                             {displayUomText}
                                                                       </div>
                                                                </FormControl>
                                                                <FormMessage className="text-[10px] mt-1" />
@@ -589,13 +594,15 @@ function LineItemRow({
                                                         >
                                                                <FormControl>
                                                                       <SelectTrigger className="h-10 w-full bg-background border border-border text-foreground rounded-xl font-mono uppercase text-[11px] font-bold px-2">
-                                                                             <SelectValue placeholder={resolvedCode}>{resolvedCode}</SelectValue>
+                                                                             <SelectValue placeholder={displayUomText}>
+                                                                                    {displayUomText}
+                                                                             </SelectValue>
                                                                       </SelectTrigger>
                                                                </FormControl>
                                                                <SelectContent>
                                                                       {availableUoms.map((u) => (
                                                                              <SelectItem key={u.id} value={u.id}>
-                                                                                    {u.code}{u.name && u.name !== u.code ? ` (${u.name})` : ''}
+                                                                                    {u.code && !isRawUuid(u.code) ? u.code : (u.name && !isRawUuid(u.name) ? u.name : 'UOM')}
                                                                              </SelectItem>
                                                                       ))}
                                                                </SelectContent>

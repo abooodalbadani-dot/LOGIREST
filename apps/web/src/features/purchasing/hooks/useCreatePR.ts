@@ -10,10 +10,11 @@ const CreatePRPayloadSchema = z.object({
  warehouseId: z.string(),
  departmentId: z.string().optional(),
  notes: z.string().optional().or(z.literal('')),
+ expectedDate: z.string().optional().nullable(),
  lines: z.array(z.object({
   id: z.string().optional(),
   itemId: z.string(),
-  uomId: z.string().optional(),
+  uomId: z.string().optional().nullable(),
   quantity: z.number().positive(),
  }))
 });

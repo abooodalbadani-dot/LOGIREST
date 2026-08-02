@@ -134,6 +134,7 @@ export default function MovementsClient() {
    switch (norm) {
     case 'RECEIPT':
     case 'GOODS_RECEIVED_NOTE':
+    case 'GRN':
      return `/goods-received/${id}`;
     case 'ISSUE':
     case 'INVENTORY_ISSUE':
@@ -142,6 +143,8 @@ export default function MovementsClient() {
      return `/transfers/${id}`;
     case 'ADJUSTMENT':
      return `/adjustments/${id}`;
+    case 'STOCKTAKE':
+     return `/stocktake/${id}`;
     default:
      return '#';
    }
@@ -168,6 +171,36 @@ export default function MovementsClient() {
    ),
   },
   {
+   accessorKey: 'documentReference',
+   header: t('document_number'),
+   cell: ({ row }) => {
+    const docRef = row.original.documentReference;
+    const docId = row.original.documentId ?? null;
+    const path = getDocumentPath(row.original.transactionType, docId);
+
+    if (!docRef || docRef === '—') {
+     return <span className="text-muted-foreground/60">—</span>;
+    }
+
+    if (path === '#') {
+     return (
+      <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground">
+       {docRef}
+      </span>
+     );
+    }
+
+    return (
+     <Link
+      href={path}
+      className="font-mono text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)] bg-operational-cyan/10 px-2 py-1 rounded-md border border-operational-cyan/20 inline-block"
+     >
+      <span dir="ltr">{docRef}</span>
+     </Link>
+    );
+   },
+  },
+  {
    accessorKey: 'itemCode',
    header: t('item_code'),
    cell: ({ row }) => (
@@ -180,9 +213,16 @@ export default function MovementsClient() {
    id: 'itemName',
    header: t('item_name'),
    cell: ({ row }) => (
-    <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-foreground transition-colors leading-tight block max-w-[220px]">
-     {row.original.itemName}
-    </span>
+    <div className="flex items-center gap-2.5 min-w-0">
+     {row.original.image && (
+      <div className="w-7 h-7 rounded-lg bg-surface-container-highest flex items-center justify-center border border-border shrink-0 overflow-hidden">
+       <img src={row.original.image} alt={row.original.itemName || ''} className="w-full h-full object-cover" />
+      </div>
+     )}
+     <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-foreground transition-colors leading-tight block max-w-[220px]">
+      {row.original.itemName}
+     </span>
+    </div>
    ),
   },
   {

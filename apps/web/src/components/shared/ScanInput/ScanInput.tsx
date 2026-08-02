@@ -234,7 +234,7 @@ export const ScanInput = forwardRef(
                             )}
                         </div>
                         {isManual ? (
-                            <div className={cn("flex-1 min-w-0 z-10 flex items-center h-full", variant === 'retro' ? config.input : "pr-4 pl-12")}>
+                            <div className={cn("flex-1 min-w-0 z-10 flex items-center h-full", variant === 'retro' ? config.input : "pe-4 ps-12")}>
                                 <SmartCombobox
                                     items={items || []}
                                     placeholder={placeholder || tc('search_placeholder') || 'Search item...'}
@@ -256,7 +256,7 @@ export const ScanInput = forwardRef(
                             <Input
                                 ref={inputRef}
                                 type="text"
-                                dir="ltr"
+                                dir="auto"
                                 value={value !== undefined ? value : undefined}
                                 disabled={disabled || isScanning}
                                 readOnly={readOnly}
@@ -266,7 +266,7 @@ export const ScanInput = forwardRef(
                                 autoComplete="off"
                                 className={cn(
                                     "flex-1 min-w-0 bg-transparent border-none text-[#0B1220] dark:text-white transition-all duration-200 outline-none z-10 h-full focus:ring-0 focus:outline-none shadow-none",
-                                    variant === 'retro' ? "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black" : "placeholder:text-muted-foreground text-sm md:text-base font-semibold px-2 pr-4 pl-12 focus:ring-0 focus:outline-none",
+                                    variant === 'retro' ? "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black" : "placeholder:text-muted-foreground text-sm md:text-base font-semibold pe-4 ps-12 focus:ring-0 focus:outline-none",
                                     readOnly && "cursor-default select-all opacity-70",
                                     variant === 'retro' && config.input
                                 )}

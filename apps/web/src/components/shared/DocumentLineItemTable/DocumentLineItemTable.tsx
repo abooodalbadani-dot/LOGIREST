@@ -106,7 +106,7 @@ export function DocumentLineItemTable<T extends LineItem>({
   renderQty,
   renderUom,
   dense = false,
-  enableVirtualization = false,
+  enableVirtualization = isReadOnly ? true : false,
   maxHeight = '480px',
   virtualizerRef,
   rowClassName,
@@ -765,49 +765,35 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 </div>
                               </div>
                             ) : mobileLayoutPattern === 'purchase-request-form' ? (
-                              <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 p-3.5 bg-card border border-border rounded-2xl shadow-sm transition-all mb-2 hover:border-brand-gold/30">
-                                {/* Identity: Image + Name + Code + UOM Badge */}
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                  {getItemImage(line.item) ? (
-                                    <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
-                                  ) : (
-                                    <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
-                                  )}
-                                  <div className="flex flex-col min-w-0 flex-1 text-start">
-                                    <span className="text-[13px] font-bold text-foreground leading-tight whitespace-normal mb-1">
-                                      {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                                    </span>
-                                    <div className="flex items-center gap-1.5 mt-0">
-                                      <span className="text-[10px] font-mono font-bold text-muted-foreground bg-surface-container-highest px-1.5 py-0.5 rounded border border-border/50" dir="ltr">{line.item.code}</span>
-                                      {line.item.primaryUom && (
-                                        <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                          {line.item.primaryUom.code || line.item.primaryUom.name}
-                                        </span>
+                              <div className="flex flex-col gap-2 p-3 bg-card border border-border rounded-2xl shadow-sm transition-all mb-2 hover:border-brand-gold/30 [&_button[aria-haspopup]]:!h-9 [&_button[aria-haspopup]]:!min-w-[0px] [&_input]:!h-9 [&_input]:!text-sm [&_input]:!font-medium [&_.text-label-xxs]:!text-[0.625rem] [&_.text-label-xxs]:!mt-0.5 [&_.text-label-xxs]:!font-normal">
+                                {/* Top row: Identity (Image + Name + Code) and Trash Icon on top end */}
+                                <div className="flex items-start justify-between gap-2 w-full">
+                                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    {getItemImage(line.item) ? (
+                                      <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
+                                    ) : (
+                                      <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
+                                    )}
+                                    <div className="flex flex-col min-w-0 flex-1 text-start">
+                                      <span className="text-[13px] font-bold text-foreground leading-tight whitespace-normal mb-1">
+                                        {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                                      </span>
+                                      <div className="flex items-center gap-1.5 mt-0">
+                                        <span className="text-[10px] font-mono font-bold text-muted-foreground bg-surface-container-highest px-1.5 py-0.5 rounded border border-border/50" dir="ltr">{line.item.code}</span>
+                                      </div>
+                                      {renderItemDescription && (
+                                        <div className="mt-1">
+                                          {renderItemDescription(line as T)}
+                                        </div>
                                       )}
                                     </div>
-                                    {renderItemDescription && (
-                                      <div className="mt-1">
-                                        {renderItemDescription(line as T)}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Right side controls: QTY Input + Delete Button in same row */}
-                                <div className="flex items-center gap-3 shrink-0 ms-auto">
-                                  {/* QTY Input */}
-                                  <div className="w-28 sm:w-32 shrink-0 flex flex-col items-center">
-                                    {renderQty ? renderQty(line) : (
-                                      <div className="text-sm font-black text-foreground font-mono bg-background border border-border rounded-xl px-2 h-10 flex items-center justify-center w-full" dir="ltr">{line.qty}</div>
-                                    )}
                                   </div>
 
-                                  {/* Delete Button */}
                                   {!isReadOnly && onRemoveLine && (
                                     <button
                                       type="button"
                                       onClick={() => onRemoveLine(line.id)}
-                                      className="h-9 w-9 text-destructive hover:bg-destructive/10 border border-transparent rounded-xl transition-colors flex items-center justify-center shrink-0"
+                                      className="h-8 w-8 text-destructive hover:bg-destructive/10 border border-transparent rounded-xl transition-colors flex items-center justify-center shrink-0"
                                       aria-label={tc('actions.remove_line')}
                                     >
                                       <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -815,6 +801,24 @@ export function DocumentLineItemTable<T extends LineItem>({
                                       </svg>
                                     </button>
                                   )}
+                                </div>
+
+                                {/* Bottom row: Actions Grid - Qty Input and Unit Selector side-by-side */}
+                                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40 w-full items-start">
+                                  <div className="flex flex-col gap-1 w-full">
+                                    <span className="text-label-xs text-muted-foreground">{h.qty}</span>
+                                    {renderQty ? renderQty(line) : (
+                                      <div className="text-sm font-medium text-foreground font-mono bg-background border border-border rounded-xl px-2 h-9 flex items-center justify-center w-full" dir="ltr">{line.qty}</div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col gap-1 w-full">
+                                    <span className="text-label-xs text-muted-foreground">{h.uom}</span>
+                                    {renderUom ? renderUom(line) : (
+                                      <div className="text-xs font-bold uppercase text-foreground bg-background border border-border rounded-xl px-2 h-9 flex items-center justify-center w-full">
+                                        {getLineUomDisplay(line) || "N/A"}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             ) : mobileLayoutPattern === 'adjustment-form' ? (
@@ -1478,58 +1482,62 @@ export function DocumentLineItemTable<T extends LineItem>({
                         </div>
                       </div>
                     ) : mobileLayoutPattern === 'purchase-request-form' ? (
-                      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 p-3.5 bg-card border border-border rounded-2xl shadow-sm transition-all mb-2 hover:border-brand-gold/30">
-                        {/* Identity: Image + Name + Code + UOM Badge */}
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          {getItemImage(line.item) ? (
-                            <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
-                          ) : (
-                            <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
-                          )}
-                          <div className="flex flex-col min-w-0 flex-1 text-start">
-                            <span className="text-[13px] font-bold text-foreground leading-tight whitespace-normal mb-1">
-                              {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                            </span>
-                            <div className="flex items-center gap-1.5 mt-0">
-                              <span className="text-[10px] font-mono font-bold text-muted-foreground bg-surface-container-highest px-1.5 py-0.5 rounded border border-border/50" dir="ltr">{line.item.code}</span>
-                              {line.item.primaryUom && (
-                                <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                  {line.item.primaryUom.code || line.item.primaryUom.name}
-                                </span>
-                              )}
-                            </div>
-                            {renderItemDescription && (
-                              <div className="mt-1">
-                                {renderItemDescription(line as T)}
+                      <div className="flex flex-col gap-2 p-3 bg-card border border-border rounded-2xl shadow-sm transition-all mb-2 hover:border-brand-gold/30 [&_button[aria-haspopup]]:!h-8 [&_button[aria-haspopup]]:!min-w-[0px] [&_input]:!h-8 [&_input]:!text-sm [&_input]:!font-medium">
+                                {/* Top row: Identity (Image + Name + Code) and Trash Icon on top end */}
+                                <div className="flex items-start justify-between gap-2 w-full">
+                                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    {getItemImage(line.item) ? (
+                                      <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
+                                    ) : (
+                                      <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">N/A</div>
+                                    )}
+                                    <div className="flex flex-col min-w-0 flex-1 text-start">
+                                      <span className="text-[13px] font-bold text-foreground leading-tight whitespace-normal mb-1">
+                                        {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                                      </span>
+                                      <div className="flex items-center gap-1.5 mt-0">
+                                        <span className="text-[10px] font-mono font-bold text-muted-foreground bg-surface-container-highest px-1.5 py-0.5 rounded border border-border/50" dir="ltr">{line.item.code}</span>
+                                      </div>
+                                      {renderItemDescription && (
+                                        <div className="mt-1">
+                                          {renderItemDescription(line as T)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {!isReadOnly && onRemoveLine && (
+                                    <button
+                                      type="button"
+                                      onClick={() => onRemoveLine(line.id)}
+                                      className="h-8 w-8 text-destructive hover:bg-destructive/10 border border-transparent rounded-xl transition-colors flex items-center justify-center shrink-0"
+                                      aria-label={tc('actions.remove_line')}
+                                    >
+                                      <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Bottom row: Actions Grid - Qty Input and Unit Selector side-by-side */}
+                                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40 w-full items-start">
+                                  <div className="flex flex-col gap-1 w-full">
+                                    <span className="text-label-xs text-muted-foreground">{h.qty}</span>
+                                    {renderQty ? renderQty(line) : (
+                                      <div className="text-sm font-medium text-foreground font-mono bg-background border border-border rounded-xl px-2 h-8 flex items-center justify-center w-full" dir="ltr">{line.qty}</div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col gap-1 w-full">
+                                    <span className="text-label-xs text-muted-foreground">{h.uom}</span>
+                                    {renderUom ? renderUom(line) : (
+                                      <div className="text-xs font-bold uppercase text-foreground bg-background border border-border rounded-xl px-2 h-8 flex items-center justify-center w-full">
+                                        {getLineUomDisplay(line) || "N/A"}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Right side controls: QTY Input + Delete Button in same row */}
-                        <div className="flex items-center gap-3 shrink-0 ms-auto">
-                          {/* QTY Input */}
-                          <div className="w-28 sm:w-32 shrink-0 flex flex-col items-center">
-                            {renderQty ? renderQty(line) : (
-                              <div className="text-sm font-black text-foreground font-mono bg-background border border-border rounded-xl px-2 h-10 flex items-center justify-center w-full" dir="ltr">{line.qty}</div>
-                            )}
-                          </div>
-
-                          {/* Delete Button */}
-                          {!isReadOnly && onRemoveLine && (
-                            <button
-                              type="button"
-                              onClick={() => onRemoveLine(line.id)}
-                              className="h-9 w-9 text-destructive hover:bg-destructive/10 border border-transparent rounded-xl transition-colors flex items-center justify-center shrink-0"
-                              aria-label={tc('actions.remove_line')}
-                            >
-                              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      </div>
                     ) : mobileLayoutPattern === 'adjustment-form' ? (
                       <div className="flex flex-col bg-card border border-border shadow-sm rounded-xl p-2.5 transition-all mb-2 hover:border-brand-gold/30 space-y-2 [&_input]:!h-9 [&_input]:!text-xs [&_input]:!py-1 [&_button]:!h-9 [&_button]:!text-[10px] [&_button]:!px-2.5 [&_div.h-11]:!h-9">
                         {/* Header: Item Identity + Direction Indicator (زيادة/نقصان) + Remove Button */}

@@ -145,7 +145,6 @@ export function PODetailClient({ id }: PODetailClientProps) {
         isCancelPending={cancelPO.isPending}
         onDelete={handleDelete}
         isDeletePending={deletePO.isPending}
-        onEdit={() => setIsEditing(true)}
         onFulfill={() => router.push(`/goods-received/new?po_id=${po.id}`)}
         extraActions={
           status === PO_STATUS.APPROVED ? (
@@ -176,7 +175,17 @@ export function PODetailClient({ id }: PODetailClientProps) {
   if (!isFormMode && po) {
     return (
       <>
-        <POViewer document={po} locale={locale} actions={renderViewerActions()} />
+        <POViewer
+          document={po}
+          locale={locale}
+          actions={renderViewerActions()}
+          onDelete={handleDelete}
+          isDeletePending={deletePO.isPending}
+          onApprove={status === PO_STATUS.PENDING_APPROVAL ? handleApprove : undefined}
+          isApprovePending={approvePO.isPending}
+          onReject={status === PO_STATUS.PENDING_APPROVAL ? () => setRejectModalOpen(true) : undefined}
+          isRejectPending={rejectPO.isPending}
+        />
 
         {/* Rejection Reason Modal */}
         <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
@@ -231,7 +240,17 @@ export function PODetailClient({ id }: PODetailClientProps) {
         initialData={po}
         mode={isNew ? 'create' : 'edit'}
         onConflict={triggerConflict}
-        actions={renderViewerActions()}
+        onDelete={handleDelete}
+        isDeletePending={deletePO.isPending}
+        onSubmitForApproval={handleSubmit}
+        isSubmitPending={submitPO.isPending}
+        onCancel={() => {
+          if (isEditing) {
+            setIsEditing(false);
+          } else {
+            router.push('/purchase-orders');
+          }
+        }}
       />
       <ConflictDialog
         open={open}

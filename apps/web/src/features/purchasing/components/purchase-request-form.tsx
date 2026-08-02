@@ -26,6 +26,9 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { cn } from '@/lib/utils';
 
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format, parseISO } from 'date-fns';
 import {
   Form,
   FormControl,
@@ -324,6 +327,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         warehouseId,
         departmentId: values.department_id ? values.department_id : undefined,
         notes: values.notes || '',
+        expectedDate: values.expected_date || undefined,
         lines: values.lines.map(l => ({
           id: l.id,
           itemId: l.item_id,
@@ -357,7 +361,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
       router.push(`/purchase-requests/${prId}`, { skipGuard: true });
     } catch (error) {
-      console.error(error);
+      console.error('[PurchaseRequestForm] Save error:', error instanceof Error ? error.message : error);
       playSound('error');
       let isToastShown = false;
       if (error && typeof error === 'object') {
@@ -560,13 +564,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-8">
                   <FormField<PurchaseRequestFormValues, 'department_id'>
                     control={form.control}
                     name="department_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 flex items-center gap-2 ps-1">
+                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-2 md:mb-3 flex items-center gap-2 ps-1">
                           <Package className="w-3 h-3" />
                           {t('department')}
                         </FormLabel>
@@ -576,7 +580,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                             value={field.value ?? undefined}
                             onSelect={(item) => field.onChange(item.id)}
                             placeholder={tc('select_warehouse')}
-                            className="bg-card h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-brand-gold/50"
+                            className="bg-card h-9 md:h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-brand-gold/50"
                             disabled={isFormDisabled}
                           />
                         </FormControl>
@@ -588,28 +592,60 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   <FormField<PurchaseRequestFormValues, 'expected_date'>
                     control={form.control}
                     name="expected_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 flex items-center gap-2 ps-1">
-                          <Calendar className="w-3 h-3" />
-                          {t('expected_date')}
-                        </FormLabel>
-                        <FormControl>
-                          <Input type="date" dir="ltr" className="bg-card h-11 rounded-xl font-semibold text-label-xs uppercase rtl:text-right" {...field} disabled={isFormDisabled} />
-                        </FormControl>
-                        <FormMessage className="text-label-xxs font-semibold uppercase" />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const selectedDate = field.value ? parseISO(field.value) : undefined;
+                      const isValidDate = selectedDate && !isNaN(selectedDate.getTime());
+                      return (
+                        <FormItem>
+                          <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-2 md:mb-3 flex items-center gap-2 ps-1">
+                            <Calendar className="w-3 h-3" />
+                            {t('expected_date')}
+                          </FormLabel>
+                          <FormControl>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={isFormDisabled}
+                                  className={cn(
+                                    "bg-card h-9 md:h-11 w-full rounded-xl border border-border px-3 font-mono text-label-xs uppercase shadow-sm focus:ring-1 focus:ring-brand-gold/50 flex items-center justify-between font-semibold",
+                                    !field.value && "text-muted-foreground/60"
+                                  )}
+                                >
+                                  <span lang="en" dir="ltr" className="force-latin-numbers inline-block text-right font-mono text-label-xs">
+                                    {isValidDate ? format(selectedDate, "dd/MM/yyyy") : tc('select_date')}
+                                  </span>
+                                  <Calendar className="w-4 h-4 text-muted-foreground/60 shrink-0 ms-2" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 border border-border bg-card shadow-xl rounded-xl" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={isValidDate ? selectedDate : undefined}
+                                  onSelect={(date) => {
+                                    field.onChange(date ? format(date, "yyyy-MM-dd") : "");
+                                  }}
+                                  disabled={isFormDisabled}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </FormControl>
+                          <FormMessage className="text-label-xxs font-semibold uppercase" />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField<PurchaseRequestFormValues, 'notes'>
                     control={form.control}
                     name="notes"
                     render={({ field }) => (
-                      <FormItem className="lg:col-span-3">
-                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
+                      <FormItem className="col-span-2 md:col-span-2 lg:col-span-3">
+                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-2 md:mb-3 ps-1">{tc('notes')}</FormLabel>
                         <FormControl>
-                          <Input placeholder={tc('notes')} className="bg-card h-11 rounded-xl font-semibold text-label-xs uppercase" {...field} disabled={isFormDisabled} />
+                          <Input placeholder={tc('notes')} className="bg-card h-9 md:h-11 rounded-xl font-semibold text-label-xs uppercase" {...field} disabled={isFormDisabled} />
                         </FormControl>
                         <FormMessage className="text-label-xxs font-semibold uppercase" />
                       </FormItem>
@@ -704,7 +740,8 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                             }
                           }}
                           getPrimaryLabel={(uom) => uom.code || uom.name || 'UOM'}
-                          triggerClassName="h-9 min-w-[90px] bg-card border border-border text-foreground rounded-lg text-xs font-bold uppercase shadow-sm focus:ring-1 focus:ring-operational-cyan"
+                          getSecondaryLabel={() => undefined}
+                          triggerClassName="h-9 w-full bg-card border border-border text-foreground rounded-lg text-xs font-bold uppercase shadow-sm focus:ring-1 focus:ring-operational-cyan"
                           disabled={isFormDisabled || isSubmitting}
                         />
                       );
@@ -727,7 +764,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                                 form.setValue(`lines.${index}.req_qty`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                               }}
                               disabled={isFormDisabled || isSubmitting}
-                              className="w-full text-center font-black text-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+                              className="w-full text-center text-sm font-medium bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
                             />
                           )}
                           {(minStock !== undefined || reorderPt !== undefined) && (

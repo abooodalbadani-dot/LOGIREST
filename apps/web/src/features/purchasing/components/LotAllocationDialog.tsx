@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { PackageCheck, Calendar, Hash, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format, parseISO, isValid } from 'date-fns';
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
@@ -65,8 +68,11 @@ export function LotAllocationDialog({
   const isLotNumberValid = lotNumberTrimmed.length > 0;
   const isFormValid = isLotNumberValid;
 
-  const isExpiryInPast = expiryDate
-    ? new Date(expiryDate) < new Date(new Date().toDateString())
+  const selectedDate = expiryDate ? parseISO(expiryDate) : undefined;
+  const isDateValid = selectedDate ? isValid(selectedDate) : false;
+
+  const isExpiryInPast = isDateValid && selectedDate
+    ? selectedDate < new Date(new Date().toDateString())
     : false;
 
   const handleConfirm = () => {
@@ -169,17 +175,40 @@ export function LotAllocationDialog({
                     ({tc('optional') || 'optional'})
                   </span>
                 </Label>
-                <Input
-                  id="expiry-date-input"
-                  type="date"
-                  dir="ltr"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  className={cn(
-                    'h-11 font-mono bg-background border-input text-foreground focus:ring-1 focus:ring-brand-gold focus:border-brand-gold shadow-sm rounded-xl',
-                    isExpiryInPast && 'border-amber-500 ring-1 ring-amber-500 bg-amber-500/5'
-                  )}
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      id="expiry-date-trigger"
+                      className={cn(
+                        'flex h-11 w-full rounded-xl border border-input bg-background px-3 font-mono text-sm shadow-sm focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold items-center justify-between font-semibold text-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none cursor-pointer',
+                        !expiryDate && 'text-muted-foreground',
+                        isExpiryInPast && 'border-amber-500 ring-1 ring-amber-500 bg-amber-500/5'
+                      )}
+                    >
+                      <span
+                        lang="en"
+                        dir="ltr"
+                        className="force-latin-numbers inline-block text-start font-mono text-sm"
+                      >
+                        {isDateValid && selectedDate
+                          ? format(selectedDate, 'dd/MM/yyyy')
+                          : tc('select_date') || 'dd/mm/yyyy'}
+                      </span>
+                      <Calendar className="w-4 h-4 text-muted-foreground/60 shrink-0 ms-2" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 border border-border bg-card shadow-2xl rounded-xl z-[100]" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={isDateValid ? selectedDate : undefined}
+                      onSelect={(date) => {
+                        setExpiryDate(date ? format(date, 'yyyy-MM-dd') : '');
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 {isExpiryInPast && (
                   <p className="text-xs text-amber-500 font-semibold flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5" />

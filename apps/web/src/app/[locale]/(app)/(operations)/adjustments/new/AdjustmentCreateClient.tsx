@@ -71,7 +71,7 @@ function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen:
           </div>
           <div className="space-y-2">
             <Label htmlFor="expiryDate" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tCommon('expiry_date') || 'Expiry Date'}</Label>
-            <Input id="expiryDate" type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="bg-surface-container-highest/40" />
+            <Input id="expiryDate" type="date" dir="ltr" lang="en" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="bg-surface-container-highest/40 force-latin-numbers font-mono text-start" />
           </div>
         </div>
         <DialogFooter>

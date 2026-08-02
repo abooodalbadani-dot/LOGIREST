@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
-import { GRNDetailSchema } from './useGRN';
+import { GRNDetailResponseSchema } from './useGRN';
 
 const UpdateGRNPayloadSchema = z.object({
  version: z.number(),
@@ -18,7 +18,7 @@ const UpdateGRNPayloadSchema = z.object({
   lotId: z.string().nullable().optional(),
   lotNumber: z.string().nullable().optional(),
   expiryDate: z.string().nullable().optional(),
-  receivedQty: z.number().positive(),
+  receivedQty: z.number().min(0),
   unitCostForeign: z.number().nonnegative(),
  }))
 });
@@ -30,7 +30,7 @@ export function useUpdateGRN(options?: { onConflict?: () => void }) {
  return useSafeMutation({
   onConflict: options?.onConflict,
   mutationFn: ({ id, payload, signal, headers }: { id: string; payload: UpdateGRNPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
-   apiClient.put(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema }), UpdateGRNPayloadSchema.parse(payload), { signal, headers }).then(res => res.data),
+   apiClient.put(`/procurement/grns/${id}`, z.object({ data: GRNDetailResponseSchema }), UpdateGRNPayloadSchema.parse(payload), { signal, headers }).then(res => res.data),
   onSuccess: (data, { id }) => {
    queryClient.setQueryData(['grn', id], data);
    queryClient.invalidateQueries({ queryKey: ['grns'] });

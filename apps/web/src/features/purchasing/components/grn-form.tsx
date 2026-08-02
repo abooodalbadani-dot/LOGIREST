@@ -19,7 +19,9 @@ import {
    PackageSearch,
    MessageSquare,
    Send,
-   Scan
+   Scan,
+   Trash2,
+   Sparkles
 } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
@@ -78,6 +80,7 @@ interface GRNFormProps {
    initialData?: GRNDetail;
    id: string;
    onConflict?: () => void;
+   onBindSaveForm?: (fn: () => Promise<boolean>) => void;
 }
 
 interface GRNReceivedQtyCellProps {
@@ -132,26 +135,30 @@ function GRNLotAllocationCell({ field, hasLot, label, onClick }: GRNLotAllocatio
       <button
          type="button"
          className={cn(
-            'inline-flex items-center justify-center transition-all text-xs font-bold uppercase rounded-xl px-3 py-1.5 h-9 border shadow-sm',
+            'group relative overflow-hidden inline-flex items-center justify-center gap-1.5 transition-all duration-300 text-xs font-extrabold px-4 h-9 rounded-lg shadow-md active:scale-95',
             hasLot
-               ? 'bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 border-operational-cyan/30 font-mono gap-1.5'
-               : 'border-[#b48e67] text-[#b48e67] hover:bg-[#b48e67] hover:text-black'
+               ? 'bg-gradient-to-r from-cyan-950/90 via-slate-900 to-cyan-950/90 text-cyan-400 border border-cyan-500/50 shadow-[0_2px_10px_rgba(6,182,212,0.2)] hover:shadow-[0_4px_15px_rgba(6,182,212,0.35)] hover:border-cyan-400 font-mono tracking-wide'
+               : 'bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-amber-300 border border-amber-500/40 shadow-[0_2px_10px_rgba(245,158,11,0.15)] hover:shadow-[0_4px_15px_rgba(245,158,11,0.3)] hover:border-amber-400/80 hover:brightness-110'
          )}
          onClick={onClick}
       >
+         <div className="absolute inset-0 w-1/2 h-full bg-white/5 skew-x-[-20deg] -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-out pointer-events-none" />
          {hasLot ? (
             <>
-               <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shrink-0" />
-               <span dir="ltr" className="font-mono">{field.lot!.lotNumber}</span>
+               <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] shrink-0 animate-pulse" />
+               <span dir="ltr" className="font-mono font-black tracking-wider truncate">{field.lot!.lotNumber}</span>
             </>
          ) : (
-            label
+            <>
+               <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 group-hover:rotate-12 transition-transform duration-300" />
+               <span className="tracking-wide font-display">{label}</span>
+            </>
          )}
       </button>
    );
 }
 
-export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) {
+export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }: GRNFormProps) {
    const t = useTranslations('procurement.grn');
    const tc = useTranslations('common');
    const ts = useTranslations('operations.stocktake');
@@ -332,6 +339,22 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    const { currency: baseCurrency } = useBaseCurrency();
    const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
    const watchedExchangeRate = useWatch({ control, name: 'exchangeRate' });
+   const prevCurrencyRef = useRef<string>(selectedCurrencyCode);
+
+   useEffect(() => {
+      if (!hasPo && selectedCurrencyCode) {
+         if (selectedCurrencyCode === baseCurrency) {
+            setValue('exchangeRate', 1, { shouldValidate: true, shouldDirty: true });
+         } else if (fxRates && fxRates.length > 0 && typeof fxRates[0]?.rate === 'number') {
+            const fetchedRate = fxRates[0].rate;
+            if (prevCurrencyRef.current !== selectedCurrencyCode || isNew || !watchedExchangeRate || watchedExchangeRate === 1) {
+               setValue('exchangeRate', fetchedRate, { shouldValidate: true, shouldDirty: true });
+            }
+         }
+      }
+      prevCurrencyRef.current = selectedCurrencyCode;
+   }, [selectedCurrencyCode, baseCurrency, fxRates, hasPo, isNew, setValue, watchedExchangeRate]);
+
    const currentFxRate = typeof watchedExchangeRate === 'number'
       ? watchedExchangeRate
       : (watchedExchangeRate && !isNaN(parseFloat(watchedExchangeRate)))
@@ -348,10 +371,11 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
    useEffect(() => {
       if (initialData && initialData.id !== lastResetId.current) {
          lastResetId.current = initialData.id;
+         const resolvedCurrencyId = initialData.currencyId || (initialData.currencyCode && currencies?.find(c => c.code === initialData.currencyCode)?.id) || '';
          reset({
             poId: initialData.poId || '',
             supplierId: initialData.supplierId || '',
-            currencyId: initialData.currencyId || '',
+            currencyId: resolvedCurrencyId,
             exchangeRate: initialData.fxRate || '',
             warehouseId: initialData.warehouseId || '',
             notes: initialData.notes || '',
@@ -372,7 +396,19 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
          });
          setIdempotencyKey(crypto.randomUUID());
       }
-   }, [initialData, reset, itemsData]);
+   }, [initialData, reset, itemsData, currencies]);
+
+   useEffect(() => {
+      if (initialData && currencies && currencies.length > 0) {
+         const currentCurrency = getValues('currencyId');
+         const targetCurrencyId = initialData.currencyId || currencies.find(c => c.code === initialData.currencyCode || c.id === initialData.currencyId)?.id;
+         if (targetCurrencyId && currencies.some(c => c.id === targetCurrencyId)) {
+            if (!currentCurrency || currentCurrency !== targetCurrencyId) {
+               setValue('currencyId', targetCurrencyId, { shouldValidate: true });
+            }
+         }
+      }
+   }, [initialData, currencies, getValues, setValue]);
 
    useEffect(() => {
       if (isNew && poData) {
@@ -628,6 +664,25 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       }
    };
 
+   useEffect(() => {
+      if (onBindSaveForm) {
+         onBindSaveForm(async () => {
+            let isSavedSuccess = false;
+            await handleSubmit(
+               async (values) => {
+                  await onSubmit(values);
+                  isSavedSuccess = true;
+               },
+               (errs) => {
+                  onFormError(errs);
+                  isSavedSuccess = false;
+               }
+            )();
+            return isSavedSuccess;
+         });
+      }
+   }, [onBindSaveForm, handleSubmit]);
+
    if (isNew && queryPoId && isLoadingPO) {
       return <PageSkeleton variant="detail" />;
    }
@@ -757,7 +812,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                        placeholder={tc('select_supplier')}
                                        className="mt-1"
                                        triggerClassName={cn(
-                                          "w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase",
+                                          "w-full h-9 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase",
                                           hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
                                        )}
                                        disabled={isLocked || isWarehouseLocked || hasPo}
@@ -767,63 +822,66 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                               {errors.supplierId && <span className="text-[10px] text-destructive font-bold">{errors.supplierId.message}</span>}
                            </div>
 
-                           {/* Order Currency */}
-                           <div className="flex flex-col gap-1">
-                              <Label htmlFor="currency-select" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tc('order_currency')}</Label>
-                              <Controller
-                                 name="currencyId"
-                                 control={control}
-                                 render={({ field }) => (
-                                    <SmartCombobox
-                                       items={currencyItems}
-                                       value={field.value}
-                                       onSelect={(item) => field.onChange(item.id)}
-                                       placeholder={tc('select_currency')}
-                                       className="mt-1"
-                                       triggerClassName={cn(
-                                          "w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase",
-                                          hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
-                                       )}
-                                       disabled={isLocked || isWarehouseLocked || hasPo}
-                                    />
-                                 )}
-                              />
-                              {errors.currencyId && <span className="text-[10px] text-destructive font-bold">{errors.currencyId.message}</span>}
-                           </div>
+                           {/* Order Currency & Exchange Rate in a single row on mobile (grid grid-cols-2 gap-2) */}
+                           <div className="col-span-1 sm:col-span-2 md:col-span-2 lg:col-span-2 grid grid-cols-2 gap-2 sm:gap-4">
+                              {/* Order Currency */}
+                              <div className="flex flex-col gap-1">
+                                 <Label htmlFor="currency-select" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tc('order_currency')}</Label>
+                                 <Controller
+                                    name="currencyId"
+                                    control={control}
+                                    render={({ field }) => (
+                                       <SmartCombobox
+                                          items={currencyItems}
+                                          value={field.value}
+                                          onSelect={(item) => field.onChange(item.id)}
+                                          placeholder={tc('select_currency')}
+                                          className="mt-1"
+                                          triggerClassName={cn(
+                                             "w-full h-9 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase",
+                                             hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                          )}
+                                          disabled={isLocked || isWarehouseLocked || hasPo}
+                                       />
+                                    )}
+                                 />
+                                 {errors.currencyId && <span className="text-[10px] text-destructive font-bold">{errors.currencyId.message}</span>}
+                              </div>
 
-                           {/* Exchange Rate */}
-                           <div className="flex flex-col gap-1">
-                              <Label htmlFor="exchange-rate-input" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                                 {t('exchange_rate') || 'Exchange Rate'}
-                              </Label>
-                              <Controller
-                                 name="exchangeRate"
-                                 control={control}
-                                 render={({ field }) => (
-                                    <Input
-                                       id="exchange-rate-input"
-                                       type="text"
-                                       inputMode="decimal"
-                                       disabled={isLocked || isWarehouseLocked || hasPo}
-                                       className={cn(
-                                          "w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl font-mono text-label-xs mt-1",
-                                          hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
-                                       )}
-                                       placeholder="1.00"
-                                       {...field}
-                                       value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
-                                       onChange={(e) => {
-                                          let val = e.target.value.replace(/[^0-9.]/g, '');
-                                          const parts = val.split('.');
-                                          if (parts.length > 2) {
-                                             val = parts[0] + '.' + parts.slice(1).join('');
-                                          }
-                                          field.onChange(val);
-                                       }}
-                                    />
-                                 )}
-                              />
-                              {errors.exchangeRate && <span className="text-[10px] text-destructive font-bold">{errors.exchangeRate.message}</span>}
+                              {/* Exchange Rate */}
+                              <div className="flex flex-col gap-1">
+                                 <Label htmlFor="exchange-rate-input" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    {t('exchange_rate') || 'Exchange Rate'}
+                                 </Label>
+                                 <Controller
+                                    name="exchangeRate"
+                                    control={control}
+                                    render={({ field }) => (
+                                       <Input
+                                          id="exchange-rate-input"
+                                          type="text"
+                                          inputMode="decimal"
+                                          disabled={isLocked || isWarehouseLocked || hasPo}
+                                          className={cn(
+                                             "w-full h-9 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl font-mono text-label-xs mt-1",
+                                             hasPo && "bg-slate-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+                                          )}
+                                          placeholder="1.00"
+                                          {...field}
+                                          value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
+                                          onChange={(e) => {
+                                             let val = e.target.value.replace(/[^0-9.]/g, '');
+                                             const parts = val.split('.');
+                                             if (parts.length > 2) {
+                                                val = parts[0] + '.' + parts.slice(1).join('');
+                                             }
+                                             field.onChange(val);
+                                          }}
+                                       />
+                                    )}
+                                 />
+                                 {errors.exchangeRate && <span className="text-[10px] text-destructive font-bold">{errors.exchangeRate.message}</span>}
+                              </div>
                            </div>
 
                            {/* Reference Document */}
@@ -832,7 +890,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                               <div className="mt-1">
                                  {initialData?.poNumber || poData?.documentNumber ? (
                                     <div className="flex items-center gap-2">
-                                       <Badge variant="outline" className="h-10 sm:h-11 px-3 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
+                                       <Badge variant="outline" className="h-9 sm:h-11 px-3 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
                                           <span dir="ltr" className="font-mono">{initialData?.poNumber || poData?.documentNumber}</span>
                                        </Badge>
                                        {isNew && !initialData && (
@@ -858,7 +916,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                           router.replace(`/goods-received/new?po_id=${item.id}`, { skipGuard: true });
                                        }}
                                        placeholder={t('select_po') || "Select Purchase Order"}
-                                       triggerClassName="w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase"
+                                       triggerClassName="w-full h-9 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase"
                                     />
                                  ) : (
                                     <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
@@ -879,7 +937,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                        onSelect={(item) => field.onChange(item.id)}
                                        placeholder={tc('select_warehouse')}
                                        className="mt-1"
-                                       triggerClassName="w-full h-10 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase"
+                                       triggerClassName="w-full h-9 sm:h-11 px-3 bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl text-label-xs uppercase"
                                        disabled={isLocked || isWarehouseLocked}
                                     />
                                  )}
@@ -929,91 +987,274 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                            </div>}
                         </div>
 
-                        <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
-                           <DocumentLineItemTable<LineItem>
-                              lines={fields.map((f, idx) => {
+                        {/* Existing Desktop Table View */}
+                        <div className="hidden md:block">
+                           <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
+                              <DocumentLineItemTable<LineItem>
+                                 lines={fields.map((f, idx) => {
+                                    const live = watchedLines?.[idx] || {};
+                                    const matchedItem = itemsData?.data?.find(i => i.id === f.item.id);
+                                    const liveUomId = live.uomId || f.uomId;
+                                    const fRecord = f as Record<string, unknown>;
+                                    const liveRecord = live as Record<string, unknown>;
+                                    const liveUom = (fRecord.uom as { id: string; code: string; name?: string } | undefined) ||
+                                       (liveRecord.uom as { id: string; code: string; name?: string } | undefined) ||
+                                       (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
+                                    return {
+                                       id: f.id,
+                                       qty: live.qty ?? f.qty,
+                                       receivedQty: live.receivedQty ?? f.receivedQty,
+                                       uomId: liveUomId,
+                                       uom: liveUom,
+                                       unitCostForeign: live.unitCostForeign ?? f.unitCostForeign,
+                                       unitCostBase: live.unitCostBase ?? f.unitCostBase,
+                                       item: {
+                                          id: f.item.id,
+                                          code: f.item.code,
+                                          name: f.item.name || f.item.nameEn || f.item.nameAr || '',
+                                          nameAr: f.item.nameAr,
+                                          nameEn: f.item.nameEn,
+                                          image: f.item.image || f.item.imageUrl || matchedItem?.image || matchedItem?.imageUrl || null,
+                                          primaryUom: matchedItem?.primaryUom || f.item.primaryUom || {
+                                             id: liveUomId || '',
+                                             code: liveUomId || ''
+                                          },
+                                          uomConversions: matchedItem?.uomConversions || null
+                                       },
+                                       lot: live.lot ? { id: live.lot.id, lotNumber: live.lot.lotNumber, expiryDate: live.lot.expiryDate } : (f.lot ? { id: f.lot.id, lotNumber: f.lot.lotNumber, expiryDate: f.lot.expiryDate } : null),
+                                    };
+                                 })}
+                                 isReadOnly={isLocked || isWarehouseLocked}
+                                 layoutMode="table"
+                                 mobileLayoutPattern="goods-received-form"
+                                 hideLotColumns={true}
+                                 renderUom={(line) => {
+                                    const matchedItem = itemsData?.data?.find(i => i.id === line.item.id);
+                                    const availableUoms = getAvailableUomsForItem(matchedItem || line.item);
+                                    const lineIdx = fields.findIndex(f => f.id === line.id);
+                                    const currentUomId = line.uomId || matchedItem?.primaryUom?.id || '';
+                                    const resolvedCode = resolveUomCode(currentUomId, matchedItem || line.item, uomsData?.data);
+
+                                    if (availableUoms.length <= 1 || isLocked || isWarehouseLocked) {
+                                       return (
+                                          <span className="text-label-xs font-bold text-muted-foreground uppercase px-2.5 py-1 bg-surface-container rounded-md border border-border/50 font-mono inline-block">
+                                             {resolvedCode}
+                                          </span>
+                                       );
+                                    }
+
+                                    return (
+                                       <SmartCombobox
+                                          items={availableUoms}
+                                          value={currentUomId}
+                                          onSelect={(uom) => {
+                                             if (lineIdx !== -1) {
+                                                setValue(`lines.${lineIdx}.uomId`, String(uom.id), { shouldDirty: true, shouldValidate: true });
+                                             }
+                                          }}
+                                          placeholder={resolvedCode}
+                                          triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
+                                       />
+                                    );
+                                 }}
+                                 borderless={true}
+                                 noCollapse={false}
+                                 enableVirtualization={false}
+                                 rowClassName={(line) => expiredLineIds.includes(line.id) ? 'border-l-2 border-l-destructive bg-destructive/5' : ''}
+                                 onRemoveLine={(id) => {
+                                    const idx = fields.findIndex(f => f.id === id);
+                                    if (idx >= 0) remove(idx);
+                                 }}
+                                 extraColumns={extraColumns}
+                              />
+                           </div>
+                        </div>
+
+                        {/* Mobile View Wrapper (Strict Rule 2) */}
+                        <div className="block md:hidden space-y-[var(--spacing-sm)]">
+                           {fields.length === 0 ? (
+                              <div className="bg-card border border-border rounded-[var(--radius-sm)] p-4 text-center text-muted-foreground text-label-xs font-semibold uppercase">
+                                 {tc('no_items') || 'لا يوجد أصناف في السند'}
+                              </div>
+                           ) : (
+                              fields.map((f, idx) => {
                                  const live = watchedLines?.[idx] || {};
                                  const matchedItem = itemsData?.data?.find(i => i.id === f.item.id);
                                  const liveUomId = live.uomId || f.uomId;
                                  const fRecord = f as Record<string, unknown>;
                                  const liveRecord = live as Record<string, unknown>;
-                                 const liveUom = (fRecord.uom as { id: string; code: string; name?: string } | undefined) || 
-                                                 (liveRecord.uom as { id: string; code: string; name?: string } | undefined) || 
-                                                 (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
-                                 return {
-                                    id: f.id,
-                                    qty: live.qty ?? f.qty,
-                                    receivedQty: live.receivedQty ?? f.receivedQty,
-                                    uomId: liveUomId,
-                                    uom: liveUom,
-                                    unitCostForeign: live.unitCostForeign ?? f.unitCostForeign,
-                                    unitCostBase: live.unitCostBase ?? f.unitCostBase,
-                                    item: {
-                                       id: f.item.id,
-                                       code: f.item.code,
-                                       name: f.item.name || f.item.nameEn || f.item.nameAr || '',
-                                       nameAr: f.item.nameAr,
-                                       nameEn: f.item.nameEn,
-                                       image: f.item.image || f.item.imageUrl || matchedItem?.image || matchedItem?.imageUrl || null,
-                                       primaryUom: matchedItem?.primaryUom || f.item.primaryUom || {
-                                          id: liveUomId || '',
-                                          code: liveUomId || ''
-                                       },
-                                       uomConversions: matchedItem?.uomConversions || null
-                                    },
-                                    lot: live.lot ? { id: live.lot.id, lotNumber: live.lot.lotNumber, expiryDate: live.lot.expiryDate } : (f.lot ? { id: f.lot.id, lotNumber: f.lot.lotNumber, expiryDate: f.lot.expiryDate } : null),
-                                 };
-                              })}
-                              isReadOnly={isLocked || isWarehouseLocked}
-                              layoutMode="table"
-                              mobileLayoutPattern="goods-received-form"
-                              hideLotColumns={true}
-                              renderUom={(line) => {
-                                  const matchedItem = itemsData?.data?.find(i => i.id === line.item.id);
-                                  const availableUoms = getAvailableUomsForItem(matchedItem || line.item);
-                                  const lineIdx = fields.findIndex(f => f.id === line.id);
-                                  const currentUomId = line.uomId || matchedItem?.primaryUom?.id || '';
-                                  const resolvedCode = resolveUomCode(currentUomId, matchedItem || line.item, uomsData?.data);
+                                 const liveUom = (fRecord.uom as { id: string; code: string; name?: string } | undefined) ||
+                                    (liveRecord.uom as { id: string; code: string; name?: string } | undefined) ||
+                                    (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
 
-                                  if (availableUoms.length <= 1 || isLocked || isWarehouseLocked) {
-                                     return (
-                                        <span className="text-label-xs font-bold text-muted-foreground uppercase px-2.5 py-1 bg-surface-container rounded-md border border-border/50 font-mono inline-block">
-                                           {resolvedCode}
-                                        </span>
-                                     );
-                                  }
+                                 const itemCode = f.item.code;
+                                 const itemName = f.item.name || f.item.nameAr || f.item.nameEn || '';
+                                 const itemImage = f.item.image || f.item.imageUrl || matchedItem?.image || matchedItem?.imageUrl || null;
+                                 const availableUoms = getAvailableUomsForItem(matchedItem || f.item);
+                                 const currentUomId = liveUomId || matchedItem?.primaryUom?.id || '';
+                                 const resolvedUomCode = resolveUomCode(currentUomId, matchedItem || f.item, uomsData?.data);
+                                 const hasLot = !!live.lot || !!f.lot;
+                                 const currentLot = live.lot || f.lot || null;
 
-                                  return (
-                                     <SmartCombobox
-                                        items={availableUoms}
-                                        value={currentUomId}
-                                        onSelect={(uom) => {
-                                           if (lineIdx !== -1) {
-                                              setValue(`lines.${lineIdx}.uomId`, String(uom.id), { shouldDirty: true, shouldValidate: true });
-                                           }
-                                        }}
-                                        placeholder={resolvedCode}
-                                        triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
-                                     />
-                                  );
-                               }}
-                              borderless={true}
-                              noCollapse={false}
-                              enableVirtualization={false}
-                              rowClassName={(line) => expiredLineIds.includes(line.id) ? 'border-l-2 border-l-destructive bg-destructive/5' : ''}
-                              onRemoveLine={(id) => {
-                                 const idx = fields.findIndex(f => f.id === id);
-                                 if (idx >= 0) remove(idx);
-                              }}
-                              extraColumns={extraColumns}
-                           />
+                                 const qty = live.qty ?? f.qty;
+                                 const receivedQty = live.receivedQty ?? f.receivedQty;
+                                 const hasError = !!errors.lines?.[idx]?.receivedQty;
+                                 const isExpired = expiredLineIds.includes(f.id);
+
+                                 return (
+                                    <div
+                                       key={f.id}
+                                       className={cn(
+                                          "bg-card border border-border rounded-[var(--radius-sm)] p-2.5 flex flex-col gap-2 shadow-sm relative",
+                                          isExpired && "border-l-4 border-l-destructive bg-destructive/5"
+                                       )}
+                                    >
+                                       {/* Row 1 (Condensed Header): Item details & image, Unit selector, Trash icon */}
+                                       <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+                                          {/* Right side: Item image & details */}
+                                          <div className="flex items-center gap-2.5 min-w-0">
+                                             {itemImage ? (
+                                                <img
+                                                   src={itemImage}
+                                                   alt={itemName}
+                                                   className="w-9 h-9 rounded-md object-cover border border-border shrink-0"
+                                                />
+                                             ) : (
+                                                <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center border border-border text-muted-foreground shrink-0">
+                                                   <PackageSearch className="w-4 h-4 opacity-60" />
+                                                </div>
+                                             )}
+                                             <div className="flex flex-col min-w-0">
+                                                <span className="text-xs font-bold text-foreground truncate block">
+                                                   {itemName}
+                                                </span>
+                                                <span className="text-label-xs text-muted-foreground font-mono truncate block mt-0.5">
+                                                   {itemCode}
+                                                </span>
+                                             </div>
+                                          </div>
+
+                                          {/* Unit Selector (الوحدة) */}
+                                          <div className="shrink-0">
+                                             {availableUoms.length <= 1 || isLocked || isWarehouseLocked ? (
+                                                <span className="text-xs font-bold text-muted-foreground uppercase px-2 py-1 bg-muted/60 rounded-md border border-border/50 font-mono inline-flex items-center justify-center h-8 min-w-[70px]">
+                                                   {resolvedUomCode}
+                                                </span>
+                                             ) : (
+                                                <SmartCombobox
+                                                   items={availableUoms}
+                                                   value={currentUomId}
+                                                   onSelect={(uom) => {
+                                                      setValue(`lines.${idx}.uomId`, String(uom.id), { shouldDirty: true, shouldValidate: true });
+                                                   }}
+                                                   placeholder={resolvedUomCode}
+                                                   triggerClassName="h-8 min-w-[70px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase px-2 py-0"
+                                                />
+                                             )}
+                                          </div>
+
+                                          {/* Trash Icon */}
+                                          {(!isLocked && !isWarehouseLocked) && (
+                                             <button
+                                                type="button"
+                                                onClick={() => remove(idx)}
+                                                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors shrink-0 flex items-center justify-center"
+                                                aria-label={tc('delete') || 'Delete'}
+                                             >
+                                                <Trash2 className="w-4 h-4" />
+                                             </button>
+                                          )}
+                                       </div>
+
+                                       {/* Row 2: Unified Row for Quantity, Received Qty, and Premium Allocation Button */}
+                                       <div className="flex flex-row items-end gap-2 sm:gap-2.5 pt-1 w-full justify-between">
+                                          {/* Qty (Ordered/Expected) */}
+                                          <div className="flex flex-col gap-1 shrink-0">
+                                             <span className="text-[11px] font-bold text-muted-foreground text-center block">
+                                                {tc('table_headers.qty') || 'الكمية'}
+                                             </span>
+                                             <div
+                                                dir="ltr"
+                                                className="h-9 w-[72px] sm:w-[80px] text-center font-mono text-body-md font-bold text-foreground rounded-lg bg-muted/40 border border-border flex items-center justify-center shadow-inner force-latin-numbers"
+                                             >
+                                                {qty}
+                                             </div>
+                                          </div>
+
+                                          {/* Received Qty */}
+                                          <div className="flex flex-col gap-1 shrink-0">
+                                             <span className="text-[11px] font-extrabold text-foreground text-center block">
+                                                {tc('table_headers.received_qty') || 'الكمية المستلمة'}
+                                             </span>
+                                             <Input
+                                                type="number"
+                                                dir="ltr"
+                                                lang="en"
+                                                disabled={isLocked || isWarehouseLocked}
+                                                className={cn(
+                                                   "h-9 w-[78px] sm:w-[86px] text-center font-mono text-body-md font-black force-latin-numbers rounded-lg border border-border px-1 py-0 outline-none transition-all disabled:opacity-50 shadow-sm",
+                                                   hasError
+                                                      ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
+                                                      : receivedQty > qty
+                                                         ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
+                                                         : "focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 bg-background text-foreground hover:border-border/80"
+                                                )}
+                                                {...register(`lines.${idx}.receivedQty` as const, { valueAsNumber: true })}
+                                             />
+                                          </div>
+
+                                          {/* Allocation Button (Luxurious / Non-traditional Design) */}
+                                          <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                             <span className="text-[11px] font-bold text-transparent text-center block select-none pointer-events-none aria-hidden">
+                                                &nbsp;
+                                             </span>
+                                             <button
+                                                type="button"
+                                                disabled={isLocked || isWarehouseLocked}
+                                                className={cn(
+                                                   'w-full h-9 px-2 sm:px-3 rounded-lg font-extrabold text-[11px] sm:text-xs transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md relative overflow-hidden group active:scale-[0.97]',
+                                                   hasLot
+                                                      ? 'bg-gradient-to-r from-cyan-950/90 via-slate-900 to-cyan-950/90 text-cyan-400 border border-cyan-500/50 shadow-[0_4px_12px_rgba(0,0,0,0.15),0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_4px_15px_rgba(0,0,0,0.2),0_0_20px_rgba(6,182,212,0.35)] hover:border-cyan-400 font-mono'
+                                                      : 'bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-amber-300 border border-amber-500/40 shadow-[0_4px_12px_rgba(0,0,0,0.15),0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_4px_15px_rgba(0,0,0,0.2),0_0_20px_rgba(245,158,11,0.3)] hover:border-amber-400/80 hover:brightness-110'
+                                                )}
+                                                onClick={() => handleLotClick({
+                                                   id: f.id,
+                                                   item: f.item,
+                                                   uom: liveUom,
+                                                   qty,
+                                                   receivedQty,
+                                                   uomId: liveUomId,
+                                                   unitCostForeign: live.unitCostForeign ?? f.unitCostForeign,
+                                                   unitCostBase: live.unitCostBase ?? f.unitCostBase,
+                                                   lot: currentLot,
+                                                })}
+                                             >
+                                                <div className="absolute inset-0 w-1/2 h-full bg-white/5 skew-x-[-20deg] -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-out pointer-events-none" />
+                                                {hasLot && currentLot?.lotNumber ? (
+                                                   <>
+                                                      <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] shrink-0 animate-pulse" />
+                                                      <span dir="ltr" className="font-mono font-black tracking-wider truncate">{currentLot.lotNumber}</span>
+                                                   </>
+                                                ) : (
+                                                   <>
+                                                      <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 group-hover:rotate-12 transition-transform duration-300" />
+                                                      <span className="truncate tracking-wide font-display">{t('allocate_lot') || 'تخصيص الحصة'}</span>
+                                                   </>
+                                                )}
+                                             </button>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 );
+                              })
+                           )}
                         </div>
                      </div>
                   </div>
                </DocumentReadOnlyOverlay>
 
                {expiredLineIds.length > 0 && (user?.role === 'INV_MGR' || user?.role === 'ADMIN') && (
-                  <div className="bg-card border border-border shadow-sm p-6 rounded-2xl shadow-sm flex flex-col gap-2 border border-amber-500/20">
+                  <div className="bg-card border border-border shadow-sm p-4 sm:p-6 rounded-2xl shadow-sm flex flex-col gap-2 border border-amber-500/20">
                      <Label htmlFor="override-reason" className="text-label-xs font-semibold uppercase text-amber-500">
                         {t('override_reason')} *
                      </Label>
@@ -1023,40 +1264,39 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                         onChange={(e) => setOverrideReason(e.target.value)}
                         disabled={isLocked || isWarehouseLocked}
                         placeholder={t('override_reason')}
-                        className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl p-4 text-body-md font-medium min-h-[80px] resize-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
+                        className="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-transparent dark:border-border dark:text-white rounded-xl p-3 sm:p-4 text-body-md font-medium min-h-[80px] resize-none placeholder:text-gray-400 dark:placeholder:text-muted-foreground"
                      />
                   </div>
                )}
 
-               <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8 pt-10">
-                  <div className="flex flex-col items-end gap-1 px-6">
+               {/* Footer (Totals & Submit) */}
+               <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-2 md:gap-8 pt-2 md:pt-10">
+                  <div className="flex flex-col items-end gap-1 px-2 md:px-6">
                      <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">
                         {t('market_index_ref')}
                      </p>
                      <div className="flex items-center gap-2 text-primary">
                         <TrendingUp className="w-3 h-3" />
-                        <p dir="ltr" className="text-label-sm font-mono font-semibold">
+                        <p dir="ltr" className="text-label-sm font-mono font-semibold force-latin-numbers">
                            1 {selectedCurrencyCode} = {currentFxRate} {baseCurrency}
                         </p>
                      </div>
                   </div>
 
-                  <div className="bg-card border border-border shadow-sm p-4 md:p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-full md:min-w-[340px] group transition-all hover:shadow-2xl">
+                  <div className="bg-card border border-border shadow-sm p-2 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl shadow-xl relative overflow-hidden min-w-full md:min-w-[340px] group transition-all hover:shadow-2xl">
                      <div className="absolute top-0 end-0 w-1 h-full bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] group-hover:bg-primary transition-all" />
 
-                     <div className="space-y-6 relative z-10">
-                        <div className="flex justify-between items-baseline gap-10">
+                     <div className="space-y-1 sm:space-y-6 relative z-10">
+                        <div className="flex justify-between items-baseline gap-4 sm:gap-10">
                            <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: selectedCurrencyCode || '' })}</p>
-                           <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">
+                           <p dir="ltr" className="text-title-lg sm:text-headline-lg font-display font-semibold text-foreground force-latin-numbers">
                               {formatCurrency(totalForeign, selectedCurrencyCode, locale as 'ar' | 'en')}
                            </p>
                         </div>
 
-
-
-                        <div className="flex justify-between items-center gap-10">
+                        <div className="flex justify-between items-center gap-4 sm:gap-10">
                            <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency || '' })}</p>
-                           <p dir="ltr" className="text-title-lg font-mono font-semibold text-primary/60">
+                           <p dir="ltr" className="text-label-md sm:text-title-lg font-mono font-semibold text-primary/60 force-latin-numbers">
                               {formatCurrency(totalForeign * currentFxRate, baseCurrency, locale as 'ar' | 'en')}
                            </p>
                         </div>

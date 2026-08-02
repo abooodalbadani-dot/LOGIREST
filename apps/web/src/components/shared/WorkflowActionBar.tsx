@@ -149,17 +149,19 @@ export function WorkflowActionBar({
   return (
     <div
       className={cn(
-        'sticky bottom-0 z-50 w-full bg-background/95 backdrop-blur-md border-t border-border shadow-lg p-4 flex flex-wrap items-center justify-between gap-4 print:hidden transition-all',
+        'sticky bottom-0 z-50 w-full bg-background/95 backdrop-blur-md border-t border-border shadow-lg p-3.5 sm:p-4 flex flex-wrap items-center justify-center md:justify-between gap-3 sm:gap-4 print:hidden transition-all',
         className
       )}
     >
       {/* Left Slot: Extra Actions (e.g. Export Dropdowns, Custom Tools) */}
-      <div className="flex items-center gap-2">
-        {extraActions}
-      </div>
+      {extraActions && (
+        <div className="flex items-center justify-center gap-2">
+          {extraActions}
+        </div>
+      )}
 
       {/* Right Slot: Workflow Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3 ms-auto">
+      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mx-auto md:ms-auto md:mx-0">
         {/* 1. EDIT ACTION */}
         {onEdit && (
           <ActionGuard documentType={documentType} status={status} action="EDIT" role={role}>
@@ -187,9 +189,10 @@ export function WorkflowActionBar({
           <PermissionGate action="delete" resource={targetResource}>
             <Button
               type="button"
+              variant="destructive"
               onClick={onDelete}
               disabled={isDeletePending}
-              className="h-10 px-4 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 text-label-xs font-bold uppercase border border-destructive/20 transition-all flex items-center"
+              className="h-10 px-4 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 text-label-xs font-bold uppercase shadow-sm transition-all flex items-center"
             >
               {isDeletePending ? (
                 <Loader2 className="w-4 h-4 animate-spin me-2" />

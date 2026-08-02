@@ -99,6 +99,11 @@ const GRNLineItemResponseSchema = z.object({
  qty: z.coerce.number().nullish(),
  receivedQty: z.coerce.number().nullish(),
  uomId: z.string().nullish(),
+ uom: z.object({
+  id: z.string(),
+  code: z.string().optional().nullable(),
+  name: z.string().optional().nullable()
+ }).nullish(),
  unitCostForeign: z.coerce.number().nullish(),
  unitCostBase: z.coerce.number().nullish()
 }).transform((val) => {
@@ -123,12 +128,17 @@ const GRNLineItemResponseSchema = z.object({
   qty: val.qty ?? 0,
   receivedQty: val.receivedQty ?? 0,
   uomId: val.uomId ?? '',
+  uom: val.uom ? {
+   id: val.uom.id,
+   code: val.uom.code ?? '',
+   name: val.uom.name ?? val.uom.code ?? ''
+  } : undefined,
   unitCostForeign: val.unitCostForeign ?? null,
   unitCostBase: val.unitCostBase ?? null
  };
 });
 
-const GRNDetailResponseSchema = z.object({
+export const GRNDetailResponseSchema = z.object({
  id: z.string(),
  documentNumber: z.string(),
  status: BadgeStatusSchema,

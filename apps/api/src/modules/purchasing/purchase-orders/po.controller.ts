@@ -39,6 +39,38 @@ import { CreatePoDto } from './dto/create-po.dto';
 import { UpdatePoDto } from './dto/update-po.dto';
 import type { Request, Response } from 'express';
 
+export function parsePONotesAndExpectedDate(rawNotes: string | null | undefined, createdAtIso: string) {
+  if (!rawNotes) {
+    return { expectedDate: createdAtIso, notes: '' };
+  }
+  const match = rawNotes.match(/^\[EXPECTED_DATE:([^\]]+)\]\n?(.*)/s);
+  if (match) {
+    const dateStr = match[1];
+    const notesContent = match[2] || '';
+    const parsedDate = new Date(dateStr);
+    const expectedDate = !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : createdAtIso;
+    return { expectedDate, notes: notesContent };
+  }
+  return { expectedDate: createdAtIso, notes: rawNotes };
+}
+
+export function formatPONotesWithExpectedDate(notes: string | undefined | null, expectedDate: string | undefined | null, existingRawNotes?: string | null): string | null {
+  let cleanNotes = (notes !== undefined ? (notes || '') : '').trim();
+  let targetExpectedDate = expectedDate;
+
+  if (existingRawNotes && (expectedDate === undefined || notes === undefined)) {
+    const parsed = parsePONotesAndExpectedDate(existingRawNotes, '');
+    if (notes === undefined) cleanNotes = parsed.notes;
+    if (expectedDate === undefined) targetExpectedDate = parsed.expectedDate;
+  }
+
+  if (!targetExpectedDate || targetExpectedDate.trim() === '') {
+    return cleanNotes || null;
+  }
+
+  return `[EXPECTED_DATE:${targetExpectedDate}]\n${cleanNotes}`.trim();
+}
+
 // Map database fields to match the frontend expected schemas
 function mapPODetail(po: Record<string, unknown>) {
   const poLines = (po.lines as Record<string, unknown>[]) || [];
@@ -123,6 +155,11 @@ function mapPODetail(po: Record<string, unknown>) {
     ? ((firstUser.user as Record<string, unknown>).name as string)
     : 'System';
 
+  const { expectedDate, notes: cleanNotes } = parsePONotesAndExpectedDate(
+    po.notes as string,
+    createdAtIso,
+  );
+
   return {
     id: po.id as string,
     documentNumber: po.poNumber as string,
@@ -147,14 +184,14 @@ function mapPODetail(po: Record<string, unknown>) {
         }
       : undefined,
     exchangeRate: po.exchangeRate !== undefined && po.exchangeRate !== null ? Number(po.exchangeRate) : 1.0,
-    expectedDate: createdAtIso,
-    expectedDeliveryDate: createdAtIso,
+    expectedDate: expectedDate,
+    expectedDeliveryDate: expectedDate,
     targetWarehouseId: (po.warehouseId as string) || undefined,
     lines,
     supplierTotalAmount: supplierTotalAmount,
     baseTotalAmount: supplierTotalAmount,
     total: supplierTotalAmount,
-    notes: (po.notes as string) || '',
+    notes: cleanNotes,
     auditLog: [],
     createdAt: createdAtIso,
     createdBy,
@@ -184,6 +221,11 @@ function mapPOSummary(po: Record<string, unknown>) {
       ).toISOString()
     : new Date().toISOString();
 
+  const { expectedDate, notes: cleanNotes } = parsePONotesAndExpectedDate(
+    po.notes as string,
+    createdAtIso,
+  );
+
   return {
     id: po.id as string,
     documentNumber: po.poNumber as string,
@@ -192,7 +234,8 @@ function mapPOSummary(po: Record<string, unknown>) {
     supplierName: (supplier?.name as string) || '',
     warehouseName: (warehouse?.name as string) || '',
     currencyCode: (currency?.code as string) || '',
-    expectedDate: createdAtIso,
+    expectedDate: expectedDate,
+    notes: cleanNotes,
     supplierTotalAmount: supplierTotalAmount,
     totalAmount: supplierTotalAmount,
     total: supplierTotalAmount,
@@ -267,6 +310,7 @@ export class PurchaseOrderController {
         pr.warehouseId,
       );
     }
+    const formattedNotes = formatPONotesWithExpectedDate(body.notes, body.expectedDate);
     const po = await this.poService.create(
       {
         supplierId,
@@ -275,7 +319,7 @@ export class PurchaseOrderController {
         lines,
         isSubmitted: body.isSubmitted,
         warehouseId: body.targetWarehouseId || body.warehouseId,
-        notes: body.notes,
+        notes: formattedNotes,
         exchangeRate: body.exchangeRate,
       },
       userId,
@@ -440,12 +484,17 @@ export class PurchaseOrderController {
       });
     }
 
+    const formattedNotes = formatPONotesWithExpectedDate(
+      body.notes,
+      body.expectedDate,
+      (po as Record<string, unknown>).notes as string,
+    );
     const updated = await this.poService.update(id, {
       supplierId,
       currencyId,
       warehouseId: body.targetWarehouseId || body.warehouseId,
       version: body.version,
-      notes: body.notes,
+      notes: formattedNotes,
       exchangeRate: body.exchangeRate,
       lines,
     });

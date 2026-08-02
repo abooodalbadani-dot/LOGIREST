@@ -20,8 +20,20 @@ const GRNSummarySchema = z.object({
  status: BadgeStatusSchema, 
  supplierId: z.string().optional().nullable(), 
  supplierName: z.string().optional().nullable(), 
+ supplier: z.object({
+  id: z.string(),
+  name: z.string()
+ }).optional().nullable(),
  poId: z.string().optional().nullable(), 
  poNumber: z.string().optional().nullable(), 
+ purchaseOrder: z.object({
+  id: z.string(),
+  poNumber: z.string().optional().nullable(),
+  supplier: z.object({
+   id: z.string(),
+   name: z.string()
+  }).optional().nullable()
+ }).optional().nullable(),
  warehouseId: z.string().optional().nullable(), 
  warehouseName: z.string().optional().nullable(), 
  createdAt: RobustDateSchema, 

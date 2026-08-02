@@ -353,9 +353,10 @@ export function FXRateFormClient({
                     id="fx-date"
                     type="date"
                     dir="ltr"
+                    lang="en"
                     readOnly={isReadOnly}
                     {...register('effectiveDate')}
-                    className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm read-only:opacity-70 read-only:cursor-default w-full"
+                    className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm read-only:opacity-70 read-only:cursor-default w-full force-latin-numbers text-start"
                   />
                 </div>
                 {errors.effectiveDate && <p className="text-xs text-red-500 mt-1">{tv(errors.effectiveDate.message as never)}</p>}

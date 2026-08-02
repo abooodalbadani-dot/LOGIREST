@@ -8,11 +8,16 @@ import { PRDetailSchema } from './usePR';
 
 const UpdatePRPayloadSchema = z.object({
  version: z.number(),
+ branchId: z.string().optional().nullable(),
+ warehouseId: z.string().optional().nullable(),
+ departmentId: z.string().optional().nullable(),
+ notes: z.string().optional().nullable().or(z.literal('')),
+ expectedDate: z.string().optional().nullable(),
  lines: z.array(z.object({
-  id: z.string().optional(),
+  id: z.string().optional().nullable(),
   itemId: z.string(),
-  uomId: z.string().optional(),
-  quantity: z.number().positive(),
+  uomId: z.string().optional().nullable(),
+  quantity: z.number(),
  })).optional()
 });
 
@@ -32,7 +37,8 @@ export function useUpdatePR(options?: { onConflict?: () => void }) {
    queryClient.invalidateQueries({ queryKey: ['purchase-requests', data.id] });
   },
   onError: (error) => {
-   console.error('[useUpdatePR] Failed to update PR:', error);
+   const msg = error instanceof Error ? error.message : JSON.stringify(error);
+   console.error('[useUpdatePR] Failed to update PR details:', msg, error);
   }
  });
 }

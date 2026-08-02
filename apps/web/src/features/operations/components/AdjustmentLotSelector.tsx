@@ -117,9 +117,11 @@ function CreateLotModal({
             </Label>
             <Input
               type="date"
+              dir="ltr"
+              lang="en"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
-              className="bg-surface-container-highest/40 border border-border/70 text-foreground font-mono text-sm h-11 rounded-xl focus:border-brand-gold focus:ring-1 focus:ring-brand-gold"
+              className="bg-surface-container-highest/40 border border-border/70 text-foreground font-mono text-sm h-11 rounded-xl focus:border-brand-gold focus:ring-1 focus:ring-brand-gold force-latin-numbers text-start"
             />
           </div>
         </div>

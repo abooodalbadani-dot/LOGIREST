@@ -131,22 +131,54 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     : new Date().toISOString();
 
   const supplierId = (grn.supplierId as string) || (purchaseOrder?.supplierId as string) || '';
-  const currencyId = (grn.currencyId as string) || (purchaseOrder?.currencyId as string) || '';
+  const currencyId = (grn.currencyId as string) || (purchaseOrder?.currencyId as string) || (currency?.id as string) || '';
+  const createdByUser = grn.createdBy as Record<string, unknown> | null;
+  const creatorName = (createdByUser?.name as string) || '';
+
+  const approvalEvents = (grn.approvalEvents as Array<Record<string, unknown>>) || [];
+  const auditLog = approvalEvents.length > 0
+    ? approvalEvents.map((evt) => {
+        const evtUser = evt.user as Record<string, unknown> | null;
+        const userName = (evtUser?.name as string) || creatorName || 'User';
+        const createdAt = evt.createdAt
+          ? (evt.createdAt instanceof Date ? evt.createdAt : new Date(evt.createdAt as string)).toISOString()
+          : createdAtIso;
+        return {
+          status: (evt.toStatus as string) || (grn.status as string),
+          createdAt,
+          userName,
+        };
+      })
+    : [
+        {
+          status: grn.status as string,
+          createdAt: createdAtIso,
+          userName: creatorName || 'User',
+        },
+      ];
 
   return {
     id: grn.id as string,
     documentNumber: grn.grnNumber as string,
     status: grn.status as string,
     supplierId,
+    currencyId,
     supplier: supplier
       ? {
           id: supplier.id as string,
           name: supplier.name as string,
         }
       : undefined,
+    currency: currency
+      ? {
+          id: currency.id as string,
+          code: currency.code as string,
+          name: (currency.name as string) || (currency.code as string),
+        }
+      : undefined,
     supplierName: (supplier?.name as string) || '',
-    poId: grn.poId as string,
-    poNumber: (purchaseOrder?.poNumber as string) || '',
+    poId: (grn.poId as string) || null,
+    poNumber: (purchaseOrder?.poNumber as string) || null,
     poFxRate: purchaseOrder?.exchangeRate !== undefined && purchaseOrder?.exchangeRate !== null
       ? Number(purchaseOrder.exchangeRate)
       : (grn.fxRate !== undefined && grn.fxRate !== null ? Number(grn.fxRate) : 1.0),
@@ -166,9 +198,8 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     version: grn.version as number,
     notes: (grn.notes as string) || '',
     createdAt: createdAtIso,
-    createdBy:
-      ((grn.createdBy as Record<string, unknown> | null)?.name as string) ||
-      'System',
+    createdBy: creatorName || 'User',
+    auditLog,
     updatedAt: (() => {
       const events = (grn.approvalEvents as Array<Record<string, unknown>>) || [];
       const lastEvent = events.length > 0 ? events[events.length - 1] : null;
@@ -192,7 +223,8 @@ function mapGRNDetail(grn: Record<string, unknown>) {
 function mapGRNSummary(grn: Record<string, unknown>) {
   const lines = (grn.lines as Record<string, unknown>[]) || [];
   const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
-  const supplier = purchaseOrder?.supplier as Record<string, unknown> | null;
+  const supplier = (grn.supplier as Record<string, unknown> | null) || (purchaseOrder?.supplier as Record<string, unknown> | null);
+  const currency = (grn.currency as Record<string, unknown> | null) || (purchaseOrder?.currency as Record<string, unknown> | null);
   const warehouse = grn.warehouse as Record<string, unknown> | null;
 
   const supplierTotalAmount = lines.reduce(
@@ -212,13 +244,29 @@ function mapGRNSummary(grn: Record<string, unknown>) {
     id: grn.id as string,
     documentNumber: grn.grnNumber as string,
     status: grn.status as string,
-    supplierId: (purchaseOrder?.supplierId as string) || '',
+    supplierId: (grn.supplierId as string) || (purchaseOrder?.supplierId as string) || '',
     supplierName: (supplier?.name as string) || '',
-    poId: grn.poId as string,
-    poNumber: (purchaseOrder?.poNumber as string) || '',
-    currencyCode:
-      ((purchaseOrder?.currency as Record<string, unknown> | null)
-        ?.code as string) || '',
+    supplier: supplier
+      ? {
+          id: supplier.id as string,
+          name: supplier.name as string,
+        }
+      : undefined,
+    purchaseOrder: purchaseOrder
+      ? {
+          id: purchaseOrder.id as string,
+          poNumber: (purchaseOrder.poNumber as string) || null,
+          supplier: purchaseOrder.supplier
+            ? {
+                id: (purchaseOrder.supplier as Record<string, unknown>).id as string,
+                name: (purchaseOrder.supplier as Record<string, unknown>).name as string,
+              }
+            : undefined,
+        }
+      : undefined,
+    poId: (grn.poId as string) || null,
+    poNumber: (purchaseOrder?.poNumber as string) || null,
+    currencyCode: (currency?.code as string) || '',
     warehouseId: grn.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     createdAt: createdAtIso,
@@ -297,6 +345,7 @@ export class GrnController {
     const grn = await this.grnService.create(
       { poId, supplierId: body.supplierId, currencyId: body.currencyId, warehouseId, fxRate: body.fxRate, notes: body.notes, lines },
       userId,
+      role,
     );
     return { data: mapGRNDetail(grn) };
   }

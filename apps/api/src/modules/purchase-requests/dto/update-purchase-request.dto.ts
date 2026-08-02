@@ -1,36 +1,24 @@
 import {
   IsString,
-  IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsArray,
   ValidateNested,
-  IsNumber,
-  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PrLineDto } from './create-purchase-request.dto';
 
-export class PrLineDto {
-  @IsString()
-  @IsNotEmpty()
-  itemId!: string;
-
+export class UpdatePurchaseRequestDto {
   @IsNumber()
-  @Min(0.01)
-  quantity!: number;
+  version!: number;
 
   @IsString()
   @IsOptional()
-  uomId?: string;
-}
-
-export class CreatePurchaseRequestDto {
-  @IsString()
-  @IsNotEmpty()
-  branchId!: string;
+  branchId?: string;
 
   @IsString()
-  @IsNotEmpty()
-  warehouseId!: string;
+  @IsOptional()
+  warehouseId?: string;
 
   @IsString()
   @IsOptional()
@@ -45,7 +33,8 @@ export class CreatePurchaseRequestDto {
   expectedDate?: string;
 
   @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => PrLineDto)
-  lines!: PrLineDto[];
+  lines?: PrLineDto[];
 }

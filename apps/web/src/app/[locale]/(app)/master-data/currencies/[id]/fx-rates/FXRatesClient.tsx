@@ -228,7 +228,8 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  id="fx-date" 
  type="date" 
  dir="ltr" 
- className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
+ lang="en"
+ className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50 force-latin-numbers text-start font-mono"
  {...register('effectiveDate')} 
  />
  {errors.effectiveDate && <p className="text-label-xs font-bold text-red-500 uppercase">{tv(errors.effectiveDate.message as never)}</p>}

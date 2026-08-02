@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useGRNList, type GRNSummary } from '@/features/purchasing/hooks/useGRNList';
+import { useSuppliers } from '@/features/purchasing/hooks/useSuppliers';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid';
 import { ColumnDef } from '@tanstack/react-table';
@@ -43,6 +44,17 @@ export function GRNListClient({
  const router = useRouter();
 
  const deleteGRN = useDeleteGRN();
+ const { data: suppliers } = useSuppliers();
+ const supplierMap = useMemo(() => new Map(suppliers?.map(s => [s.id, s.name]) || []), [suppliers]);
+
+ const resolveSupplierName = useMemo(() => (grn: GRNSummary) => {
+   if (grn.supplierName && grn.supplierName.trim() !== '') return grn.supplierName;
+   if (grn.supplier?.name && grn.supplier.name.trim() !== '') return grn.supplier.name;
+   if (grn.purchaseOrder?.supplier?.name && grn.purchaseOrder.supplier.name.trim() !== '') return grn.purchaseOrder.supplier.name;
+   if (grn.supplierId && supplierMap.has(grn.supplierId)) return supplierMap.get(grn.supplierId)!;
+   return '—';
+ }, [supplierMap]);
+
  const [status, setStatus] = useState<string | undefined>(initialStatus);
  const [page, setPage] = useState(initialPage);
  const [search, setSearch] = useState('');
@@ -167,14 +179,17 @@ export function GRNListClient({
   {
    accessorKey: 'supplierName',
    header: () => <SortHeader field="supplierName" label={tc('supplier')} />,
-   cell: ({ row }) => (
-    <div className="flex flex-col min-w-0">
-     <span className="text-label-xs font-semibold text-foreground/80 text-start">
-      {row.original.supplierName || '—'}
-     </span>
-     <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
-    </div>
-   ),
+   cell: ({ row }) => {
+    const supplierName = resolveSupplierName(row.original);
+    return (
+     <div className="flex flex-col min-w-0">
+      <span className="text-label-xs font-semibold text-foreground/80 text-start">
+       {supplierName}
+      </span>
+      <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
+     </div>
+    );
+   },
   },
   {
    accessorKey: 'warehouseName',
@@ -411,7 +426,7 @@ export function GRNListClient({
             </div>
             <span className="text-sm font-bold text-foreground line-clamp-1 flex items-center gap-1.5 mt-0.5">
              <Inbox className="w-4 h-4 text-brand-gold shrink-0" />
-             {grn.supplierName || '—'}
+             {resolveSupplierName(grn)}
             </span>
            </div>
           </div>

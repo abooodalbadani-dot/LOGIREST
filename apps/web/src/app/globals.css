@@ -458,11 +458,11 @@
     font-feature-settings: "lnum" 1, "tnum" 1;
   }
 
-  /* Text inputs that display codes, IDs, or structured data */
   input[type="text"][dir="ltr"],
   input[type="date"],
   input[type="time"],
   input[type="datetime-local"] {
+    -webkit-locale: "en" !important;
     direction: ltr !important;
     unicode-bidi: plaintext;
     font-variant-numeric: lining-nums tabular-nums;
@@ -748,8 +748,15 @@
 
 /* Force Latin (Western) numerals globally or under specific classes */
 .force-latin-numbers,
-.force-latin-numbers * {
-  -webkit-locale: "en" !important;
+.force-latin-numbers *,
+input[type="date"],
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  -webkit-locale: "en-US" !important;
   font-variant-numeric: lining-nums !important;
   font-feature-settings: "lnum" 1 !important;
 }

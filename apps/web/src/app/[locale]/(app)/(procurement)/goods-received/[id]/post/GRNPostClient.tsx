@@ -172,22 +172,26 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   }
 
   return (
-    <div className="flex flex-col gap-10 pb-20 min-w-0">
+    <div className="flex flex-col gap-6 md:gap-10 pb-20 min-w-0">
       <PageHeader
         title={`#${grn.documentNumber}`}
         subtitle={t('fx_capture_title')}
         showStatus
         status={grn.status}
         children={
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={() => router.back()} className="px-6 py-2.5 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div className="flex justify-between items-center w-full md:w-auto gap-2">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="flex-1 md:flex-initial px-4 py-2 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all text-sm"
+            >
               {tc('back')}
             </button>
             <button
               type="button"
               onClick={() => setIsPostDialogOpen(true)}
               disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0 || !baseCurrency}
-              className="px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-md hover:bg-gray-800 dark:hover:bg-[#b5952f] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 md:flex-initial px-4 py-2 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg shadow-md hover:bg-gray-800 dark:hover:bg-[#b5952f] transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
             >
               <Send className="w-4 h-4" />
               {t('post_grn')}
@@ -209,106 +213,112 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
         confirmKeyword={t('confirm_keyword') || 'POST'}
       />
 
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         {/* FX Panel (PART 2) */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 p-8 rounded-xl shadow-sm relative overflow-hidden group">
+        <div className="lg:col-span-2 space-y-4 md:space-y-8">
+          <div className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 p-4 md:p-8 rounded-xl shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 end-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-all duration-700">
               <TrendingUp className="w-40 h-40" />
             </div>
 
-            <div className="relative z-10 space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                  <ArrowRightLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            <div className="relative z-10 space-y-4 md:space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                  <ArrowRightLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-700 dark:text-gray-300" />
                 </div>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-[#0B1220] dark:text-white">{t('fx_capture_title')}</h3>
+                <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-[#0B1220] dark:text-white">
+                  {t('fx_capture_title')}
+                </h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+              {/* 1. Compressed Currency Fields (Grid 2 cols) */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">{tc('order_currency')}</Label>
-                  <div className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white">
+                  <div className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg px-3 h-9 flex items-center text-sm font-bold text-[#0B1220] dark:text-white">
                     <span className="font-mono">{supplierCurrency}</span>
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">{tc('base_currency')}</Label>
-                  <div className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white">
+                  <div className="w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg px-3 h-9 flex items-center text-sm font-bold text-[#0B1220] dark:text-white">
                     <span className="font-mono">{baseCurrency}</span>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">{t('fx_capture_title')}</Label>
-                  <div className="relative group">
-                    <Input
-                      type="number"
-                      step="0.0001"
-                      dir="ltr"
-                      className="w-full bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-mono h-11"
-                      {...form.register('fx_rate', { valueAsNumber: true })}
-                    />
-                    <div className="absolute inset-y-0 end-3 flex items-center pointer-events-none">
-                      <TrendingUp className="w-4 h-4 text-gray-400" />
-                    </div>
+              {/* FX Rate Input & Confirmation */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">{t('fx_capture_title')}</Label>
+                <div className="relative group">
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    dir="ltr"
+                    className="w-full bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-lg p-3 text-sm font-bold text-[#0B1220] dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all font-mono h-11 force-latin-numbers"
+                    {...form.register('fx_rate', { valueAsNumber: true })}
+                  />
+                  <div className="absolute inset-y-0 end-3 flex items-center pointer-events-none">
+                    <TrendingUp className="w-4 h-4 text-gray-400" />
                   </div>
                 </div>
-
-                <div className="flex flex-col justify-end min-w-0">
-                  <div className="flex items-center gap-2 pt-2">
-                    <div className={cn(
-                      "w-2 h-2 rounded-full animate-pulse",
-                      Math.abs(rateVariance) > 5 ? "bg-red-500" : "bg-emerald-500"
-                    )} />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                      * {tc('confirm_rate')}
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full animate-pulse",
+                    Math.abs(rateVariance) > 5 ? "bg-red-500" : "bg-emerald-500"
+                  )} />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    * {tc('confirm_rate')}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Immutability Warning */}
-          <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-xl p-4 flex flex-col gap-1">
+          <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-xl p-3.5 md:p-4 flex flex-col gap-1">
             <h4 className="text-xs font-black text-yellow-800 dark:text-yellow-500 uppercase tracking-widest">{t('fx_freeze_title')}</h4>
-            <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">{t('fx_freeze_desc')}</p>
+            <p className="text-xs md:text-sm font-medium text-yellow-700 dark:text-yellow-400">{t('fx_freeze_desc')}</p>
           </div>
         </div>
 
-        {/* Sidebar Summary (PART 3) */}
-        <div className="space-y-6">
-          <div className="bg-surface-container-high p-8 rounded-[32px] shadow-2xl border border-white/10 space-y-8">
+        {/* Sidebar Summary (PART 3) - Compressed Financial Summary Card */}
+        <div className="space-y-4 md:space-y-6">
+          <div className="bg-surface-container-high p-3 md:p-8 rounded-2xl md:rounded-[32px] shadow-2xl border border-white/10 space-y-3.5 md:space-y-8">
             <div className="flex items-center justify-between">
-              <div className="space-y-2">
+              <div className="space-y-1 min-w-0">
                 <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('supplier')}</p>
-                <h2 className="text-title-lg font-bold">{grn.supplier?.name || t('mock_supplier_1')}</h2>
+                <h2 className="text-base md:text-title-lg font-bold truncate max-w-[220px] sm:max-w-none">
+                  {grn.supplier?.name || t('mock_supplier_1')}
+                </h2>
               </div>
-              <div className="w-12 h-12 bg-card/5 rounded-2xl flex items-center justify-center">
-                <Wallet className="w-6 h-6 text-muted-foreground/40" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-card/5 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
+                <Wallet className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground/40" />
               </div>
             </div>
 
             <div className="h-px bg-card/5" />
 
-            <div className="space-y-6">
+            <div className="space-y-3 md:space-y-6">
               <div className="flex justify-between items-center">
                 <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('total')} ({supplierCurrency})</p>
-                <p dir="ltr" className="font-mono font-semibold text-title-sm">{formatCurrency(totalSupplier, supplierCurrency, locale)}</p>
+                <p dir="ltr" className="font-mono font-semibold text-title-sm force-latin-numbers">
+                  {formatCurrency(totalSupplier, supplierCurrency, locale)}
+                </p>
               </div>
 
-              <div className="space-y-3 bg-surface-container-highest/50 p-6 rounded-2xl border border-white/5">
+              <div className="space-y-2 bg-surface-container-highest/50 p-2.5 md:p-6 rounded-xl md:rounded-2xl border border-white/5">
                 <div className="flex justify-between items-center opacity-60">
                   <p className="text-label-xxs font-bold uppercase">{t('market_rate')}</p>
-                  <p dir="ltr" className="font-mono text-label-sm">{formatRate(expectedRate, locale, 4)}</p>
+                  <p dir="ltr" className="font-mono text-label-sm force-latin-numbers">
+                    {formatRate(expectedRate, locale, 4)}
+                  </p>
                 </div>
                 <div className="flex justify-between items-center">
                   <p className="text-label-xxs font-bold uppercase">{t('rate_variance')}</p>
                   <p dir="ltr" className={cn(
-                    "font-mono text-label-sm font-semibold",
+                    "font-mono text-label-sm font-semibold force-latin-numbers",
                     rateVariance > 0 ? "text-foreground" : rateVariance < 0 ? "text-destructive" : "text-muted-foreground"
                   )}>
                     {rateVariance > 0 ? '+' : ''}{formatNumber(rateVariance, locale, 2)}%
@@ -316,16 +326,18 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center bg-primary/5 p-6 rounded-2xl border border-primary/10 relative overflow-hidden group">
+              <div className="flex justify-between items-center bg-primary/5 p-3 md:p-6 rounded-xl md:rounded-2xl border border-primary/10 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                <div className="relative z-10 flex flex-col gap-1 min-w-0">
+                <div className="relative z-10 flex flex-col gap-0.5 md:gap-1 min-w-0">
                   <p className="text-label-xs font-semibold uppercase text-primary/60">{tc('base_currency')}</p>
-                  <p dir="ltr" className="font-mono font-semibold text-headline-lg text-primary">{formatCurrency(totalBase, baseCurrency, locale)}</p>
+                  <p dir="ltr" className="font-mono font-semibold text-2xl md:text-headline-lg text-primary force-latin-numbers">
+                    {formatCurrency(totalBase, baseCurrency, locale)}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2 pt-4">
+            <div className="space-y-1 pt-1 md:pt-4">
               <p className="text-label-xs font-semibold uppercase text-muted-foreground/30 text-center leading-relaxed">
                 {tc('posting_irreversible')}
               </p>

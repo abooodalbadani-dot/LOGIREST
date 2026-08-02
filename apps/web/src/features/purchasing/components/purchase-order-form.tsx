@@ -10,7 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle, Loader2, ArrowLeft } from "lucide-react";
+import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown, AlertTriangle, Loader2, ArrowLeft, Send, Save } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api/client";
 import { onFormError } from "@/hooks/useFormError";
@@ -43,6 +43,10 @@ import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
 import { useBaseCurrency } from "@/hooks/useBaseCurrency";
 import { formatCurrency } from "@/utils/currency";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format, parseISO, isValid } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { PurchaseOrderLineItems } from "./purchase-order-line-items";
 import { usePRList } from "@/features/purchasing/hooks/usePRList";
 import { usePR } from "@/features/purchasing/hooks/usePR";
@@ -94,9 +98,24 @@ interface PurchaseOrderFormProps {
   mode?: "create" | "edit";
   onConflict?: () => void;
   actions?: React.ReactNode;
+  onDelete?: () => void;
+  isDeletePending?: boolean;
+  onSubmitForApproval?: () => void;
+  isSubmitPending?: boolean;
+  onCancel?: () => void;
 }
 
-export function PurchaseOrderForm({ initialData, mode = "create", onConflict, actions }: PurchaseOrderFormProps) {
+export function PurchaseOrderForm({
+  initialData,
+  mode = "create",
+  onConflict,
+  actions,
+  onDelete,
+  isDeletePending = false,
+  onSubmitForApproval,
+  isSubmitPending = false,
+  onCancel,
+}: PurchaseOrderFormProps) {
   const locale = useLocale();
   const t = useTranslations("procurement.po");
   const tc = useTranslations("common");
@@ -110,7 +129,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       prId: initialData?.prId || "",
       currencyId: initialData?.currencyId || "",
       exchangeRate: initialData?.exchangeRate || 1,
-      expectedDate: initialData?.expectedDate ? initialData.expectedDate.split("T")[0] : new Date().toISOString().split("T")[0],
+      expectedDate: initialData?.expectedDate ? initialData.expectedDate.split("T")[0] : (initialData?.expectedDeliveryDate ? initialData.expectedDeliveryDate.split("T")[0] : new Date().toISOString().split("T")[0]),
       targetWarehouseId: initialData?.targetWarehouseId || (initialData as Record<string, unknown>)?.warehouseId as string || "",
       notes: initialData?.notes || "",
       lines: initialData?.lines ? initialData.lines.map(l => ({
@@ -133,7 +152,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         prId: initialData.prId || "",
         currencyId: initialData.currencyId || "",
         exchangeRate: initialData.exchangeRate || 1,
-        expectedDate: initialData.expectedDate ? initialData.expectedDate.split("T")[0] : new Date().toISOString().split("T")[0],
+        expectedDate: initialData.expectedDate ? initialData.expectedDate.split("T")[0] : (initialData.expectedDeliveryDate ? initialData.expectedDeliveryDate.split("T")[0] : new Date().toISOString().split("T")[0]),
         targetWarehouseId: initialData.targetWarehouseId || (initialData as Record<string, unknown>)?.warehouseId as string || "",
         notes: initialData.notes || "",
         lines: initialData.lines ? initialData.lines.map(l => ({
@@ -266,9 +285,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           id: initialData.id,
           payload: { ...values, version: initialData.version ?? 0 }
         });
-        
+
         form.reset(values);
-        
+
         playSound('success');
         toast.success(t("edit_success"));
         queryClient.invalidateQueries({ queryKey: ['purchase-orders', initialData.id] });
@@ -447,14 +466,14 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         const fromCode = r.fromCurrency?.code || currencies?.find(c => c.id === r.fromCurrencyId)?.code;
         const toCode = r.toCurrency?.code || currencies?.find(c => c.id === r.toCurrencyId)?.code;
         return (fromCode === selectedCurrencyCode || r.fromCurrencyId === currencyId) &&
-               (toCode === baseCurrency || (baseCurrId && r.toCurrencyId === baseCurrId));
+          (toCode === baseCurrency || (baseCurrId && r.toCurrencyId === baseCurrId));
       });
 
       const inverseMatch = !directMatch ? fxRates.find(r => {
         const fromCode = r.fromCurrency?.code || currencies?.find(c => c.id === r.fromCurrencyId)?.code;
         const toCode = r.toCurrency?.code || currencies?.find(c => c.id === r.toCurrencyId)?.code;
         return (fromCode === baseCurrency || (baseCurrId && r.fromCurrencyId === baseCurrId)) &&
-               (toCode === selectedCurrencyCode || r.toCurrencyId === currencyId);
+          (toCode === selectedCurrencyCode || r.toCurrencyId === currencyId);
       }) : undefined;
 
       let fetchedRate: number | undefined;
@@ -588,7 +607,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                             }
                           }}
                           placeholder={t('select_supplier')}
-                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
+                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-9 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -608,7 +627,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           <Input
                             placeholder={t('linked_pr_placeholder')}
                             disabled={isLocked}
-                            className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-11 rounded-md flex-1 focus:border-[#b48e67] focus:ring-[#b48e67]"
+                            className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white uppercase font-mono h-9 rounded-md flex-1 focus:border-[#b48e67] focus:ring-[#b48e67]"
                             value={loadingSelectedPR ? tc('loading') : (selectedPR?.documentNumber || field.value || '')}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
@@ -623,7 +642,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                             variant="outline"
                             size="sm"
                             onClick={() => setImportDialogOpen(true)}
-                            className="h-11 px-3 text-label-xs font-semibold border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/10"
+                            className="h-9 px-3 text-label-xs font-semibold border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/10"
                           >
                             <FileDown className="w-4 h-4" />
                           </Button>
@@ -692,15 +711,47 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 <FormField
                   control={form.control}
                   name="expectedDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('expected_date')}</FormLabel>
-                      <FormControl>
-                        <Input type="date" disabled={isLocked} className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const selectedDate = field.value ? parseISO(field.value) : undefined;
+                    const isValidDate = selectedDate && isValid(selectedDate);
+
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('expected_date')}</FormLabel>
+                        <FormControl>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                disabled={isLocked}
+                                className={cn(
+                                  "flex h-9 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-card px-3 font-mono text-label-xs uppercase shadow-sm focus:outline-none focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] items-center justify-between font-semibold text-[#0B1220] dark:text-white transition-colors disabled:opacity-50 disabled:pointer-events-none",
+                                  !field.value && "text-muted-foreground/60"
+                                )}
+                              >
+                                <span lang="en" dir="ltr" className="force-latin-numbers inline-block text-start font-mono text-label-xs">
+                                  {isValidDate ? format(selectedDate, "dd/MM/yyyy") : (tc('select_date') || 'Select Date')}
+                                </span>
+                                <CalendarIcon className="w-4 h-4 text-muted-foreground/60 shrink-0 ms-2" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 border border-border bg-card shadow-xl rounded-xl" align="start">
+                              <CalendarComponent
+                                mode="single"
+                                selected={isValidDate ? selectedDate : undefined}
+                                onSelect={(date) => {
+                                  field.onChange(date ? format(date, "yyyy-MM-dd") : "");
+                                }}
+                                disabled={isLocked}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
@@ -715,7 +766,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           value={field.value}
                           onSelect={(item) => field.onChange(item.id)}
                           placeholder={t('select_warehouse')}
-                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
+                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-9 rounded-md text-sm font-semibold uppercase focus:border-[#b48e67] focus:ring-[#b48e67]"
                           disabled={isLocked}
                         />
                       </FormControl>
@@ -724,66 +775,70 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="currencyId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('supplier_currency')}</FormLabel>
-                      <FormControl>
-                        <SmartCombobox
-                          items={currencyItems}
-                          value={field.value}
-                          onSelect={(item) => field.onChange(item.id)}
-                          placeholder={t('currency_placeholder')}
-                          className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 rounded-md text-sm font-semibold uppercase font-mono focus:border-[#b48e67] focus:ring-[#b48e67]"
-                          disabled={isLocked}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="exchangeRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('fx_rate', { currency: baseCurrency })}</FormLabel>
-                      <div className="relative">
-                        {loadingFXRates ? (
-                          <Loader2 className="absolute start-3 top-3.5 h-4 w-4 text-operational-cyan animate-spin" />
-                        ) : (
-                          <ArrowRightLeft className="absolute start-3 top-3.5 h-4 w-4 text-muted-foreground/40" />
-                        )}
+                {/* Group Supplier Currency & Exchange Rate in a single 2-column grid row */}
+                <div className="grid grid-cols-2 gap-2 w-full md:col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="currencyId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('supplier_currency')}</FormLabel>
                         <FormControl>
-                          <Input
-                            type="text"
-                            inputMode="decimal"
+                          <SmartCombobox
+                            items={currencyItems}
+                            value={field.value}
+                            onSelect={(item) => field.onChange(item.id)}
+                            placeholder={t('currency_placeholder')}
+                            className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-9 rounded-md text-xs font-semibold uppercase font-mono focus:border-[#b48e67] focus:ring-[#b48e67]"
                             disabled={isLocked}
-                            readOnly={selectedCurrencyCode === baseCurrency}
-                            className={cn(
-                              "bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-11 ps-10 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67]",
-                              selectedCurrencyCode === baseCurrency && "opacity-80 cursor-not-allowed bg-gray-100 dark:bg-card"
-                            )}
-                            dir="ltr"
-                            {...field}
-                            value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
-                            onChange={(e) => {
-                              let val = e.target.value.replace(/[^0-9.]/g, '');
-                              const parts = val.split('.');
-                              if (parts.length > 2) {
-                                val = parts[0] + '.' + parts.slice(1).join('');
-                              }
-                              field.onChange(val);
-                            }}
                           />
                         </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="exchangeRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('fx_rate', { currency: baseCurrency })}</FormLabel>
+                        <div className="relative">
+                          {loadingFXRates ? (
+                            <Loader2 className="absolute start-3 top-2.5 h-4 w-4 text-operational-cyan animate-spin" />
+                          ) : (
+                            <ArrowRightLeft className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground/40" />
+                          )}
+                          <FormControl>
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              disabled={isLocked}
+                              readOnly={selectedCurrencyCode === baseCurrency}
+                              className={cn(
+                                "bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white h-9 ps-10 rounded-md focus:border-[#b48e67] focus:ring-[#b48e67] force-latin-numbers font-mono text-xs",
+                                selectedCurrencyCode === baseCurrency && "opacity-80 cursor-not-allowed bg-gray-100 dark:bg-card"
+                              )}
+                              dir="ltr"
+                              lang="en"
+                              {...field}
+                              value={field.value === undefined || field.value === null || (typeof field.value === 'number' && Number.isNaN(field.value)) ? "" : field.value}
+                              onChange={(e) => {
+                                let val = e.target.value.replace(/[^0-9.]/g, '');
+                                const parts = val.split('.');
+                                if (parts.length > 2) {
+                                  val = parts[0] + '.' + parts.slice(1).join('');
+                                }
+                                field.onChange(val);
+                              }}
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="notes"
@@ -841,17 +896,18 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 />
 
 
-                <div className="mt-10 flex flex-col md:flex-row justify-end gap-6">
-                  <div className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 px-6 sm:px-8 py-5 rounded-2xl flex items-center justify-between gap-4 sm:gap-10 w-full md:w-auto md:min-w-[300px]">
+                {/* ── Totals ─────────────────────────────────────────────────── */}
+                <div className="mt-10 flex flex-col md:flex-row justify-end gap-4 md:gap-6">
+                  <div className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-800 px-4 md:px-8 py-3 md:py-5 rounded-xl md:rounded-2xl flex items-center justify-between gap-4 md:min-w-[300px]">
                     <span className="text-label-xs uppercase font-semibold text-muted-foreground/40">{t('supplier_total')}</span>
-                    <span className="text-title-lg font-mono font-semibold text-foreground" dir="ltr">
+                    <span className="text-body-md md:text-title-lg font-mono font-semibold text-foreground" dir="ltr">
                       {formatCurrency(supplierTotalAmount, selectedCurrencyCode, locale as 'ar' | 'en')}
                     </span>
                   </div>
-                  <div className="bg-operational-cyan/[0.03] dark:bg-operational-cyan/[0.01] border border-operational-cyan/10 px-6 sm:px-8 py-5 rounded-2xl flex items-center justify-between gap-4 sm:gap-10 w-full md:w-auto md:min-w-[300px] backdrop-blur-sm relative overflow-hidden">
+                  <div className="bg-operational-cyan/[0.03] dark:bg-operational-cyan/[0.01] border border-operational-cyan/10 px-4 md:px-8 py-3 md:py-5 rounded-xl md:rounded-2xl flex items-center justify-between gap-4 md:min-w-[300px] backdrop-blur-sm relative overflow-hidden">
                     <div className="absolute top-0 start-0 w-1 h-full bg-operational-cyan/20" />
                     <span className="text-label-xs uppercase font-semibold text-operational-cyan/60">{t('base_total', { currency: baseCurrency })}</span>
-                    <span className="text-headline-lg font-mono font-semibold text-operational-cyan" dir="ltr">
+                    <span className="text-body-md md:text-headline-lg font-mono font-semibold text-operational-cyan" dir="ltr">
                       {formatCurrency(baseTotalAmount, baseCurrency, locale as 'ar' | 'en')}
                     </span>
                   </div>
@@ -863,24 +919,64 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
         <FormFooter
           isLocked={isLocked}
-          onSubmit={mode === "edit"
-            ? form.handleSubmit((values) => handleSavePO(values, false), onFormError)
-            : form.handleSubmit((values) => handleSavePO(values, true), onFormError)
-          }
-          isPending={isSubmitting}
-          submitLabel={mode === "edit" ? tc('save') : (t('actions.submit') || 'Submit Purchase Order')}
+          isPending={isSubmitting || isSubmitPending || isDeletePending}
+          onCancel={onCancel || (() => router.push('/purchase-orders'))}
+          cancelLabel={(tc.has('actions.cancel') ? tc('actions.cancel') : null) || (locale === 'ar' ? 'إلغاء' : 'Cancel')}
           actions={
-            mode === "create" && !isLocked ? (
-              <Button
-                type="button"
-                onClick={form.handleSubmit((values) => handleSavePO(values, false), onFormError)}
-                disabled={!form.formState.isDirty || !form.formState.isValid || isSubmitting}
-                variant="outline"
-                className="w-full md:w-auto h-12 md:h-10 border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 px-6 font-semibold"
-              >
-                {t('save_draft') || 'Save as Draft'}
-              </Button>
-            ) : actions
+            !isLocked && (
+              <>
+                {/* 1. Delete Button (for existing draft) */}
+                {mode === "edit" && onDelete && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onDelete}
+                    disabled={isDeletePending || isSubmitting}
+                    isLoading={isDeletePending}
+                    className="h-10 px-4 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 text-label-xs font-bold uppercase border border-destructive/20 transition-all flex items-center"
+                  >
+                    <Trash2 className="w-4 h-4 me-1.5" />
+                    {(tc.has('actions.delete') ? tc('actions.delete') : null) || (locale === 'ar' ? 'حذف' : 'Delete')}
+                  </Button>
+                )}
+
+                {/* 2. Save Draft / Save Changes Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={form.handleSubmit((values) => handleSavePO(values, false), onFormError)}
+                  disabled={!form.formState.isDirty || !form.formState.isValid || isSubmitting}
+                  isLoading={isSubmitting}
+                  className="h-10 px-4 rounded-xl border-border text-foreground hover:bg-muted text-label-xs font-bold uppercase transition-all flex items-center"
+                >
+                  <Save className="w-4 h-4 me-1.5" />
+                  {mode === "edit"
+                    ? ((tc.has('save') ? tc('save') : null) || (locale === 'ar' ? 'حفظ' : 'Save Changes'))
+                    : ((t.has('save_draft') ? t('save_draft') : null) || (locale === 'ar' ? 'حفظ كمسودة' : 'Save as Draft'))}
+                </Button>
+
+                {/* 3. Submit for Approval Button */}
+                <Button
+                  type="button"
+                  onClick={
+                    onSubmitForApproval
+                      ? async () => {
+                          if (form.formState.isDirty) {
+                            await form.handleSubmit((values) => handleSavePO(values, false), onFormError)();
+                          }
+                          onSubmitForApproval();
+                        }
+                      : form.handleSubmit((values) => handleSavePO(values, true), onFormError)
+                  }
+                  disabled={isSubmitting || isSubmitPending}
+                  isLoading={isSubmitting || isSubmitPending}
+                  className="h-10 px-5 rounded-xl bg-operational-cyan hover:brightness-110 text-white text-label-xs font-bold uppercase shadow-md shadow-operational-cyan/20 border-none transition-all active:scale-95 flex items-center"
+                >
+                  <Send className="w-4 h-4 me-1.5" />
+                  {(t.has('actions.submit') ? t('actions.submit') : null) || (locale === 'ar' ? 'إرسال' : 'Submit')}
+                </Button>
+              </>
+            )
           }
         />
       </form>

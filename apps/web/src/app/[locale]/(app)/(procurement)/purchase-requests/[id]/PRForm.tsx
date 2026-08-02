@@ -9,6 +9,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { cn } from '@/lib/utils';
 
 import {
   Form,
@@ -254,7 +255,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   {t('expected_date')}
                 </FormLabel>
                 <FormControl>
-                  <Input type="date" className={form.formState.errors.expected_date ? "border-red-500 focus:ring-red-500" : ""} {...field} disabled={isLocked} />
+                  <div dir="ltr" lang="en" className="w-full force-latin-numbers font-mono">
+                    <Input type="date" dir="ltr" lang="en" className={cn("force-latin-numbers font-mono text-start w-full", form.formState.errors.expected_date ? "border-red-500 focus:ring-red-500" : "")} {...field} disabled={isLocked} />
+                  </div>
                 </FormControl>
                 <FormMessage className="text-xs text-red-500 mt-1" />
               </FormItem>

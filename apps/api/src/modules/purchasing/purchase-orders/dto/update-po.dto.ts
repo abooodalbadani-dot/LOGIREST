@@ -64,6 +64,11 @@ export class UpdatePoDto {
   @ValidateIf((_, v) => v !== null)
   @IsString()
   @IsOptional()
+  expectedDate?: string | null;
+
+  @ValidateIf((_, v) => v !== null)
+  @IsString()
+  @IsOptional()
   notes?: string | null;
 
   @IsInt()

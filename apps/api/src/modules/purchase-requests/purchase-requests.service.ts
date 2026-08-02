@@ -228,14 +228,18 @@ export class PurchaseRequestsService {
     id: string,
     body: {
       version: number;
+      branchId?: string;
+      warehouseId?: string;
+      departmentId?: string;
       notes?: string;
+      expectedDate?: string;
       lines?: Array<{ itemId: string; quantity: number; uomId?: string }>;
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.purchaseRequest.findUnique({
         where: { id },
-        select: { version: true, status: true },
+        select: { version: true, status: true, warehouseId: true },
       });
 
       if (!existing) {
@@ -260,10 +264,21 @@ export class PurchaseRequestsService {
         });
       }
 
+      const targetWarehouseId = body.warehouseId || existing.warehouseId;
+      const targetDepartmentId =
+        !body.departmentId ||
+        body.departmentId === '' ||
+        body.departmentId === targetWarehouseId
+          ? null
+          : body.departmentId;
+
       return tx.purchaseRequest.update({
         where: { id },
         data: {
           version: { increment: 1 },
+          ...(body.branchId !== undefined && { branchId: body.branchId }),
+          ...(body.warehouseId !== undefined && { warehouseId: body.warehouseId }),
+          ...(body.departmentId !== undefined && { departmentId: targetDepartmentId }),
           ...(body.notes !== undefined && { notes: body.notes }),
           ...(body.lines && {
             lines: {

@@ -43,6 +43,7 @@ function PopoverContent({
  sideOffset={sideOffset}
  alignOffset={alignOffset}
  side={side}
+ className="z-[100]"
  >
  <PopoverPrimitive.Popup
  className={cn(

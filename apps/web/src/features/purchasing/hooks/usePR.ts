@@ -32,6 +32,7 @@ const PRLineSchema = z.object({
   image: z.string().nullable().optional(),
  }),
  reqQty: z.number(),
+ quantity: z.number().optional(),
  uomId: z.string(),
  uom: z.object({
   id: z.string(),
@@ -44,7 +45,7 @@ export const PRApprovalEventSchema = z.object({
  id: z.string(),
  action: z.string(),
  comments: z.string().nullable().optional(),
- createdAt: z.string(),
+ createdAt: z.string().optional().nullable(),
  user: z.object({
   name: z.string().optional().nullable(),
   role: z.string().optional().nullable(),
@@ -63,10 +64,10 @@ export const PRDetailSchema = z.object({
  expectedDate: z.string(),
  version: z.number().optional(),
  notes: z.string().nullable().optional(),
- createdAt: z.string().optional(),
- createdBy: z.string().optional(),
+ createdAt: z.string().optional().nullable(),
+ createdBy: z.string().optional().nullable(),
  createdById: z.string().optional().nullable(),
- updatedAt: z.string().optional(),
+ updatedAt: z.string().optional().nullable(),
  lines: z.array(PRLineSchema),
  approvalEvents: z.array(PRApprovalEventSchema).optional().default([]),
 });
