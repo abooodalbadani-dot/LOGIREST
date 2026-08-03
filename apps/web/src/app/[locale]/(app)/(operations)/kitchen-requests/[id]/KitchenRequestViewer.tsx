@@ -18,7 +18,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
-import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, getItemImage, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { useMemo, useState } from 'react';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -50,15 +50,15 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
    id: item.id,
    item: {
     id: item.itemId,
-    code: item.itemId,
+    code: item.itemCode || item.itemId,
     nameEn: item.itemName,
     nameAr: item.itemName,
-    primaryUom: { code: item.uom },
+    primaryUom: { id: item.uomId || '', code: item.uom },
     image: item.itemImage || item.image || null
    },
    qty: item.quantity,
    fulfilledQty: item.fulfilledQuantity,
-   uomId: '',
+   uomId: item.uomId || '',
    lot: null,
    notes: item.notes,
   }));
@@ -136,41 +136,43 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
 
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
      <div className="lg:col-span-8 space-y-8">
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
-       <div className="space-y-1">
-        <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
-         <Building2 className="w-3.5 h-3.5" />
-         {t('department')}
-        </span>
-        <p className="text-body-md font-bold not-italic">{request.departmentName}</p>
-       </div>
-       <div className="space-y-1">
-        <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
-         <Warehouse className="w-3.5 h-3.5" />
-         {t('warehouse')}
-        </span>
-        <p className="text-body-md font-bold not-italic">{request.warehouseName}</p>
-       </div>
-       <div className="space-y-1">
-        <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
-         <User className="w-3.5 h-3.5" />
-         {t('requested_by')}
-        </span>
-        <p className="text-body-md font-bold not-italic">{request.requestedBy}</p>
-       </div>
-       {request.notes && (
-        <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
-         <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
-          <FileText className="w-3.5 h-3.5" />
-          {tCommon('notes')}
+      <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-lg border-surface-container-high/20">
+       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+        <div className="space-y-1">
+         <span className="text-label-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
+          <Building2 className="w-3.5 h-3.5" />
+          {t('department')}
          </span>
-         <p className="text-label-sm text-muted-foreground font-bold not-italic leading-relaxed">&quot;{request.notes}&quot;</p>
+         <p className="text-body-md font-bold not-italic">{request.departmentName}</p>
         </div>
-       )}
+        <div className="space-y-1">
+         <span className="text-label-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
+          <Warehouse className="w-3.5 h-3.5" />
+          {t('warehouse')}
+         </span>
+         <p className="text-body-md font-bold not-italic">{request.warehouseName}</p>
+        </div>
+        <div className="space-y-1">
+         <span className="text-label-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
+          <User className="w-3.5 h-3.5" />
+          {t('requested_by')}
+         </span>
+         <p className="text-body-md font-bold not-italic">{request.requestedBy}</p>
+        </div>
+        {request.notes && (
+         <div className="col-span-2 md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
+          <span className="text-label-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
+           <FileText className="w-3.5 h-3.5" />
+           {tCommon('notes')}
+          </span>
+          <p className="text-label-sm text-muted-foreground font-bold not-italic leading-relaxed">&quot;{request.notes}&quot;</p>
+         </div>
+        )}
+       </div>
       </div>
 
-      <div className="bg-card border border-border shadow-sm rounded-lg border border-surface-container-high/20 overflow-hidden">
-       <div className="p-8 border-b border-surface-container-high/50 flex justify-between items-center">
+      <div className="bg-card border border-border shadow-sm rounded-lg border-surface-container-high/20 overflow-hidden">
+       <div className="p-4 sm:p-6 md:p-8 border-b border-surface-container-high/50 flex justify-between items-center">
         <div className="flex items-center gap-4">
          <div className="w-1.5 h-6 bg-cyan-500 rounded-full" />
          <h3 className="text-label-sm font-semibold uppercase">{t('items')}</h3>
@@ -179,47 +181,118 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
          {request.items.length} {t('entries')}
         </Badge>
        </div>
-       <DocumentLineItemTable<KitchenRequestLineItem>
-        lines={tableLines}
-        locale={locale}
-        isReadOnly={true}
-        hideLotColumns={true}
-        headers={{
-         code: tCommon('table_headers.code'),
-         name: tCommon('table_headers.name'),
-         qty: tCommon('table_headers.qty'),
-         uom: tCommon('table_headers.uom'),
-        }}
-        renderQty={(line) => (
-         <span className="text-body-md font-semibold text-foreground tabular-nums">
-          {line.qty}
-         </span>
-        )}
-        renderUom={(line) => (
-         <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">
-          {line.item.primaryUom?.code || '---'}
-         </span>
-        )}
-        extraColumns={[
-         {
-          header: t('fulfilled') || 'Fulfilled',
-          cell: (line) => (
-           <span className={cn(
-            "text-body-md font-semibold tabular-nums",
-            (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-foreground"
-           )}>{line.fulfilledQty || 0}</span>
-          )
-         },
-         {
-          header: tCommon('notes') || 'Notes',
-          cell: (line) => (
-           <p className="text-xs font-bold text-muted-foreground max-w-[200px] line-clamp-2 not-italic">
-            {line.notes || '—'}
-           </p>
-          )
-         }
-        ]}
-       />
+       <div className="hidden md:block">
+        <DocumentLineItemTable<KitchenRequestLineItem>
+         lines={tableLines}
+         locale={locale}
+         isReadOnly={true}
+         hideLotColumns={true}
+         headers={{
+          code: tCommon('table_headers.code'),
+          name: tCommon('table_headers.name'),
+          qty: tCommon('table_headers.qty'),
+          uom: tCommon('table_headers.uom'),
+         }}
+         renderQty={(line) => (
+          <span className="text-body-md font-semibold text-foreground tabular-nums">
+           {line.qty}
+          </span>
+         )}
+         renderUom={(line) => (
+          <span className="text-body-sm text-foreground font-medium uppercase">
+           {line.item.primaryUom?.code || '---'}
+          </span>
+         )}
+         extraColumns={[
+          {
+           header: t('fulfilled') || 'Fulfilled',
+           cell: (line) => (
+            <span className={cn(
+             "text-body-md font-semibold tabular-nums",
+             (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-foreground"
+            )}>{line.fulfilledQty || 0}</span>
+           )
+          },
+          {
+           header: tCommon('notes') || 'Notes',
+           cell: (line) => (
+            <p className="text-xs font-bold text-muted-foreground max-w-[200px] line-clamp-2 not-italic">
+             {line.notes || '—'}
+            </p>
+           )
+          }
+         ]}
+        />
+       </div>
+       <div className="flex flex-col gap-3 md:hidden p-3">
+        {tableLines.map((line) => {
+         const imgSrc = getItemImage(line.item);
+         const itemName = locale === 'ar'
+          ? (line.item.nameAr || line.item.nameEn)
+          : (line.item.nameEn || line.item.nameAr);
+         const itemCode = line.item.code || '—';
+
+         return (
+          <div
+           key={line.id}
+           className="bg-card border border-border-color rounded-[var(--radius-md)] p-3 flex flex-col gap-3"
+          >
+           <div className="flex items-center justify-between gap-4 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+             {imgSrc ? (
+              <img
+               src={imgSrc}
+               alt={itemName || 'Product'}
+               className="w-12 h-12 object-cover rounded-xl border border-border/50 shrink-0 shadow-sm"
+              />
+             ) : (
+              <div className="w-12 h-12 bg-surface-container-high flex items-center justify-center rounded-xl border border-border/40 text-[10px] text-muted-foreground/60 font-mono font-bold shrink-0">
+               N/A
+              </div>
+             )}
+             <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-black text-foreground text-sm truncate leading-tight text-start">
+               {itemName}
+              </span>
+              <div className="mt-1 text-start w-full">
+               <span 
+                className="text-label-xs text-muted-foreground truncate max-w-[120px] inline-block font-mono" 
+                dir="ltr"
+                title={itemCode}
+               >
+                {itemCode}
+               </span>
+              </div>
+             </div>
+            </div>
+
+            <div className="flex flex-col items-end shrink-0 bg-surface-container-high/40 p-2 px-3 rounded-xl border border-border/40 text-end">
+             <div className="flex items-baseline gap-1.5">
+              <span className="text-sm font-black text-foreground tabular-nums">{line.qty}</span>
+              <span className="text-[10px] font-bold text-foreground/80 uppercase">{line.item.primaryUom?.code || '---'}</span>
+             </div>
+             {line.fulfilledQty !== undefined && (
+              <span className="text-[10px] font-bold text-amber-500 tabular-nums mt-0.5">
+               {t('fulfilled') || 'Fulfilled'}: {line.fulfilledQty || 0}
+              </span>
+             )}
+            </div>
+           </div>
+
+           {line.notes && (
+            <div className="pt-2 border-t border-border/30 flex items-center gap-2 text-xs text-start">
+             <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider shrink-0">
+              {tCommon('notes') || 'Notes'}:
+             </span>
+             <span className="truncate text-xs font-medium text-foreground/80 italic">
+              {line.notes}
+             </span>
+            </div>
+           )}
+          </div>
+         );
+        })}
+       </div>
       </div>
      </div>
 

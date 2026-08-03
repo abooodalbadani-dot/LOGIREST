@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
-import { UpdateKitchenRequestDto } from '@logirest/shared-types';
+import { UpdateKitchenRequestDto } from './dto/update-kitchen-request.dto';
 import { DocumentNumberService } from '../sequencing/document-number.service';
 import { IssuePostService } from '../operations/issue-post.service';
 import { DocumentType, Prisma, Role } from '@prisma/client';
@@ -17,7 +17,7 @@ export class KitchenRequestsService {
     private readonly workflowService: WorkflowService,
     private readonly documentNumberService: DocumentNumberService,
     private readonly issuePostService: IssuePostService,
-  ) {}
+  ) { }
 
   async create(
     body: {
@@ -76,6 +76,12 @@ export class KitchenRequestsService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  uomConversions: {
+                    include: {
+                      fromUom: true,
+                      toUom: true,
+                    },
+                  },
                 },
               },
             },
@@ -222,6 +228,12 @@ export class KitchenRequestsService {
             item: {
               include: {
                 unitOfMeasure: true,
+                uomConversions: {
+                  include: {
+                    fromUom: true,
+                    toUom: true,
+                  },
+                },
               },
             },
           },
@@ -294,16 +306,16 @@ export class KitchenRequestsService {
         );
       }
 
-      // Pre-fulfillment stock sufficiency check — runs before any state changes
+      // Pre-fulfillment stock sufficiency check — runs before  state changes
       const linesToCheck = body.fulfillments
         ? body.fulfillments.map((f) => ({
-            itemId: f.itemId,
-            fulfilledQty: f.fulfilledQty,
-          }))
+          itemId: f.itemId,
+          fulfilledQty: f.fulfilledQty,
+        }))
         : kr.items.map((i) => ({
-            itemId: i.itemId,
-            fulfilledQty: Number(i.quantityRequested),
-          }));
+          itemId: i.itemId,
+          fulfilledQty: Number(i.quantityRequested),
+        }));
 
       const itemIds = linesToCheck.map((l) => l.itemId);
       const whItems = await tx.warehouseItem.findMany({
@@ -327,7 +339,7 @@ export class KitchenRequestsService {
           const itemLabel = dbItem?.item ? `"${dbItem.item.name}" (${dbItem.item.sku})` : `ID ${lineInput.itemId}`;
           throw new BadRequestException(
             `Insufficient stock: cannot fulfill item ${itemLabel}. ` +
-              `Requested: ${lineInput.fulfilledQty}, Available (net of allocations): ${available}.`,
+            `Requested: ${lineInput.fulfilledQty}, Available (net of allocations): ${available}.`,
           );
         }
       }
@@ -427,7 +439,15 @@ export class KitchenRequestsService {
             include: {
               uom: true,
               item: {
-                include: { unitOfMeasure: true },
+                include: {
+                  unitOfMeasure: true,
+                  uomConversions: {
+                    include: {
+                      fromUom: true,
+                      toUom: true,
+                    },
+                  },
+                },
               },
             },
           },
@@ -505,10 +525,39 @@ export class KitchenRequestsService {
         }
       }
 
-      // 1. Delete existing items
-      await tx.kitchenRequestItem.deleteMany({
-        where: { requestId: id },
-      });
+      const inputItems = dto.items || dto.lines;
+
+      let itemsToCreate: Array<{
+        itemId: string;
+        quantityRequested: number;
+        quantityFulfilled: number;
+        uomId: string | null;
+        notes: string | null;
+      }> | undefined = undefined;
+
+      if (inputItems && Array.isArray(inputItems) && inputItems.length > 0) {
+        itemsToCreate = inputItems.map((item) => {
+          const qty = Number(item.quantityRequested ?? item.quantity ?? 0);
+          if (qty <= 0) {
+            throw new BadRequestException(
+              `Quantity must be greater than 0 for item ${item.itemId}`,
+            );
+          }
+
+          return {
+            itemId: item.itemId,
+            quantityRequested: qty,
+            quantityFulfilled: 0,
+            uomId: item.uomId || null,
+            notes: item.notes || null,
+          };
+        });
+
+        // 1. Delete existing items
+        await tx.kitchenRequestItem.deleteMany({
+          where: { requestId: id },
+        });
+      }
 
       // 2. Update core fields and create new items
       const updated = await tx.kitchenRequest.update({
@@ -518,23 +567,25 @@ export class KitchenRequestsService {
           warehouseId: dto.warehouseId || kr.warehouseId,
           notes: dto.notes !== undefined ? dto.notes : kr.notes,
           version: { increment: 1 },
-          items: dto.items
-            ? {
-                create: dto.items.map((item) => ({
-                  itemId: item.itemId,
-                  quantityRequested: item.quantityRequested,
-                  quantityFulfilled: 0,
-                  notes: item.notes || null,
-                })),
-              }
-            : undefined,
+          ...(itemsToCreate && {
+            items: {
+              create: itemsToCreate,
+            },
+          }),
         },
         include: {
           items: {
             include: {
+              uom: true,
               item: {
                 include: {
                   unitOfMeasure: true,
+                  uomConversions: {
+                    include: {
+                      fromUom: true,
+                      toUom: true,
+                    },
+                  },
                 },
               },
             },

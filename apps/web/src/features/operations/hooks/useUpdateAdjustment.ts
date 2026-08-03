@@ -62,7 +62,7 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
      uomId: l.uomId,
      direction: l.direction,
      unitCost: l.unitCost ?? null,
-     lotId: isValidUuid(l.lotAllocations?.[0]?.lotId) ? l.lotAllocations![0].lotId : null,
+     lotId: l.lotAllocations?.[0]?.lotId || null,
     }))
    };
    return apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, backendPayload, { signal, headers });
@@ -71,6 +71,7 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
    queryClient.setQueryData(['adjustments', data.id], data);
    queryClient.invalidateQueries({ queryKey: ['adjustments'] });
    queryClient.invalidateQueries({ queryKey: ['adjustments', data.id] });
+   queryClient.invalidateQueries({ queryKey: ['lots-available'] });
   },
   onError: (error) => {
    console.error('[useUpdateAdjustment] Failed to update adjustment:', error);

@@ -8,6 +8,7 @@ import type { LotAllocation } from '@/types/documents';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { RelationalName } from '@/components/shared/RelationalName';
 import { isRawUuid, resolveUomCode, getScaledQtyBefore } from '@/utils/uom-helper';
+import { ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 
 export interface LineItem {
   id: string;
@@ -418,13 +419,13 @@ export function DocumentLineItemTable<T extends LineItem>({
             <th className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", noCollapse ? "w-auto min-w-[130px] md:min-w-[180px]" : mobileLayoutPattern === 'transfer-form' ? "w-[250px] min-w-[250px]" : "w-full min-w-[120px] md:min-w-[180px]", dense ? "px-3 py-2 h-9 text-[10px]" : "px-8 h-14")}>{h.name}</th>
             {!hideLotColumns && (
               <>
-                <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.lot}</th>
-                <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.expiry}</th>
+                <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground truncate max-w-[150px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.lot}</th>
+                <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground truncate max-w-[120px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.expiry}</th>
               </>
             )}
             <th className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", noCollapse ? "min-w-[85px] md:min-w-[120px]" : mobileLayoutPattern === 'transfer-form' ? "w-[140px] min-w-[130px]" : "min-w-[120px]", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.qty}</th>
             {!hideUomColumn && (
-              <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.uom}</th>
+              <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground min-w-[140px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.uom}</th>
             )}
             {extraColumns.map((col, i) => (
               <th key={i} className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", col.headerClassName, dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{col.header}</th>
@@ -822,71 +823,70 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 </div>
                               </div>
                             ) : mobileLayoutPattern === 'adjustment-form' ? (
-                              <div className="flex flex-col bg-card border border-border shadow-sm rounded-xl p-2.5 transition-all mb-2 hover:border-brand-gold/30 space-y-2 [&_input]:!h-9 [&_input]:!text-xs [&_input]:!py-1 [&_button]:!h-9 [&_button]:!text-[10px] [&_button]:!px-2.5 [&_div.h-11]:!h-9">
-                                {/* Header: Item Identity + Direction Indicator (زيادة/نقصان) + Remove Button */}
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    {getItemImage(line.item) ? (
-                                      <img src={getItemImage(line.item) || ''} alt="Product" className="w-9 h-9 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
-                                    ) : (
-                                      <div className="w-9 h-9 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0 font-bold">N/A</div>
-                                    )}
-                                    <div className="flex flex-col min-w-0 flex-1 text-start">
-                                      <span className="text-xs font-bold text-foreground leading-tight truncate block">
-                                        {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                                      </span>
-                                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                        <span className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-1.5 py-0.5 rounded border border-brand-gold/20" dir="ltr">{line.item.code}</span>
-                                        {renderUom ? (
-                                          <div className="shrink-0 flex items-center [&_span]:!h-5 [&_span]:!min-w-0 [&_span]:!px-1.5 [&_span]:!py-0 [&_span]:!text-[9px] [&_button]:!h-5 [&_button]:!min-w-0 [&_button]:!px-1.5 [&_button]:!text-[9px] [&_button]:!w-auto">
-                                            {renderUom(line)}
+                              isReadOnly ? (
+                                <div className="flex flex-col bg-surface-container-low border border-border shadow-sm rounded-xl p-3.5 transition-all mb-2.5 hover:border-brand-gold/30 space-y-3">
+                                  {/* 1. Header: Image + Item Name & Code & UOM + Direction Badge */}
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      {getItemImage(line.item) ? (
+                                        <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
+                                      ) : (
+                                        <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0 font-bold">N/A</div>
+                                      )}
+                                      <div className="flex flex-col min-w-0 flex-1 text-start">
+                                        <span className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate block">
+                                          {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                                        </span>
+                                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                          <span className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-1.5 py-0.5 rounded border border-brand-gold/20" dir="ltr">{line.item.code}</span>
+                                          {line.item.primaryUom && (
+                                            <span className="text-[9px] bg-surface-container-highest text-muted-foreground px-1.5 py-0.5 rounded uppercase font-bold tracking-wider border border-border/40">
+                                              {getLineUomDisplay(line) || line.item.primaryUom.code || line.item.primaryUom.name}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {renderItemDescription && (
+                                          <div className="mt-0.5">
+                                            {renderItemDescription(line as T)}
                                           </div>
-                                        ) : line.item.primaryUom && (
-                                          <span className="text-[9px] bg-surface-container-highest text-muted-foreground px-1.5 py-0.5 rounded font-bold border border-border/40">
-                                            {getLineUomDisplay(line) || line.item.primaryUom.code || line.item.primaryUom.name}
-                                          </span>
                                         )}
                                       </div>
-                                      {renderItemDescription && (
-                                        <div className="mt-0.5">
-                                          {renderItemDescription(line as T)}
-                                        </div>
-                                      )}
+                                    </div>
+
+                                    {/* Direction Badge */}
+                                    <div className="shrink-0">
+                                      {(() => {
+                                        const dirCol = extraColumns.find(col => 
+                                          col.header.toLowerCase().includes('direction') || 
+                                          col.header.includes('اتجاه')
+                                        );
+                                        if (dirCol) {
+                                          return dirCol.cell(line);
+                                        }
+                                        const direction = (line as { direction?: string }).direction;
+                                        if (direction) {
+                                          const isInc = direction === 'INCREASE';
+                                          return (
+                                            <div className={cn(
+                                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
+                                              isInc ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
+                                            )}>
+                                              {isInc ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                                              {isInc ? (locale === 'ar' ? 'زيادة' : 'INCREASE') : (locale === 'ar' ? 'نقصان' : 'DECREASE')}
+                                            </div>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
                                     </div>
                                   </div>
 
-                                  {/* Direction Indicator (زيادة / نقصان) + Remove Action */}
-                                  <div className="flex items-center gap-1.5 shrink-0 ms-auto">
-                                    {extraColumns.slice(0, 1).map((col, i) => (
-                                      <div key={i} className="shrink-0 flex items-center [&_div]:!h-auto [&_div]:!w-auto [&_div]:!p-0.5 [&_button]:!h-6 [&_button]:!px-2 [&_button]:!text-[10px] [&_button]:!rounded-md">
-                                        {col.cell(line)}
-                                      </div>
-                                    ))}
-
-                                    {!isReadOnly && onRemoveLine && (
-                                      <button
-                                        type="button"
-                                        onClick={() => onRemoveLine(line.id)}
-                                        className="w-8 h-8 text-muted-foreground hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all flex items-center justify-center bg-surface-container-high border border-border/50 shrink-0 active:scale-95"
-                                        aria-label={tc('actions.remove_line')}
-                                      >
-                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* 3. Main Data Row & Lot Selector */}
-                                <div className="bg-surface-container-highest/30 p-2.5 rounded-xl border border-border/40 space-y-2.5">
-                                  {/* Row: Qty, Unit Cost, Before, After */}
-                                  <div className="flex items-end justify-between gap-1.5 text-xs w-full has-[.qty-error]:mb-4 transition-all">
-
-                                    {/* Qty Input (Main) */}
-                                    <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1.5' }}>
+                                  {/* 2. Compact Stats Bar: Qty Adjusted, Before -> After, Unit Cost */}
+                                  <div className="bg-background/80 dark:bg-surface-container-highest/30 p-2.5 rounded-lg border border-border/50 grid grid-cols-3 gap-2 items-center text-center">
+                                    {/* Quantity Adjusted */}
+                                    <div className="flex flex-col gap-0.5">
                                       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{h.qty}</span>
-                                      <div className="w-full">
+                                      <div className="flex justify-center items-center">
                                         {renderQty ? renderQty(line) : (
                                           <span className="text-xs font-black font-mono text-foreground" dir="ltr">
                                             {line.qty ?? line.requestedQty ?? 0}
@@ -895,79 +895,266 @@ export function DocumentLineItemTable<T extends LineItem>({
                                       </div>
                                     </div>
 
-                                    {/* Unit Cost (Main) */}
-                                    {extraColumns.length > 1 && (
-                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1.5' }}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{extraColumns[1].header}</span>
-                                        <div className="w-full font-mono font-bold text-foreground text-xs">{extraColumns[1].cell(line)}</div>
+                                    {/* Before -> After */}
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                                        {locale === 'ar' ? 'قبل ← بعد' : 'Before → After'}
+                                      </span>
+                                      <div className="flex items-center justify-center gap-1 font-mono text-xs" dir="ltr">
+                                        {(() => {
+                                          const beforeCol = extraColumns.find(col => 
+                                            col.header.toLowerCase().includes('before') || 
+                                            col.header.includes('قبل')
+                                          );
+                                          const afterCol = extraColumns.find(col => 
+                                            col.header.toLowerCase().includes('after') || 
+                                            col.header.includes('بعد')
+                                          );
+                                          return (
+                                            <>
+                                              <span className="text-muted-foreground font-semibold">
+                                                {beforeCol ? beforeCol.cell(line) : ((line as { qtyBefore?: number }).qtyBefore ?? 0)}
+                                              </span>
+                                              <span className="text-muted-foreground/40 font-black">→</span>
+                                              <span className="font-black text-foreground">
+                                                {afterCol ? afterCol.cell(line) : (() => {
+                                                  const qBefore = (line as { qtyBefore?: number }).qtyBefore ?? 0;
+                                                  const qAdj = line.qty ?? 0;
+                                                  const dir = (line as { direction?: string }).direction;
+                                                  return dir === 'INCREASE' ? qBefore + qAdj : qBefore - qAdj;
+                                                })()}
+                                              </span>
+                                            </>
+                                          );
+                                        })()}
                                       </div>
-                                    )}
+                                    </div>
 
-                                    {/* Qty Before (Read-only Badge) */}
-                                    {extraColumns.length > 2 && (
-                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1' }}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{extraColumns[2].header}</span>
-                                        <div className="flex items-center justify-center rounded-md bg-brand-gold/10 border border-brand-gold/20 shrink-0 h-9 w-full relative">
-                                          <div className="flex items-center justify-center [&_span]:text-xs [&_span]:font-black [&_div]:gap-0">
-                                            {extraColumns[2].cell(line)}
-                                          </div>
-                                        </div>
+                                    {/* Unit Cost */}
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                                        {locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost'}
+                                      </span>
+                                      <div className="flex justify-center items-center font-mono font-bold text-xs text-foreground truncate">
+                                        {(() => {
+                                          const costCol = extraColumns.find(col => 
+                                            col.header.toLowerCase().includes('cost') || 
+                                            col.header.includes('تكلفة')
+                                          );
+                                          return costCol ? costCol.cell(line) : '—';
+                                        })()}
                                       </div>
-                                    )}
-
-                                    {/* Qty After (Read-only Badge) */}
-                                    {extraColumns.length > 4 ? (
-                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1' }}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{extraColumns[4].header}</span>
-                                        <div className="flex items-center justify-center rounded-md bg-brand-gold/10 border border-brand-gold/20 shrink-0 h-9 w-full relative">
-                                          <div className="flex items-center justify-center [&_span]:text-xs [&_span]:font-black [&_div]:gap-0">
-                                            {extraColumns[4].cell(line)}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : extraColumns.length > 2 && (
-                                      <div className="flex flex-col gap-1 min-w-0" style={{ flex: '1' }}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{tc('qty_after') || 'Qty After'}</span>
-                                        <div className="flex items-center justify-center rounded-md bg-brand-gold/10 border border-brand-gold/20 shrink-0 h-9 w-full relative">
-                                          <div className="font-mono font-black text-brand-gold text-xs">
-                                            {(() => {
-                                              const qBefore = (line as { qtyBefore?: number }).qtyBefore ?? 0;
-                                              const qAdj = line.qty ?? 0;
-                                              const dir = (line as { direction?: string }).direction;
-                                              return dir === 'INCREASE' ? qBefore + qAdj : qBefore - qAdj;
-                                            })()}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )}
-
+                                    </div>
                                   </div>
 
-                                  {/* Lot Selection Section (extraColumns[3]) */}
-                                  {extraColumns.length > 3 && (
-                                    <div className="flex flex-col gap-1 border-t border-border/30 pt-2">
-                                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{extraColumns[3].header}</span>
-                                      <div className="w-full">{extraColumns[3].cell(line)}</div>
-                                    </div>
-                                  )}
+                                  {/* 3. Lot & Expiry Details (if present) */}
+                                  {(() => {
+                                    const lotCol = extraColumns.find(col => 
+                                      (col.header.toLowerCase().includes('lot') || col.header.includes('تشغيلة') || col.header.includes('دفعة')) &&
+                                      !col.header.toLowerCase().includes('allocat')
+                                    );
+                                    const hasLot = line.lot || line.lotAllocations?.length || (line as { displayLot?: string }).displayLot;
+                                    if (lotCol || hasLot) {
+                                      return (
+                                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/30 text-[10px]">
+                                          <span className="font-bold text-muted-foreground uppercase tracking-wider">{h.lot}:</span>
+                                          <div className="font-mono font-bold text-foreground truncate max-w-[200px]">
+                                            {lotCol ? (
+                                              lotCol.cell(line)
+                                            ) : line.lot ? (
+                                              <span dir="ltr">{line.lot.lotNumber}</span>
+                                            ) : (line as { displayLot?: string }).displayLot ? (
+                                              <span dir="ltr">{(line as { displayLot?: string }).displayLot}</span>
+                                            ) : line.lotAllocations?.[0]?.lotNumber ? (
+                                              <span dir="ltr">{line.lotAllocations.map(a => a.lotNumber).join(', ')}</span>
+                                            ) : (
+                                              <span className="text-muted-foreground/50">{tc('no_lot')}</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
                                 </div>
-
-                                {/* Lot Allocation if any (for read-only) */}
-                                {!hideLotColumns && (line.lot || line.lotAllocations?.length ? (
-                                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/30 text-[10px]">
-                                    <span className="font-bold text-muted-foreground">{h.lot}:</span>
-                                    <div className="font-mono font-bold text-foreground truncate">
-                                      {line.lot ? (
-                                        <span dir="ltr">{line.lot.lotNumber}</span>
-                                      ) : line.lotAllocations?.[0]?.lotNumber ? (
-                                        <span dir="ltr">{line.lotAllocations.map(a => a.lotNumber).join(', ')}</span>
+                              ) : (
+                                <div className="flex flex-col bg-card border border-border shadow-sm rounded-xl p-3 transition-all mb-2 hover:border-brand-gold/30 space-y-3">
+                                  {/* Row 1: Identity (Image + Name + Code) & Trash Action */}
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      {getItemImage(line.item) ? (
+                                        <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
                                       ) : (
-                                        <span className="text-muted-foreground/50">{tc('no_lot')}</span>
+                                        <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0 font-bold">N/A</div>
                                       )}
+                                      <div className="flex flex-col min-w-0 flex-1 text-start">
+                                        <span className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate block">
+                                          {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                                        </span>
+                                        <span className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-1.5 py-0.5 rounded border border-brand-gold/20 w-fit mt-1" dir="ltr">
+                                          {line.item.code}
+                                        </span>
+                                        {renderItemDescription && (
+                                          <div className="mt-0.5">
+                                            {renderItemDescription(line as T)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {!isReadOnly && onRemoveLine && (
+                                      <button
+                                        type="button"
+                                        onClick={() => onRemoveLine(line.id)}
+                                        className="w-8 h-8 text-destructive hover:bg-destructive/10 rounded-lg transition-all flex items-center justify-center border border-transparent shrink-0 active:scale-95"
+                                        aria-label={tc('actions.remove_line')}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Row 2: Controls (Direction Toggle + UOM Dropdown) */}
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {/* Left cell: Direction Toggle taking full cell width */}
+                                    <div className="w-full flex items-center [&>div]:w-full [&_div]:w-full [&_button]:flex-1 [&_button]:h-9 [&_button]:justify-center [&_button]:text-xs">
+                                      {(() => {
+                                        const dirCol = extraColumns.find(col => 
+                                          col.header.toLowerCase().includes('direction') || 
+                                          col.header.includes('اتجاه')
+                                        );
+                                        if (dirCol) {
+                                          return dirCol.cell(line);
+                                        }
+                                        if (extraColumns.length > 0) {
+                                          return extraColumns[0].cell(line);
+                                        }
+                                        return null;
+                                      })()}
+                                    </div>
+
+                                    {/* Right cell: UOM Dropdown Selector (h-9) */}
+                                    <div className="w-full flex items-center [&_button]:!h-9 [&_div]:!h-9 [&_span]:!h-9">
+                                      {renderUom ? (
+                                        renderUom(line)
+                                      ) : line.item.primaryUom ? (
+                                        <div className="h-9 px-3 text-xs font-bold font-mono text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-xl flex items-center justify-center w-full">
+                                          {getLineUomDisplay(line) || line.item.primaryUom.code || line.item.primaryUom.name}
+                                        </div>
+                                      ) : null}
                                     </div>
                                   </div>
-                                ) : null)}
-                              </div>
+
+                                  {/* Row 3: Inputs & Cost (QTY ADJUSTED + UNIT COST) */}
+                                  <div className="grid grid-cols-2 gap-3 items-center">
+                                    {/* Left cell: QTY ADJUSTED */}
+                                    <div className="flex flex-col gap-1 w-full">
+                                      <span className="text-label-xs font-bold text-muted-foreground uppercase tracking-wider">{h.qty}</span>
+                                      <div className="w-full [&_input]:!h-9 [&_input]:!text-body-md [&_input]:!font-bold [&_input]:force-latin-numbers">
+                                        {renderQty ? renderQty(line) : (
+                                          <span className="text-body-md font-bold font-mono text-foreground h-9 flex items-center" dir="ltr">
+                                            {line.qty ?? line.requestedQty ?? 0}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Right cell: UNIT COST */}
+                                    <div className="flex flex-col gap-1 w-full">
+                                      <span className="text-label-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
+                                        {locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost'}
+                                      </span>
+                                      <div className="w-full [&_input]:!h-9 [&_input]:!text-body-md [&_input]:!font-bold [&_input]:force-latin-numbers">
+                                        {(() => {
+                                          const costCol = extraColumns.find(col =>
+                                            col.header.toLowerCase().includes('unit cost') ||
+                                            col.header.toLowerCase().includes('cost') ||
+                                            col.header.includes('تكلفة')
+                                          );
+                                          if (costCol) {
+                                            return costCol.cell(line);
+                                          }
+                                          const rawCost = (line as { unitCost?: number | null }).unitCost;
+                                          if (rawCost !== null && rawCost !== undefined && !isNaN(Number(rawCost))) {
+                                            return (
+                                              <span className="h-9 flex items-center font-mono text-sm font-bold text-foreground">
+                                                {Number(rawCost).toLocaleString('en-US', {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                                })}
+                                              </span>
+                                            );
+                                          }
+                                          return <span className="h-9 flex items-center font-mono text-sm font-bold text-muted-foreground">—</span>;
+                                        })()}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Row 4: Before/After Transition (NO INPUTS) */}
+                                  {(() => {
+                                    const scaledQtyBefore = getScaledQtyBefore(
+                                      (line as { qtyBefore?: number }).qtyBefore ?? 0,
+                                      line.uomId,
+                                      line.item,
+                                    );
+                                    const qAdj = Number(line.qty ?? (line as { qtyAdjusted?: number }).qtyAdjusted ?? 0);
+                                    const dir = (line as { direction?: string }).direction;
+                                    const after = dir === 'INCREASE' ? scaledQtyBefore + qAdj : scaledQtyBefore - qAdj;
+                                    const isNegative = after < 0;
+
+                                    return (
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex items-center justify-between px-2 py-1.5 bg-surface-container-lowest rounded-sm border border-border/30">
+                                          <span className="text-label-sm text-muted-foreground uppercase">
+                                            {locale === 'ar' ? 'مستوى المخزون' : 'Stock Level'}
+                                          </span>
+                                          <div className="flex items-center gap-2 font-mono text-sm force-latin-numbers" dir="ltr">
+                                            <span className="text-muted-foreground">
+                                              {Number(scaledQtyBefore).toLocaleString('en-US', { maximumFractionDigits: 4 })}
+                                            </span>
+                                            <span className="text-muted-foreground/50">→</span>
+                                            <span className={cn('font-bold', isNegative ? 'text-red-500' : 'text-foreground')}>
+                                              {Number(after).toLocaleString('en-US', { maximumFractionDigits: 4 })}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        {isNegative && (
+                                          <span className="text-[10px] text-red-500 font-semibold uppercase px-1">
+                                            {locale === 'ar' ? 'الكمية تتجاوز المخزون المتاح' : 'Exceeds available stock'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+
+                                  {/* Row 5: LOT Selector taking full width */}
+                                  {(() => {
+                                    const lotCol = extraColumns.find(
+                                      (col) =>
+                                        (col.header.toLowerCase().includes('lot') ||
+                                          col.header.includes('تشغيلة') ||
+                                          col.header.includes('دفعة')) &&
+                                        !col.header.toLowerCase().includes('allocat'),
+                                    );
+                                    if (lotCol) {
+                                      return (
+                                        <div className="w-full [&>div]:w-full">
+                                          {lotCol.cell(line)}
+                                        </div>
+                                      );
+                                    }
+                                    if (extraColumns.length > 3) {
+                                      return (
+                                        <div className="w-full [&>div]:w-full">
+                                          {extraColumns[3].cell(line)}
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              )
                             ) : mobileLayoutPattern === 'issue-form' ? (
                               <div className="flex flex-col bg-card border border-border shadow-sm rounded-xl p-3 transition-all mb-2 hover:border-brand-gold/30 space-y-2">
                                 {/* Header: Identity (Image + Name + Code + UOM + Status) + Delete Button */}
@@ -1232,16 +1419,16 @@ export function DocumentLineItemTable<T extends LineItem>({
                         </td>
                         {!hideLotColumns && (
                           <>
-                            <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
+                            <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle truncate max-w-[150px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")} title={line.lot?.lotNumber || line.lotAllocations?.[0]?.lotNumber}>
                               {line.lot ? (
-                                <span dir="ltr">{line.lot.lotNumber}</span>
+                                <span dir="ltr" className="truncate block max-w-[150px]">{line.lot.lotNumber}</span>
                               ) : line.lotAllocations?.[0]?.lotNumber ? (
-                                <span dir="ltr">{line.lotAllocations[0].lotNumber}</span>
+                                <span dir="ltr" className="truncate block max-w-[150px]">{line.lotAllocations[0].lotNumber}</span>
                               ) : (
                                 <span className="opacity-20">—</span>
                               )}
                             </td>
-                            <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
+                            <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle truncate max-w-[120px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
                               {line.lot?.expiryDate ? (
                                 <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
                               ) : line.lotAllocations?.[0]?.expiryDate ? (
@@ -1264,8 +1451,8 @@ export function DocumentLineItemTable<T extends LineItem>({
                           </div>
                         </td>
                         {!hideUomColumn && (
-                          <td className={cn("align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", noCollapse ? (dense ? "px-2 py-1" : "px-4 py-2") : (dense ? "md:px-3 md:py-1.5" : "md:px-6"))}>
-                            <div className="flex items-center w-full">
+                          <td className={cn("align-middle min-w-[140px]", noCollapse ? "table-cell" : "hidden md:table-cell", noCollapse ? (dense ? "px-2 py-1" : "px-4 py-2") : (dense ? "md:px-3 md:py-1.5" : "md:px-6"))}>
+                            <div className="flex items-center w-full min-w-[140px]">
                               {renderUom ? (
                                 renderUom(line)
                               ) : (
@@ -1549,70 +1736,70 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 </div>
                               </div>
                     ) : mobileLayoutPattern === 'adjustment-form' ? (
-                      <div className="flex flex-col bg-card border border-border shadow-sm rounded-xl p-2.5 transition-all mb-2 hover:border-brand-gold/30 space-y-2 [&_input]:!h-9 [&_input]:!text-xs [&_input]:!py-1 [&_button]:!h-9 [&_button]:!text-[10px] [&_button]:!px-2.5 [&_div.h-11]:!h-9">
-                        {/* Header: Item Identity + Direction Indicator (زيادة/نقصان) + Remove Button */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            {getItemImage(line.item) ? (
-                              <img src={getItemImage(line.item) || ''} alt="Product" className="w-9 h-9 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
-                            ) : (
-                              <div className="w-9 h-9 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0 font-bold">N/A</div>
-                            )}
-                            <div className="flex flex-col min-w-0 flex-1 text-start">
-                              <span className="text-xs font-bold text-foreground leading-tight truncate block">
-                                {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
-                              </span>
-                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                <span className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-1.5 py-0.5 rounded border border-brand-gold/20" dir="ltr">{line.item.code}</span>
-                                {renderUom ? (
-                                  <div className="shrink-0 flex items-center [&_span]:!h-5 [&_span]:!min-w-0 [&_span]:!px-1.5 [&_span]:!py-0 [&_span]:!text-[9px] [&_button]:!h-5 [&_button]:!min-w-0 [&_button]:!px-1.5 [&_button]:!text-[9px] [&_button]:!w-auto">
-                                    {renderUom(line)}
+                      isReadOnly ? (
+                        <div className="flex flex-col bg-surface-container-low border border-border shadow-sm rounded-xl p-3.5 transition-all mb-2.5 hover:border-brand-gold/30 space-y-3">
+                          {/* 1. Header: Image + Item Name & Code & UOM + Direction Badge */}
+                          <div className="flex items-start justify-between gap-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              {getItemImage(line.item) ? (
+                                <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
+                              ) : (
+                                <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0 font-bold">N/A</div>
+                              )}
+                              <div className="flex flex-col min-w-0 flex-1 text-start">
+                                <span className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate block">
+                                  {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                                </span>
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                  <span className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-1.5 py-0.5 rounded border border-brand-gold/20" dir="ltr">{line.item.code}</span>
+                                  {line.item.primaryUom && (
+                                    <span className="text-[9px] bg-surface-container-highest text-muted-foreground px-1.5 py-0.5 rounded uppercase font-bold tracking-wider border border-border/40">
+                                      {getLineUomDisplay(line) || line.item.primaryUom.code || line.item.primaryUom.name}
+                                    </span>
+                                  )}
+                                </div>
+                                {renderItemDescription && (
+                                  <div className="mt-0.5">
+                                    {renderItemDescription(line as T)}
                                   </div>
-                                ) : line.item.primaryUom && (
-                                  <span className="text-[9px] bg-surface-container-highest text-muted-foreground px-1.5 py-0.5 rounded font-bold border border-border/40">
-                                    {line.item.primaryUom.code || line.item.primaryUom.name}
-                                  </span>
                                 )}
                               </div>
-                              {renderItemDescription && (
-                                <div className="mt-0.5">
-                                  {renderItemDescription(line as T)}
-                                </div>
-                              )}
+                            </div>
+
+                            {/* Direction Badge */}
+                            <div className="shrink-0">
+                              {(() => {
+                                const dirCol = extraColumns.find(col => 
+                                  col.header.toLowerCase().includes('direction') || 
+                                  col.header.includes('اتجاه')
+                                );
+                                if (dirCol) {
+                                  return dirCol.cell(line);
+                                }
+                                const direction = (line as { direction?: string }).direction;
+                                if (direction) {
+                                  const isInc = direction === 'INCREASE';
+                                  return (
+                                    <div className={cn(
+                                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
+                                      isInc ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
+                                    )}>
+                                      {isInc ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                                      {isInc ? (locale === 'ar' ? 'زيادة' : 'INCREASE') : (locale === 'ar' ? 'نقصان' : 'DECREASE')}
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                           </div>
 
-                          {/* Direction Indicator (زيادة / نقصان) + Remove Action */}
-                          <div className="flex items-center gap-1.5 shrink-0 ms-auto">
-                            {extraColumns.slice(0, 1).map((col, i) => (
-                              <div key={i} className="shrink-0 flex items-center [&_div]:!h-7 [&_div]:!w-auto [&_div]:!p-0.5 [&_button]:!h-6 [&_button]:!px-2 [&_button]:!text-[10px] [&_button]:!rounded-md">
-                                {col.cell(line)}
-                              </div>
-                            ))}
-
-                            {!isReadOnly && onRemoveLine && (
-                              <button
-                                type="button"
-                                onClick={() => onRemoveLine(line.id)}
-                                className="w-7 h-7 text-muted-foreground hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all flex items-center justify-center bg-surface-container-high border border-border/50 shrink-0 active:scale-95"
-                                aria-label={tc('actions.remove_line')}
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Body: Qty + Unit Cost + Lot Number in 1 compact bar */}
-                        <div className="bg-surface-container-highest/30 p-2 rounded-lg border border-border/40 space-y-2">
-                          {/* Qty & Unit Cost side by side */}
-                          <div className="grid grid-cols-2 gap-1.5 text-xs items-center">
-                            {/* Quantity */}
+                          {/* 2. Compact Stats Bar: Qty Adjusted, Before -> After, Unit Cost */}
+                          <div className="bg-background/80 dark:bg-surface-container-highest/30 p-2.5 rounded-lg border border-border/50 grid grid-cols-3 gap-2 items-center text-center">
+                            {/* Quantity Adjusted */}
                             <div className="flex flex-col gap-0.5">
-                              <span className="text-[9px] font-bold text-muted-foreground/80 truncate">{h.qty}</span>
-                              <div className="w-full">
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{h.qty}</span>
+                              <div className="flex justify-center items-center">
                                 {renderQty ? renderQty(line) : (
                                   <span className="text-xs font-black font-mono text-foreground" dir="ltr">
                                     {line.qty ?? line.requestedQty ?? 0}
@@ -1621,40 +1808,266 @@ export function DocumentLineItemTable<T extends LineItem>({
                               </div>
                             </div>
 
-                            {/* Unit Cost (if extraColumns[1] exists) */}
-                            {extraColumns.length > 1 && (
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[9px] font-bold text-muted-foreground/80 truncate">{extraColumns[1].header}</span>
-                                <div className="w-full font-mono font-bold text-foreground text-xs">{extraColumns[1].cell(line)}</div>
+                            {/* Before -> After */}
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                                {locale === 'ar' ? 'قبل ← بعد' : 'Before → After'}
+                              </span>
+                              <div className="flex items-center justify-center gap-1 font-mono text-xs" dir="ltr">
+                                {(() => {
+                                  const beforeCol = extraColumns.find(col => 
+                                    col.header.toLowerCase().includes('before') || 
+                                    col.header.includes('قبل')
+                                  );
+                                  const afterCol = extraColumns.find(col => 
+                                    col.header.toLowerCase().includes('after') || 
+                                    col.header.includes('بعد')
+                                  );
+                                  return (
+                                    <>
+                                      <span className="text-muted-foreground font-semibold">
+                                        {beforeCol ? beforeCol.cell(line) : ((line as { qtyBefore?: number }).qtyBefore ?? 0)}
+                                      </span>
+                                      <span className="text-muted-foreground/40 font-black">→</span>
+                                      <span className="font-black text-foreground">
+                                        {afterCol ? afterCol.cell(line) : (() => {
+                                          const qBefore = (line as { qtyBefore?: number }).qtyBefore ?? 0;
+                                          const qAdj = line.qty ?? 0;
+                                          const dir = (line as { direction?: string }).direction;
+                                          return dir === 'INCREASE' ? qBefore + qAdj : qBefore - qAdj;
+                                        })()}
+                                      </span>
+                                    </>
+                                  );
+                                })()}
                               </div>
+                            </div>
+
+                            {/* Unit Cost */}
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                                {locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost'}
+                              </span>
+                              <div className="flex justify-center items-center font-mono font-bold text-xs text-foreground truncate">
+                                {(() => {
+                                  const costCol = extraColumns.find(col => 
+                                    col.header.toLowerCase().includes('cost') || 
+                                    col.header.includes('تكلفة')
+                                  );
+                                  return costCol ? costCol.cell(line) : '—';
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 3. Lot & Expiry Details (if present) */}
+                          {(() => {
+                            const lotCol = extraColumns.find(col => 
+                              (col.header.toLowerCase().includes('lot') || col.header.includes('تشغيلة') || col.header.includes('دفعة')) &&
+                              !col.header.toLowerCase().includes('allocat')
+                            );
+                            const hasLot = line.lot || line.lotAllocations?.length || (line as { displayLot?: string }).displayLot;
+                            if (lotCol || hasLot) {
+                              return (
+                                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/30 text-[10px]">
+                                  <span className="font-bold text-muted-foreground uppercase tracking-wider">{h.lot}:</span>
+                                  <div className="font-mono font-bold text-foreground truncate max-w-[200px]">
+                                    {lotCol ? (
+                                      lotCol.cell(line)
+                                    ) : line.lot ? (
+                                      <span dir="ltr">{line.lot.lotNumber}</span>
+                                    ) : (line as { displayLot?: string }).displayLot ? (
+                                      <span dir="ltr">{(line as { displayLot?: string }).displayLot}</span>
+                                    ) : line.lotAllocations?.[0]?.lotNumber ? (
+                                      <span dir="ltr">{line.lotAllocations.map(a => a.lotNumber).join(', ')}</span>
+                                    ) : (
+                                      <span className="text-muted-foreground/50">{tc('no_lot')}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col bg-card border border-border shadow-sm rounded-xl p-3 transition-all mb-2 hover:border-brand-gold/30 space-y-3">
+                          {/* Row 1: Identity (Image + Name + Code) & Trash Action */}
+                          <div className="flex items-start justify-between gap-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              {getItemImage(line.item) ? (
+                                <img src={getItemImage(line.item) || ''} alt="Product" className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm" />
+                              ) : (
+                                <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[9px] text-muted-foreground font-mono shrink-0 font-bold">N/A</div>
+                              )}
+                              <div className="flex flex-col min-w-0 flex-1 text-start">
+                                <span className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate block">
+                                  {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
+                                </span>
+                                <span className="text-[10px] font-mono font-bold text-brand-gold bg-brand-gold/10 px-1.5 py-0.5 rounded border border-brand-gold/20 w-fit mt-1" dir="ltr">
+                                  {line.item.code}
+                                </span>
+                                {renderItemDescription && (
+                                  <div className="mt-0.5">
+                                    {renderItemDescription(line as T)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {!isReadOnly && onRemoveLine && (
+                              <button
+                                type="button"
+                                onClick={() => onRemoveLine(line.id)}
+                                className="w-8 h-8 text-destructive hover:bg-destructive/10 rounded-lg transition-all flex items-center justify-center border border-transparent shrink-0 active:scale-95"
+                                aria-label={tc('actions.remove_line')}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             )}
                           </div>
 
-                          {/* Lot Number (if extraColumns[2] exists) */}
-                          {extraColumns.length > 2 && (
-                            <div className="flex flex-col gap-0.5 border-t border-border/30 pt-1.5">
-                              <span className="text-[9px] font-bold text-muted-foreground/80 truncate">{extraColumns[2].header}</span>
-                              <div className="w-full font-mono font-bold text-foreground text-xs">{extraColumns[2].cell(line)}</div>
+                          {/* Row 2: Controls (Direction Toggle + UOM Dropdown) */}
+                          <div className="grid grid-cols-2 gap-3">
+                            {/* Left cell: Direction Toggle taking full cell width */}
+                            <div className="w-full flex items-center [&>div]:w-full [&_div]:w-full [&_button]:flex-1 [&_button]:h-9 [&_button]:justify-center [&_button]:text-xs">
+                              {(() => {
+                                const dirCol = extraColumns.find(col => 
+                                  col.header.toLowerCase().includes('direction') || 
+                                  col.header.includes('اتجاه')
+                                );
+                                if (dirCol) {
+                                  return dirCol.cell(line);
+                                }
+                                if (extraColumns.length > 0) {
+                                  return extraColumns[0].cell(line);
+                                }
+                                return null;
+                              })()}
                             </div>
-                          )}
-                        </div>
 
-                        {/* Lot Allocation if any (for read-only) */}
-                        {!hideLotColumns && (line.lot || line.lotAllocations?.length ? (
-                          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/30 text-[10px]">
-                            <span className="font-bold text-muted-foreground">{h.lot}:</span>
-                            <div className="font-mono font-bold text-foreground truncate">
-                              {line.lot ? (
-                                <span dir="ltr">{line.lot.lotNumber}</span>
-                              ) : line.lotAllocations?.[0]?.lotNumber ? (
-                                <span dir="ltr">{line.lotAllocations.map(a => a.lotNumber).join(', ')}</span>
-                              ) : (
-                                <span className="text-muted-foreground/50">{tc('no_lot')}</span>
-                              )}
+                            {/* Right cell: UOM Dropdown Selector (h-9) */}
+                            <div className="w-full flex items-center [&_button]:!h-9 [&_div]:!h-9 [&_span]:!h-9">
+                              {renderUom ? (
+                                renderUom(line)
+                              ) : line.item.primaryUom ? (
+                                <div className="h-9 px-3 text-xs font-bold font-mono text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-xl flex items-center justify-center w-full">
+                                  {getLineUomDisplay(line) || line.item.primaryUom.code || line.item.primaryUom.name}
+                                </div>
+                              ) : null}
                             </div>
                           </div>
-                        ) : null)}
-                      </div>
+
+                          {/* Row 3: Inputs & Cost (QTY ADJUSTED + UNIT COST) */}
+                          <div className="grid grid-cols-2 gap-3 items-center">
+                            {/* Left cell: QTY ADJUSTED */}
+                            <div className="flex flex-col gap-1 w-full">
+                              <span className="text-label-xs font-bold text-muted-foreground uppercase tracking-wider">{h.qty}</span>
+                              <div className="w-full [&_input]:!h-9 [&_input]:!text-body-md [&_input]:!font-bold [&_input]:force-latin-numbers">
+                                {renderQty ? renderQty(line) : (
+                                  <span className="text-body-md font-bold font-mono text-foreground h-9 flex items-center" dir="ltr">
+                                    {line.qty ?? line.requestedQty ?? 0}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Right cell: UNIT COST */}
+                            <div className="flex flex-col gap-1 w-full">
+                              <span className="text-label-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
+                                {locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost'}
+                              </span>
+                              <div className="w-full [&_input]:!h-9 [&_input]:!text-body-md [&_input]:!font-bold [&_input]:force-latin-numbers">
+                                {(() => {
+                                  const costCol = extraColumns.find(col =>
+                                    col.header.toLowerCase().includes('unit cost') ||
+                                    col.header.toLowerCase().includes('cost') ||
+                                    col.header.includes('تكلفة')
+                                  );
+                                  if (costCol) {
+                                    return costCol.cell(line);
+                                  }
+                                  const rawCost = (line as { unitCost?: number | null }).unitCost;
+                                  if (rawCost !== null && rawCost !== undefined && !isNaN(Number(rawCost))) {
+                                    return (
+                                      <span className="h-9 flex items-center font-mono text-sm font-bold text-foreground">
+                                        {Number(rawCost).toLocaleString('en-US', {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })}
+                                      </span>
+                                    );
+                                  }
+                                  return <span className="h-9 flex items-center font-mono text-sm font-bold text-muted-foreground">—</span>;
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 4: Before/After Transition (NO INPUTS) */}
+                          {(() => {
+                            const scaledQtyBefore = getScaledQtyBefore(
+                              (line as { qtyBefore?: number }).qtyBefore ?? 0,
+                              line.uomId,
+                              line.item,
+                            );
+                            const qAdj = Number(line.qty ?? (line as { qtyAdjusted?: number }).qtyAdjusted ?? 0);
+                            const dir = (line as { direction?: string }).direction;
+                            const after = dir === 'INCREASE' ? scaledQtyBefore + qAdj : scaledQtyBefore - qAdj;
+                            const isNegative = after < 0;
+
+                            return (
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-between px-2 py-1.5 bg-surface-container-lowest rounded-sm border border-border/30">
+                                  <span className="text-label-sm text-muted-foreground uppercase">
+                                    {locale === 'ar' ? 'مستوى المخزون' : 'Stock Level'}
+                                  </span>
+                                  <div className="flex items-center gap-2 font-mono text-sm force-latin-numbers" dir="ltr">
+                                    <span className="text-muted-foreground">
+                                      {Number(scaledQtyBefore).toLocaleString('en-US', { maximumFractionDigits: 4 })}
+                                    </span>
+                                    <span className="text-muted-foreground/50">→</span>
+                                    <span className={cn('font-bold', isNegative ? 'text-red-500' : 'text-foreground')}>
+                                      {Number(after).toLocaleString('en-US', { maximumFractionDigits: 4 })}
+                                    </span>
+                                  </div>
+                                </div>
+                                {isNegative && (
+                                  <span className="text-[10px] text-red-500 font-semibold uppercase px-1">
+                                    {locale === 'ar' ? 'الكمية تتجاوز المخزون المتاح' : 'Exceeds available stock'}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Row 5: LOT Selector taking full width */}
+                          {(() => {
+                            const lotCol = extraColumns.find(
+                              (col) =>
+                                (col.header.toLowerCase().includes('lot') ||
+                                  col.header.includes('تشغيلة') ||
+                                  col.header.includes('دفعة')) &&
+                                !col.header.toLowerCase().includes('allocat'),
+                            );
+                            if (lotCol) {
+                              return (
+                                <div className="w-full [&>div]:w-full">
+                                  {lotCol.cell(line)}
+                                </div>
+                              );
+                            }
+                            if (extraColumns.length > 3) {
+                              return (
+                                <div className="w-full [&>div]:w-full">
+                                  {extraColumns[3].cell(line)}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )
                     ) : mobileLayoutPattern === 'issue-form' ? (
                       <div className="flex flex-col bg-card border border-border shadow-sm rounded-xl p-3 transition-all mb-2 hover:border-brand-gold/30 space-y-2.5">
                         {/* Header: Identity (Image + Name + Code) + Delete Button */}
@@ -1904,7 +2317,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                         {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 tracking-wider uppercase" dir="ltr">
+                        <span className="text-[10px] font-mono text-muted-foreground tracking-wider uppercase truncate max-w-[120px] inline-block" dir="ltr" title={line.item.code}>
                           {line.item.code || 'N/A'}
                         </span>
                         {hideUomColumn && (
@@ -1919,10 +2332,10 @@ export function DocumentLineItemTable<T extends LineItem>({
                 </td>
                 {!hideLotColumns && (
                   <>
-                    <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
-                      {line.lot ? <span dir="ltr">{line.lot.lotNumber}</span> : <span className="opacity-20">—</span>}
+                    <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle truncate max-w-[150px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")} title={line.lot?.lotNumber || line.lotAllocations?.[0]?.lotNumber}>
+                      {line.lot ? <span dir="ltr" className="truncate block max-w-[150px]">{line.lot.lotNumber}</span> : line.lotAllocations?.[0]?.lotNumber ? <span dir="ltr" className="truncate block max-w-[150px]">{line.lotAllocations[0].lotNumber}</span> : <span className="opacity-20">—</span>}
                     </td>
-                    <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
+                    <td className={cn("font-mono text-label-xs text-muted-foreground/60 align-middle truncate max-w-[120px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
                       {line.lot?.expiryDate
                         ? <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
                         : <span className="opacity-20">—</span>}
@@ -1941,12 +2354,12 @@ export function DocumentLineItemTable<T extends LineItem>({
                   </div>
                 </td>
                 {!hideUomColumn && (
-                  <td className={cn("align-middle", noCollapse ? "table-cell" : "hidden md:table-cell", noCollapse ? (dense ? "px-2 py-1" : "px-4 py-2") : (dense ? "md:px-3 md:py-1.5" : "md:px-6"))}>
-                    <div className="flex items-center w-full">
+                  <td className={cn("align-middle min-w-[140px]", noCollapse ? "table-cell" : "hidden md:table-cell", noCollapse ? (dense ? "px-2 py-1" : "px-4 py-2") : (dense ? "md:px-3 md:py-1.5" : "md:px-6"))}>
+                    <div className="flex items-center w-full min-w-[140px]">
                       {renderUom ? (
                         renderUom(line)
                       ) : (
-                        <span className="text-xs font-medium uppercase text-muted-foreground">
+                        <span className="text-body-sm text-foreground font-medium uppercase">
                           {getLineUomDisplay(line) || "N/A"}
                         </span>
                       )}
@@ -1954,7 +2367,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   </td>
                 )}
                 {extraColumns.map((col, i) => (
-                  <td key={i} className={cn("align-middle text-center", noCollapse ? "table-cell" : "hidden md:table-cell", noCollapse ? (dense ? "px-2 py-1" : "px-4 py-2") : (dense ? "md:px-3 md:py-1.5" : "md:px-6"))}>
+                  <td key={i} className={cn("align-middle text-center", col.cellClassName, noCollapse ? "table-cell" : "hidden md:table-cell", noCollapse ? (dense ? "px-2 py-1" : "px-4 py-2") : (dense ? "md:px-3 md:py-1.5" : "md:px-6"))}>
                     {col.cell(line)}
                   </td>
                 ))}

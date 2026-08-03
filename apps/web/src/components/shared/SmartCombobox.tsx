@@ -321,11 +321,18 @@ export function SmartCombobox<T extends ComboboxItem>({
                   <span className="text-body-sm font-medium truncate text-foreground text-start">
                     {actualGetPrimaryLabel(selectedItem)}
                   </span>
-                  {actualGetSecondaryLabel(selectedItem) && (
-                    <span className="text-label-xs text-muted-foreground bg-muted-bg px-1.5 py-0.5 rounded-sm font-mono uppercase max-w-[60%] truncate shrink-0">
-                      {actualGetSecondaryLabel(selectedItem)}
-                    </span>
-                  )}
+                  {(() => {
+                    const secondary = actualGetSecondaryLabel(selectedItem);
+                    const primary = actualGetPrimaryLabel(selectedItem);
+                    if (!secondary) return null;
+                    if (secondary.trim().toLowerCase() === primary.trim().toLowerCase()) return null;
+                    if (/^[-_—\s]+$/.test(secondary)) return null;
+                    return (
+                      <span className="text-label-xs text-muted-foreground bg-muted-bg px-1.5 py-0.5 rounded-sm font-mono uppercase max-w-[60%] truncate shrink-0">
+                        {secondary}
+                      </span>
+                    );
+                  })()}
                 </div>
               ) : (
                 <span className="text-muted-foreground font-medium truncate w-full text-start flex-1 min-w-0">

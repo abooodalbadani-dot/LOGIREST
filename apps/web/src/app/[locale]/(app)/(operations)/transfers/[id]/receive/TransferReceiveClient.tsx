@@ -28,6 +28,7 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAuth } from '@/providers/AuthProvider';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useAbortController } from '@/hooks/useAbortController';
 import { formatDate } from '@/utils/currency';
@@ -240,7 +241,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     return cols;
   }, [t, isMutationBlocked, hasAnyLots, handleQtyChange]);
 
-  const handleScan = useCallback((barcode: string) => {
+  const handleScan = useCallback(async (barcode: string) => {
     if (isMutationBlocked) {
       setScanStatus('error');
 
@@ -259,44 +260,88 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       throw new Error('WarehouseLocked');
     }
 
-    const lineIndex = lines.findIndex(l => {
-      const matchedBarcode = l.item?.barcodes?.find(b => b.barcode === barcode);
-      if (matchedBarcode) {
-        const bmUomId = (matchedBarcode as { barcode: string; uomId?: string }).uomId;
-        if (bmUomId) {
-          return l.uomId === bmUomId;
-        }
-        return true;
-      }
-      return l.item?.code === barcode;
-    });
-    if (lineIndex !== -1) {
-      const line = lines[lineIndex];
-      const shippedQty = line.shippedQty ?? line.qty;
-      const currentReceived = line._receivedQty ?? 0;
+    const clean = barcode.trim();
+    if (!clean) return;
 
-      if (currentReceived >= shippedQty) {
-        setScanStatus('error');
-        const msg = t('scan_duplicate_warning') || "Item already fully verified.";
-        setStatusMessage(msg);
-        toast.warning(msg);
-        setTimeout(() => setScanStatus('idle'), 2000);
-        throw new Error('ScanDuplicate');
-      }
-
-      setLines(prev => prev.map((l, i) =>
-        i === lineIndex ? { ...l, _receivedQty: (l._receivedQty ?? 0) + 1 } : l
-      ));
-      setScanStatus('success');
-      setStatusMessage(`${t('scan_success')}: ${line.item?.name}`);
-      setTimeout(() => setScanStatus('idle'), 2000);
-    } else {
+    const resolved = await resolveBarcodeAndUom(clean, lines.map(l => l.item));
+    if (!resolved) {
       setScanStatus('error');
-      setStatusMessage(t('scan_error'));
-      toast.error(t('scan_error'));
+      const msg = t('scan_error') || "Item or barcode not found.";
+      setStatusMessage(msg);
+      toast.error(msg);
       setTimeout(() => setScanStatus('idle'), 2000);
       throw new Error('ItemNotFound');
     }
+
+    const { item: scannedItem, uomId: scannedUomId } = resolved;
+
+    const candidateLines = lines.filter(l => 
+      l.itemId === scannedItem.id || 
+      l.item?.code?.toLowerCase() === scannedItem.code?.toLowerCase() || 
+      l.item?.id === scannedItem.id
+    );
+
+    if (candidateLines.length === 0) {
+      setScanStatus('error');
+      const msg = t('scan_error') || "Scanned item is not part of this manifest.";
+      setStatusMessage(msg);
+      toast.error(msg);
+      setTimeout(() => setScanStatus('idle'), 2000);
+      throw new Error('ItemNotFound');
+    }
+
+    // 1. Try direct UOM match
+    let matchingLine = candidateLines.find(l => l.uomId === scannedUomId);
+    let incrementQty = 1;
+
+    // 2. If no direct match, check UOM conversions between scanned UOM and line UOM
+    if (!matchingLine && candidateLines.length === 1) {
+      const line = candidateLines[0];
+      const conversions = (line.item?.uomConversions || []) as Array<{ fromUomId: string; toUomId: string; factor: number }>;
+      const conv = conversions.find(c =>
+        (c.fromUomId === scannedUomId && c.toUomId === line.uomId) ||
+        (c.toUomId === scannedUomId && c.fromUomId === line.uomId)
+      );
+
+      if (conv && conv.factor > 0) {
+        matchingLine = line;
+        incrementQty = conv.fromUomId === scannedUomId ? Number(conv.factor) : Number(1 / conv.factor);
+      }
+    }
+
+    if (!matchingLine) {
+      setScanStatus('error');
+      const msg = locale === 'ar'
+        ? "وحدة القياس للباركود الممسوح لا تطابق وحدة القياس المتوقعة لهذا السطر"
+        : "Scanned barcode UOM does not match the expected UOM for this line.";
+      setStatusMessage(msg);
+      toast.error(msg);
+      setTimeout(() => setScanStatus('idle'), 2000);
+      throw new Error('UomMismatch');
+    }
+
+    const line = matchingLine;
+    const shippedQty = line.shippedQty ?? line.qty;
+    const currentReceived = line._receivedQty ?? 0;
+
+    if ((currentReceived + incrementQty) > shippedQty) {
+      setScanStatus('error');
+      const msg = t('scan_duplicate_warning') || "Item already fully verified.";
+      setStatusMessage(msg);
+      toast.warning(msg);
+      setTimeout(() => setScanStatus('idle'), 2000);
+      throw new Error('ScanDuplicate');
+    }
+
+    setLines(prev => prev.map((l) =>
+      l.id === line.id ? { ...l, _receivedQty: (l._receivedQty ?? 0) + incrementQty } : l
+    ));
+    setScanStatus('success');
+    setStatusMessage(`${t('scan_success')}: ${line.item?.name}`);
+    setTimeout(() => {
+      setScanStatus('idle');
+      setStatusMessage('');
+    }, 2500);
   }, [lines, isMutationBlocked, isWarehouseLocked, isLockError, t, locale]);
 
   const handleReceiveAll = () => {

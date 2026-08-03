@@ -21,7 +21,8 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../decorators/swagger-docs.decorator';
-import { type UpdateKitchenRequestDto } from '@logirest/shared-types';
+import { UpdateKitchenRequestDto } from './dto/update-kitchen-request.dto';
+import { CreateKitchenRequestDto } from './dto/create-kitchen-request.dto';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
@@ -46,6 +47,20 @@ function mapKitchenRequestDetail(
     const lineUom = item.uom as Record<string, unknown> | null;
     const resolvedUom =
       (lineUom?.code as string) || (unitOfMeasure?.code as string) || 'PCS';
+    const rawConversions = (it?.uomConversions as Array<Record<string, unknown>>) || [];
+    const uomConversions = rawConversions.map((c) => {
+      const fromUom = c.fromUom as Record<string, unknown> | null;
+      const toUom = c.toUom as Record<string, unknown> | null;
+      return {
+        fromUomId: (c.fromUomId as string) || (fromUom?.id as string) || '',
+        toUomId: (c.toUomId as string) || (toUom?.id as string) || '',
+        factor: Number(c.factor || 1),
+        fromUomCode: (c.fromUomCode as string) || (fromUom?.code as string) || '',
+        fromUomName: (c.fromUomName as string) || (fromUom?.name as string) || '',
+        toUomCode: (c.toUomCode as string) || (toUom?.code as string) || '',
+        toUomName: (c.toUomName as string) || (toUom?.name as string) || '',
+      };
+    });
     return {
       id: item.id as string,
       itemId: item.itemId as string,
@@ -55,6 +70,7 @@ function mapKitchenRequestDetail(
       itemBarcode: (it?.sku as string) || '',
       uom: resolvedUom,
       uomId: (item.uomId as string) || (unitOfMeasure?.id as string) || null,
+      uomConversions,
       image: (it?.image as string) || null,
       itemImage: (it?.image as string) || null,
       quantity: Number(item.quantityRequested),
@@ -124,18 +140,7 @@ export class KitchenRequestsController {
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
-    @Body()
-    body: {
-      departmentId: string;
-      warehouseId: string;
-      notes?: string;
-      items: Array<{
-        itemId: string;
-        quantityRequested: number;
-        uomId?: string;
-        notes?: string;
-      }>;
-    },
+    @Body() dto: CreateKitchenRequestDto,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
@@ -143,16 +148,16 @@ export class KitchenRequestsController {
       await this.scopeValidationService.validateDepartment(
         userId,
         role,
-        body.departmentId,
+        dto.departmentId,
       );
     } else {
       await this.scopeValidationService.validateWarehouse(
         userId,
         role,
-        body.warehouseId,
+        dto.warehouseId,
       );
     }
-    const kr = await this.krService.create(body, userId);
+    const kr = await this.krService.create(dto, userId);
     return { data: mapKitchenRequestDetail(kr, userId) };
   }
 

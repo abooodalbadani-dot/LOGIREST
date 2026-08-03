@@ -69,6 +69,14 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
                 (item.barcodeMappings as Record<string, unknown>[]) || []
               ).map((b) => ({
                 barcode: b.barcode as string,
+                uomId: (b.uomId || b.uom_id || null) as string | null,
+              })),
+              uomConversions: (
+                (item.uomConversions as Record<string, unknown>[]) || []
+              ).map((c) => ({
+                fromUomId: (c.fromUomId || c.from_uom_id || '') as string,
+                toUomId: (c.toUomId || c.to_uom_id || '') as string,
+                factor: Number(c.factor || 1),
               })),
             }
           : {
@@ -79,6 +87,7 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
               image: null,
               primaryUom: { id: '', code: '', nameAr: '', nameEn: '' },
               barcodes: [],
+              uomConversions: [],
             },
         lotId: null,
         lot: null,

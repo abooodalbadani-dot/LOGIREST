@@ -6,7 +6,7 @@ import { WorkflowService } from '../workflow/workflow.service';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import type { Request } from 'express';
+import { Request } from 'express';
 
 describe('KitchenRequestsController', () => {
   const mockScopeValidationService = {

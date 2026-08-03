@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { z } from "zod";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
-import { Plus, Tag, X } from "lucide-react";
+import { format, parseISO, isValid } from "date-fns";
+import { Plus, Tag, X, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const LotSchema = z.object({
   id: z.string(),
@@ -77,6 +85,9 @@ function CreateLotModal({
   const [expiryDate, setExpiryDate] = useState("");
   const isRtl = locale === "ar";
 
+  const selectedDate = expiryDate ? parseISO(expiryDate) : null;
+  const isDateValid = Boolean(selectedDate && isValid(selectedDate));
+
   const handleSave = () => {
     if (!lotNumber.trim()) return;
     onSave(lotNumber.trim(), expiryDate.trim() ? expiryDate.trim() : null);
@@ -112,17 +123,56 @@ function CreateLotModal({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-              {isRtl ? "تاريخ الانتهاء" : "EXPIRY DATE"}
-            </Label>
-            <Input
-              type="date"
-              dir="ltr"
-              lang="en"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              className="bg-surface-container-highest/40 border border-border/70 text-foreground font-mono text-sm h-11 rounded-xl focus:border-brand-gold focus:ring-1 focus:ring-brand-gold force-latin-numbers text-start"
-            />
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                {isRtl ? "تاريخ الانتهاء" : "EXPIRY DATE"}
+              </Label>
+              {expiryDate && (
+                <button
+                  type="button"
+                  onClick={() => setExpiryDate("")}
+                  className="text-[10px] text-muted-foreground hover:text-foreground font-semibold flex items-center gap-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                  {isRtl ? "مسح" : "Clear"}
+                </button>
+              )}
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    "flex h-11 w-full rounded-xl border border-border/70 bg-surface-container-highest/40 px-3 font-mono text-sm shadow-sm focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold items-center justify-between font-semibold text-foreground transition-colors cursor-pointer",
+                    !expiryDate && "text-muted-foreground"
+                  )}
+                >
+                  <span
+                    lang="en"
+                    dir="ltr"
+                    className="force-latin-numbers inline-block text-start font-mono text-sm"
+                  >
+                    {isDateValid && selectedDate
+                      ? format(selectedDate, "yyyy-MM-dd")
+                      : (isRtl ? "YYYY-MM-DD (اختياري)" : "YYYY-MM-DD (Optional)")}
+                  </span>
+                  <CalendarIcon className="w-4 h-4 text-muted-foreground/60 shrink-0 ms-2" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto p-0 border border-border bg-card shadow-2xl rounded-2xl z-[100]"
+                align="start"
+              >
+                <CalendarComponent
+                  mode="single"
+                  selected={isDateValid && selectedDate ? selectedDate : undefined}
+                  onSelect={(date) => {
+                    setExpiryDate(date ? format(date, "yyyy-MM-dd") : "");
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -179,7 +229,7 @@ export function AdjustmentLotSelector({
   const [createdLotNumber, setCreatedLotNumber] = useState(initialLotNumber || "");
 
   const comboboxItems = useMemo(() => {
-    return (lots || []).map((lot) => {
+    const list = (lots || []).map((lot) => {
       const qtyStr = lot.qtyAvailable ? ` (${lot.qtyAvailable})` : "";
       return {
         id: lot.id,
@@ -187,7 +237,17 @@ export function AdjustmentLotSelector({
         code: lot.lotNumber,
       };
     });
-  }, [lots]);
+
+    if (value && initialLotNumber && !list.some((i) => i.id === value)) {
+      list.unshift({
+        id: value,
+        name: initialLotNumber,
+        code: initialLotNumber,
+      });
+    }
+
+    return list;
+  }, [lots, value, initialLotNumber]);
 
   useEffect(() => {
     if (initialLotNumber && (!value || value.startsWith("new-"))) {
@@ -210,7 +270,7 @@ export function AdjustmentLotSelector({
   };
 
   return (
-    <div className="flex items-center gap-1.5 w-full min-w-[170px] max-w-[300px] dir-auto">
+    <div className="flex items-center gap-2 w-full min-w-[220px] dir-auto">
       {isCreatedLot ? (
         <div className="flex items-center justify-between gap-2 h-9 px-3 bg-brand-gold/15 border border-brand-gold/40 rounded-xl w-full text-brand-gold font-mono text-xs font-bold shadow-sm">
           <div className="flex items-center gap-1.5 truncate">
@@ -228,7 +288,7 @@ export function AdjustmentLotSelector({
           )}
         </div>
       ) : (
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <SmartCombobox
             items={comboboxItems}
             value={value || ""}
@@ -255,7 +315,7 @@ export function AdjustmentLotSelector({
             }
             triggerClassName={
               triggerClassName ||
-              "w-full h-9 rounded-xl border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-start px-3 font-mono text-xs outline-none transition-all text-foreground focus:ring-1 focus:ring-brand-gold shadow-sm flex items-center justify-between"
+              "w-full h-9 rounded-xl border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-start px-3 font-mono text-xs outline-none transition-all text-foreground focus:ring-1 focus:ring-brand-gold shadow-sm flex items-center justify-between min-w-[200px]"
             }
           />
         </div>
@@ -267,10 +327,10 @@ export function AdjustmentLotSelector({
           disabled={disabled}
           onClick={() => setIsModalOpen(true)}
           title={isRtl ? "إنشاء دفعة جديدة" : "Create new lot"}
-          className="h-9 px-2.5 bg-gradient-to-r from-brand-gold/20 to-amber-500/20 hover:from-brand-gold/30 hover:to-amber-500/30 border border-brand-gold/40 text-brand-gold font-bold text-xs rounded-xl transition-all shrink-0 flex items-center gap-1 shadow-sm hover:scale-105"
+          className="h-9 px-3 bg-brand-gold/15 hover:bg-brand-gold/25 dark:bg-brand-gold/20 dark:hover:bg-brand-gold/30 text-amber-900 dark:text-brand-gold border border-brand-gold/40 hover:border-brand-gold/60 font-bold text-xs rounded-xl transition-all shrink-0 flex items-center gap-1 shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span className="text-[13px] font-black">{isRtl ? "جديد" : "New"}</span>
+          <span>{isRtl ? "جديد" : "New"}</span>
         </button>
       )}
 

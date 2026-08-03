@@ -75,6 +75,8 @@ interface AdjustmentLineWithRelations {
 interface ApprovalEventDetail {
   actionPerformed: string;
   userRole: string;
+  toStatus?: string | null;
+  fromStatus?: string | null;
   user?: { name: string } | null;
   createdAt?: Date | string | number | null;
 }
@@ -156,6 +158,8 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
           : null,
       unitCost: line.unitCost ? Number(line.unitCost) : null,
       reasonNotes: line.reason || '',
+      lotId: line.lotId || null,
+      lotNumber: line.lot?.lotNumber || null,
       lot: line.lot
         ? {
             id: line.lot.id,
@@ -222,7 +226,46 @@ function mapAdjustmentDetail(adj: AdjustmentWithRelations) {
     })(),
     version: adj.version || 1,
     lines,
-    timeline: [],
+    timeline: (() => {
+      const creatorName = adj.createdBy?.name || 'System';
+      const list: { status: string; at: string; by: string }[] = [
+        {
+          status: 'DRAFT',
+          at: createdAtIso,
+          by: creatorName,
+        },
+      ];
+
+      const events = adj.approvalEvents || [];
+      const sortedEvents = [...events].sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeA - timeB;
+      });
+
+      for (const ev of sortedEvents) {
+        const userName = ev.user?.name || ev.userRole || creatorName;
+        const createdAtVal = ev.createdAt || new Date();
+        const atIso = (
+          createdAtVal instanceof Date ? createdAtVal : new Date(createdAtVal)
+        ).toISOString();
+        let statusStr = ev.toStatus || ev.actionPerformed || '';
+        if (statusStr === 'APPROVE') statusStr = 'APPROVED';
+        if (statusStr === 'SUBMIT') statusStr = 'SUBMITTED';
+        if (statusStr === 'POST') statusStr = 'POSTED';
+        if (statusStr === 'REJECT') statusStr = 'REJECTED';
+
+        if (statusStr) {
+          list.push({
+            status: statusStr,
+            at: atIso,
+            by: userName,
+          });
+        }
+      }
+
+      return list;
+    })(),
   };
 }
 

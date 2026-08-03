@@ -66,6 +66,18 @@ export interface BarcodeResolutionResult {
   item: ResolvedBarcodeItem;
   uomId: string;
   matchedBarcode: string;
+  conversionFactor: number;
+}
+
+function getConversionFactor(item: Record<string, unknown>, uomId: string): number {
+  if (!uomId) return 1;
+  const primaryUomObj = item.primaryUom as { id?: string } | undefined;
+  if (primaryUomObj?.id === uomId || (item.uomId as string) === uomId) {
+    return 1;
+  }
+  const conversions = (Array.isArray(item.uomConversions) ? item.uomConversions : []) as Array<{ fromUomId?: string; toUomId?: string; factor?: number }>;
+  const found = conversions.find(c => c.fromUomId === uomId || c.toUomId === uomId);
+  return found?.factor && found.factor > 0 ? found.factor : 1;
 }
 
 /**
@@ -93,7 +105,7 @@ export async function resolveBarcodeAndUom(
             : (Array.isArray(item.barcode_mappings) && item.barcode_mappings.length > 0)
               ? item.barcode_mappings
               : []
-      ) as Array<{ barcode?: string; uomId?: string | null; uom_id?: string | null }>;
+      ) as Array<{ barcode?: string; uomId?: string | null; uom_id?: string | null; uom?: { id?: string } | null }>;
 
       const matchedBm = mappings.find(
         (bm) => typeof bm.barcode === 'string' && bm.barcode.trim().toLowerCase() === clean
@@ -101,11 +113,13 @@ export async function resolveBarcodeAndUom(
 
       if (matchedBm) {
         const primaryUomObj = item.primaryUom as { id?: string } | undefined;
-        const uomId = matchedBm.uomId || matchedBm.uom_id || primaryUomObj?.id || (item.uomId as string) || '';
+        const bmUomId = matchedBm.uomId || matchedBm.uom_id || (matchedBm.uom && typeof matchedBm.uom === 'object' ? matchedBm.uom.id : null);
+        const uomId = bmUomId || primaryUomObj?.id || (item.uomId as string) || '';
         return {
           item: item as unknown as ResolvedBarcodeItem,
           uomId,
           matchedBarcode: clean,
+          conversionFactor: getConversionFactor(item, uomId),
         };
       }
 
@@ -115,10 +129,12 @@ export async function resolveBarcodeAndUom(
 
       if (itemCode === clean || itemBarcode === clean || itemSku === clean) {
         const primaryUomObj = item.primaryUom as { id?: string } | undefined;
+        const uomId = primaryUomObj?.id || (item.uomId as string) || '';
         return {
           item: item as unknown as ResolvedBarcodeItem,
-          uomId: primaryUomObj?.id || (item.uomId as string) || '',
+          uomId,
           matchedBarcode: clean,
+          conversionFactor: getConversionFactor(item, uomId),
         };
       }
     }
@@ -161,6 +177,7 @@ export async function resolveBarcodeAndUom(
         item,
         uomId,
         matchedBarcode: clean,
+        conversionFactor: getConversionFactor(item as unknown as Record<string, unknown>, uomId),
       };
     }
   } catch (err) {

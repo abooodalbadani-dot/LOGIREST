@@ -122,7 +122,23 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
 
   const extraColumns = useMemo(() => [
    {
+    header: t('direction') || 'Direction',
+    headerClassName: 'min-w-[120px] text-center whitespace-nowrap',
+    cellClassName: 'min-w-[120px] text-center',
+    cell: (line: MappedAdjustmentLine) => (
+     <div className={cn(
+      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-xs font-semibold uppercase whitespace-nowrap",
+      line.direction === 'INCREASE' ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
+     )}>
+      {line.direction === 'INCREASE' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+      {t(`direction_${line.direction.toLowerCase()}`)}
+     </div>
+    )
+   },
+   {
     header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
+    headerClassName: 'min-w-[110px] text-center whitespace-nowrap',
+    cellClassName: 'min-w-[110px] text-center',
     cell: (line: MappedAdjustmentLine) => (
      <span className="text-body-md font-bold text-foreground">
       {line.direction === 'INCREASE'
@@ -134,19 +150,9 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
     )
    },
    {
-    header: t('direction') || 'Direction',
-    cell: (line: MappedAdjustmentLine) => (
-     <div className={cn(
-      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-xs font-semibold uppercase",
-      line.direction === 'INCREASE' ? "bg-muted/50 text-foreground" : "bg-red-500/10 text-red-500"
-     )}>
-      {line.direction === 'INCREASE' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-      {t(`direction_${line.direction.toLowerCase()}`)}
-     </div>
-    )
-   },
-   {
     header: t('qty_before') || 'Qty Before',
+    headerClassName: 'min-w-[100px] text-center whitespace-nowrap',
+    cellClassName: 'min-w-[100px] text-center',
     cell: (line: MappedAdjustmentLine) => {
      const scaledQtyBefore = getScaledQtyBefore(
       line.qtyBefore,
@@ -155,25 +161,16 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
       items,
      );
      return (
-      <span className="text-body-md font-bold text-muted-foreground/40" lang="en" dir="ltr">
+      <span className="text-body-md font-bold text-muted-foreground/60" lang="en" dir="ltr">
        {formatQuantity(scaledQtyBefore, locale as 'ar' | 'en')}
       </span>
      );
     }
    },
    {
-    header: tc('table_headers.lot') || 'Lot',
-    cell: (line: MappedAdjustmentLine) => {
-     const lotVal = line.displayLot || '—';
-     return (
-      <span className="font-mono text-[11px] md:text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 truncate inline-block">
-       {lotVal}
-      </span>
-     );
-    }
-   },
-   {
     header: t('qty_after') || 'Qty After',
+    headerClassName: 'min-w-[100px] text-center whitespace-nowrap',
+    cellClassName: 'min-w-[100px] text-center',
     cell: (line: MappedAdjustmentLine) => {
      const scaledQtyBefore = getScaledQtyBefore(
       line.qtyBefore,
@@ -187,6 +184,19 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
      return (
       <span className={cn("text-body-md font-bold", afterVal < 0 ? "text-red-500" : "text-foreground")} lang="en" dir="ltr">
        {formatQuantity(afterVal, locale as 'ar' | 'en')}
+      </span>
+     );
+    }
+   },
+   {
+    header: tc('table_headers.lot') || 'Lot',
+    headerClassName: 'min-w-[140px] max-w-[160px] text-center whitespace-nowrap',
+    cellClassName: 'min-w-[140px] max-w-[160px] text-center truncate',
+    cell: (line: MappedAdjustmentLine) => {
+     const lotVal = line.displayLot || '—';
+     return (
+      <span className="font-mono text-[11px] md:text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 truncate inline-block max-w-[150px]" title={lotVal}>
+       {lotVal}
       </span>
      );
     }
@@ -231,36 +241,33 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
    />
 
    {/* Main Content */}
-   <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 print:max-w-full print:px-0 print:py-0 print:space-y-4 print:animate-none">
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:block">
-     {/* Left Column */}
-     <div className="lg:col-span-8 space-y-8 print:max-w-full">
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 border border-surface-variant/5">
-        <div className="space-y-4">
-         <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase text-muted-foreground">{tc('warehouse')}</label>
-          <div className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase not-italic">
-           <RelationalName name={document.warehouseName} rawId={document.warehouseId} />
-          </div>
-         </div>
-
-         <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase text-muted-foreground">{t('reason')}</label>
-          <p className="font-bold text-body-md bg-card border border-border shadow-sm p-3 rounded-lg uppercase not-italic">{t(`reason_${document.reason.toLowerCase()}`)}</p>
-         </div>
+   <div className="max-w-[1920px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 print:max-w-full print:px-0 print:py-0 print:space-y-4 print:animate-none">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 print:block">
+     {/* Left Column (Main Content + Table) */}
+     <div className="col-span-12 lg:col-span-8 xl:col-span-9 space-y-6 print:max-w-full">
+      {/* Mobile & Desktop Metadata Card */}
+      <div className="bg-surface-container-low border border-border rounded-[var(--radius-lg)] p-4 md:p-6 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <span className="text-xs text-muted-foreground block font-medium uppercase mb-1">{tc('warehouse')}</span>
+          <span className="text-sm font-semibold text-foreground">
+            <RelationalName name={document.warehouseName} rawId={document.warehouseId} />
+          </span>
         </div>
-
-        <div className="space-y-1.5">
-         <label className="text-xs font-bold uppercase text-muted-foreground">{tc('notes')}</label>
-         <div className="bg-card border border-border shadow-sm rounded-lg min-h-[120px] p-4 text-body-md not-italic font-bold text-foreground">
-          {document.notes || tc('no_notes')}
-         </div>
+        <div>
+          <span className="text-xs text-muted-foreground block font-medium uppercase mb-1">{t('reason')}</span>
+          <span className="text-sm font-semibold text-foreground uppercase">
+            {t(`reason_${document.reason.toLowerCase()}`)}
+          </span>
+        </div>
+        <div className="sm:col-span-2">
+          <span className="text-xs text-muted-foreground block font-medium uppercase mb-1">{tc('notes')}</span>
+          <p className="text-sm text-foreground break-words">{document.notes || tc('no_notes')}</p>
         </div>
       </div>
 
       {/* Items Table */}
-      <div className="bg-card border border-border shadow-sm rounded-lg shadow-sm overflow-hidden border border-surface-variant/5">
-       <div className="p-8 flex justify-between items-center">
+      <div className="bg-card border border-border shadow-sm rounded-xl overflow-x-auto w-full border-surface-variant/5">
+       <div className="p-6 flex justify-between items-center">
         <div className="flex items-center gap-4">
          <div className="w-1.5 h-6 bg-primary rounded-full" />
          <h3 className="text-label-sm font-semibold uppercase">{tc('items')}</h3>
@@ -287,11 +294,11 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
       </div>
      </div>
 
-     {/* Right Column */}
-     <div className="lg:col-span-4 space-y-8 print-hidden">
-      <div className="bg-card border border-border shadow-sm p-8 rounded-lg shadow-sm relative overflow-hidden group border border-surface-variant/5">
+     {/* Right Column (Audit Trail) */}
+     <div className="col-span-12 lg:col-span-4 xl:col-span-3 space-y-6 print-hidden">
+      <div className="bg-card border border-border shadow-sm p-6 rounded-xl relative overflow-hidden group border-surface-variant/5">
        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
-       <div className="relative space-y-8">
+       <div className="relative space-y-6">
         <div className="flex items-center gap-4">
          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
           <History className="w-5 h-5 text-primary" />

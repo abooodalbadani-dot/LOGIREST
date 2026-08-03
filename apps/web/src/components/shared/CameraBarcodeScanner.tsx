@@ -48,7 +48,7 @@ export function CameraBarcodeScanner({ onScanSuccess, className }: CameraBarcode
     if (typeof window === 'undefined') return;
 
     if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      setError('Camera access requires a secure HTTPS connection.');
+      setError(translateSafe('camera_https_required', 'يتطلب الوصول إلى الكاميرا اتصالاً آمناً (HTTPS) أو استخدام localhost'));
       setIsInitializing(false);
       return;
     }

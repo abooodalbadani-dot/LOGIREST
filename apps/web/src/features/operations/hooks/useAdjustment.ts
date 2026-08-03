@@ -44,6 +44,8 @@ export const AdjustmentLineSchema = z.object({
  }).nullable().optional(),
  unitCost: z.number().nullable().optional(),
  reasonNotes: z.string().optional(),
+ lotId: z.string().nullable().optional(),
+ lotNumber: z.string().nullable().optional(),
  lot: z.object({
   id: z.string(),
   lotNumber: z.string(),

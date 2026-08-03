@@ -101,6 +101,46 @@ export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {
  });
 }
 
+export function useUpdateKitchenRequest(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    mutationFn: ({ id, data, version, signal }: { id: string; data: Partial<CreateKitchenRequestDTO>; version: number; signal?: AbortSignal }) => {
+      const rawItems = data.items || [];
+      const payload = {
+        departmentId: data.departmentId,
+        warehouseId: data.warehouseId,
+        notes: data.notes,
+        version,
+        items: rawItems.map(item => ({
+          itemId: item.itemId,
+          quantity: item.quantity,
+          quantityRequested: item.quantity,
+          uomId: item.uomId || undefined,
+          notes: item.notes || null,
+        })),
+        lines: rawItems.map(item => ({
+          itemId: item.itemId,
+          quantity: item.quantity,
+          quantityRequested: item.quantity,
+          uomId: item.uomId || undefined,
+          notes: item.notes || null,
+        })),
+      };
+      return apiClient.put(`/operations/kitchen-requests/${id}`, z.object({ data: KitchenRequestDetailSchema }), payload, { signal }).then(r => r.data);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(['kitchen-requests', variables.id], data);
+      queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
+    },
+    onError: (error) => {
+      console.error('Failed to update kitchen request:', error);
+      const message = error instanceof Error ? error.message : 'Failed to update kitchen request';
+      toast.error(message);
+    },
+  });
+}
+
 export function useUpdateKitchenRequestStatus(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
  return useSafeMutation({

@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -220,6 +220,14 @@ export function AdjustmentForm({
     crypto.randomUUID(),
   );
 
+  const currentVersionRef = useRef<number>(document?.version || 0);
+
+  useEffect(() => {
+    if (document?.version !== undefined) {
+      currentVersionRef.current = document.version;
+    }
+  }, [document?.version]);
+
   const hasNegativeStock = useMemo(
     () =>
       lines.some((line) => {
@@ -326,6 +334,9 @@ export function AdjustmentForm({
     setNotes(document.notes ?? "");
     setLines(document.lines);
     setIdempotencyKey(crypto.randomUUID());
+    if (document.version !== undefined) {
+      currentVersionRef.current = document.version;
+    }
   }
 
   // Refresh stock levels when warehouse changes
@@ -380,19 +391,19 @@ export function AdjustmentForm({
     }
   }, [warehouseId, canEdit, abortController]);
 
-  const handleSaveDraft = async () => {
-    if (lines.length === 0) return;
+  const handleSaveDraft = async (): Promise<AdjustmentDetail | null> => {
+    if (lines.length === 0) return null;
     if (hasInvalidCosts) {
       toast.error(
         locale === "ar"
           ? "تكلفة الوحدة مطلوبة ويجب أن تكون أكبر من أو تساوي 0 لبنود الزيادة"
           : "Unit cost is required and must be >= 0 for increase lines.",
       );
-      return;
+      return null;
     }
     try {
       const payload = {
-        version: document?.version || 0,
+        version: currentVersionRef.current,
         warehouseId,
         reason,
         notes,
@@ -418,42 +429,57 @@ export function AdjustmentForm({
       const headers = { "X-Idempotency-Key": idempotencyKey };
 
       if (isNew) {
-        await createAdjustment.mutateAsync({
+        const res = await createAdjustment.mutateAsync({
           payload,
           signal: abortController.signal,
           headers,
         });
         toast.success(t("create_success"));
         router.push(`/adjustments`);
+        return res;
       } else {
-        await updateAdjustment.mutateAsync({
+        const updatedDoc = await updateAdjustment.mutateAsync({
           id,
           payload,
           signal: abortController.signal,
           headers,
         });
+        if (updatedDoc?.version !== undefined) {
+          currentVersionRef.current = updatedDoc.version;
+        }
+        if (updatedDoc?.lines) {
+          setLines(updatedDoc.lines as unknown as AdjustmentLine[]);
+        }
         toast.success(t("update_success"));
+        return updatedDoc;
       }
     } catch (e) {
       console.error(e);
       toast.error(tc("error_occurred"));
+      throw e;
     }
   };
 
   const handleSubmit = async () => {
-    await submitAdjustment.mutateAsync({
-      id,
-      version: document?.version || 0,
-      signal: abortController.signal,
-    });
-    toast.success(t("submit_success"));
-    setSubmitDialogOpen(false);
+    try {
+      const savedDoc = await handleSaveDraft();
+      const versionToSubmit = savedDoc?.version ?? currentVersionRef.current;
+      await submitAdjustment.mutateAsync({
+        id,
+        version: versionToSubmit,
+        signal: abortController.signal,
+      });
+      toast.success(t("submit_success"));
+      setSubmitDialogOpen(false);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleApprove = async () => {
     await approveAdjustment.mutateAsync({
       id,
-      version: document?.version || 0,
+      version: currentVersionRef.current,
       signal: abortController.signal,
     });
     toast.success(t("approve_success"));
@@ -465,7 +491,7 @@ export function AdjustmentForm({
     if (trimmedComment.length < 15) return;
     await rejectAdjustment.mutateAsync({
       id,
-      version: document?.version || 0,
+      version: currentVersionRef.current,
       reject: trimmedComment,
       signal: abortController.signal,
     });
@@ -476,7 +502,7 @@ export function AdjustmentForm({
   const handlePost = async () => {
     await postAdjustment.mutateAsync({
       id,
-      version: document?.version || 0,
+      version: currentVersionRef.current,
       signal: abortController.signal,
     });
     setPostDialogOpen(false);
@@ -619,7 +645,7 @@ export function AdjustmentForm({
 
     if (currentStatusNorm !== 'draft') {
       const statusTime = (docAny.submittedAt as string) || (docAny.updatedAt as string) || document.createdAt || new Date().toISOString();
-      const statusUser = (docAny.submittedBy as string) || (docAny.createdBy as string) || tc('system_user') || 'System';
+      const statusUser = (docAny.approvedBy as string) || (docAny.submittedBy as string) || (docAny.createdBy as string) || (docAny.createdByName as string) || tc('system_user') || 'System';
       const normalizedStatus = (currentStatusNorm.includes('submitted') ? 'submitted' : currentStatusNorm) as Status;
 
       h.push({
@@ -745,6 +771,8 @@ export function AdjustmentForm({
       },
       {
         header: t("qty_before") || "Qty Before",
+        headerClassName: "min-w-[100px] text-center whitespace-nowrap",
+        cellClassName: "min-w-[100px] text-center",
         cell: (line: AdjustmentFormLine) => {
           const scaledQtyBefore = getScaledQtyBefore(
             line.qtyBefore,
@@ -755,7 +783,7 @@ export function AdjustmentForm({
           return (
             <div className="flex flex-col items-center gap-0.5 tabular-nums">
               <span
-                className="text-body-md font-bold text-muted-foreground/45"
+                className="text-body-md font-bold text-muted-foreground/60"
                 lang="en"
                 dir="ltr"
               >
@@ -768,9 +796,47 @@ export function AdjustmentForm({
         },
       },
       {
+        header: t("qty_after") || "Qty After",
+        headerClassName: "min-w-[100px] text-center whitespace-nowrap",
+        cellClassName: "min-w-[100px] text-center",
+        cell: (line: AdjustmentFormLine) => {
+          const scaledQtyBefore = getScaledQtyBefore(
+            line.qtyBefore,
+            line.uomId,
+            line.item,
+            items,
+          );
+          const after =
+            line.direction === "INCREASE"
+              ? scaledQtyBefore + line.qtyAdjusted
+              : scaledQtyBefore - line.qtyAdjusted;
+          return (
+            <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 sm:min-w-[100px] text-center whitespace-normal">
+              <span
+                className={cn(
+                  "font-mono font-bold",
+                  after < 0 ? "text-red-500" : "text-foreground",
+                )}
+                lang="en"
+                dir="ltr"
+              >
+                {Number(after).toLocaleString("en-US", {
+                  maximumFractionDigits: 4,
+                })}
+              </span>
+              {after < 0 && (
+                <span className="qty-error text-[10px] md:text-xs text-red-500 leading-tight font-semibold uppercase mt-1 z-10">
+                  {t("errors.exceeds_available_stock")}
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         header: tc("table_headers.lot") || "Lot",
-        headerClassName: "min-w-[170px]",
-        cellClassName: "min-w-[170px]",
+        headerClassName: "min-w-[140px] max-w-[160px] text-center whitespace-nowrap",
+        cellClassName: "min-w-[140px] max-w-[160px] text-center truncate",
         cell: (line: AdjustmentFormLine) => {
           if (!canEdit) {
             const rawLine = line as unknown as Record<string, unknown>;
@@ -783,7 +849,7 @@ export function AdjustmentForm({
               "";
             const lotVal = displayLot || "—";
             return (
-              <span className="font-mono text-[11px] md:text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 truncate inline-block">
+              <span className="font-mono text-[11px] md:text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20 truncate inline-block max-w-[150px]" title={lotVal}>
                 {lotVal}
               </span>
             );
@@ -804,42 +870,6 @@ export function AdjustmentForm({
                 });
               }}
             />
-          );
-        },
-      },
-      {
-        header: t("qty_after") || "Qty After",
-        cell: (line: AdjustmentFormLine) => {
-          const scaledQtyBefore = getScaledQtyBefore(
-            line.qtyBefore,
-            line.uomId,
-            line.item,
-            items,
-          );
-          const after =
-            line.direction === "INCREASE"
-              ? scaledQtyBefore + line.qtyAdjusted
-              : scaledQtyBefore - line.qtyAdjusted;
-          return (
-            <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 sm:min-w-[180px] sm:max-w-[220px] text-center whitespace-normal">
-              <span
-                className={cn(
-                  "font-mono font-bold",
-                  after < 0 ? "text-red-500" : "text-foreground",
-                )}
-                lang="en"
-                dir="ltr"
-              >
-                {Number(after).toLocaleString("en-US", {
-                  maximumFractionDigits: 4,
-                })}
-              </span>
-              {after < 0 && (
-                <span className="qty-error absolute top-[calc(100%+6px)] ltr:right-0 rtl:left-0 sm:static sm:top-auto sm:right-auto sm:left-auto w-max sm:w-auto text-[10px] md:text-xs text-red-500 leading-tight font-semibold uppercase mt-0 sm:mt-1 z-10">
-                  {t("errors.exceeds_available_stock")}
-                </span>
-              )}
-            </div>
           );
         },
       },
@@ -929,7 +959,7 @@ export function AdjustmentForm({
           <div className="flex-1 w-full p-1 sm:p-4 lg:p-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 print:block items-start max-w-[1920px] mx-auto">
               {/* Main Content: Unified Master Container (Document Details + Items Table) */}
-              <div className="col-span-12 flex flex-col gap-6">
+              <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
                 <div className="bg-card backdrop-blur-3xl p-3.5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-border/70 space-y-6 lg:space-y-8 transition-all duration-500 group">
                   {/* Decorative background glow */}
                   <div className="absolute top-0 end-0 w-96 h-96 bg-brand-gold/5 blur-[100px] pointer-events-none rounded-full" />
@@ -1188,8 +1218,8 @@ export function AdjustmentForm({
                 </div>
               </div>
 
-              {/* Sidebar (col-span-12 lg:col-span-3): Audit Trail & Document Information */}
-              <div className="col-span-12 lg:col-span-3 flex flex-col gap-6 print-hidden">
+              {/* Sidebar (col-span-12 lg:col-span-4 xl:col-span-3): Audit Trail & Document Information */}
+              <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-6 print-hidden">
                 <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] group border border-slate-200/60 dark:border-white/5">
                   <div className="absolute top-0 end-0 w-32 h-32 bg-brand-gold/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-brand-gold/10 transition-all duration-700" />
                   <div className="relative space-y-8">

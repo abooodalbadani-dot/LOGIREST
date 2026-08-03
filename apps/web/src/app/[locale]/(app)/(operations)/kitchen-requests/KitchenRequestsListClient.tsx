@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Search,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -239,7 +240,27 @@ export function KitchenRequestsListClient({
       header: t('status'),
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
-  ], [t, tc, locale]);
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-3 text-brand-gold hover:text-brand-gold hover:bg-brand-gold/10 text-label-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/kitchen-requests/${row.original.id}`);
+            }}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>{locale === 'ar' ? 'فتح المستند' : 'Open'}</span>
+          </Button>
+        </div>
+      ),
+    },
+  ], [t, tc, locale, router]);
 
   const submittedCount = data?.data?.filter(doc => isPendingStatus('KITCHEN_REQUEST', doc.status as DocumentStatus)).length || 0;
   const approvedCount = data?.data?.filter(r => isApprovedStatus('KITCHEN_REQUEST', r.status)).length || 0;
@@ -350,12 +371,17 @@ export function KitchenRequestsListClient({
           columns={columns}
           data={data?.data ?? []}
           isLoading={isLoading}
+          onRowClick={(row: KitchenRequestSummary) => router.push(`/kitchen-requests/${row.id}`)}
           enableVirtualization={true}
           collectionName="kitchen_requests"
           exportTitle={t('title')}
           exportFilename="operational_requisitions"
           renderMobileCard={(item: KitchenRequestSummary) => (
-            <div key={item.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 text-start">
+            <div 
+              key={item.id} 
+              onClick={() => router.push(`/kitchen-requests/${item.id}`)}
+              className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col gap-3 text-start cursor-pointer hover:border-brand-gold/40 transition-colors"
+            >
               <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
                 <div><StatusBadge status={item.status} /></div>
                 <span className="text-[10px] text-gray-500 font-mono" dir="ltr">
@@ -373,6 +399,7 @@ export function KitchenRequestsListClient({
                 <Link
                   href={`/kitchen-requests/${item.id}`}
                   className="text-[#b48e67] hover:text-[#8a6b4c] text-xs font-bold flex items-center gap-1 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {locale === 'ar' ? 'عرض' : 'View'}
                   <svg className="w-3 h-3 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -3148,7 +3148,9 @@
         "specify_components": "Specify request components",
         "warehouse_required": "Warehouse is required"
       },
-      "warehouse": "Warehouse"
+      "warehouse": "Warehouse",
+      "select_department": "Select Department",
+      "select_warehouse": "Select Warehouse"
     },
     "stocktake": {
       "active_counting": "Active Counting",

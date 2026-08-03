@@ -198,6 +198,7 @@ export class AdjustmentsService {
           warehouseId: body.warehouseId,
           notes: body.notes || null,
           status: 'DRAFT',
+          createdById: userId,
           lines: {
             create: preparedLines.map((line) => ({
               itemId: line.itemId,
@@ -229,6 +230,9 @@ export class AdjustmentsService {
             },
           },
           warehouse: true,
+          createdBy: {
+            select: { id: true, name: true, email: true },
+          },
         },
       });
     });
@@ -280,6 +284,9 @@ export class AdjustmentsService {
             },
           },
           warehouse: true,
+          createdBy: {
+            select: { id: true, name: true, email: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,

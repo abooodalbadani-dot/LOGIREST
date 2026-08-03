@@ -25,8 +25,10 @@ import {
   Building2,
   FileText,
   Calculator,
-  ListFilter
+  ListFilter,
+  Trash2
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   KitchenRequestSchema,
@@ -379,56 +381,57 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
       <form className="space-y-8">
         {/* Header Information */}
-        <div className="bg-card border border-border shadow-sm p-8 rounded-[2rem] shadow-sm shadow-black/5">
+        <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-[2rem] space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="w-full space-y-2">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
+                <Building2 className="w-3.5 h-3.5" />
+                {t('department')}
+              </label>
+              <SmartCombobox
+                items={departmentItems}
+                value={form.watch('departmentId')}
+                onSelect={(dept) => form.setValue('departmentId', String(dept.id), { shouldValidate: true })}
+                getPrimaryLabel={(dept) => dept.name}
+                getSecondaryLabel={() => undefined}
+                placeholder={tCommon('select_department')}
+                triggerClassName="w-full bg-background border border-border text-foreground rounded-md shadow-sm h-12 md:h-14 px-4 md:px-6 text-body-md font-bold focus:ring-2 focus:ring-primary/20"
+              />
+              {form.formState.errors.departmentId && (
+                <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.department_required')}</p>
+              )}
+            </div>
 
-          <div className="col-span-1 md:col-span-6 w-full">
-            <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 mb-3 flex items-center gap-2">
-              <Building2 className="w-3.5 h-3.5" />
-              {t('department')}
-            </label>
-            <SmartCombobox
-              items={departmentItems}
-              value={form.watch('departmentId')}
-              onSelect={(dept) => form.setValue('departmentId', String(dept.id), { shouldValidate: true })}
-              getPrimaryLabel={(dept) => dept.name}
-              placeholder={tCommon('select_department')}
-              triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
-            />
-            {form.formState.errors.departmentId && (
-              <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.department_required')}</p>
-            )}
+            <div className="w-full space-y-2">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
+                <Warehouse className="w-3.5 h-3.5" />
+                {t('warehouse')}
+              </label>
+              <SmartCombobox
+                items={warehouseItems}
+                value={form.watch('warehouseId')}
+                onSelect={(w) => form.setValue('warehouseId', String(w.id), { shouldValidate: true })}
+                getPrimaryLabel={(w) => w.name}
+                placeholder={tCommon('select_warehouse')}
+                triggerClassName="w-full bg-background border border-border text-foreground rounded-md shadow-sm h-12 md:h-14 px-4 md:px-6 text-body-md font-bold focus:ring-2 focus:ring-primary/20"
+              />
+              {form.formState.errors.warehouseId && (
+                <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.warehouse_required')}</p>
+              )}
+            </div>
           </div>
 
-          <div className="col-span-1 md:col-span-6 w-full">
-            <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 mb-3 flex items-center gap-2">
-              <Warehouse className="w-3.5 h-3.5" />
-              {t('warehouse')}
-            </label>
-            <SmartCombobox
-              items={warehouseItems}
-              value={form.watch('warehouseId')}
-              onSelect={(w) => form.setValue('warehouseId', String(w.id), { shouldValidate: true })}
-              getPrimaryLabel={(w) => w.name}
-              placeholder={tCommon('select_warehouse')}
-              triggerClassName="w-full bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
-            />
-            {form.formState.errors.warehouseId && (
-              <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.warehouse_required')}</p>
-            )}
-          </div>
-
-          <div className="md:col-span-2 space-y-2">
-            <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 mb-3 flex items-center gap-2">
+          <div className="w-full space-y-2">
+            <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
               <FileText className="w-3.5 h-3.5" />
               {tCommon('notes')}
             </label>
             <Input
               {...form.register('notes')}
               placeholder={t('notes_placeholder')}
-              className="bg-gray-50 border border-gray-200 text-[#0B1220] dark:bg-surface-container-high/30 dark:border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20 w-full"
+              className="w-full bg-background border border-border text-foreground rounded-md shadow-sm h-12 md:h-14 px-4 md:px-6 text-body-md font-bold focus:ring-2 focus:ring-primary/20"
             />
           </div>
-
         </div>
 
         {/* Line Items */}
@@ -534,15 +537,15 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                       uom: tCommon('table_headers.uom'),
                     }}
                     renderQty={(line) => (
-                      <div className="flex flex-col items-center gap-1 min-w-0">
-                        <div className="flex justify-center">
+                      <div className="flex flex-col items-center justify-center gap-1 w-full">
+                        <div className="flex justify-center w-full">
                           <QuantityInput
                             value={form.watch(`items.${line.index}.quantity`)}
                             onChange={(val) => {
                               form.setValue(`items.${line.index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                             }}
                             disabled={form.formState.isSubmitting}
-                            className="w-full text-center font-black text-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-lg outline-none transition-all"
+                            className="w-24 max-w-[100px] text-center font-black text-lg bg-background border border-input text-foreground focus:border-primary focus:ring-1 focus:ring-primary rounded-md outline-none transition-all mx-auto"
                           />
                         </div>
                         {form.formState.errors.items?.[line.index]?.quantity && (
@@ -553,27 +556,40 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                     renderUom={(line) => {
                       const availableUoms = getAvailableUomsForItem(line.selectedItem);
                       const itemValues = watchedItems?.[line.index] as { uomId?: string } | undefined;
-                      const currentUomId = itemValues?.uomId || line.selectedItem?.primaryUom?.id || '';
+                      const currentUomId = itemValues?.uomId || line.selectedItem?.primaryUom?.id || (availableUoms[0]?.id ? String(availableUoms[0].id) : '');
                       const resolvedCode = resolveUomCode(currentUomId, line.selectedItem);
 
                       if (availableUoms.length <= 1) {
                         return (
-                          <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2 py-1 bg-surface-container rounded font-mono font-bold">
+                          <span className="text-body-sm text-foreground font-semibold uppercase px-2 py-1 bg-surface-container rounded font-mono">
                             {resolvedCode}
                           </span>
                         );
                       }
 
                       return (
-                        <SmartCombobox
-                          items={availableUoms}
+                        <Select
                           value={currentUomId}
-                          onSelect={(uom) => {
-                            form.setValue(`items.${line.index}.uomId`, String(uom.id), { shouldDirty: true, shouldValidate: true });
+                          onValueChange={(val) => {
+                            if (val) {
+                              form.setValue(`items.${line.index}.uomId`, val, { shouldDirty: true, shouldValidate: true });
+                            }
                           }}
-                          getPrimaryLabel={(uom) => uom.code || uom.name || 'UOM'}
-                          triggerClassName="h-8 min-w-[80px] bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
-                        />
+                          disabled={form.formState.isSubmitting}
+                        >
+                          <SelectTrigger className="h-8 min-w-[90px] bg-background border border-input text-foreground rounded-md text-xs font-bold uppercase">
+                            <span className="flex-1 text-start truncate font-bold uppercase">
+                              {resolvedCode || 'UOM'}
+                            </span>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableUoms.map((uom) => (
+                              <SelectItem key={uom.id} value={String(uom.id)}>
+                                {uom.code || uom.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       );
                     }}
                     extraColumns={extraColumns}
@@ -586,72 +602,127 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                     const selectedItemId = watchedItems?.[index]?.itemId;
                     const selectedItem = items?.find(i => i.id === selectedItemId);
                     if (!selectedItem) return null;
+
+                    const availableUoms = getAvailableUomsForItem(selectedItem);
+                    const itemValues = watchedItems?.[index] as { uomId?: string } | undefined;
+                    const currentUomId = itemValues?.uomId || selectedItem?.primaryUom?.id || (availableUoms[0]?.id ? String(availableUoms[0].id) : '');
+                    const resolvedCode = resolveUomCode(currentUomId, selectedItem);
+
                     return (
-                      <div key={field.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm relative animate-in fade-in duration-200 hover:border-brand-gold/30">
-                        {/* Header: Image + Item Name + Code + UOM Badge on Start side, Delete Button on End side (opposite side) */}
-                        <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
+                      <div
+                        key={field.id}
+                        className="bg-card dark:bg-card border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm relative animate-in fade-in duration-200 flex flex-col gap-3"
+                      >
+                        {/* Header: Image + Item Name + Code on Start side, Delete Button on End side */}
+                        <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             {selectedItem.image ? (
-                              <img src={selectedItem.image} alt={selectedItem.name} className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm" />
+                              <img
+                                src={selectedItem.image}
+                                alt={selectedItem.name}
+                                className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm"
+                              />
                             ) : (
                               <div className="w-10 h-10 bg-surface-container flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">
                                 N/A
                               </div>
                             )}
                             <div className="flex flex-col min-w-0 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">{selectedItem.name}</span>
-                                {selectedItem.primaryUom?.code && (
-                                  <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-md uppercase shrink-0">
-                                    {selectedItem.primaryUom.code}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-gray-400 font-mono tracking-widest block mt-0.5">{selectedItem.code || '---'}</span>
+                              <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">
+                                {selectedItem.name}
+                              </span>
+                              <span
+                                className="text-label-xs text-muted-foreground truncate max-w-[140px] inline-block font-mono tracking-wider mt-0.5"
+                                dir="ltr"
+                                title={selectedItem.code || ''}
+                              >
+                                {selectedItem.code || '---'}
+                              </span>
                             </div>
                           </div>
 
-                          {/* Delete Button (On the opposite side of item name) */}
-                          <button
+                          {/* Delete Button (transparent icon with text-destructive) */}
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => remove(index)}
-                            className="p-2 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition-colors shrink-0 ms-2"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl shrink-0 transition-colors h-9 w-9"
                             aria-label={tCommon('actions.remove_line') || 'Remove'}
                           >
-                            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
 
-                        {/* Last Row: Quantity (Smaller) & Notes (Larger) Side-by-side */}
-                        <div className="flex items-start gap-3 w-full">
-                          {/* Quantity Field (Smaller) */}
-                          <div className="w-1/3 min-w-[100px] shrink-0 space-y-1">
-                            <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 block">{locale === 'ar' ? 'الكمية' : 'Qty'}</label>
+                        {/* QTY & Interactive UOM side-by-side */}
+                        <div className="grid grid-cols-2 gap-3 w-full">
+                          {/* QTY */}
+                          <div className="space-y-1">
+                            <label className="text-label-xs font-semibold text-muted-foreground block">
+                              {locale === 'ar' ? 'الكمية' : 'Qty'}
+                            </label>
                             <QuantityInput
                               value={form.watch(`items.${index}.quantity`)}
                               onChange={(val) => {
                                 form.setValue(`items.${index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                               }}
                               disabled={form.formState.isSubmitting}
-                              className="w-full text-center font-black text-base h-10 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-xl outline-none transition-all"
+                              className="w-full text-center font-black text-base h-10 bg-background dark:bg-background border border-border dark:border-border text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-xl outline-none transition-all"
                             />
                             {form.formState.errors.items?.[index]?.quantity && (
-                              <p className="text-label-xxs font-bold text-red-500 uppercase mt-1">{t('validation.qty_positive')}</p>
+                              <p className="text-label-xxs font-bold text-red-500 uppercase mt-1">
+                                {t('validation.qty_positive')}
+                              </p>
                             )}
                           </div>
 
-                          {/* Notes Field (Larger) */}
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 block">{tCommon('notes') || (locale === 'ar' ? 'الملاحظات' : 'Notes')}</label>
-                            <Input
-                              type="text"
-                              placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
-                              {...form.register(`items.${index}.notes`)}
-                              className="w-full h-10 text-xs px-3 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-gray-600 rounded-xl focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-gray-900 dark:text-gray-100 placeholder:text-muted-foreground/50"
-                            />
+                          {/* Interactive UOM */}
+                          <div className="space-y-1">
+                            <label className="text-label-xs font-semibold text-muted-foreground block">
+                              {tCommon('table_headers.uom') || 'UOM'}
+                            </label>
+                            {availableUoms.length > 1 ? (
+                              <Select
+                                value={currentUomId}
+                                onValueChange={(val) => {
+                                  if (val) {
+                                    form.setValue(`items.${index}.uomId`, val, { shouldDirty: true, shouldValidate: true });
+                                  }
+                                }}
+                                disabled={form.formState.isSubmitting}
+                              >
+                                <SelectTrigger className="w-full h-10 bg-background dark:bg-background border border-border dark:border-border rounded-xl text-xs font-bold uppercase text-gray-900 dark:text-gray-100">
+                                  <span className="flex-1 text-start truncate font-bold uppercase">
+                                    {resolvedCode || 'UOM'}
+                                  </span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableUoms.map((uom) => (
+                                    <SelectItem key={uom.id} value={String(uom.id)}>
+                                      {uom.code || uom.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <div className="h-10 flex items-center justify-center bg-background dark:bg-background border border-border dark:border-border rounded-xl text-xs font-bold uppercase text-gray-700 dark:text-gray-300 font-mono">
+                                {resolvedCode}
+                              </div>
+                            )}
                           </div>
+                        </div>
+
+                        {/* Full-width Line Notes below QTY/UOM */}
+                        <div className="w-full space-y-1">
+                          <label className="text-label-xs font-semibold text-muted-foreground block">
+                            {tCommon('notes') || (locale === 'ar' ? 'الملاحظات' : 'Notes')}
+                          </label>
+                          <Input
+                            type="text"
+                            placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
+                            {...form.register(`items.${index}.notes`)}
+                            className="w-full h-10 text-xs px-3 bg-background dark:bg-background border border-border dark:border-border rounded-xl focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-gray-900 dark:text-gray-100 placeholder:text-muted-foreground/50"
+                          />
                         </div>
                       </div>
                     );
@@ -662,7 +733,8 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
           </div>
         </div>
 
-        <div className="w-full flex items-center justify-end gap-4 mt-8 pt-6 border-t border-border">
+        {/* Desktop Footer (md:flex) */}
+        <div className="w-full hidden md:flex items-center justify-end gap-4 mt-8 pt-6 border-t border-border">
           <Button
             type="button"
             variant="outline"
@@ -682,6 +754,35 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
           >
             <Send className="w-4 h-4 me-2" />
             {t('submit')}
+          </Button>
+        </div>
+
+        {/* Mobile Footer (md:hidden) */}
+        <div className="flex flex-col gap-3 w-full md:hidden mt-6 pb-6 border-t border-border pt-4">
+          {/* Primary Action on Top */}
+          <Button
+            type="button"
+            size="lg"
+            onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)}
+            isLoading={createRequest.isPending || updateStatus.isPending}
+            className="w-full bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-xl shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity h-12"
+          >
+            <Send className="w-4 h-4 me-2" />
+            {t('submit')}
+          </Button>
+
+          {/* Secondary Action Below */}
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={form.handleSubmit((data) => onSubmit(data, true), onFormError)}
+            isLoading={createRequest.isPending}
+            disabled={updateStatus.isPending}
+            className="w-full bg-transparent border border-border text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-muted dark:hover:bg-neutral-900 transition-all shadow-sm flex items-center justify-center gap-2 h-12"
+          >
+            <Save className="w-4 h-4 me-2" />
+            {t('save_draft')}
           </Button>
         </div>
       </form>

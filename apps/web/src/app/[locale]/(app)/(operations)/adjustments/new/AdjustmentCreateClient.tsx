@@ -32,56 +32,9 @@ import { apiClient } from '@/lib/api/client';
 
 import { CreateCustomItemDialog } from '@/components/shared/CreateCustomItemDialog';
 import { AdjustmentLotSelector } from '@/features/operations/components/AdjustmentLotSelector';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 
-function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen: boolean, onClose: () => void, onSave: (lotNumber: string, expiryDate?: string) => void, defaultItemName: string }) {
-  const t = useTranslations('operations.adjustment');
-  const tCommon = useTranslations('common');
-  const [lotNumber, setLotNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState(new Date().toISOString().split('T')[0]);
-
-  const handleSave = () => {
-    if (!lotNumber) {
-      toast.error(tCommon('required_fields_missing') || "Lot number is required");
-      return;
-    }
-    onSave(lotNumber, expiryDate || undefined);
-    setLotNumber('');
-    setExpiryDate('');
-    onClose();
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        className="bg-card border border-border shadow-sm text-foreground"
-        style={{ width: '90vw', maxWidth: '425px' }}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-title-md font-semibold text-operational-cyan uppercase">{t('create_lot') || 'Create New Lot'}</DialogTitle>
-          <p className="text-label-sm text-muted-foreground/80">{defaultItemName}</p>
-        </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="lotNumber" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tCommon('lot_number') || 'Lot Number'} *</Label>
-            <Input id="lotNumber" value={lotNumber} onChange={(e) => setLotNumber(e.target.value)} className="bg-surface-container-highest/40" placeholder="LOT-1234" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="expiryDate" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tCommon('expiry_date') || 'Expiry Date'}</Label>
-            <Input id="expiryDate" type="date" dir="ltr" lang="en" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="bg-surface-container-highest/40 force-latin-numbers font-mono text-start" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-label-sm uppercase font-semibold text-muted-foreground hover:text-foreground">{tCommon('cancel')}</Button>
-          <Button onClick={handleSave} className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">{tCommon('save')}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function UnitCostInput({
   value,
@@ -647,8 +600,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
               }}
               className={cn(
-                "w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1",
-                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-red-500/50 focus:ring-red-500/30"
+                "w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1",
+                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-destructive/40 focus-visible:ring-1 focus-visible:ring-destructive/30"
               )}
             />
           </div>
@@ -677,10 +630,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     },
     {
       header: tCommon('table_headers.lot') || tCommon('lot_number') || (locale === 'ar' ? 'رقم الدفعة' : 'Lot Number'),
-      headerClassName: "min-w-[220px]",
-      cellClassName: "min-w-[220px]",
+      headerClassName: "min-w-[240px]",
+      cellClassName: "min-w-[240px]",
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-center w-full min-w-[250px]">
+        <div className="flex justify-center w-full min-w-[220px]">
           <AdjustmentLotSelector
             itemId={line.itemId}
             warehouseId={warehouseId}
@@ -688,6 +641,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             lotNumber={line.lotNumber}
             direction={line.direction}
             locale={locale}
+            triggerClassName="w-full h-9 rounded-xl border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-start px-3 font-mono text-xs outline-none transition-all text-foreground focus:ring-1 focus:ring-brand-gold shadow-sm flex items-center justify-between min-w-[200px]"
             onChange={(lotId, lotNumber) => {
               setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotId, lotNumber } : l));
             }}
@@ -1017,7 +971,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                             ));
                           }}
                           placeholder={line.item?.primaryUom?.code || "UOM"}
-                          triggerClassName="h-11 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
+                          triggerClassName="h-9 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full min-w-[140px] font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
                         />
                       </div>
                     );
@@ -1119,19 +1073,6 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         }}
       />
 
-      <CreateLotDialog
-        isOpen={creatingLotForLineId !== null}
-        onClose={() => setCreatingLotForLineId(null)}
-        defaultItemName={creatingLotForLineId ? lines.find(l => l.id === creatingLotForLineId)?.item.name || '' : ''}
-        onSave={(lotNumber, expiryDate) => {
-          if (creatingLotForLineId) {
-            setLines(prev => prev.map(l => l.id === creatingLotForLineId ? { ...l, lotNumber: lotNumber } : l));
-            // In a real app we might also save the expiryDate to the payload if the API expects it for NEW lots
-            // For now, we set the lot_number in the UI. 
-            toast.success(tCommon('success') || "Lot created locally.");
-          }
-        }}
-      />
     </div>
   );
 }

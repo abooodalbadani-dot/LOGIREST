@@ -3148,7 +3148,9 @@
         "specify_components": "حدد مكونات الطلب",
         "warehouse_required": "المستودع مطلوب"
       },
-      "warehouse": "المستودع"
+      "warehouse": "المستودع",
+      "select_department": "اختر القسم",
+      "select_warehouse": "اختر المستودع"
     },
     "stocktake": {
       "active_counting": "عد نشط",

@@ -30,6 +30,8 @@ import { useAbortController } from '@/hooks/useAbortController';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
+import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
+
 export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.transfer');
  const tCommon = useTranslations('common');
@@ -43,10 +45,9 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  const [scannedLines, setScannedLines] = useState<Record<string, number>>({});
  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
  const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
- const [statusMessage, setStatusMessage] = useState('');
-
+ const [statusMessage, setStatusMessage] = useState<string>('');
  const lastResetId = useRef<string | null>(null);
- const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+ const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
 
  useEffect(() => {
   if (transfer && transfer.id !== lastResetId.current) {
@@ -72,7 +73,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   }
  }, [isLockError]);
 
- const handleScan = useCallback((barcode: string) => {
+ const handleScan = useCallback(async (barcode: string) => {
   if (isMutationBlocked) {
    setScanStatus('error');
    
@@ -91,42 +92,88 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
    throw new Error('WarehouseLocked');
   }
 
-  const line = transfer?.lines.find(l => {
-    const matchedBarcode = l.item?.barcodes?.find(b => b.barcode === barcode);
-    if (matchedBarcode) {
-      const bmUomId = (matchedBarcode as { barcode: string; uomId?: string }).uomId;
-      if (bmUomId) {
-        return l.uomId === bmUomId;
-      }
-      return true;
-    }
-    return l.item?.code === barcode;
-  });
-  if (line) {
-   const currentScanned = scannedLines[line.id] ?? 0;
-   if (currentScanned >= line.qty) {
-    setScanStatus('error');
-    const msg = t('scan_duplicate_warning') || "Item already fully verified.";
-    setStatusMessage(msg);
-    toast.warning(msg);
-    setTimeout(() => setScanStatus('idle'), 2000);
-    throw new Error('ScanDuplicate');
-   }
+  const clean = barcode.trim();
+  if (!clean) return;
 
-   setScannedLines(prev => ({
-    ...prev,
-    [line.id]: (prev[line.id] ?? 0) + 1
-   }));
-   setScanStatus('success');
-   setStatusMessage(`${t('scan_success')}: ${line.item?.name}`);
-   setTimeout(() => setScanStatus('idle'), 2000);
-  } else {
+  const resolved = await resolveBarcodeAndUom(clean, transfer?.lines.map(l => l.item));
+  if (!resolved) {
    setScanStatus('error');
-   setStatusMessage(t('scan_error'));
-   toast.error(t('scan_error'));
+   const msg = t('scan_error') || "Item or barcode not found.";
+   setStatusMessage(msg);
+   toast.error(msg);
    setTimeout(() => setScanStatus('idle'), 2000);
    throw new Error('ItemNotFound');
   }
+
+  const { item: scannedItem, uomId: scannedUomId } = resolved;
+
+  // Find candidate lines by item identity
+  const candidateLines = transfer?.lines.filter(l => 
+   l.itemId === scannedItem.id || 
+   l.item?.code?.toLowerCase() === scannedItem.code?.toLowerCase() ||
+   l.item?.id === scannedItem.id
+  ) || [];
+
+  if (candidateLines.length === 0) {
+   setScanStatus('error');
+   const msg = t('scan_error') || "Scanned item is not part of this manifest.";
+   setStatusMessage(msg);
+   toast.error(msg);
+   setTimeout(() => setScanStatus('idle'), 2000);
+   throw new Error('ItemNotInManifest');
+  }
+
+  // 1. Try exact UOM match
+  let matchingLine = candidateLines.find(l => l.uomId === scannedUomId);
+  let incrementQty = 1;
+
+  // 2. If no direct match, check UOM conversions between scanned UOM and line UOM
+  if (!matchingLine && candidateLines.length === 1) {
+   const line = candidateLines[0];
+   const conversions = (line.item?.uomConversions || []) as Array<{ fromUomId: string; toUomId: string; factor: number }>;
+   const conv = conversions.find(c =>
+    (c.fromUomId === scannedUomId && c.toUomId === line.uomId) ||
+    (c.toUomId === scannedUomId && c.fromUomId === line.uomId)
+   );
+
+   if (conv && conv.factor > 0) {
+    matchingLine = line;
+    incrementQty = conv.fromUomId === scannedUomId ? Number(conv.factor) : Number(1 / conv.factor);
+   }
+  }
+
+  // 3. Strict Rejection if UOMs do not match and no valid conversion exists
+  if (!matchingLine) {
+   setScanStatus('error');
+   const msg = locale === 'ar'
+    ? "وحدة القياس للباركود الممسوح لا تطابق وحدة القياس المتوقعة لهذا السطر"
+    : "Scanned barcode UOM does not match the expected UOM for this line.";
+   setStatusMessage(msg);
+   toast.error(msg);
+   setTimeout(() => setScanStatus('idle'), 2000);
+   throw new Error('UomMismatch');
+  }
+
+  const currentScanned = scannedLines[matchingLine.id] ?? 0;
+  if ((currentScanned + incrementQty) > matchingLine.qty) {
+   setScanStatus('error');
+   const msg = t('scan_duplicate_warning') || "Item already fully verified.";
+   setStatusMessage(msg);
+   toast.warning(msg);
+   setTimeout(() => setScanStatus('idle'), 2000);
+   throw new Error('ScanDuplicate');
+  }
+
+  setScannedLines(prev => ({
+   ...prev,
+   [matchingLine.id]: (prev[matchingLine.id] ?? 0) + incrementQty
+  }));
+  setScanStatus('success');
+  setStatusMessage(`${t('scan_success')}: ${matchingLine.item?.name}`);
+  setTimeout(() => {
+   setScanStatus('idle');
+   setStatusMessage('');
+  }, 2500);
  }, [transfer, scannedLines, isMutationBlocked, isWarehouseLocked, isLockError, t, locale]);
 
  const handleShip = () => {
@@ -402,24 +449,53 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       </div>
      )}
 
-    <div className="flex flex-col-reverse md:flex-row justify-end items-center gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 w-full">
+    {/* Desktop Action Bar (hidden md:flex) */}
+    <div className="hidden md:flex justify-end items-center gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 w-full">
      <Button
       type="button"
+      variant="outline"
       onClick={() => router.push(`/transfers/${id}`, { skipGuard: true })}
-      className="w-full md:w-auto px-6 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      className="px-6 py-2.5 border border-border text-foreground font-bold rounded-lg hover:bg-surface-container-high transition-colors"
      >
       {tCommon('cancel') || 'Cancel'}
      </Button>
      <PermissionGate action="ship" resource="transfer">
       <Button
+       type="button"
        disabled={isMutationBlocked || shipTransfer.isPending || !allScanned || isWorkflowLocked}
        onClick={() => setConfirmDialogOpen(true)}
-       className="w-full md:w-auto px-6 py-2.5 bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-sm"
+       className="px-6 py-2.5 bg-brand-gold hover:bg-brand-gold/90 text-slate-950 font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
        <Truck className="w-5 h-5" />
        {t('confirm_shipment')}
       </Button>
      </PermissionGate>
+    </div>
+
+    {/* Mobile Action Bar (flex flex-col gap-3 md:hidden) */}
+    <div className="flex flex-col gap-3 md:hidden mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 w-full">
+     {/* Row 1: Primary Action (Top) */}
+     <PermissionGate action="ship" resource="transfer">
+      <Button
+       type="button"
+       disabled={isMutationBlocked || shipTransfer.isPending || !allScanned || isWorkflowLocked}
+       onClick={() => setConfirmDialogOpen(true)}
+       className="w-full py-3 bg-brand-gold hover:bg-brand-gold/90 text-slate-950 font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+       <Truck className="w-5 h-5" />
+       {t('confirm_shipment')}
+      </Button>
+     </PermissionGate>
+
+     {/* Row 2: Secondary Action (Bottom) */}
+     <Button
+      type="button"
+      variant="outline"
+      onClick={() => router.push(`/transfers/${id}`, { skipGuard: true })}
+      className="w-full py-3 border border-border text-foreground font-bold rounded-lg hover:bg-surface-container-high transition-colors"
+     >
+      {tCommon('cancel') || 'Cancel'}
+     </Button>
     </div>
 
     <PostConfirmDialog

@@ -23,7 +23,7 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
 
 import { Link } from '@/i18n/navigation';
-import { Save, Warehouse, PackagePlus, Sparkles, ArrowLeft, Loader2, Truck } from 'lucide-react';
+import { Save, Warehouse, PackagePlus, Sparkles, ArrowLeft, Loader2, Truck, Trash2 } from 'lucide-react';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { Item, ItemSchema } from '@/types/master-data';
 import { getAvailableUomsForItem, resolveUomCode, handleUomChange, getScaledQtyBefore } from '@/utils/uom-helper';
@@ -749,16 +749,16 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
             </div>
           </div>
 
-          <div className="border border-border/60 shadow-sm rounded-xl overflow-hidden mt-4">
+          {/* Desktop View Table (hidden md:block) */}
+          <div className="hidden md:block border border-border/60 shadow-sm rounded-xl overflow-hidden mt-4">
             <DocumentLineItemTable
               lines={lines}
               locale={locale}
               isReadOnly={false}
               onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
               hideLotColumns={true}
-              noCollapse={false}
+              noCollapse={true}
               dense={false}
-              mobileLayoutPattern="transfer-form"
               headers={{
                 code: tCommon('table_headers.code'),
                 name: tCommon('table_headers.name'),
@@ -770,10 +770,136 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
               extraColumns={extraColumns}
             />
           </div>
+
+          {/* Mobile View Item Cards (md:hidden) */}
+          <div className="md:hidden flex flex-col gap-3 mt-4">
+            {lines.map((line) => {
+              const matchedItem = itemsMaster?.data?.find((i: Item) => i.id === line.itemId);
+              const availableUoms = getAvailableUomsForItem(matchedItem);
+              const currentUomId = line.uomId || matchedItem?.primaryUom?.id || '';
+              const resolvedCode = resolveUomCode(currentUomId, matchedItem);
+              const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
+              const rawAvailableQty = balance ? balance.qtyAvailable : 0;
+              const scaledAvailableQty = getScaledQtyBefore(
+                rawAvailableQty,
+                line.uomId,
+                matchedItem,
+                itemsMaster?.data
+              );
+              const isExceeded = balance ? line.qty > scaledAvailableQty : false;
+              const itemName = matchedItem?.name || line.item?.name || '';
+              const itemImage = line.item?.image || matchedItem?.image || matchedItem?.imageUrl;
+
+              return (
+                <div
+                  key={line.id}
+                  className="bg-card border border-border-color rounded-[var(--radius-md)] p-3 flex flex-col gap-3"
+                >
+                  {/* Row 1: Identity & Action */}
+                  <div className="flex justify-between items-start w-full gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      {itemImage ? (
+                        <img
+                          src={itemImage}
+                          alt={itemName}
+                          className="w-10 h-10 object-cover rounded-lg border border-border shrink-0 shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-surface-container-highest flex items-center justify-center rounded-lg border border-border/50 text-[10px] text-muted-foreground font-mono font-bold shrink-0">
+                          N/A
+                        </div>
+                      )}
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-title-sm font-bold text-foreground leading-snug truncate">
+                          {itemName}
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground mt-0.5" dir="ltr">
+                          {line.item?.code}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setLines(prev => prev.filter(l => l.id !== line.id))}
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
+                      aria-label={tCommon('actions.remove_line') || 'Remove line'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Row 2: QTY & UOM (Restored UOM Selector) */}
+                  <div className="grid grid-cols-2 gap-3 w-full">
+                    {/* Column 1: QTY */}
+                    <div className="flex flex-col">
+                      <span className="text-label-xs text-muted-foreground uppercase font-bold mb-1">
+                        {tCommon('table_headers.qty')}
+                      </span>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={line.qty !== undefined && line.qty !== null ? line.qty : ''}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          handleQtyChange(line.id, isNaN(val) ? 0 : val);
+                        }}
+                        className={cn(
+                          "h-9 text-body-md font-bold force-latin-numbers w-full bg-background border-border",
+                          isExceeded && "border-destructive text-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                      <span className={cn("text-[10px] text-muted-foreground mt-0.5", isExceeded && "text-destructive font-semibold")}>
+                        {locale === 'ar' ? 'المتاح:' : 'Available:'} {scaledAvailableQty.toFixed(4)}
+                      </span>
+                    </div>
+
+                    {/* Column 2: UOM Selector */}
+                    <div className="flex flex-col">
+                      <span className="text-label-xs text-muted-foreground uppercase font-bold mb-1">
+                        {tCommon('table_headers.uom')}
+                      </span>
+                      {availableUoms.length <= 1 ? (
+                        <div className="h-9 flex items-center px-3 bg-surface-container-highest/40 border border-border text-foreground rounded-md text-xs font-bold uppercase font-mono">
+                          {resolvedCode}
+                        </div>
+                      ) : (
+                        <SmartCombobox
+                          items={availableUoms}
+                          value={currentUomId}
+                          onSelect={(uom) => {
+                            setLines(prev => prev.map(l => (l.id === line.id ? { ...l, uomId: uom.id } : l)));
+                          }}
+                          triggerClassName="h-9 w-full bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row 3: Notes */}
+                  <div className="flex flex-col gap-1 w-full">
+                    <span className="text-label-xs text-muted-foreground uppercase">
+                      {tCommon('table_headers.notes') || 'Notes'}
+                    </span>
+                    <Input
+                      value={line.notes || ''}
+                      onChange={(e) => handleNotesChange(line.id, e.target.value)}
+                      className="h-9 w-full bg-background border-border text-sm"
+                      placeholder={locale === 'ar' ? 'ملاحظات إعادة التوجيه التشغيلية...' : 'Operational relocation remarks...'}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      <FormFooter>
+      {/* Desktop Footer (hidden md:flex) */}
+      <FormFooter className="hidden md:flex">
         <div className="flex items-center justify-end gap-3 w-full max-w-6xl mx-auto px-4">
           <Button
             type="button"
@@ -805,6 +931,56 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
           )}
         </div>
       </FormFooter>
+
+      {/* Mobile Footer (md:hidden flex flex-col gap-3 w-full mt-6 pb-6 px-4) */}
+      <div className="flex flex-col gap-3 w-full md:hidden mt-6 pb-6 px-4">
+        {/* Row 1: Primary Action */}
+        {id ? (
+          <Button
+            type="button"
+            size="lg"
+            onClick={() => router.push(`/transfers/${id}/ship`, { skipGuard: true })}
+            className="w-full bg-slate-900 dark:bg-amber-600 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Truck className="w-4 h-4" />
+            {locale === 'ar' ? 'شحن / ترحيل العملية' : 'SHIP / PROCESS TRANSFER'}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleSave}
+            disabled={createTransfer.isPending || !isValid || isEitherLocked}
+            className="w-full bg-brand-gold hover:bg-brand-gold/90 text-slate-950 font-bold h-12 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
+          >
+            {createTransfer.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {locale === 'ar' ? 'حفظ مسودة التحويل' : 'SAVE TRANSFER'}
+          </Button>
+        )}
+
+        {/* Row 2: Secondary Actions */}
+        <div className="grid grid-cols-2 gap-3 w-full">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.push('/transfers', { skipGuard: true })}
+            className="w-full h-11 font-bold rounded-xl flex items-center justify-center gap-2 border border-border/40"
+          >
+            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+            {locale === 'ar' ? 'رجوع' : 'BACK'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSave}
+            disabled={createTransfer.isPending || !isValid || isEitherLocked}
+            className="w-full h-11 font-bold rounded-xl flex items-center justify-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            {locale === 'ar' ? 'حفظ' : 'SAVE TRANSFER'}
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }

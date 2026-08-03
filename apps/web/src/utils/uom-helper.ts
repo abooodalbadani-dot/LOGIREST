@@ -9,6 +9,8 @@ export interface UomOption {
 export interface ItemUomMeta {
   primaryUom?: { id?: string; code?: string; name?: string } | null;
   primary_uom?: { id?: string; code?: string; name?: string } | null;
+  unitOfMeasure?: { id?: string; code?: string; name?: string } | null;
+  unit_of_measure?: { id?: string; code?: string; name?: string } | null;
   uomConversions?: Array<{
     fromUomId?: string;
     from_uom_id?: string;
@@ -48,7 +50,7 @@ export function getAvailableUomsForItem(item?: ItemUomMeta | null): UomOption[] 
   if (!item) return [];
   const options: UomOption[] = [];
 
-  const primary = item.primaryUom || item.primary_uom;
+  const primary = item.primaryUom || item.primary_uom || item.unitOfMeasure || item.unit_of_measure;
   if (primary && primary.id) {
     const code = (!isRawUuid(primary.code) && primary.code) ? primary.code : 'UOM';
     options.push({
@@ -94,7 +96,7 @@ export function resolveUomCode(
 ): string {
   const safeFallback = isRawUuid(fallback) ? 'UOM' : (fallback || 'UOM');
   if (!uomId) {
-    const primary = item?.primaryUom || item?.primary_uom;
+    const primary = item?.primaryUom || item?.primary_uom || item?.unitOfMeasure || item?.unit_of_measure;
     if (primary?.code && !isRawUuid(primary.code)) return primary.code;
     return safeFallback;
   }
@@ -105,7 +107,7 @@ export function resolveUomCode(
   }
 
   // 2. Check primaryUom by ID
-  const primary = item?.primaryUom || item?.primary_uom;
+  const primary = item?.primaryUom || item?.primary_uom || item?.unitOfMeasure || item?.unit_of_measure;
   if (primary && primary.code && !isRawUuid(primary.code)) {
     if (primary.id && primary.id === uomId) {
       return primary.code;
@@ -172,7 +174,7 @@ export function getScaledQtyBefore(
 
   if (!selectedUomId) return baseQty;
 
-  const primary = item?.primaryUom || item?.primary_uom;
+  const primary = item?.primaryUom || item?.primary_uom || item?.unitOfMeasure || item?.unit_of_measure;
   const primaryUomId = primary?.id || '';
   const primaryUomCode = primary?.code || '';
 

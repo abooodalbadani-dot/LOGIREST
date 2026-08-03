@@ -224,6 +224,7 @@ export class TransfersService {
                 unitOfMeasure: true,
                 category: true,
                 barcodeMappings: true,
+                uomConversions: true,
               },
             },
             uom: true,

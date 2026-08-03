@@ -56,7 +56,7 @@ export function useCreateAdjustment(options?: { onConflict?: () => void }) {
     const isIncrease = l.direction === 'INCREASE';
     return {
      itemId: l.itemId,
-      lotId: isValidUuid(l.lotAllocations?.[0]?.lotId) ? l.lotAllocations![0].lotId : undefined,
+     lotId: l.lotAllocations?.[0]?.lotId || undefined,
      quantity: l.qty,
      uomId: l.uomId,
      direction: isIncrease ? ('IN' as const) : ('OUT' as const),
@@ -68,8 +68,9 @@ export function useCreateAdjustment(options?: { onConflict?: () => void }) {
   return apiClient.post('/operations/adjustments', AdjustmentDetailSchema, backendPayload, { signal, headers });
  },
  onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: ['adjustments'] });
- queryClient.invalidateQueries({ queryKey: ['adjustments', 'summary'] });
+  queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+  queryClient.invalidateQueries({ queryKey: ['adjustments', 'summary'] });
+  queryClient.invalidateQueries({ queryKey: ['lots-available'] });
  },
  onError: (error: unknown) => {
   const message = error instanceof Error ? error.message : 'Operation failed';

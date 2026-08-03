@@ -326,17 +326,8 @@ export const ScanInput = forwardRef(
                             </div>
                         )}
 
-                        {statusMessage && (
-                            <div className={cn(
-                                "absolute -bottom-11 start-0 px-6 py-2.5 rounded-b-sm font-black text-[11px] uppercase tracking-[0.2em] animate-in slide-in-from-top-4 duration-200 shadow-2xl z-20",
-                                scanStatus === 'success' ? "bg-operational-cyan text-white shadow-operational-cyan/20" : "bg-destructive text-white shadow-destructive/20"
-                            )}>
-                                {statusMessage}
-                            </div>
-                        )}
-
                         {variant === 'standard' && (
-                            <div className="shrink-0 flex items-center gap-1.5 z-10 ms-auto">
+                            <div className="shrink-0 flex items-center gap-1.5 z-10 ms-auto pe-2">
                                 {(!readOnly) && (items || onManualTrigger) && (
                                     <button
                                         type="button"
@@ -394,6 +385,22 @@ export const ScanInput = forwardRef(
                             !disabled && !isScanning && !readOnly && scanStatus === 'idle' && "group-focus-within:opacity-60"
                         )} />}
                     </div>
+
+                    {statusMessage && (
+                        <div className={cn(
+                            "mt-2.5 px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 border backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-300 w-full shadow-sm",
+                            scanStatus === 'error'
+                                ? "bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-300"
+                                : "bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-300"
+                        )}>
+                            {scanStatus === 'error' ? (
+                                <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
+                            ) : (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                            )}
+                            <span className="flex-1 text-start leading-snug break-words">{statusMessage}</span>
+                        </div>
+                    )}
                 </div>
 
                 <style jsx>{`
@@ -418,7 +425,7 @@ export const ScanInput = forwardRef(
                                 <CameraBarcodeScanner
                                     onScanSuccess={(barcode) => {
                                         audioAlerts.playScanSuccess();
-                                        processScan(barcode);
+                                        onScan(barcode);
                                         setIsCameraOpen(false);
                                     }}
                                 />
