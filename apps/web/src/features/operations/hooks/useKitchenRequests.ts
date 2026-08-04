@@ -119,13 +119,6 @@ export function useUpdateKitchenRequest(options?: { onConflict?: () => void }) {
           uomId: item.uomId || undefined,
           notes: item.notes || null,
         })),
-        lines: rawItems.map(item => ({
-          itemId: item.itemId,
-          quantity: item.quantity,
-          quantityRequested: item.quantity,
-          uomId: item.uomId || undefined,
-          notes: item.notes || null,
-        })),
       };
       return apiClient.put(`/operations/kitchen-requests/${id}`, z.object({ data: KitchenRequestDetailSchema }), payload, { signal }).then(r => r.data);
     },

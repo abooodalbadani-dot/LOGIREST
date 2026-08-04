@@ -9,25 +9,29 @@ import {
 import { Type } from 'class-transformer';
 
 export class UpdateKitchenRequestItemDto {
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @IsString()
   itemId!: string;
 
-  @IsNumber()
   @IsOptional()
+  @IsNumber()
   @Min(0.0001)
   quantity?: number;
 
-  @IsNumber()
   @IsOptional()
+  @IsNumber()
   @Min(0.0001)
   quantityRequested?: number;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   uomId?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   notes?: string;
 }
 

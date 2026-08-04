@@ -76,6 +76,7 @@ export class KitchenRequestsService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  barcodeMappings: true,
                   uomConversions: {
                     include: {
                       fromUom: true,
@@ -228,6 +229,7 @@ export class KitchenRequestsService {
             item: {
               include: {
                 unitOfMeasure: true,
+                barcodeMappings: true,
                 uomConversions: {
                   include: {
                     fromUom: true,
@@ -441,6 +443,7 @@ export class KitchenRequestsService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  barcodeMappings: true,
                   uomConversions: {
                     include: {
                       fromUom: true,
@@ -536,22 +539,37 @@ export class KitchenRequestsService {
       }> | undefined = undefined;
 
       if (inputItems && Array.isArray(inputItems) && inputItems.length > 0) {
-        itemsToCreate = inputItems.map((item) => {
-          const qty = Number(item.quantityRequested ?? item.quantity ?? 0);
-          if (qty <= 0) {
-            throw new BadRequestException(
-              `Quantity must be greater than 0 for item ${item.itemId}`,
-            );
-          }
+        itemsToCreate = await Promise.all(
+          inputItems.map(async (item) => {
+            const qty = Number(item.quantityRequested ?? item.quantity ?? 0);
+            if (qty <= 0) {
+              throw new BadRequestException(
+                `Quantity must be greater than 0 for item ${item.itemId}`,
+              );
+            }
 
-          return {
-            itemId: item.itemId,
-            quantityRequested: qty,
-            quantityFulfilled: 0,
-            uomId: item.uomId || null,
-            notes: item.notes || null,
-          };
-        });
+            const itemRec = await tx.item.findUnique({
+              where: { id: item.itemId },
+              select: { uomId: true },
+            });
+            if (!itemRec) {
+              throw new NotFoundException(
+                `Item with ID ${item.itemId} not found`,
+              );
+            }
+            // INSIDE THE ITEMS MAP LOOP:
+            const frontendUomId = item.uomId; // Ensure this is extracting from the DTO!
+            const uomIdToSave = frontendUomId ? frontendUomId : itemRec.uomId;
+
+            return {
+              itemId: item.itemId,
+              quantityRequested: qty,
+              quantityFulfilled: 0,
+              uomId: uomIdToSave ?? null,
+              notes: item.notes || null,
+            };
+          }),
+        );
 
         // 1. Delete existing items
         await tx.kitchenRequestItem.deleteMany({
@@ -580,6 +598,7 @@ export class KitchenRequestsService {
               item: {
                 include: {
                   unitOfMeasure: true,
+                  barcodeMappings: true,
                   uomConversions: {
                     include: {
                       fromUom: true,

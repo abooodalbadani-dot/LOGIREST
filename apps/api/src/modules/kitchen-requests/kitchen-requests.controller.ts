@@ -61,15 +61,20 @@ function mapKitchenRequestDetail(
         toUomName: (c.toUomName as string) || (toUom?.name as string) || '',
       };
     });
+    const targetUomId = (item.uomId as string) || (unitOfMeasure?.id as string) || null;
+    const rawBarcodeMappings = (it?.barcodeMappings as Array<Record<string, unknown>>) || [];
+    const matchingBarcodeObj = rawBarcodeMappings.find((bm) => (bm.uomId as string) === targetUomId) || rawBarcodeMappings[0];
+    const resolvedBarcode = (matchingBarcodeObj?.barcode as string) || (it?.sku as string) || '';
+
     return {
       id: item.id as string,
       itemId: item.itemId as string,
       itemName: (it?.name as string) || '',
       itemCode: (it?.sku as string) || '',
-      barcode: (it?.sku as string) || '',
-      itemBarcode: (it?.sku as string) || '',
+      barcode: resolvedBarcode,
+      itemBarcode: resolvedBarcode,
       uom: resolvedUom,
-      uomId: (item.uomId as string) || (unitOfMeasure?.id as string) || null,
+      uomId: targetUomId,
       uomConversions,
       image: (it?.image as string) || null,
       itemImage: (it?.image as string) || null,

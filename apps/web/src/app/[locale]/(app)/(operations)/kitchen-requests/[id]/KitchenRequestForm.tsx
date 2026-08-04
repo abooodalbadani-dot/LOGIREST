@@ -214,8 +214,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
   const [fulfillmentData, setFulfillmentData] = useState<{ itemId: string; fulfilledQty: number }[]>([]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: warehouseLockState } = useWarehouseLock((isDraft ? warehouseId : request.warehouseId) || null);
-  const isWriteBlocked = updateStatus.isPending || updateDraft.isPending || fulfillRequest.isPending || fulfillRequest.isSuccess || !!warehouseLockState?.isLocked;
+  const isWriteBlocked = isSubmitting || updateStatus.isPending || updateDraft.isPending || fulfillRequest.isPending || fulfillRequest.isSuccess || !!warehouseLockState?.isLocked;
 
   const showFulfilled = useMemo(() => {
     return canPerformActionV2('KITCHEN_REQUEST', status, 'INTERNAL_MOVEMENT', user?.role);
@@ -251,7 +252,12 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     setLines(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = async (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (isSubmitting || isWriteBlocked) return;
     if (warehouseLockState?.isLocked) {
       audioAlerts.playScanBlocked();
       toast.error(t('warehouse_locked_cannot_mutate') || 'Warehouse is locked. Cannot perform this action.');
@@ -266,62 +272,38 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       return;
     }
 
-    // Snapshot the user's intent before firing — we'll restore it if the server
-    // response somehow drops the uomId (e.g. stale API build).
-    const linesSnapshot = lines.map(l => ({
-      itemId: l.item.id,
-      uomId: l.uomId,
-      qty: l.qty,
-      notes: l.notes,
-    }));
-
+    setIsSubmitting(true);
     try {
-      const serverData = await updateDraft.mutateAsync({
+      await updateDraft.mutateAsync({
         id,
         version: request.version ?? 0,
         data: {
           departmentId,
           warehouseId,
           notes,
-          items: linesSnapshot.map(l => {
-            const fullItem = allItems.find((i) => i.id === l.itemId || i.code === l.itemId) as (typeof allItems[0] & { unitOfMeasure?: { id?: string } }) | undefined;
-            const availableUoms = fullItem ? getAvailableUomsForItem(fullItem) : [];
-            const resolvedUomId = l.uomId || fullItem?.unitOfMeasure?.id || fullItem?.primaryUom?.id || availableUoms[0]?.id;
-            return {
-              itemId: l.itemId,
-              quantity: l.qty ?? 1,
-              uomId: resolvedUomId || undefined,
-              notes: l.notes || undefined,
-            };
-          }),
+          items: lines.map(l => ({
+            itemId: l.item.id,
+            quantity: l.qty ?? 1,
+            uomId: l.uomId || undefined,
+            notes: l.notes || undefined,
+          })),
         },
       });
-
-      // Restore user edits merged with new server-assigned item IDs.
-      // This guarantees UOM selection survives even if the server response
-      // contains a null uomId due to a stale build.
-      setLines(prev =>
-        prev.map((line, idx) => {
-          const snap = linesSnapshot[idx];
-          const serverItem = serverData.items[idx];
-          if (!snap) return line;
-          return {
-            ...line,
-            id: serverItem?.id ?? line.id,
-            uomId: snap.uomId,
-            qty: snap.qty,
-            notes: snap.notes,
-          };
-        })
-      );
 
       toast.success(locale === 'ar' ? 'تم حفظ المسودة بنجاح' : 'Draft saved successfully');
     } catch (err) {
       console.error('Failed to save draft', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleSubmitDraft = async () => {
+  const handleSubmitDraft = async (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (isSubmitting || isWriteBlocked) return;
     if (warehouseLockState?.isLocked) {
       audioAlerts.playScanBlocked();
       toast.error(t('warehouse_locked_cannot_mutate') || 'Warehouse is locked. Cannot perform this action.');
@@ -340,6 +322,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const updated = await updateDraft.mutateAsync({
         id,
@@ -348,17 +331,12 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           departmentId,
           warehouseId,
           notes,
-          items: lines.map(l => {
-            const fullItem = allItems.find((i) => i.id === l.item.id || i.code === l.item.code) || l.item;
-            const availableUoms = getAvailableUomsForItem(fullItem);
-            const resolvedUomId = l.uomId || (fullItem as { unitOfMeasure?: { id?: string } })?.unitOfMeasure?.id || l.item.primaryUom?.id || availableUoms[0]?.id;
-            return {
-              itemId: l.item.id,
-              quantity: l.qty,
-              uomId: resolvedUomId || undefined,
-              notes: l.notes || undefined,
-            };
-          }),
+          items: lines.map(l => ({
+            itemId: l.item.id,
+            quantity: l.qty,
+            uomId: l.uomId || undefined,
+            notes: l.notes || undefined,
+          })),
         },
       });
 
@@ -371,6 +349,8 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       toast.success(locale === 'ar' ? 'تم تقديم الطلب بنجاح' : 'Request submitted successfully');
     } catch (err) {
       console.error('Failed to submit request', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
