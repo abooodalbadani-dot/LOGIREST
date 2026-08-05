@@ -103,7 +103,13 @@ export class OpeningStockImportService {
     const warehouseMap = new Map<string, string>(); // code -> id
     const itemMap = new Map<
       string,
-      { id: string; isBatched: boolean; hasExpiry: boolean }
+      {
+        id: string;
+        uomId: string;
+        isBatched: boolean;
+        hasExpiry: boolean;
+        uomConversions: { fromUomId: string; toUomId: string; factor: number }[];
+      }
     >(); // sku -> details
 
     const warehouses = await this.prisma.warehouse.findMany({
@@ -113,14 +119,36 @@ export class OpeningStockImportService {
       warehouseMap.set(w.code.trim().toUpperCase(), w.id);
     });
 
+    const uomMap = new Map<string, string>(); // code/name -> id
+    const uoms = await this.prisma.unitOfMeasure.findMany({
+      select: { id: true, code: true, name: true },
+    });
+    uoms.forEach((u) => {
+      uomMap.set(u.code.trim().toUpperCase(), u.id);
+      uomMap.set(u.name.trim().toUpperCase(), u.id);
+    });
+
     const items = await this.prisma.item.findMany({
-      select: { id: true, sku: true, isBatched: true, hasExpiry: true },
+      select: {
+        id: true,
+        sku: true,
+        uomId: true,
+        isBatched: true,
+        hasExpiry: true,
+        uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+      },
     });
     items.forEach((item) => {
       itemMap.set(item.sku.trim().toUpperCase(), {
         id: item.id,
+        uomId: item.uomId,
         isBatched: item.isBatched,
         hasExpiry: item.hasExpiry,
+        uomConversions: item.uomConversions.map((c) => ({
+          fromUomId: c.fromUomId,
+          toUomId: c.toUomId,
+          factor: Number(c.factor),
+        })),
       });
     });
 
@@ -139,6 +167,10 @@ export class OpeningStockImportService {
           typeof row.itemSku === 'string' || typeof row.itemSku === 'number'
             ? String(row.itemSku).trim().toUpperCase()
             : '';
+        const unitStr =
+          typeof row.unit === 'string' || typeof row.Unit === 'string'
+            ? String(row.unit || row.Unit).trim().toUpperCase()
+            : '';
         const qtyRaw = row.quantity;
         const unitCostRaw = row.unitCost;
         const lotNumber =
@@ -156,7 +188,7 @@ export class OpeningStockImportService {
         if (qtyRaw === undefined || qtyRaw === null) {
           throw new BadRequestException('Quantity is required');
         }
-        const quantity = Number(qtyRaw);
+        let quantity = Number(qtyRaw);
         if (isNaN(quantity) || quantity <= 0) {
           throw new BadRequestException('Quantity must be a positive number');
         }
@@ -164,7 +196,7 @@ export class OpeningStockImportService {
         if (unitCostRaw === undefined || unitCostRaw === null) {
           throw new BadRequestException('Unit cost is required');
         }
-        const unitCost = Number(unitCostRaw);
+        let unitCost = Number(unitCostRaw);
         if (isNaN(unitCost) || unitCost < 0) {
           throw new BadRequestException(
             'Unit cost must be a non-negative number',
@@ -181,6 +213,27 @@ export class OpeningStockImportService {
         const itemInfo = itemMap.get(itemSku);
         if (!itemInfo) {
           throw new NotFoundException(`Item with SKU "${itemSku}" not found`);
+        }
+
+        if (unitStr) {
+          const specifiedUomId = uomMap.get(unitStr);
+          if (!specifiedUomId) {
+            throw new NotFoundException(
+              `Unit of Measure "${unitStr}" specified for SKU "${itemSku}" not found`,
+            );
+          }
+          if (specifiedUomId !== itemInfo.uomId) {
+            const conv = itemInfo.uomConversions.find(
+              (c) => c.fromUomId === specifiedUomId && c.toUomId === itemInfo.uomId,
+            );
+            if (!conv || conv.factor <= 0) {
+              throw new BadRequestException(
+                `No conversion factor defined from "${unitStr}" to primary unit for SKU "${itemSku}"`,
+              );
+            }
+            quantity = quantity * conv.factor;
+            unitCost = unitCost / conv.factor;
+          }
         }
 
         const requiresLot = itemInfo.isBatched || itemInfo.hasExpiry;
@@ -283,7 +336,7 @@ export class OpeningStockImportService {
             lotId,
             quantity: r.quantity,
             direction: AdjustmentDirection.IN,
-            reason: AdjustmentReason.ADMIN_OVERRIDE,
+            reason: AdjustmentReason.OPENING_STOCK,
             unitCost: r.unitCost,
           });
         }

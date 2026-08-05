@@ -129,6 +129,7 @@ export class ImportsController {
     worksheet.columns = [
       { header: 'warehouseCode', key: 'warehouseCode', width: 20 },
       { header: 'itemSku', key: 'itemSku', width: 20 },
+      { header: 'unit', key: 'unit', width: 15 },
       { header: 'quantity', key: 'quantity', width: 15 },
       { header: 'unitCost', key: 'unitCost', width: 15 },
       { header: 'lotNumber', key: 'lotNumber', width: 20 },
@@ -151,9 +152,11 @@ export class ImportsController {
   @Post('items')
   @Roles(Role.ADMIN, Role.GM, Role.INV_MGR)
   @UseInterceptors(FileInterceptor('file'))
-  async importItems(@UploadedFile() file: Express.Multer.File) {
-    // Current user can be mapped if needed, passing static user ID
-    return this.itemsImportService.importItems(file.buffer, 'system-user');
+  async importItems(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.itemsImportService.importItems(file.buffer, userId);
   }
 
   @Get('templates/items')
@@ -167,6 +170,8 @@ export class ImportsController {
       { header: 'Code', key: 'Code', width: 15 },
       { header: 'Category', key: 'Category', width: 20 },
       { header: 'Unit', key: 'Unit', width: 15 },
+      { header: 'SecondaryUnit', key: 'SecondaryUnit', width: 18 },
+      { header: 'ConversionFactor', key: 'ConversionFactor', width: 18 },
       { header: 'LotTracked', key: 'LotTracked', width: 15 },
       { header: 'Status', key: 'Status', width: 12 },
     ];

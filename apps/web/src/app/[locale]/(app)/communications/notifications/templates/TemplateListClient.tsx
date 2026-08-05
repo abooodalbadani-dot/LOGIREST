@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Pagination } from '@/components/shared/DataTable/Pagination';
 import { useNotificationTemplates } from '@/features/notifications/hooks/useNotificationTemplates';
+import { getTemplateLabel } from '@/features/notifications/utils/templateLabels';
 import { motion } from 'framer-motion';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -220,9 +221,14 @@ export function TemplateListClient({ locale }: { locale: string }) {
         {/* Header Info */}
         <div className="flex justify-between items-start gap-4 mb-5">
          <div className="flex flex-col gap-1.5 min-w-0">
-          <span className="font-mono text-[9px] font-black text-operational-cyan bg-operational-cyan/10 px-2.5 py-1 rounded-xl border border-operational-cyan/25 tracking-wider self-start shadow-[0_0_12px_rgba(var(--operational-cyan-rgb),0.05)]">
-           {template.code}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+           <span className="font-bold text-xs text-operational-cyan bg-operational-cyan/10 px-3 py-1.5 rounded-xl border border-operational-cyan/25 tracking-wide self-start shadow-[0_0_12px_rgba(var(--operational-cyan-rgb),0.05)]">
+            {getTemplateLabel(template.code, locale)}
+           </span>
+           <span className="text-[9px] font-mono text-muted-foreground/40 font-semibold">
+            ({template.code})
+           </span>
+          </div>
           
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-card border border-border shadow-sm/80 border border-white/5 w-fit">
            {isSms ? (
@@ -308,10 +314,10 @@ export function TemplateListClient({ locale }: { locale: string }) {
 
        {/* Footer Event Trigger */}
        <div className="flex items-center justify-between pt-4 border-t border-white/[0.04]">
-        <div className="flex items-center gap-2 max-w-[80%]">
-         <Activity className="w-3.5 h-3.5 text-operational-cyan/50 animate-pulse" />
-         <span className="text-[10px] font-bold text-muted-foreground/50 truncate uppercase tracking-wider font-mono">
-          {template.triggerEvent}
+        <div className="flex items-center gap-2 max-w-[80%] min-w-0">
+         <Activity className="w-3.5 h-3.5 text-operational-cyan/50 animate-pulse shrink-0" />
+         <span className="text-[10px] font-bold text-muted-foreground/60 truncate tracking-wide">
+          {getTemplateLabel(template.triggerEvent, locale)}
          </span>
         </div>
         <div className="w-9 h-9 rounded-xl bg-card/5 border border-white/5 flex items-center justify-center text-muted-foreground group-hover:bg-operational-cyan/10 group-hover:border-operational-cyan/20 group-hover:text-operational-cyan transition-all duration-300 shadow-md">

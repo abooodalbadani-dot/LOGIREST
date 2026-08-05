@@ -118,11 +118,11 @@ export class ItemsService {
       barcode: item.barcodeMappings?.[0]?.barcode || '',
       barcodes: (item.barcodeMappings || []).map((bm: { barcode: string; uomId?: string | null }) => ({
         barcode: bm.barcode,
-        uomId: bm.uomId || null,
+        uomId: bm.uomId || item.uomId || null,
       })),
       barcodeMappings: (item.barcodeMappings || []).map((bm: { barcode: string; uomId?: string | null }) => ({
         barcode: bm.barcode,
-        uomId: bm.uomId || null,
+        uomId: bm.uomId || item.uomId || null,
       })),
       name: item.name,
       name_ar: item.name,

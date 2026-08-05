@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import { PrismaService } from '../../database/prisma.service';
 import { DocumentType } from '@prisma/client';
 import { otantikBase64Logo } from './logo-base64';
+import { cairoRegularBase64, cairoBoldBase64 } from './cairo-fonts';
 import { getDocumentTitle } from '@logirest/shared-types';
 
 @Injectable()
@@ -198,6 +199,7 @@ export class PdfGeneratorService {
     try {
       const page = await browser.newPage();
       await page.setContent(htmlString, { waitUntil: 'load' });
+      await page.evaluate(() => document.fonts.ready);
       const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
@@ -232,6 +234,18 @@ export class PdfGeneratorService {
 <head>
   <meta charset="utf-8">
   <style>
+    @font-face {
+      font-family: 'Cairo';
+      font-style: normal;
+      font-weight: 400;
+      src: url(data:font/ttf;charset=utf-8;base64,${cairoRegularBase64}) format('truetype');
+    }
+    @font-face {
+      font-family: 'Cairo';
+      font-style: normal;
+      font-weight: 700;
+      src: url(data:font/ttf;charset=utf-8;base64,${cairoBoldBase64}) format('truetype');
+    }
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
     
     :root {

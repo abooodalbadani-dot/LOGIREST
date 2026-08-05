@@ -409,7 +409,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     cols.push({
       header: tCommon('notes') || 'Notes',
       cell: (line: KitchenRequestLineItem) => (
-        <p className="text-label-xs font-medium text-muted-foreground/60 max-w-[200px] line-clamp-2 italic">
+        <p className="text-label-xs font-medium text-muted-foreground max-w-[200px] line-clamp-2 italic">
           {line.notes || '—'}
         </p>
       )
@@ -815,13 +815,15 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                       </div>
 
                       {request.notes && (
-                        <div className="pt-4 mt-4 border-t border-border/30 space-y-1.5 relative z-10">
-                          <span className="text-label-sm font-bold uppercase tracking-wider text-muted-foreground/70 flex items-center gap-1.5 mb-1">
-                            <FileText className="w-3.5 h-3.5" />
-                            {tCommon('notes')}
-                          </span>
-                          <div className="bg-surface-container-lowest/50 dark:bg-surface-lowest/50 p-3 sm:p-4 rounded-xl border border-border/40">
-                            <p className="text-label-sm text-foreground/80 italic leading-relaxed font-medium">&quot;{request.notes}&quot;</p>
+                        <div className="pt-4 mt-4 border-t border-border/30 relative z-10">
+                          <div className="flex flex-col gap-1.5 p-3 sm:p-4 bg-surface-container-lowest rounded-xl">
+                            <span className="text-label-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5" />
+                              {tCommon('notes')}
+                            </span>
+                            <span className="text-body-md text-foreground font-medium leading-relaxed">
+                              &quot;{request.notes}&quot;
+                            </span>
                           </div>
                         </div>
                       )}
@@ -913,7 +915,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                           );
                         }
                         return (
-                          <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 font-mono">
+                          <span className="text-label-xs font-semibold uppercase text-foreground font-mono">
                             {resolveUomCode(line.uomId, fullItem, null, 'PCS')}
                           </span>
                         );
@@ -1071,7 +1073,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                             <div className="flex flex-col items-end shrink-0 bg-operational-cyan/10 dark:bg-operational-cyan/5 p-2 px-3 rounded-xl border border-operational-cyan/20 text-end shadow-sm">
                               <div className="flex items-baseline gap-1.5">
                                 <span className="text-sm font-black text-operational-cyan tabular-nums">{line.qty}</span>
-                                <span className="text-[10px] font-bold text-operational-cyan/70 uppercase">{line.item.primaryUom?.code || '---'}</span>
+                                <span className="text-xs font-bold text-foreground uppercase">{displayUom}</span>
                               </div>
                               {showFulfilled && (
                                 <span className="text-[10px] font-bold text-amber-500 tabular-nums mt-0.5">
@@ -1083,12 +1085,12 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
                           {/* Row 2: Notes */}
                           <div className="pt-3 border-t border-border/30 flex items-center gap-2 text-xs text-start">
-                            <span className="font-black text-[10px] text-muted-foreground/50 uppercase tracking-widest shrink-0">
+                            <span className="font-bold text-xs text-muted-foreground uppercase tracking-wider shrink-0">
                               {tCommon('notes') || 'Notes'}:
                             </span>
                             <span className={cn(
                               "truncate text-xs font-medium",
-                              line.notes ? "text-foreground/90 italic" : "text-muted-foreground/40"
+                              line.notes ? "text-foreground italic" : "text-muted-foreground"
                             )}>
                               {line.notes || '—'}
                             </span>
@@ -1174,17 +1176,17 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
             <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-2xl border border-surface-container-high/50">
               <div className="space-y-1">
                 <p className="text-label-sm font-bold">{item.itemName}</p>
-                <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
+                <p className="text-label-xxs font-semibold text-muted-foreground uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
               </div>
               <div className="text-center">
-                <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-2 block">{t('fulfilling')}</span>
+                <span className="text-label-xs font-semibold text-muted-foreground uppercase mb-2 block">{t('fulfilling')}</span>
                 <Input 
                   type="number"
                   step="0.01"
                   dir="ltr"
                   disabled={isWriteBlocked}
                   aria-label={t('fulfilling') + " " + item.itemName}
-                  className="bg-surface-container border-0 text-foreground h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30 w-full"
+                  className="border border-border bg-background rounded-md text-center h-10 text-foreground font-semibold text-body-md transition-all focus:ring-1 focus:ring-operational-cyan/30 w-full"
                   value={fulfillmentData.find(f => f.itemId === item.itemId)?.fulfilledQty || 0}
                   onChange={(e) => {
                     const val = Number(e.target.value);
@@ -1193,7 +1195,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                 />
               </div>
               <div className="text-center pt-5">
-                <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
+                <span className="text-xs font-bold uppercase text-foreground">{item.uom}</span>
               </div>
             </div>
           ))}

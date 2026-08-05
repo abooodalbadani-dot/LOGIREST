@@ -5,14 +5,18 @@ import { IssuesService } from './issues.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { PdfGeneratorService } from '../../pdf/pdf-generator.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import type { Request } from 'express';
 
 describe('IssuesController', () => {
   const mockScopeValidationService = {
     validateWarehouse: jest.fn(),
     validateAtLeastOneWarehouse: jest.fn(),
+  };
+
+  const mockPdfGeneratorService = {
+    generateIssuePdf: jest.fn(),
   };
 
   let controller: IssuesController;
@@ -49,6 +53,7 @@ describe('IssuesController', () => {
           provide: ScopeValidationService,
           useValue: mockScopeValidationService,
         },
+        { provide: PdfGeneratorService, useValue: mockPdfGeneratorService },
       ],
     }).compile();
 

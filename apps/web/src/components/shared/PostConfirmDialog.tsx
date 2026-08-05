@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Loader2, AlertTriangle, Trash2, XCircle, Info } from 'lucide-react';
+import { Loader2, AlertTriangle, Trash2, XCircle, Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
  AlertDialog,
@@ -149,11 +149,12 @@ export function PostConfirmDialog({
      </div>
      {!(isLoading || localLoading) && (
       <button
+       type="button"
        onClick={() => handleOpenChange(false)}
-       className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors bg-transparent border-none"
+       className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-transparent border-0 text-muted-foreground hover:text-foreground p-1"
        aria-label={t('actions.close')}
       >
-       ✕
+       <X className="h-4 w-4" />
       </button>
      )}
     </AlertDialogHeader>

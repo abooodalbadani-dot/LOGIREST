@@ -33,6 +33,7 @@ export const ADJUSTMENT_REASONS = [
   'SPOILAGE',
   'CORRECTION',
   'ADMIN_OVERRIDE',
+  'OPENING_STOCK',
 ] as const;
 
 export type AdjustmentReason = (typeof ADJUSTMENT_REASONS)[number];

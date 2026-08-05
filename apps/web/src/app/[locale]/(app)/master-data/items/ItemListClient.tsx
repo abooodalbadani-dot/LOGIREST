@@ -6,6 +6,7 @@ import { VirtualizedMobileGrid } from '@/components/shared/VirtualizedMobileGrid
 import { useTranslations } from 'next-intl';
 import { Plus, Package, CheckCircle2, Search, Barcode, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useItems } from '@/features/items/hooks/useItems';
@@ -85,39 +86,70 @@ export function ItemListClient({ locale }: { locale: string }) {
    accessorKey: 'code', 
    header: t('code'), 
    cell: ({ row }) => (
-    <div className="flex flex-col gap-1 min-w-0">
+    <div className="flex items-center min-w-0">
      <span className="font-mono text-operational-cyan font-bold uppercase text-label-xs bg-operational-cyan/10 px-2 py-0.5 rounded-lg border border-operational-cyan/5 w-fit whitespace-nowrap inline-block min-w-max" dir="ltr">{row.original.code}</span>
-     <span className="text-label-xxs text-muted-foreground/60 font-medium font-mono flex items-center gap-1.5 ps-1" dir="ltr">
-      <Barcode className="w-3 h-3 opacity-40" />
-      {row.original.barcode || '—'}
-     </span>
     </div>
    )
   },
   { 
    accessorKey: 'name', 
    header: t('name'), 
-   cell: ({ row }) => (
-    <div className="flex items-center gap-2">
-     {row.original.image ? (
-      <img src={row.original.image} alt={row.original.name} className="w-8 h-8 object-cover rounded-md border border-border shrink-0" />
-     ) : (
-      <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-border text-[9px] text-muted-foreground font-mono shrink-0">
-       N/A
+   cell: ({ row }) => {
+    const item = row.original;
+    const primaryBarcode = item.barcode || '—';
+    const additionalBarcodes = Array.isArray(item.barcodeMappings)
+     ? item.barcodeMappings
+        .map((mapping) => mapping.barcode)
+        .filter((b): b is string => Boolean(b) && b !== primaryBarcode)
+     : [];
+    const allBarcodes = Array.from(new Set([primaryBarcode, ...additionalBarcodes].filter((b) => b !== '—')));
+    const extraBarcodesCount = additionalBarcodes.length;
+    const hasMoreBarcodes = extraBarcodesCount > 0;
+    const allBarcodesString = allBarcodes.length > 0 ? allBarcodes.join(', ') : 'No barcodes assigned';
+
+    return (
+     <div className="flex items-center gap-3">
+      {item.image || item.imageUrl ? (
+       <img src={item.image ?? item.imageUrl ?? ''} alt={item.name} className="w-8 h-8 object-cover rounded-md border border-border shrink-0" />
+      ) : (
+       <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-md border border-border text-[9px] text-muted-foreground font-mono shrink-0">
+        N/A
+       </div>
+      )}
+      <div className="flex flex-col gap-0.5 min-w-0">
+       <span className="font-bold text-label-sm text-foreground truncate max-w-[240px]" title={item.name}>{item.name}</span>
+       <div className="flex items-center gap-1 text-muted-foreground text-xs" title={allBarcodesString}>
+        <Barcode className="w-3 h-3 shrink-0 opacity-70" />
+        <span className="font-mono truncate max-w-[120px]">{primaryBarcode}</span>
+        {hasMoreBarcodes && <span className="font-bold font-mono text-operational-cyan ms-0.5">+{extraBarcodesCount}</span>}
+       </div>
       </div>
-     )}
-     <span className="font-bold text-label-sm text-foreground">{row.original.name}</span>
-    </div>
-   )
+     </div>
+    );
+   }
   },
   { 
    accessorKey: 'base_unit', 
    header: ti('fields.base_unit'), 
-   cell: ({ row }) => (
-    <span className="text-label-xs font-bold uppercase text-muted-foreground px-2 py-0.5 bg-surface-container rounded-lg">
-     {row.original.primaryUom?.code}
-    </span>
-   )
+   cell: ({ row }) => {
+    const item = row.original;
+    const baseUnit = item.primaryUom?.code ?? item.primaryUom?.name ?? '—';
+    const extraUnitsCount = Array.isArray(item.uomConversions) ? item.uomConversions.length : 0;
+    const hasMoreUnits = extraUnitsCount > 0;
+
+    return (
+     <div className="flex items-center gap-2">
+      <span className="text-label-xs font-bold uppercase text-muted-foreground px-2 py-0.5 bg-surface-container rounded-lg">
+       {baseUnit}
+      </span>
+      {hasMoreUnits && (
+       <Badge variant="secondary" className="text-[10px] font-bold h-5 px-1.5 shrink-0">
+        + {extraUnitsCount}
+       </Badge>
+      )}
+     </div>
+    );
+   }
   },
   {
    accessorKey: 'trackLots', 

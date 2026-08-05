@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { UomService } from '../master-data/units-of-measure/uom.service';
+import { PrismaService } from '../../database/prisma.service';
 import * as ExcelJS from 'exceljs';
 
 interface ImportRow {
@@ -39,7 +40,10 @@ function getCellValue(cell: ExcelJS.Cell): unknown {
 
 @Injectable()
 export class UomsImportService {
-  constructor(private readonly uomService: UomService) {}
+  constructor(
+    private readonly uomService: UomService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async importUoms(fileBuffer: Buffer, userId: string, ipAddress?: string) {
     const workbook = new ExcelJS.Workbook();
@@ -98,6 +102,14 @@ export class UomsImportService {
     const seenNames = new Set<string>();
     const seenCodes = new Set<string>();
 
+    const existingUoms = await this.prisma.unitOfMeasure.findMany({
+      select: { code: true, name: true },
+    });
+    existingUoms.forEach((u) => {
+      if (u.name) seenNames.add(u.name.trim().toUpperCase());
+      if (u.code) seenCodes.add(u.code.trim().toUpperCase());
+    });
+
     for (const row of rows) {
       try {
         const name = cleanStringValue(row[nameKey]);
@@ -112,12 +124,12 @@ export class UomsImportService {
 
         if (seenNames.has(name.toUpperCase())) {
           throw new BadRequestException(
-            `Duplicate UOM Name "${name}" found in spreadsheet`,
+            `Unit of Measure with Name "${name}" already exists in system or file`,
           );
         }
         if (seenCodes.has(code)) {
           throw new BadRequestException(
-            `Duplicate UOM Code "${code}" found in spreadsheet`,
+            `Unit of Measure with Code "${code}" already exists in system or file`,
           );
         }
 

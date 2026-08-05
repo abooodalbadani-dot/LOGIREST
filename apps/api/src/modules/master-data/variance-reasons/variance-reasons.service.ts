@@ -38,6 +38,13 @@ export class VarianceReasonsService {
       name_ar: 'تجاوز إداري',
       is_active: true,
     },
+    {
+      id: '6',
+      code: 'OPENING_STOCK',
+      name_en: 'Opening Stock',
+      name_ar: 'مخزون أول المدة (رصيد افتتاحي)',
+      is_active: true,
+    },
   ];
 
   findAll() {

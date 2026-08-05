@@ -68,6 +68,7 @@ export const initialVarianceReasons: VarianceReason[] = [
   { id: 'vr-theft', code: 'THEFT', name: 'Theft', isActive: true },
   { id: 'vr-counting-error', code: 'COUNTING_ERROR', name: 'Counting Error', isActive: true },
   { id: 'vr-correction', code: 'CORRECTION', name: 'Correction', isActive: true },
+  { id: 'vr-opening-stock', code: 'OPENING_STOCK', name: 'Opening Stock', isActive: true },
   { id: 'vr-other', code: 'OTHER', name: 'Other', isActive: true },
 ];
 

@@ -79,12 +79,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const watchedPrimaryUomId = useWatch({ control, name: 'primaryUomId' });
   const watchedConversions = useWatch({ control, name: 'uomConversions' });
 
-  // Compute available UOMs for barcode row dropdowns (Primary UOM + Conversion UOMs)
+  // Compute available UOMs for barcode row dropdowns (Primary UOM + Conversion UOMs + Master UOMs)
   const availableFormUoms = useMemo(() => {
     const uomMap = new Map<string, { id: string; code: string; name: string }>();
 
+    if (!uoms?.data) return [];
+
     // 1. Primary UOM
-    if (watchedPrimaryUomId && uoms?.data) {
+    if (watchedPrimaryUomId) {
       const found = uoms.data.find(u => u.id === watchedPrimaryUomId);
       if (found) {
         uomMap.set(found.id, {
@@ -96,7 +98,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     }
 
     // 2. Conversion UOMs
-    if (Array.isArray(watchedConversions) && uoms?.data) {
+    if (Array.isArray(watchedConversions)) {
       for (const conv of watchedConversions) {
         if (conv.fromUomId) {
           const found = uoms.data.find(u => u.id === conv.fromUomId);
@@ -121,9 +123,9 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       }
     }
 
-    // 3. Fallback to all master UOMs if none selected yet
-    if (uomMap.size === 0 && uoms?.data) {
-      for (const u of uoms.data) {
+    // 3. Include remaining Master UOMs
+    for (const u of uoms.data) {
+      if (!uomMap.has(u.id)) {
         uomMap.set(u.id, {
           id: u.id,
           code: u.code,
@@ -137,6 +139,11 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
   useEffect(() => {
     if (data) {
+      const primaryUomId = data.primaryUom?.id
+        || (data as unknown as Record<string, unknown>).primary_uom_id as string
+        || (data as unknown as Record<string, unknown>).uomId as string
+        || '';
+
       const rawConvs = (data.uomConversions && data.uomConversions.length > 0)
         ? data.uomConversions
         : ((data as unknown as Record<string, unknown>).uom_conversions as UoMConversion[] || []);
@@ -144,12 +151,15 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       const rawBarcodes = ((data as unknown as Record<string, unknown>).barcodes as Array<{ barcode: string; uomId?: string }>)
         || ((data as unknown as Record<string, unknown>).barcodeMappings as Array<{ barcode: string; uomId?: string }>)
         || ((data as unknown as Record<string, unknown>).barcode_mappings as Array<{ barcode: string; uomId?: string }>)
-        || (data.barcode ? [{ barcode: data.barcode, uomId: data.primaryUom?.id || '' }] : []);
+        || (data.barcode ? [{ barcode: data.barcode, uomId: primaryUomId }] : []);
 
       reset({
         code: data.code,
         barcode: data.barcode || rawBarcodes[0]?.barcode || '',
-        barcodes: (rawBarcodes || []).map((b: { barcode: string; uomId?: string }) => ({ barcode: b.barcode, uomId: b.uomId || '' })),
+        barcodes: (rawBarcodes || []).map((b: { barcode: string; uomId?: string; uom_id?: string }) => ({
+          barcode: b.barcode,
+          uomId: b.uomId || (b as unknown as Record<string, unknown>).uom_id as string || primaryUomId,
+        })),
         name: data.name,
         categoryId: data.categoryId || (data as unknown as Record<string, unknown>).category_id as string || '',
         primaryUomId: data.primaryUom?.id || (data as unknown as Record<string, unknown>).primary_uom_id as string || '',

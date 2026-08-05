@@ -43,6 +43,7 @@ enum AdjustmentReason {
   SPOILAGE
   CORRECTION
   ADMIN_OVERRIDE
+  OPENING_STOCK
 }
 
 enum DocumentType {

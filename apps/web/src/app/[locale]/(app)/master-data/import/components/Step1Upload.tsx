@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import * as XLSX from 'xlsx';
 
 import { ImportWizardState } from '../types';
+import { getTemplateHeaders } from '@/lib/import/templates';
 
 interface Step1UploadProps {
  wizard: ImportWizardState;
@@ -34,26 +35,14 @@ export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
  }
  };
 
-
  const downloadTemplate = () => {
- let headers: string[] = [];
- let fileName = '';
+   const headers = getTemplateHeaders(wizard.importType);
+   const fileName = `${wizard.importType}_template.xlsx`;
 
- if (wizard.importType === 'items') {
- headers = ['sku', 'name_en', 'name_ar', 'category', 'base_unit', 'min_stock', 'reorder_point'];
- fileName = 'items_template.xlsx';
- } else if (wizard.importType === 'uoms') {
- headers = ['code', 'name_en', 'name_ar'];
- fileName = 'uoms_template.xlsx';
- } else if (wizard.importType === 'barcodes') {
- headers = ['barcode', 'item_sku', 'uom_code', 'default_qty'];
- fileName = 'barcodes_template.xlsx';
- }
-
- const ws = XLSX.utils.aoa_to_sheet([headers]);
- const wb = XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb, ws, 'Template');
- XLSX.writeFile(wb, fileName);
+   const ws = XLSX.utils.aoa_to_sheet([headers]);
+   const wb = XLSX.utils.book_new();
+   XLSX.utils.book_append_sheet(wb, ws, 'Template');
+   XLSX.writeFile(wb, fileName);
  };
 
  return (

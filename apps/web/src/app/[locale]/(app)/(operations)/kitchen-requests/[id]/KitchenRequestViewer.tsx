@@ -160,12 +160,14 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
          <p className="text-body-md font-bold not-italic">{request.requestedBy}</p>
         </div>
         {request.notes && (
-         <div className="col-span-2 md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
-          <span className="text-label-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
-           <FileText className="w-3.5 h-3.5" />
-           {tCommon('notes')}
-          </span>
-          <p className="text-label-sm text-muted-foreground font-bold not-italic leading-relaxed">&quot;{request.notes}&quot;</p>
+         <div className="col-span-2 md:col-span-3 pt-4 border-t border-surface-container-high/50">
+          <div className="flex flex-col gap-1.5 p-3 sm:p-4 bg-surface-container-lowest rounded-xl">
+           <span className="text-label-sm font-bold uppercase text-muted-foreground flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5" />
+            {tCommon('notes')}
+           </span>
+           <span className="text-body-md text-foreground font-medium leading-relaxed">&quot;{request.notes}&quot;</span>
+          </div>
          </div>
         )}
        </div>
@@ -269,7 +271,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
             <div className="flex flex-col items-end shrink-0 bg-surface-container-high/40 p-2 px-3 rounded-xl border border-border/40 text-end">
              <div className="flex items-baseline gap-1.5">
               <span className="text-sm font-black text-foreground tabular-nums">{line.qty}</span>
-              <span className="text-[10px] font-bold text-foreground/80 uppercase">{line.item.primaryUom?.code || '---'}</span>
+              <span className="text-xs font-bold text-foreground uppercase">{line.item.primaryUom?.code || '---'}</span>
              </div>
              {line.fulfilledQty !== undefined && (
               <span className="text-[10px] font-bold text-amber-500 tabular-nums mt-0.5">
@@ -281,10 +283,10 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
 
            {line.notes && (
             <div className="pt-2 border-t border-border/30 flex items-center gap-2 text-xs text-start">
-             <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider shrink-0">
+             <span className="font-bold text-xs text-muted-foreground uppercase tracking-wider shrink-0">
               {tCommon('notes') || 'Notes'}:
              </span>
-             <span className="truncate text-xs font-medium text-foreground/80 italic">
+             <span className="truncate text-xs font-medium text-foreground italic">
               {line.notes}
              </span>
             </div>

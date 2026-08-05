@@ -144,7 +144,12 @@ export async function generatePDF(
       })
     );
     // Give React time to render and browser time to paint/load fonts
-    setTimeout(resolve, 800);
+    setTimeout(async () => {
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready.catch(() => {});
+      }
+      resolve();
+    }, 800);
   });
 
   try {

@@ -122,6 +122,16 @@ export class UomService {
     }
 
     const name = body.name || name_en || name_ar;
+    if (name) {
+      const existingName = await this.prisma.unitOfMeasure.findFirst({
+        where: { name: name.trim() },
+      });
+      if (existingName) {
+        throw new ConflictException(
+          `Unit of Measure with name "${name}" already exists`,
+        );
+      }
+    }
 
     const created = await this.prisma.$transaction(async (tx) => {
       const newUom = await tx.unitOfMeasure.create({

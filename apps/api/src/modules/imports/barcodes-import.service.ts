@@ -75,6 +75,8 @@ export class BarcodesImportService {
     const itemCodeKey = findHeaderKey(['ItemCode', 'itemCode', 'Item_Code']);
     const barcodeKey = findHeaderKey(['Barcode', 'barcode']);
 
+    const unitKey = findHeaderKey(['Unit', 'unit', 'Uom', 'uom', 'UomCode']);
+
     if (!itemCodeKey) {
       throw new BadRequestException(
         'Invalid template: "ItemCode" column is missing.',
@@ -103,12 +105,23 @@ export class BarcodesImportService {
       errors: [] as Array<{ row: number; message: string }>,
     };
 
+    // Load UoM map for fast lookups
+    const uomMap = new Map<string, string>(); // code/name -> id
+    const uoms = await this.prisma.unitOfMeasure.findMany({
+      select: { id: true, code: true, name: true },
+    });
+    uoms.forEach((u) => {
+      uomMap.set(u.code.trim().toUpperCase(), u.id);
+      uomMap.set(u.name.trim().toUpperCase(), u.id);
+    });
+
     const seenBarcodes = new Set<string>();
 
     for (const row of rows) {
       try {
         const itemCode = cleanStringValue(row[itemCodeKey]).toUpperCase();
         const barcode = cleanStringValue(row[barcodeKey]);
+        const unitStr = unitKey ? cleanStringValue(row[unitKey]).toUpperCase() : '';
 
         if (!itemCode) {
           throw new BadRequestException('ItemCode is required');
@@ -124,10 +137,14 @@ export class BarcodesImportService {
         }
         seenBarcodes.add(barcode.toUpperCase());
 
-        // Resolve Item ID by SKU (itemCode)
+        // Resolve Item ID & UOMs by SKU (itemCode)
         const item = await this.prisma.item.findUnique({
           where: { sku: itemCode },
-          select: { id: true },
+          select: {
+            id: true,
+            uomId: true,
+            uomConversions: { select: { fromUomId: true } },
+          },
         });
 
         if (!item) {
@@ -136,9 +153,34 @@ export class BarcodesImportService {
           );
         }
 
+        let targetUomId = item.uomId; // Default to primary UOM
+        if (unitStr) {
+          const resolvedUomId = uomMap.get(unitStr);
+          if (!resolvedUomId) {
+            throw new NotFoundException(
+              `Unit of Measure "${unitStr}" specified for barcode not found. Verify it is defined in Master Data.`,
+            );
+          }
+
+          // Check if resolved UOM is either the primary UOM or a secondary UOM for this item
+          const isPrimary = resolvedUomId === item.uomId;
+          const isSecondary = item.uomConversions.some(
+            (c) => c.fromUomId === resolvedUomId,
+          );
+
+          if (!isPrimary && !isSecondary) {
+            throw new BadRequestException(
+              `Unit "${unitStr}" is neither the Primary Unit nor a Secondary Unit defined for item "${itemCode}".`,
+            );
+          }
+
+          targetUomId = resolvedUomId;
+        }
+
         await this.barcodesService.create(
           {
             itemId: item.id,
+            uomId: targetUomId,
             code: barcode,
           },
           userId,

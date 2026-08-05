@@ -11,35 +11,35 @@ export interface DocumentTitle {
 export const DOCUMENT_TITLE_MAP: Record<string, DocumentTitle> = {
   stocktake: {
     en: 'STOCKTAKE MANIFEST',
-    ar: 'بيان جرد - STOCKTAKE MANIFEST',
+    ar: 'بيان جرد',
   },
   po: {
     en: 'PURCHASE ORDER',
-    ar: 'أمر شراء - PURCHASE ORDER',
+    ar: 'أمر شراء',
   },
   pr: {
     en: 'PURCHASE REQUISITION',
-    ar: 'طلب شراء - PURCHASE REQUISITION',
+    ar: 'طلب شراء',
   },
   grn: {
     en: 'GOODS RECEIPT',
-    ar: 'سند استلام بضاعة - GOODS RECEIPT',
+    ar: 'سند استلام بضاعة',
   },
   transfer: {
     en: 'STOCK TRANSFER',
-    ar: 'سند تحويل مخزني - STOCK TRANSFER',
+    ar: 'سند تحويل مخزني',
   },
   adjustment: {
     en: 'INVENTORY ADJUSTMENT',
-    ar: 'تسوية مخزنية - INVENTORY ADJUSTMENT',
+    ar: 'تسوية مخزنية',
   },
   kitchen_request: {
     en: 'KITCHEN REQUEST',
-    ar: 'طلب تحضير مطبخ - KITCHEN REQUEST',
+    ar: 'طلب تحضير مطبخ',
   },
   inventory_issue: {
     en: 'INVENTORY ISSUE',
-    ar: 'سند صرف مخزني - INVENTORY ISSUE',
+    ar: 'سند صرف مخزني',
   },
   // Report identifiers from frontend
   master_data_items: {
@@ -72,7 +72,7 @@ export const DOCUMENT_TITLE_MAP: Record<string, DocumentTitle> = {
   },
   operations_stocktake: {
     en: 'STOCKTAKE MANIFEST',
-    ar: 'بيان جرد - STOCKTAKE MANIFEST',
+    ar: 'بيان جرد',
   },
   operations_adjustments: {
     en: 'INVENTORY ADJUSTMENT',

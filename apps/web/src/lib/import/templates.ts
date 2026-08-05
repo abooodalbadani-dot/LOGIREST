@@ -3,17 +3,17 @@ export type ImportEntity = 'items' | 'uoms' | 'barcodes' | 'suppliers' | 'openin
 export const getTemplateHeaders = (entity: ImportEntity): string[] => {
   switch (entity) {
     case 'categories':
-      return ['Name', 'Code'];
+      return ['Name', 'Code', 'Description'];
     case 'items':
-      return ['Name', 'Code', 'Category', 'Unit', 'LotTracked', 'Status'];
+      return ['Name', 'Code', 'Category', 'Unit', 'SecondaryUnit', 'ConversionFactor', 'LotTracked', 'Status'];
     case 'uoms':
       return ['Name', 'Code'];
     case 'barcodes':
-      return ['ItemCode', 'Barcode'];
+      return ['ItemCode', 'Barcode', 'Unit'];
     case 'suppliers':
       return ['code', 'name', 'contactName', 'contactEmail', 'contactPhone'];
     case 'openingStock':
-      return ['warehouseCode', 'itemSku', 'quantity', 'unitCost', 'lotNumber', 'expiryDate'];
+      return ['warehouseCode', 'itemSku', 'unit', 'quantity', 'unitCost', 'lotNumber', 'expiryDate'];
     default:
       return [];
   }

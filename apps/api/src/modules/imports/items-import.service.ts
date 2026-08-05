@@ -187,7 +187,29 @@ export class ItemsImportService {
           );
         }
 
-        // Create Item record
+        const secondaryUnitStr = cleanStringValue(row.SecondaryUnit || row.Unit2 || row.PurchaseUnit || row.SecondaryUom).toUpperCase();
+        const factorRaw = row.ConversionFactor || row.Factor || row.Multiplier;
+        const conversionFactor = typeof factorRaw === 'number' ? factorRaw : (typeof factorRaw === 'string' ? parseFloat(factorRaw) : 0);
+
+        let secondaryUomId: string | undefined;
+        if (secondaryUnitStr && secondaryUnitStr !== unitStr) {
+          const resolvedId = uomMap.get(secondaryUnitStr);
+          if (!resolvedId) {
+            throw new NotFoundException(
+              `Secondary Unit of Measure "${secondaryUnitStr}" not found. Verify it is defined in Master Data.`,
+            );
+          }
+          if (resolvedId !== uomId) {
+            if (isNaN(conversionFactor) || conversionFactor <= 0) {
+              throw new BadRequestException(
+                `Conversion Factor must be a positive number when Secondary Unit is specified.`,
+              );
+            }
+            secondaryUomId = resolvedId;
+          }
+        }
+
+        // Create Item record with optional UomConversion
         await this.prisma.item.create({
           data: {
             name,
@@ -197,6 +219,13 @@ export class ItemsImportService {
             isBatched: lotTracked,
             hasExpiry: lotTracked, // Standard logic: batching is paired with lot expiry tracing
             isActive,
+            uomConversions: (secondaryUomId && conversionFactor > 0) ? {
+              create: {
+                fromUomId: secondaryUomId,
+                toUomId: uomId,
+                factor: conversionFactor,
+              }
+            } : undefined,
           },
         });
 

@@ -27,6 +27,8 @@ const ItemSchema = z.object({
   Code: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Code is required'),
   Category: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Category is required'),
   Unit: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Unit is required'),
+  SecondaryUnit: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
+  ConversionFactor: z.union([z.number(), z.string()]).optional(),
   LotTracked: z.union([z.string(), z.boolean(), z.number()]).optional(),
   Status: z.union([z.string(), z.boolean(), z.number()]).optional(),
 });
@@ -39,6 +41,7 @@ const UomSchema = z.object({
 const BarcodeSchema = z.object({
   ItemCode: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'ItemCode is required'),
   Barcode: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'Barcode is required'),
+  Unit: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
 });
 
 const SupplierSchema = z.object({
@@ -52,6 +55,7 @@ const SupplierSchema = z.object({
 const OpeningStockSchema = z.object({
   warehouseCode: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'warehouseCode is required'),
   itemSku: z.union([z.string(), z.number()]).transform(val => String(val)).refine(val => val.length > 0, 'itemSku is required'),
+  unit: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
   quantity: z.union([z.number(), z.string()]).refine((val) => {
     const num = Number(val);
     return !isNaN(num) && num > 0;

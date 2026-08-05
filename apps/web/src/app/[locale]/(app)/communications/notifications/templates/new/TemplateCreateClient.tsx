@@ -44,6 +44,81 @@ const TEMPLATE_CODE_OPTIONS = [
   { value: 'GRN_POSTED', labelEn: 'Goods Received Note Posted', labelAr: 'اعتماد سند استلام بضاعة' },
 ];
 
+const PRESET_SAMPLES: Record<string, { subjectAr: string; bodyAr: string; subjectEn: string; bodyEn: string }> = {
+  LOW_STOCK_ALERT: {
+    subjectAr: 'تنبيه نقص المخزون: {{item_name}} ({{item_sku}})',
+    bodyAr: 'وصل الصنف {{item_name}} (رمز: {{item_sku}}) إلى مستوى منخفض بالمخزون في مستودع {{item_warehouse}}. الكمية المتبقية حالياً هي {{item_currentStock}}.',
+    subjectEn: 'Low Stock Alert: {{item_name}} ({{item_sku}})',
+    bodyEn: 'Item {{item_name}} (SKU: {{item_sku}}) has reached low stock level in {{item_warehouse}}. Current stock: {{item_currentStock}}.',
+  },
+  EXPIRY_WARNING_ALERT: {
+    subjectAr: 'تحذير قرب انتهاء صلاحية: {{item_name}}',
+    bodyAr: 'الدفعة رقم {{lot_lotNumber}} للصنف {{item_name}} في مستودع {{item_warehouse}} تقترب من تاريخ انتهاء الصلاحية بتاريخ {{lot_expiryDate}}. الكمية المتبقية: {{lot_qtyOnHand}}.',
+    subjectEn: 'Expiry Warning: {{item_name}}',
+    bodyEn: 'Lot {{lot_lotNumber}} for item {{item_name}} in {{item_warehouse}} is expiring on {{lot_expiryDate}}. Remaining quantity: {{lot_qtyOnHand}}.',
+  },
+  PR_APPROVED: {
+    subjectAr: 'تمت الموافقة على طلب الشراء رقم {{purchaserequest_documentNumber}}',
+    bodyAr: 'تمت الموافقة الرسمية على طلب الشراء رقم {{purchaserequest_documentNumber}} للمستودع {{purchaserequest_warehouseName}} بواسطة {{purchaserequest_userName}}. يمكنك المتابعة في تحويل الطلب إلى أمر شراء.',
+    subjectEn: 'Purchase Request Approved: {{purchaserequest_documentNumber}}',
+    bodyEn: 'Purchase request {{purchaserequest_documentNumber}} for warehouse {{purchaserequest_warehouseName}} has been officially approved by {{purchaserequest_userName}}.',
+  },
+  PR_REJECTED: {
+    subjectAr: 'تم رفض طلب الشراء رقم {{purchaserequest_documentNumber}}',
+    bodyAr: 'تم رفض طلب الشراء رقم {{purchaserequest_documentNumber}} للمستودع {{purchaserequest_warehouseName}} بواسطة {{purchaserequest_userName}}. يُرجى مراجعة تفاصيل الطلب والتعديل عليه.',
+    subjectEn: 'Purchase Request Rejected: {{purchaserequest_documentNumber}}',
+    bodyEn: 'Purchase request {{purchaserequest_documentNumber}} for warehouse {{purchaserequest_warehouseName}} has been rejected by {{purchaserequest_userName}}.',
+  },
+  PO_PENDING_APPROVAL: {
+    subjectAr: 'أمر شراء بانتظار الاعتماد رقم {{purchaseorder_poNumber}}',
+    bodyAr: 'أمر الشراء رقم {{purchaseorder_poNumber}} الموجه للمورد {{purchaseorder_supplierName}} بقيمة {{purchaseorder_totalAmount}} بانتظار موافقة الإدارة. الحالة الحالية: {{purchaseorder_status}}.',
+    subjectEn: 'PO Pending Approval: {{purchaseorder_poNumber}}',
+    bodyEn: 'Purchase Order {{purchaseorder_poNumber}} for {{purchaseorder_supplierName}} with total amount {{purchaseorder_totalAmount}} is pending approval. Status: {{purchaseorder_status}}.',
+  },
+  PO_APPROVED: {
+    subjectAr: 'تمت الموافقة على أمر الشراء رقم {{purchaseorder_poNumber}}',
+    bodyAr: 'تمت الموافقة على أمر الشراء رقم {{purchaseorder_poNumber}} الموجه للمورد {{purchaseorder_supplierName}} بقيمة إجمالية {{purchaseorder_totalAmount}}. تم إرسال النسخة للمورد.',
+    subjectEn: 'Purchase Order Approved: {{purchaseorder_poNumber}}',
+    bodyEn: 'Purchase Order {{purchaseorder_poNumber}} issued to {{purchaseorder_supplierName}} with total amount {{purchaseorder_totalAmount}} has been approved.',
+  },
+  GRN_POSTED: {
+    subjectAr: 'تم ترحيل سند استلام بضاعة رقم {{goodsreceivednote_grnNumber}}',
+    bodyAr: 'تم اعتماد وتسليم البضاعة بسند رقم {{goodsreceivednote_grnNumber}} في مستودع {{goodsreceivednote_warehouseName}} الخاص بأمر الشراء {{goodsreceivednote_poNumber}}. تمت تحديث الكميات في المستودع بنجاح.',
+    subjectEn: 'Goods Received Note Posted: {{goodsreceivednote_grnNumber}}',
+    bodyEn: 'Goods receipt {{goodsreceivednote_grnNumber}} for warehouse {{goodsreceivednote_warehouseName}} linked to PO {{goodsreceivednote_poNumber}} has been posted.',
+  },
+  STOCKTAKE_POSTED: {
+    subjectAr: 'تم اعتماد نتائج الجرد المخزني رقم {{stocktake_sessionNumber}}',
+    bodyAr: 'تم اعتماد نتائج الجرد النهائي للجلسة رقم {{stocktake_sessionNumber}} بالمستودع {{stocktake_warehouseName}}. بلغ إجمالي قيمة التباين {{stocktake_totalVarianceValue}}.',
+    subjectEn: 'Stocktake Session Finalized: {{stocktake_sessionNumber}}',
+    bodyEn: 'Stocktake session {{stocktake_sessionNumber}} for warehouse {{stocktake_warehouseName}} has been finalized. Total variance value is {{stocktake_totalVarianceValue}}.',
+  },
+  TRANSFER_SHIPPED: {
+    subjectAr: 'تم شحن التحويل المخزني رقم {{transfer_transferNumber}}',
+    bodyAr: 'تم شحن التحويل المخزني رقم {{transfer_transferNumber}} من مستودع {{transfer_fromWarehouse}} إلى مستودع {{transfer_toWarehouse}}. يُرجى الاستعداد للاستلام والتأكيد.',
+    subjectEn: 'Transfer Dispatched: {{transfer_transferNumber}}',
+    bodyEn: 'Transfer {{transfer_transferNumber}} from {{transfer_fromWarehouse}} to {{transfer_toWarehouse}} has been dispatched.',
+  },
+  TRANSFER_RECEIVED: {
+    subjectAr: 'تم استلام التحويل المخزني رقم {{transfer_transferNumber}}',
+    bodyAr: 'تم استلام وتأكيد التحويل المخزني رقم {{transfer_transferNumber}} في مستودع {{transfer_toWarehouse}} القادم من مستودع {{transfer_fromWarehouse}}.',
+    subjectEn: 'Transfer Received: {{transfer_transferNumber}}',
+    bodyEn: 'Transfer {{transfer_transferNumber}} has been successfully received at {{transfer_toWarehouse}} from {{transfer_fromWarehouse}}.',
+  },
+  KITCHEN_REQUEST_SUBMITTED: {
+    subjectAr: 'تم رفع طلب مطبخ جديد رقم {{kitchenrequest_documentNumber}}',
+    bodyAr: 'تم رفع طلب مطبخ جديد برقم {{kitchenrequest_documentNumber}} للمستودع {{kitchenrequest_warehouseName}} بواسطة {{kitchenrequest_userName}}.',
+    subjectEn: 'Kitchen Request Submitted: {{kitchenrequest_documentNumber}}',
+    bodyEn: 'Kitchen request {{kitchenrequest_documentNumber}} for warehouse {{kitchenrequest_warehouseName}} submitted by {{kitchenrequest_userName}}.',
+  },
+  KITCHEN_REQUEST_POSTED: {
+    subjectAr: 'تم صرف طلب المطبخ رقم {{kitchenrequest_documentNumber}}',
+    bodyAr: 'تمت الموافقة وصرف طلب المطبخ رقم {{kitchenrequest_documentNumber}} من مستودع {{kitchenrequest_warehouseName}} بنجاح.',
+    subjectEn: 'Kitchen Request Issued: {{kitchenrequest_documentNumber}}',
+    bodyEn: 'Kitchen request {{kitchenrequest_documentNumber}} from warehouse {{kitchenrequest_warehouseName}} has been issued.',
+  },
+};
+
 export function TemplateCreateClient({ locale }: { locale: string }) {
  const t = useTranslations('notifications');
  const t_common = useTranslations('common');
@@ -78,6 +153,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
  };
 
  const [step, setStep] = useState(1);
+  const [focusedField, setFocusedField] = useState<'subjectAr' | 'bodyAr' | 'subjectEn' | 'bodyEn'>('bodyAr');
   const [template, setTemplate] = useState({
    code: '',
    triggerEvent: '',
@@ -115,17 +191,45 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
    }
   });
 
+  const loadPresetContent = (codeValue: string) => {
+   const preset = PRESET_SAMPLES[codeValue];
+   if (preset) {
+    setTemplate(prev => ({
+     ...prev,
+     subjectAr: preset.subjectAr,
+     bodyAr: preset.bodyAr,
+     subjectEn: preset.subjectEn,
+     bodyEn: preset.bodyEn,
+    }));
+   }
+  };
+
   const handleCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
    const val = e.target.value;
    const suggested = getSuggestedParams(val);
+   const preset = PRESET_SAMPLES[val];
    setTemplate(prev => ({
     ...prev,
     code: val,
     triggerEvent: val,
-    allowedParameters: [...suggested]
+    allowedParameters: [...suggested],
+    ...(preset ? {
+      subjectAr: preset.subjectAr,
+      bodyAr: preset.bodyAr,
+      subjectEn: preset.subjectEn,
+      bodyEn: preset.bodyEn,
+    } : {})
    }));
    setSelectedEntity(null);
    setError(null);
+  };
+
+  const insertTokenToField = (tokenName: string) => {
+   const tokenStr = `{{${tokenName}}}`;
+   setTemplate(prev => ({
+    ...prev,
+    [focusedField]: prev[focusedField] ? `${prev[focusedField]} ${tokenStr}` : tokenStr
+   }));
   };
 
   const handleTriggerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -204,27 +308,39 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
    <div className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2" />
 
    {/* Header section */}
-   <div className="space-y-4">
+   <div className="space-y-6">
     <button
      onClick={() => router.push('/communications/notifications/templates')}
      className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-operational-cyan transition-all"
     >
      <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform rtl:rotate-180" />
-     {t_common('actions.back') || 'Back to templates'}
+     {t_common('actions.back') || 'الرجوع للقوالب'}
     </button>
     
-    <div className="flex items-center justify-between border-b border-white/10 pb-6">
+    <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-6 gap-4">
      <div className="space-y-1">
-      <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-       CREATE TEMPLATE
+      <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight">
+       {locale === 'ar' ? 'إنشاء قالب إشعار جديد' : 'CREATE NOTIFICATION TEMPLATE'}
       </h1>
-      <p className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-[0.2em] mt-1.5 flex items-center gap-2">
-       <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan animate-pulse" />
-       Dynamic Notification Registration Pipeline
+      <p className="text-xs text-muted-foreground/70 font-medium flex items-center gap-2 mt-1">
+       <span className="w-2 h-2 rounded-full bg-operational-cyan animate-pulse" />
+       {locale === 'ar'
+        ? 'معالج تسجيل وإعداد إشعارات النظام التلقائية'
+        : 'Dynamic Notification Registration Pipeline'}
       </p>
      </div>
-     <div className="text-end font-mono text-3xl font-black text-muted-foreground/20">
-      0{step} / 03
+     
+     {/* Stepper Indicator */}
+     <div className="flex items-center gap-2 bg-card border border-border p-1.5 rounded-none">
+      <div className={`px-3 py-1.5 text-xs font-bold transition-all ${step === 1 ? 'bg-operational-cyan/20 text-operational-cyan border border-operational-cyan/40' : 'text-muted-foreground/50'}`}>
+       {locale === 'ar' ? '1. اختيار الحدث' : '1. Select Event'}
+      </div>
+      <div className={`px-3 py-1.5 text-xs font-bold transition-all ${step === 2 ? 'bg-operational-cyan/20 text-operational-cyan border border-operational-cyan/40' : 'text-muted-foreground/50'}`}>
+       {locale === 'ar' ? '2. تحديد المتغيرات' : '2. Tokens'}
+      </div>
+      <div className={`px-3 py-1.5 text-xs font-bold transition-all ${step === 3 ? 'bg-operational-cyan/20 text-operational-cyan border border-operational-cyan/40' : 'text-muted-foreground/50'}`}>
+       {locale === 'ar' ? '3. صياغة النص' : '3. Content'}
+      </div>
      </div>
     </div>
    </div>
@@ -248,19 +364,30 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
        transition={{ duration: 0.15 }}
        className="space-y-6"
       >
-        <div className="grid gap-4">
-         <Label htmlFor="code" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
-          TEMPLATE CODE
+        {/* Step 1 Instructions Card */}
+        <div className="p-5 bg-card border border-border rounded-none space-y-2">
+         <div className="flex items-center gap-2 text-operational-cyan font-bold text-sm">
+          <Sparkles className="w-4 h-4" />
+          <span>المرحلة 1 من 3: اختيار الحدث التشغيلي في النظام (Trigger Event)</span>
+         </div>
+         <p className="text-xs text-muted-foreground leading-relaxed">
+          اختر نوع العملية أو الحدث المخزني الذي سيقوم السيرفر بتفعيل وتوليد هذا الإشعار تلقائياً فور حدوثه (مثل: اعتماد طلب شراء، تنبيه نقص المخزون، أو ترحيل سند استلام بضاعة). سيقوم النظام آلياً باقتراح حقول البيانات المناسبة لهذا الحدث وتعبئة نموذج استرشادي جاهز.
+         </p>
+        </div>
+
+        <div className="grid gap-4 p-5 bg-card border border-border rounded-none">
+         <Label htmlFor="code" className="text-xs font-bold text-foreground/90">
+          {locale === 'ar' ? 'رمز القالب / الحدث التشغيلي:' : 'TEMPLATE CODE / TRIGGER EVENT:'}
          </Label>
          <div className="relative">
           <select
            id="code"
            value={template.code}
            onChange={handleCodeChange}
-           className="w-full h-14 bg-card border border-border dark:border-white/10 rounded-none px-5 focus:outline-none focus:ring-1 focus:ring-operational-cyan text-sm font-semibold transition-all appearance-none cursor-pointer"
+           className="w-full h-14 bg-card border border-border dark:border-white/10 rounded-none px-5 focus:outline-none focus:ring-1 focus:ring-operational-cyan text-sm font-semibold transition-all appearance-none cursor-pointer text-foreground"
           >
            <option value="" disabled>
-            {locale === 'ar' ? 'اختر رمز القالب...' : 'Select template code...'}
+            {locale === 'ar' ? 'اختر رمز القالب والحدث المطلوب...' : 'Select template code...'}
            </option>
            {TEMPLATE_CODE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -275,13 +402,13 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
          {eventsLoading ? (
           <p className="text-[9px] text-muted-foreground/45 font-medium mt-1.5 ms-1 flex items-center gap-1.5">
            <Loader2 className="w-3 h-3 animate-spin text-operational-cyan" />
-           Loading trigger metadata...
+           جاري تحميل بيانات الأحداث...
           </p>
          ) : template.code && (() => {
           const evt = triggerEvents.find((e: TriggerEvent) => e.code === template.code);
           return evt ? (
-           <p className="text-[9px] text-muted-foreground/45 font-medium mt-1.5 ms-1">
-            {evt.description} — Entity: <span className="font-mono text-operational-cyan">{evt.entityType}</span>
+           <p className="text-xs text-operational-cyan font-medium mt-1.5 ms-1">
+            ✓ {evt.description} — Kinet: <span className="font-mono text-foreground font-bold">{evt.entityType}</span>
            </p>
           ) : null;
          })()}
@@ -298,6 +425,16 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
        transition={{ duration: 0.15 }}
        className="space-y-6"
       >
+       {/* Step 2 Instructions Card */}
+       <div className="p-5 bg-card border border-border rounded-none space-y-2">
+        <div className="flex items-center gap-2 text-operational-cyan font-bold text-sm">
+         <Database className="w-4 h-4" />
+         <span>المرحلة 2 من 3: تحديد وتخصيص متغيرات الحقول (Allowed Parameters)</span>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+         المتغيرات هي الكلمات المفتاحية الديناميكية (مثل اسم الصنف <code className="text-operational-cyan font-mono">{`{{item_name}}`}</code> أو رقم الطلب <code className="text-operational-cyan font-mono">{`{{po_number}}`}</code>) التي يستبدلها النظام تلقائياً بالبيانات الحقيقية عند إرسال الإشعار. يمكنك إضافة حقول أخرى من متصفح قواعد البيانات (DB Entity Browser) بالأسفل أو إضافة متغير مخصص يدويًا.
+        </p>
+       </div>
        {/* Current Parameters List */}
        <div className="space-y-3">
         <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 block">
@@ -550,6 +687,60 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
        transition={{ duration: 0.15 }}
        className="space-y-6"
       >
+       {/* Step 3 Instructions Card */}
+       <div className="p-5 bg-card border border-border rounded-none space-y-2">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+         <div className="flex items-center gap-2 text-operational-cyan font-bold text-sm">
+          <Sparkles className="w-4 h-4" />
+          <span>المرحلة 3 من 3: صياغة موضوع ونص الرسالة والمعاينة الحية</span>
+         </div>
+         {PRESET_SAMPLES[template.code] && (
+          <Button
+           type="button"
+           onClick={() => loadPresetContent(template.code)}
+           className="h-8 px-3 text-xs font-bold bg-operational-cyan/15 text-operational-cyan border border-operational-cyan/30 hover:bg-operational-cyan/25 shrink-0"
+          >
+           {locale === 'ar' ? '⚡ تحميل نموذج محتوى جاهز' : '⚡ Load Sample Content'}
+          </Button>
+         )}
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+         اكتب موضوع ونص الرسالة باللغتين العربية والإنجليزية. انقر على أي زر متغير من الشريط أدناه لإدراجه مباشرة في الحقل المحدد بمؤشر الكتابة بدون كتابة يدويّة، وراجع المعاينة الحية بالأسفل للتأكد من المظهر النهائي قبل الحفظ.
+        </p>
+       </div>
+
+       {/* Clickable Available Parameter Chips Bar */}
+       <div className="p-4 bg-card border border-border dark:border-white/10 rounded-none space-y-2">
+        <div className="flex items-center justify-between">
+         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+          {locale === 'ar' ? 'المتغيرات المتاحة لهذا القالب (انقر للإدراج):' : 'AVAILABLE TOKENS (CLICK TO INSERT):'}
+         </span>
+         <span className="text-[9px] font-mono text-operational-cyan">
+          Focus: {focusedField}
+         </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+         {template.allowedParameters.length === 0 ? (
+          <span className="text-[10px] text-muted-foreground/45 italic">
+           {locale === 'ar' ? 'لا توجد متغيرات محددة لهذا القالب بعد.' : 'No tokens registered for this template.'}
+          </span>
+         ) : (
+          template.allowedParameters.map((p) => (
+           <button
+            key={p.name}
+            type="button"
+            onClick={() => insertTokenToField(p.name)}
+            title={`${p.labelEn} / ${p.labelAr} (Sample: ${p.sampleValue})`}
+            className="font-mono text-xs font-bold text-operational-cyan bg-operational-cyan/10 hover:bg-operational-cyan/25 border border-operational-cyan/30 px-2.5 py-1 rounded-none transition-all cursor-pointer flex items-center gap-1"
+           >
+            <Plus className="w-3 h-3 stroke-[3px]" />
+            {"{{"}{p.name}{"}}"}
+           </button>
+          ))
+         )}
+        </div>
+       </div>
+
        {/* Arabic Content */}
        <div className="space-y-4 p-5 bg-surface-container border border-white/10 rounded-none">
         <span className="text-[10px] font-bold uppercase tracking-wider text-operational-cyan flex items-center gap-1.5">
@@ -562,6 +753,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
          <Input
           id="sub_ar"
           value={template.subjectAr}
+          onFocus={() => setFocusedField('subjectAr')}
           onChange={(e) => setTemplate(prev => ({ ...prev, subjectAr: e.target.value }))}
           placeholder="تنبيه نقص المخزون: {{item_name}}"
           dir="rtl"
@@ -574,10 +766,11 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
          <Textarea
           id="body_ar"
           value={template.bodyAr}
+          onFocus={() => setFocusedField('bodyAr')}
           onChange={(e) => setTemplate(prev => ({ ...prev, bodyAr: e.target.value }))}
           placeholder="الصنف {{item_name}} وصل إلى كمية {{qty}}..."
           dir="rtl"
-          className="w-full min-h-[200px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
+          className="w-full min-h-[160px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
          />
         </div>
        </div>
@@ -594,6 +787,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
          <Input
           id="sub_en"
           value={template.subjectEn}
+          onFocus={() => setFocusedField('subjectEn')}
           onChange={(e) => setTemplate(prev => ({ ...prev, subjectEn: e.target.value }))}
           placeholder="Low Stock Alert: {{item_name}}"
           dir="ltr"
@@ -606,11 +800,60 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
          <Textarea
           id="body_en"
           value={template.bodyEn}
+          onFocus={() => setFocusedField('bodyEn')}
           onChange={(e) => setTemplate(prev => ({ ...prev, bodyEn: e.target.value }))}
           placeholder="Item {{item_name}} reached low quantity of {{qty}}..."
           dir="ltr"
-          className="w-full min-h-[200px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
+          className="w-full min-h-[160px] rounded-xl p-4 font-mono text-sm leading-relaxed tracking-wide transition-all resize-y outline-none focus:ring-1 focus:ring-brand-gold/50 bg-slate-50 border-slate-200 text-slate-800 shadow-inner dark:bg-[#0a0a0a] dark:border-white/10 dark:text-brand-gold/90 scrollbar-thin dark:scrollbar-thumb-white/10 scrollbar-thumb-slate-300"
          />
+        </div>
+       </div>
+
+       {/* Live Interpolated Preview Box */}
+       <div className="p-5 border border-border dark:border-white/10 rounded-none bg-card space-y-3">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-operational-cyan flex items-center justify-between">
+         <span>LIVE INTERPOLATION PREVIEW (معاينة حية وتفاعلية)</span>
+         <span className="text-[9px] text-muted-foreground/50 font-mono">Sample Rendering</span>
+        </div>
+
+        {/* Arabic Live Preview */}
+        <div className="p-4 bg-muted/20 border border-border/60 rounded-none space-y-2 text-end" dir="rtl">
+         <div className="text-xs font-bold text-foreground">
+          {template.subjectAr
+           ? template.subjectAr.replace(/\{\{([^}]+)\}\}/g, (_, name) => {
+              const param = template.allowedParameters.find(p => p.name === name.trim());
+              return param?.sampleValue || `[${name}]`;
+             })
+           : <span className="italic text-muted-foreground/40">موضوع الرسالة (عربي)...</span>}
+         </div>
+         <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+          {template.bodyAr
+           ? template.bodyAr.replace(/\{\{([^}]+)\}\}/g, (_, name) => {
+              const param = template.allowedParameters.find(p => p.name === name.trim());
+              return param?.sampleValue || `[${name}]`;
+             })
+           : <span className="italic text-muted-foreground/40">محتوى نص الرسالة (عربي)...</span>}
+         </div>
+        </div>
+
+        {/* English Live Preview */}
+        <div className="p-4 bg-muted/20 border border-border/60 rounded-none space-y-2 text-start" dir="ltr">
+         <div className="text-xs font-bold text-foreground">
+          {template.subjectEn
+           ? template.subjectEn.replace(/\{\{([^}]+)\}\}/g, (_, name) => {
+              const param = template.allowedParameters.find(p => p.name === name.trim());
+              return param?.sampleValue || `[${name}]`;
+             })
+           : <span className="italic text-muted-foreground/40">Subject (English)...</span>}
+         </div>
+         <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+          {template.bodyEn
+           ? template.bodyEn.replace(/\{\{([^}]+)\}\}/g, (_, name) => {
+              const param = template.allowedParameters.find(p => p.name === name.trim());
+              return param?.sampleValue || `[${name}]`;
+             })
+           : <span className="italic text-muted-foreground/40">Body text (English)...</span>}
+         </div>
         </div>
        </div>
       </motion.div>

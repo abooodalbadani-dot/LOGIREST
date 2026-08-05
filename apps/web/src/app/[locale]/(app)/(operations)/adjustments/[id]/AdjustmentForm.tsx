@@ -228,6 +228,36 @@ export function AdjustmentForm({
     }
   }, [document?.version]);
 
+  useEffect(() => {
+    const r = String(reason || "").trim().toLowerCase();
+    const isDecreaseOnly =
+      r.includes("damage") ||
+      r.includes("spoilage") ||
+      r.includes("theft") ||
+      r.includes("loss") ||
+      r.includes("telf") ||
+      r.includes("expiry");
+
+    const isIncreaseOnly =
+      r.includes("found") ||
+      r.includes("initial") ||
+      r.includes("opening");
+
+    if (isDecreaseOnly) {
+      setLines((prevLines) =>
+        prevLines.map((line) =>
+          line.direction !== "DECREASE" ? { ...line, direction: "DECREASE" } : line
+        )
+      );
+    } else if (isIncreaseOnly) {
+      setLines((prevLines) =>
+        prevLines.map((line) =>
+          line.direction !== "INCREASE" ? { ...line, direction: "INCREASE" } : line
+        )
+      );
+    }
+  }, [reason]);
+
   const hasNegativeStock = useMemo(
     () =>
       lines.some((line) => {
@@ -284,9 +314,9 @@ export function AdjustmentForm({
     if (nameLower.includes('spoilage') || nameLower.includes('expiry')) return 'إفساد / انتهاء صلاحية';
     if (nameLower.includes('theft') || nameLower.includes('loss')) return 'سرقة / فقدان';
     if (nameLower.includes('inventory correction') || nameLower.includes('correction')) return 'تصحيح مخزني';
+    if (nameLower.includes('opening_stock') || nameLower.includes('opening stock') || nameLower.includes('initial')) return 'مخزون أول المدة (رصيد افتتاحي)';
     if (nameLower.includes('admin override') || nameLower.includes('override')) return 'تعديل إداري';
     if (nameLower.includes('found')) return 'بضاعة عُثر عليها';
-    if (nameLower.includes('initial')) return 'مخزون أولي';
     return rawName;
   }, [locale]);
 
@@ -296,15 +326,23 @@ export function AdjustmentForm({
     { id: 'Theft / Loss', name: getLocalizedReasonName('Theft / Loss') },
     { id: 'Inventory Correction', name: getLocalizedReasonName('Inventory Correction') },
     { id: 'Admin Override', name: getLocalizedReasonName('Admin Override') },
+    { id: 'OPENING_STOCK', name: getLocalizedReasonName('OPENING_STOCK') },
   ], [getLocalizedReasonName]);
 
   const reasonItems = useMemo(() => {
     const reasons = varianceReasonsData?.data;
     if (reasons && reasons.length > 0) {
-      return reasons.map((r) => ({
+      const mapped = reasons.map((r) => ({
         id: r.code || r.name,
         name: getLocalizedReasonName(r.name || r.code),
       }));
+      if (!mapped.some((i) => i.id === 'OPENING_STOCK' || i.id === 'Opening Stock')) {
+        mapped.push({
+          id: 'OPENING_STOCK',
+          name: getLocalizedReasonName('OPENING_STOCK'),
+        });
+      }
+      return mapped;
     }
     return fallbackReasons;
   }, [varianceReasonsData, fallbackReasons, getLocalizedReasonName]);
