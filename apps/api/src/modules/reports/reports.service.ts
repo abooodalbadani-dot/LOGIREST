@@ -1167,6 +1167,17 @@ export class ReportsService {
     currency: string;
     currencySymbol: string;
   }> {
+    const baseDbCurrency = await this.prisma.currency.findFirst({
+      where: { isBase: true, isActive: true },
+      select: { code: true, symbol: true },
+    });
+
+    if (baseDbCurrency) {
+      const currency = baseDbCurrency.code;
+      const currencySymbol = baseDbCurrency.symbol || CURRENCY_SYMBOLS[currency] || currency;
+      return { currency, currencySymbol };
+    }
+
     const setting = await this.prisma.systemSetting.findUnique({
       where: { key: 'system_settings' },
     });
@@ -1185,7 +1196,7 @@ export class ReportsService {
       }
     }
 
-    const currency = code || process.env.BASE_CURRENCY_CODE || 'USD';
+    const currency = code || process.env.BASE_CURRENCY_CODE || 'SAR';
     const currencySymbol = CURRENCY_SYMBOLS[currency] ?? currency;
 
     return { currency, currencySymbol };

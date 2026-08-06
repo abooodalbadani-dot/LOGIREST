@@ -16,7 +16,7 @@ export function formatDate(
   try {
     const d = typeof dateString === 'string' ? dateString : dateString.toISOString();
     // Guess the user's local timezone
-    const tz = dayjs.tz.guess() || 'Asia/Shanghai';
+    const tz = dayjs.tz.guess() || process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || 'UTC';
     return dayjs.utc(d).tz(tz).format(formatStr);
   } catch (error) {
     console.error('Error formatting date:', error);

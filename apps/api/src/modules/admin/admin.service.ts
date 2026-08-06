@@ -224,7 +224,7 @@ export class AdminService {
       systemName: 'Otantik Restaurants System',
       baseCurrency: process.env.BASE_CURRENCY_CODE || 'USD',
       branchId: 'HQ',
-      timezone: 'Asia/Riyadh',
+      timezone: process.env.SYSTEM_TIMEZONE || process.env.DEFAULT_TIMEZONE || 'UTC',
       localeDefault: 'en',
       senderName: 'Otantik Restaurants Alerts',
       replyToEmail: 'alerts@otantik.app',

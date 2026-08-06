@@ -24,8 +24,16 @@ describe('GrnService - Over-receiving Validation', () => {
         findUnique: jest.fn().mockResolvedValue({ branchId: 'branch-1' }),
       },
       lot: {
+        findUnique: jest.fn(),
         findFirst: jest.fn(),
         create: jest.fn(),
+      },
+      item: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'item-1',
+          uomId: 'uom-box',
+          uomConversions: [],
+        }),
       },
       approvalEvent: {
         create: jest.fn(),
@@ -214,5 +222,72 @@ describe('GrnService - Over-receiving Validation', () => {
 
     expect(result).toBeDefined();
     expect(prisma.goodsReceivedNote.create).toHaveBeenCalled();
+  });
+
+  it('should throw BadRequestException on create when item hasExpiry is true but no expiryDate or lotId is provided', async () => {
+    prisma.item.findUnique.mockResolvedValue({
+      id: 'item-exp-1',
+      sku: 'EXP-ITEM-001',
+      hasExpiry: true,
+      uomId: 'uom-bag',
+      uomConversions: [],
+    });
+
+    await expect(
+      service.create(
+        {
+          warehouseId: 'wh-1',
+          lines: [
+            {
+              itemId: 'item-exp-1',
+              quantity: 5,
+              unitPrice: 20,
+              uomId: 'uom-bag',
+              expiryDate: null,
+              lotId: null,
+            },
+          ],
+        },
+        'user-1',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException when selecting an existing lot that is already expired', async () => {
+    prisma.item.findUnique.mockResolvedValue({
+      id: 'item-exp-1',
+      sku: 'EXP-ITEM-001',
+      hasExpiry: true,
+      uomId: 'uom-bag',
+      uomConversions: [],
+    });
+
+    // Mock an expired lot in database
+    const pastDate = new Date();
+    pastDate.setUTCDate(pastDate.getUTCDate() - 10);
+    prisma.lot.findUnique.mockResolvedValue({
+      id: 'lot-exp-old',
+      itemId: 'item-exp-1',
+      lotNumber: 'LOT-OLD-001',
+      expiryDate: pastDate.toISOString(),
+    });
+
+    await expect(
+      service.create(
+        {
+          warehouseId: 'wh-1',
+          lines: [
+            {
+              itemId: 'item-exp-1',
+              quantity: 5,
+              unitPrice: 20,
+              uomId: 'uom-bag',
+              lotId: 'lot-exp-old',
+            },
+          ],
+        },
+        'user-1',
+      ),
+    ).rejects.toThrow(BadRequestException);
   });
 });

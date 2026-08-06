@@ -150,25 +150,27 @@ export class PdfGeneratorService {
           parsed.timezone ??
           parsed.timeZone ??
           process.env.SYSTEM_TIMEZONE ??
-          'Asia/Riyadh'
+          process.env.DEFAULT_TIMEZONE ??
+          'UTC'
         );
       }
     } catch {
       // fallback
     }
-    return process.env.SYSTEM_TIMEZONE ?? 'Asia/Riyadh';
+    return process.env.SYSTEM_TIMEZONE ?? process.env.DEFAULT_TIMEZONE ?? 'UTC';
   }
 
   private formatDate(
     date: Date | string | null,
-    timeZone: string = 'Asia/Riyadh',
+    timeZone?: string,
   ): string {
+    const tz = timeZone || process.env.SYSTEM_TIMEZONE || process.env.DEFAULT_TIMEZONE || 'UTC';
     if (!date) return '—';
     const d = new Date(date);
     if (isNaN(d.getTime())) return '—';
     try {
       const formatter = new Intl.DateTimeFormat('sv-SE', {
-        timeZone,
+        timeZone: tz,
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -182,11 +184,11 @@ export class PdfGeneratorService {
     }
   }
 
-  private async renderHtmlToPdf(htmlString: string): Promise<Buffer> {
+  private renderHtmlToPdf(htmlString: string): Promise<Buffer> {
     const executablePath = process.env.CHROMIUM_PATH || '/usr/bin/chromium';
     const isDocker = fs.existsSync(executablePath);
 
-    const browser = await chromium.launch({
+    return chromium.launch({
       headless: true,
       executablePath: isDocker ? executablePath : undefined,
       args: [
@@ -194,26 +196,26 @@ export class PdfGeneratorService {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
       ],
+    }).then(async (browser) => {
+      try {
+        const page = await browser.newPage();
+        await page.setContent(htmlString, { waitUntil: 'load' });
+        await page.evaluate(() => document.fonts.ready);
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '15mm',
+            bottom: '15mm',
+            left: '15mm',
+            right: '15mm',
+          },
+        });
+        return pdfBuffer;
+      } finally {
+        await browser.close();
+      }
     });
-
-    try {
-      const page = await browser.newPage();
-      await page.setContent(htmlString, { waitUntil: 'load' });
-      await page.evaluate(() => document.fonts.ready);
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '15mm',
-          bottom: '15mm',
-          left: '15mm',
-          right: '15mm',
-        },
-      });
-      return pdfBuffer;
-    } finally {
-      await browser.close();
-    }
   }
 
   private wrapHtml(
@@ -223,11 +225,12 @@ export class PdfGeneratorService {
     contentHtml: string,
     summaryHtml: string = '',
     logoHtml: string = `<img src="${otantikBase64Logo}" alt="Restaurant Logo" />`,
-    timeZone: string = 'Asia/Riyadh',
+    timeZone?: string,
   ): string {
+    const tz = timeZone || process.env.SYSTEM_TIMEZONE || process.env.DEFAULT_TIMEZONE || 'UTC';
     const isAr = locale === 'ar';
     const direction = isAr ? 'rtl' : 'ltr';
-    const dateStr = this.formatDate(new Date(), timeZone);
+    const dateStr = this.formatDate(new Date(), tz);
 
     return `<!DOCTYPE html>
 <html dir="${direction}" lang="${locale}">
@@ -302,7 +305,7 @@ export class PdfGeneratorService {
     }
     
     .title-container {
-      text-align: ${isAr ? 'left' : 'right'};
+      text-align: ${isAr ? 'right' : 'left'};
     }
     
     .document-title {

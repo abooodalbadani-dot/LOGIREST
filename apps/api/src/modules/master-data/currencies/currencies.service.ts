@@ -59,45 +59,49 @@ export class CurrenciesService {
   }
 
   async create(data: CurrencyDto) {
-    if (data.isBase) {
-      await this.prisma.currency.updateMany({
-        where: { isBase: true },
-        data: { isBase: false },
-      });
-    }
+    return this.prisma.$transaction(async (tx) => {
+      if (data.isBase) {
+        await tx.currency.updateMany({
+          where: { isBase: true },
+          data: { isBase: false },
+        });
+      }
 
-    const currency = await this.prisma.currency.create({
-      data: {
-        code: data.code ?? '',
-        name: data.name ?? '',
-        isBase: data.isBase ?? false,
-        symbol: data.symbol,
-        isActive: data.isActive ?? true,
-      },
+      const currency = await tx.currency.create({
+        data: {
+          code: data.code ?? '',
+          name: data.name ?? '',
+          isBase: data.isBase ?? false,
+          symbol: data.symbol,
+          isActive: data.isActive ?? true,
+        },
+      });
+      return this.mapDbCurrencyToFrontend(currency);
     });
-    return this.mapDbCurrencyToFrontend(currency);
   }
 
   async update(id: string, data: CurrencyDto) {
-    if (data.isBase) {
-      await this.prisma.currency.updateMany({
-        where: { isBase: true },
-        data: { isBase: false },
-      });
-    }
+    return this.prisma.$transaction(async (tx) => {
+      if (data.isBase) {
+        await tx.currency.updateMany({
+          where: { isBase: true, id: { not: id } },
+          data: { isBase: false },
+        });
+      }
 
-    const currency = await this.prisma.currency.update({
-      where: { id },
-      data: {
-        code: data.code,
-        name: data.name,
-        isBase: data.isBase,
-        symbol: data.symbol,
-        isActive: data.isActive,
-        version: data.version ? { increment: 1 } : undefined,
-      },
+      const currency = await tx.currency.update({
+        where: { id },
+        data: {
+          code: data.code,
+          name: data.name,
+          isBase: data.isBase,
+          symbol: data.symbol,
+          isActive: data.isActive,
+          version: data.version ? { increment: 1 } : undefined,
+        },
+      });
+      return this.mapDbCurrencyToFrontend(currency);
     });
-    return this.mapDbCurrencyToFrontend(currency);
   }
 
   async remove(id: string) {

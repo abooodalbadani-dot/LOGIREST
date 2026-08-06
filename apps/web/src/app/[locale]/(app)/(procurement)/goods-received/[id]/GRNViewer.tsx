@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { RelationalName } from '@/components/shared/RelationalName';
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
+import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { formatCurrency, formatDate } from '@/utils/currency';
 import { resolveUomCode } from '@/utils/uom-helper';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -58,15 +59,23 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
   const tc = useTranslations('common');
   const router = useRouter();
 
-  const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
+  const { currency: baseCurrencyCode, isLoading: loadingSettings } = useBaseCurrency();
+  const { data: currencies } = useCurrencies();
+  const baseCurrencyObj = currencies?.find((c) => c.isBase);
+
+  const foreignCurrencyCode = document?.currencyCode || 'USD';
+  const systemBaseCurrency = baseCurrencyObj?.code || baseCurrencyCode || 'SAR';
+  const isBaseTransaction = foreignCurrencyCode.toUpperCase() === systemBaseCurrency.toUpperCase();
+  const effectiveFxRate = isBaseTransaction ? 1 : (document?.fxRate || 1);
 
   const totalForeign =
     document?.lines?.reduce(
       (acc: number, line: GRNLineItem) =>
-        acc + line.receivedQty * (line.unitCostForeign || 0),
+        acc + (line.receivedQty || 0) * (line.unitCostForeign || line.unitCost || 0),
       0
     ) || 0;
-  const currentFxRate = document?.fxRate || 1;
+
+  const totalBase = totalForeign * effectiveFxRate;
 
   const timelineEntries = document?.auditLog?.map((e: AuditLogEntry) => ({
     status: e.status.toLowerCase() as Status,
@@ -405,7 +414,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
               <TrendingUp className="w-3 h-3 hidden md:block" />
               <p dir="ltr" className="text-xs sm:text-label-sm font-mono font-bold force-latin-numbers">
-                1 {document?.currencyCode || 'USD'} = {currentFxRate} {baseCurrency}
+                1 {foreignCurrencyCode} = {effectiveFxRate} {systemBaseCurrency}
               </p>
             </div>
           </div>
@@ -415,25 +424,25 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             <div className="space-y-4 sm:space-y-6 relative z-10">
               <div className="flex justify-between items-center gap-6 sm:gap-10">
                 <p className="text-[10px] sm:text-xs font-bold uppercase text-primary tracking-widest">
-                  {t('receipt_total', { currency: document?.currencyCode || 'USD' })}
+                  {t('receipt_total', { currency: foreignCurrencyCode })}
                 </p>
                 <p
                   dir="ltr"
                   className="text-2xl sm:text-headline-lg font-display font-black text-foreground force-latin-numbers"
                 >
-                  {formatCurrency(totalForeign, document?.currencyCode || 'USD', locale)}
+                  {formatCurrency(totalForeign, foreignCurrencyCode, locale)}
                 </p>
               </div>
               <div className="h-px bg-surface-container-high/10 sm:bg-surface-container-high/20 w-full" />
               <div className="flex justify-between items-center gap-6 sm:gap-10">
                 <p className="text-[10px] sm:text-xs font-bold uppercase text-primary tracking-widest">
-                  {t('base_value', { currency: baseCurrency })}
+                  {t('base_value', { currency: systemBaseCurrency })}
                 </p>
                 <p
                   dir="ltr"
                   className="text-sm sm:text-title-lg font-mono font-bold text-primary/60 force-latin-numbers"
                 >
-                  {formatCurrency(totalForeign * currentFxRate, baseCurrency, locale)}
+                  {formatCurrency(totalBase, systemBaseCurrency, locale)}
                 </p>
               </div>
             </div>

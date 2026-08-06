@@ -15,6 +15,7 @@ export const LineItemSchema = z.object({
   nameEn: z.string().optional(),
   image: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
+  hasExpiry: z.boolean().optional(),
   primaryUom: z.object({
    id: z.string(),
    code: z.string()
@@ -37,6 +38,15 @@ export const LineItemSchema = z.object({
   message: 'Must not be less than 0'
  }),
  unitCostBase: z.number().nullable()
+}).superRefine((data, ctx) => {
+ const hasExpiry = (data.item as { hasExpiry?: boolean })?.hasExpiry === true;
+ if (hasExpiry && !data.lot?.id && !data.lot?.expiryDate) {
+  ctx.addIssue({
+   code: z.ZodIssueCode.custom,
+   message: 'Expiry date is required for items with expiry tracking',
+   path: ['lot', 'expiryDate'],
+  });
+ }
 });
 
 export const GRNDetailSchema = z.object({
@@ -46,8 +56,8 @@ export const GRNDetailSchema = z.object({
  supplierId: z.string(),
  supplierName: z.string().optional().nullable(),
  supplier: z.object({
- id: z.string(),
- name: z.string()
+  id: z.string(),
+  name: z.string()
  }).optional(),
  poId: z.string().nullable(),
  poNumber: z.string().nullable(),
@@ -86,6 +96,7 @@ const GRNLineItemResponseSchema = z.object({
   name: z.string().nullish(),
   nameAr: z.string().optional().nullable(),
   nameEn: z.string().optional().nullable(),
+  hasExpiry: z.boolean().optional().nullable(),
   primaryUom: z.object({
    id: z.string().optional().nullable(),
    code: z.string().optional().nullable()
@@ -115,6 +126,7 @@ const GRNLineItemResponseSchema = z.object({
    name: val.item.name ?? '',
    nameAr: val.item.nameAr ?? undefined,
    nameEn: val.item.nameEn ?? undefined,
+   hasExpiry: val.item.hasExpiry ?? undefined,
    primaryUom: {
     id: val.item.primaryUom?.id ?? '',
     code: val.item.primaryUom?.code ?? ''

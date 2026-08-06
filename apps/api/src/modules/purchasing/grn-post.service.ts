@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
-import { DocumentType, Role, toBaseQty } from '@logirest/shared-types';
+import { DocumentType, Role, toBaseQty, getConversionFactor } from '@logirest/shared-types';
 import {
   DocumentType as PrismaDocType,
   GoodsReceivedNote,
@@ -130,8 +130,14 @@ export class GrnPostService {
                 let resolvedLotId = lotId;
 
                 if (!resolvedLotId) {
+                  if (item.hasExpiry) {
+                    throw new BadRequestException(
+                      `Item ${item.sku} requires strict expiry tracking. You must provide an expiry date or select an existing valid lot.`,
+                    );
+                  }
+
                   // Auto-create a lot using the GRN document number + item SKU as a stable,
-                  // unique lot number. This handles GRNs that were submitted without lot data.
+                  // unique lot number for non-expiry batched items.
                   const autoLotNumber = `${grn.grnNumber}-${item.sku}`;
                   const existingLot = await tx.lot.findUnique({
                     where: { lotNumber: autoLotNumber },
@@ -158,15 +164,35 @@ export class GrnPostService {
                   });
                 }
 
-                // Validate lot-item association
+                // Validate lot-item association and expiry requirement
                 const lot = await tx.lot.findUnique({
                   where: { id: resolvedLotId },
-                  select: { itemId: true },
+                  select: { itemId: true, expiryDate: true },
                 });
                 if (!lot || lot.itemId !== item.id) {
                   throw new BadRequestException(
                     `Lot ${resolvedLotId} does not belong to item ${item.id}.`,
                   );
+                }
+                if (item.hasExpiry) {
+                  if (!lot.expiryDate) {
+                    throw new BadRequestException(
+                      `Item ${item.sku} requires strict expiry tracking. The assigned lot ${resolvedLotId} is missing an expiry date.`,
+                    );
+                  }
+
+                  const today = new Date();
+                  today.setUTCHours(0, 0, 0, 0);
+
+                  const expiry = new Date(lot.expiryDate);
+                  expiry.setUTCHours(0, 0, 0, 0);
+
+                  if (expiry < today) {
+                    const expiredOn = expiry.toISOString().split('T')[0];
+                    throw new BadRequestException(
+                      `Item ${item.sku}: Lot ${resolvedLotId} expired on ${expiredOn}. Cannot receive stock into an expired lot.`,
+                    );
+                  }
                 }
 
                 // Lock lot balance row (SELECT FOR UPDATE)
@@ -242,14 +268,22 @@ export class GrnPostService {
                 });
               }
 
-              // Recalculate WAC
+              // Recalculate WAC (unit cost must be in base UOM)
               const costIdempotencyKey = `${PrismaDocType.GOODS_RECEIVED_NOTE}:cost:${grn.id}:${item.id}:${line.id}`;
 
-              // Task 1.1: Use unitPriceBase if available, fallback to unitPrice (for legacy un-migrated GRNs)
-              const costToUse =
-                line.unitPriceBase !== null
-                  ? Number(line.unitPriceBase)
-                  : Number(line.unitPrice);
+              // unitPriceBase is always stored correctly pre-divided by the UOM factor
+              // (since the grn.service.ts create/updateLine path was fixed to do this division).
+              // Fall back to recomputing from raw foreign price only for truly legacy rows
+              // that predate the unitPriceBase column (i.e., the column is NULL).
+              const uomFactor = getConversionFactor(lineUomId, item.uomId, conversions);
+              const fxRate = grn.fxRate ? Number(grn.fxRate) : 1;
+
+              const costToUse: number =
+                line.unitPriceBase !== null && line.unitPriceBase !== undefined
+                  ? Number(line.unitPriceBase)                                          // ← always correct post-fix
+                  : uomFactor > 0                                                        // ← legacy NULL fallback
+                    ? (Number(line.unitPrice) * fxRate) / uomFactor
+                    : Number(line.unitPrice) * fxRate;
 
               await this.wacService.recalculate(
                 tx,
@@ -305,7 +339,7 @@ export class GrnPostService {
                 },
               });
               const allPostedGrns = await tx.goodsReceivedNote.findMany({
-                where: { poId, status: { in: ['POSTED', 'RECEIVED', 'SUBMITTED'] } },
+                where: { poId, status: 'POSTED' },
                 include: {
                   lines: {
                     include: {

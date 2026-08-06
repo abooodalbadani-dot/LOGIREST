@@ -285,20 +285,20 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
 
       {/* UNIFIED HEADER ARCHITECTURE */}
       <header style={{ width: '100%', marginBottom: '10mm', display: 'flex', flexDirection: 'column' }}>
-        {/* TOP ROW: Identity (Left) & Report Info (Right) */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '6mm', flexDirection: lang === 'ar' ? 'row-reverse' : 'row' }}>
+        {/* TOP ROW: Identity (Start/Right in AR, Left in EN) & Report Info (End/Left in AR, Right in EN) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '6mm' }}>
 
-          {/* LEFT QUADRANT: Dynamic Identity */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexDirection: lang === 'ar' ? 'row-reverse' : 'row' }}>
+          {/* START QUADRANT: Dynamic Identity */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {type === 'BANNER' ? (
               brandingConfig?.logoSvgContent ? (
                 <div
                   className="report-svg-banner"
-                  style={{ width: '80mm', height: '24mm', display: 'flex', alignItems: 'center', justifyContent: lang === 'ar' ? 'flex-end' : 'flex-start', overflow: 'visible', flexShrink: 0 }}
+                  style={{ width: '80mm', height: '24mm', display: 'flex', alignItems: 'center', justifyContent: lang === 'ar' ? 'flex-start' : 'flex-start', overflow: 'visible', flexShrink: 0 }}
                   dangerouslySetInnerHTML={{ __html: brandingConfig.logoSvgContent }}
                 />
               ) : (
-                <div style={{ width: '80mm', height: '24mm', display: 'flex', alignItems: 'center', justifyContent: lang === 'ar' ? 'flex-end' : 'flex-start', overflow: 'visible', flexShrink: 0 }}>
+                <div style={{ width: '80mm', height: '24mm', display: 'flex', alignItems: 'center', justifyContent: lang === 'ar' ? 'flex-start' : 'flex-start', overflow: 'visible', flexShrink: 0 }}>
                   <img
                     src={src}
                     {...(src.startsWith('data:') ? {} : { crossOrigin: "anonymous" })}
@@ -308,7 +308,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
                 </div>
               )
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexDirection: lang === 'ar' ? 'row-reverse' : 'row' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 {brandingConfig?.logoSvgContent ? (
                   <div
                     className="report-svg-mark"
@@ -332,8 +332,8 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             )}
           </div>
 
-          {/* RIGHT QUADRANT: Report Title & Date (ALWAYS HERE) */}
-          <div style={{ textAlign: lang === 'ar' ? 'left' : 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
+          {/* END QUADRANT: Report Title & Date */}
+          <div style={{ textAlign: lang === 'ar' ? 'right' : 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h2 style={{ margin: 0, fontSize: '14pt', fontWeight: 700, color: '#0B1220', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{displayTitle}</h2>
             <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '4px' }}>{labels.date}: {dateStr}</span>
             {hasValidScope && <span style={{ fontSize: '9pt', color: '#64748b', marginTop: '2px' }}>{labels.scope}: {options.scope}</span>}
@@ -343,7 +343,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
           </div>
         </div>
 
-        {/* BOTTOM ROW: The Global Metadata Strip (ALWAYS HERE) */}
+        {/* BOTTOM ROW: The Global Metadata Strip */}
         <div style={{
           display: 'flex',
           width: '100%',
@@ -356,10 +356,9 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
           color: '#9ca3af',
           textTransform: 'uppercase',
           letterSpacing: '0.1em',
-          flexDirection: lang === 'ar' ? 'row-reverse' : 'row',
           marginTop: '16px'
         }}>
-          {/* Left Side: Name & Address (Constrained Width) */}
+          {/* Start Side: Name & Address */}
           <div style={{
             width: '60%',
             paddingRight: lang === 'en' ? '16px' : '0',
@@ -392,7 +391,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
             )}
           </div>
 
-          {/* Right Side: Legal & Contact (Right Aligned) */}
+          {/* End Side: Legal & Contact */}
           <div style={{
             width: '40%',
             display: 'flex',

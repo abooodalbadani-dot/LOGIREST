@@ -756,6 +756,7 @@ export class OutboxWorker extends WorkerHost {
       const date = new Date(isoString);
       if (isNaN(date.getTime())) return 'N/A';
 
+      const timeZone = process.env.SYSTEM_TIMEZONE || process.env.DEFAULT_TIMEZONE || 'UTC';
       const formatter = new Intl.DateTimeFormat('en-GB', {
         day: '2-digit',
         month: '2-digit',
@@ -763,7 +764,7 @@ export class OutboxWorker extends WorkerHost {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
-        timeZone: 'Asia/Riyadh',
+        timeZone,
       });
       const formatted = formatter.format(date);
       return formatted.replace(/\//g, '-').replace(',', '');

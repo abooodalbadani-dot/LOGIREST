@@ -136,6 +136,10 @@ describe('Purchasing Controllers', () => {
       expect(mockPurchaseOrderService.create).toHaveBeenCalledWith(
         {
           ...body,
+          exchangeRate: undefined,
+          isSubmitted: undefined,
+          notes: null,
+          prId: undefined,
           warehouseId: undefined,
         },
         'user-1',

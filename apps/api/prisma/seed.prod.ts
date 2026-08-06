@@ -16,7 +16,7 @@ async function main(): Promise<void> {
   const systemSettingsConfig = {
     systemName: 'Otantik Restuarant System',
     baseCurrency: 'USD',
-    timezone: 'Asia/Riyadh',
+    timezone: process.env.SYSTEM_TIMEZONE || process.env.DEFAULT_TIMEZONE || 'UTC',
     localeDefault: 'ar',
     hasTransactions: false,
   };

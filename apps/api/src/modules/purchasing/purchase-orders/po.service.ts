@@ -34,147 +34,178 @@ export class PurchaseOrderService {
     userId: string,
     userRole: Role = Role.PROC_OFFICER,
   ) {
-    return this.prisma.$transaction(async (tx) => {
-      let branchId: string | undefined;
-      let warehouseId: string | undefined = body.warehouseId;
+    const maxAttempts = 3;
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            await this.validateBaseCurrencyFxRate(tx, body.currencyId, body.exchangeRate);
 
-      if (body.prId) {
-        const pr = await tx.purchaseRequest.findUnique({
-          where: { id: body.prId },
-          select: { branchId: true, status: true, warehouseId: true },
-        });
-        if (!pr) {
-          throw new NotFoundException(
-            `Purchase Request with ID ${body.prId} not found`,
-          );
-        }
-        if (pr.status !== 'APPROVED') {
-          throw new BadRequestException(
-            `Only APPROVED Purchase Requests can be converted to Purchase Orders. (Current status: ${pr.status})`,
-          );
-        }
+            let branchId: string | undefined;
+            let warehouseId: string | undefined = body.warehouseId;
 
-        const existingPo = await tx.purchaseOrder.findFirst({
-          where: { prId: body.prId },
-          select: { poNumber: true },
-        });
-        if (existingPo) {
-          throw new ConflictException(
-            `Purchase Request ${body.prId} has already been converted to Purchase Order ${existingPo.poNumber}.`,
-          );
-        }
+            if (body.prId) {
+              const pr = await tx.purchaseRequest.findUnique({
+                where: { id: body.prId },
+                select: { branchId: true, status: true, warehouseId: true },
+              });
+              if (!pr) {
+                throw new NotFoundException(
+                  `Purchase Request with ID ${body.prId} not found`,
+                );
+              }
+              if (pr.status !== 'APPROVED') {
+                throw new BadRequestException(
+                  `Only APPROVED Purchase Requests can be converted to Purchase Orders. (Current status: ${pr.status})`,
+                );
+              }
 
-        branchId = pr.branchId;
-        warehouseId = pr.warehouseId;
+              const existingPo = await tx.purchaseOrder.findFirst({
+                where: { prId: body.prId },
+                select: { poNumber: true },
+              });
+              if (existingPo) {
+                throw new ConflictException(
+                  `Purchase Request ${body.prId} has already been converted to Purchase Order ${existingPo.poNumber}.`,
+                );
+              }
 
-        await tx.purchaseRequest.update({
-          where: { id: body.prId },
-          data: { status: 'FULFILLED' },
-        });
-      }
+              branchId = pr.branchId;
+              warehouseId = pr.warehouseId;
 
-      if (!branchId && warehouseId) {
-        const wh = await tx.warehouse.findUnique({
-          where: { id: warehouseId },
-          select: { branchId: true },
-        });
-        if (wh) {
-          branchId = wh.branchId;
-        }
-      }
+              await tx.purchaseRequest.update({
+                where: { id: body.prId },
+                data: { status: 'FULFILLED' },
+              });
+            }
 
-      if (!branchId) {
-        const firstBranch = await tx.branch.findFirst({ select: { id: true } });
-        if (!firstBranch) {
-          throw new NotFoundException(
-            'No active branch found to generate document sequence',
-          );
-        }
-        branchId = firstBranch.id;
-      }
+            if (!branchId && warehouseId) {
+              const wh = await tx.warehouse.findUnique({
+                where: { id: warehouseId },
+                select: { branchId: true },
+              });
+              if (wh) {
+                branchId = wh.branchId;
+              }
+            }
 
-      const poNumber = await this.documentNumberService.next(
-        tx,
-        DocumentType.PURCHASE_ORDER,
-        branchId,
-      );
+            if (!branchId) {
+              const firstBranch = await tx.branch.findFirst({ select: { id: true } });
+              if (!firstBranch) {
+                throw new NotFoundException(
+                  'No active branch found to generate document sequence',
+                );
+              }
+              branchId = firstBranch.id;
+            }
 
-      const status: POStatus = body.isSubmitted
-        ? POStatus.PENDING_APPROVAL
-        : POStatus.DRAFT;
+            const poNumber = await this.documentNumberService.next(
+              tx,
+              DocumentType.PURCHASE_ORDER,
+              branchId,
+            );
 
-      const po = await tx.purchaseOrder.create({
-        data: {
-          poNumber,
-          prId: body.prId || null,
-          supplierId: body.supplierId,
-          currencyId: body.currencyId,
-          warehouseId: warehouseId || null,
-          status,
-          notes: body.notes ?? null,
-          exchangeRate: body.exchangeRate ?? 1,
-          lines: {
-            create: body.lines.map((line) => ({
-              itemId: line.itemId,
-              quantity: line.quantity,
-              unitPrice: line.unitPrice,
-              uomId: line.uomId || null,
-              notes: line.notes ?? null,
-            })),
-          },
-        },
-        include: {
-          lines: {
-            include: {
-              uom: true,
-              item: {
-                include: {
-                  unitOfMeasure: true,
-                  category: true,
-                  uomConversions: {
-                    include: {
-                      fromUom: { select: { id: true, code: true, name: true } },
-                      toUom: { select: { id: true, code: true, name: true } },
+            const status: POStatus = body.isSubmitted
+              ? POStatus.PENDING_APPROVAL
+              : POStatus.DRAFT;
+
+            const po = await tx.purchaseOrder.create({
+              data: {
+                poNumber,
+                prId: body.prId || null,
+                supplierId: body.supplierId,
+                currencyId: body.currencyId,
+                warehouseId: warehouseId || null,
+                status,
+                notes: body.notes ?? null,
+                exchangeRate: body.exchangeRate ?? 1,
+                lines: {
+                  create: body.lines.map((line) => ({
+                    itemId: line.itemId,
+                    quantity: line.quantity,
+                    unitPrice: line.unitPrice,
+                    uomId: line.uomId || null,
+                    notes: line.notes ?? null,
+                  })),
+                },
+              },
+              include: {
+                lines: {
+                  include: {
+                    uom: true,
+                    item: {
+                      include: {
+                        unitOfMeasure: true,
+                        category: true,
+                        uomConversions: {
+                          include: {
+                            fromUom: { select: { id: true, code: true, name: true } },
+                            toUom: { select: { id: true, code: true, name: true } },
+                          },
+                        },
+                      },
                     },
                   },
                 },
+                supplier: true,
+                currency: true,
+                warehouse: true,
+                purchaseRequest: {
+                  include: {
+                    warehouse: true,
+                  },
+                },
               },
-            },
-          },
-          supplier: true,
-          currency: true,
-          warehouse: true,
-          purchaseRequest: {
-            include: {
-              warehouse: true,
-            },
-          },
-        },
-      });
+            });
 
-      if (body.isSubmitted) {
-        await tx.approvalEvent.create({
-          data: {
-            documentId: po.id,
-            documentType: DocumentType.PURCHASE_ORDER,
-            fromStatus: POStatus.DRAFT,
-            toStatus: POStatus.PENDING_APPROVAL,
-            actionPerformed: 'SUBMIT',
-            userId,
-            userRole,
-            stepNumber: 1,
-          },
-        });
+            if (body.isSubmitted) {
+              await tx.approvalEvent.create({
+                data: {
+                  documentId: po.id,
+                  documentType: DocumentType.PURCHASE_ORDER,
+                  fromStatus: POStatus.DRAFT,
+                  toStatus: POStatus.PENDING_APPROVAL,
+                  actionPerformed: 'SUBMIT',
+                  userId,
+                  userRole,
+                  stepNumber: 1,
+                },
+              });
 
-        await this.outboxService.writeEvent(tx, 'PO_SUBMITTED', {
-          id: po.id,
-          documentNumber: po.poNumber,
-          supplierId: po.supplierId,
-        });
+              await this.outboxService.writeEvent(tx, 'PO_SUBMITTED', {
+                id: po.id,
+                documentNumber: po.poNumber,
+                supplierId: po.supplierId,
+              });
+            }
+
+            return po;
+          },
+          {
+            timeout: 15000,
+          },
+        );
+      } catch (error) {
+        const isLockOrSerializationError =
+          (error instanceof Prisma.PrismaClientKnownRequestError &&
+            (error.code === 'P2034' || error.code === 'P2024' || error.code === 'P1001')) ||
+          (error instanceof Error &&
+            (error.message?.includes('40001') ||
+              error.message?.includes('40P01') ||
+              error.message?.includes('serialization') ||
+              error.message?.includes('deadlock') ||
+              error.message?.includes('lock timeout') ||
+              error.message?.includes('canceling statement due to lock timeout')));
+        if (isLockOrSerializationError && attempt < maxAttempts) {
+          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
       }
-
-      return po;
-    });
+    }
   }
 
   async findAll(
@@ -205,6 +236,7 @@ export class PurchaseOrderService {
     if (warehouseId) {
       where.OR = [
         { warehouseId },
+        { warehouseId: null },
         {
           purchaseRequest: {
             warehouseId,
@@ -307,7 +339,7 @@ export class PurchaseOrderService {
     const grns = await this.prisma.goodsReceivedNote.findMany({
       where: {
         poId: po.id,
-        status: { in: ['POSTED', 'RECEIVED', 'SUBMITTED'] },
+        status: 'POSTED',
       },
       select: {
         lines: {
@@ -408,7 +440,7 @@ export class PurchaseOrderService {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.purchaseOrder.findUnique({
         where: { id },
-        select: { version: true, status: true },
+        select: { version: true, status: true, currencyId: true, exchangeRate: true },
       });
 
       if (!existing) {
@@ -426,6 +458,12 @@ export class PurchaseOrderService {
           'Only DRAFT Purchase Orders can be updated.',
         );
       }
+
+      await this.validateBaseCurrencyFxRate(
+        tx,
+        body.currencyId ?? existing.currencyId,
+        body.exchangeRate ?? existing.exchangeRate,
+      );
 
       // Delete old lines and recreate new ones
       if (body.lines) {
@@ -618,5 +656,33 @@ export class PurchaseOrderService {
       await tx.pOLine.deleteMany({ where: { poId: id } });
       return tx.purchaseOrder.delete({ where: { id } });
     });
+  }
+
+  private async validateBaseCurrencyFxRate(
+    tx: Prisma.TransactionClient,
+    currencyId?: string | null,
+    exchangeRate?: number | Prisma.Decimal | null,
+  ) {
+    if (!currencyId) return;
+    const currency = await tx.currency.findUnique({
+      where: { id: currencyId },
+      select: { id: true, isBase: true, code: true },
+    });
+    if (!currency) return;
+
+    if (currency.isBase && exchangeRate !== undefined && exchangeRate !== null && Number(exchangeRate) !== 1) {
+      throw new BadRequestException(
+        `Exchange rate must be 1 when document currency is the system base currency (${currency.code}).`,
+      );
+    }
+
+    if (!currency.isBase) {
+      const numRate = exchangeRate !== undefined && exchangeRate !== null ? Number(exchangeRate) : 0;
+      if (!numRate || numRate <= 0) {
+        throw new BadRequestException(
+          `Selected foreign currency (${currency.code}) requires a valid non-zero exchange rate to the system base currency.`,
+        );
+      }
+    }
   }
 }

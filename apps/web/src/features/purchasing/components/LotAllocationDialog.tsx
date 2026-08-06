@@ -64,20 +64,23 @@ export function LotAllocationDialog({
     }
   }, [open, currentLot]);
 
-  const lotNumberTrimmed = lotNumber.trim();
-  const isLotNumberValid = lotNumberTrimmed.length > 0;
-  const isFormValid = isLotNumberValid;
-
   const selectedDate = expiryDate ? parseISO(expiryDate) : undefined;
   const isDateValid = selectedDate ? isValid(selectedDate) : false;
 
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+
   const isExpiryInPast = isDateValid && selectedDate
-    ? selectedDate < new Date(new Date().toDateString())
+    ? selectedDate < todayMidnight
     : false;
+
+  const lotNumberTrimmed = lotNumber.trim();
+  const isLotNumberValid = lotNumberTrimmed.length > 0;
+  const isFormValid = isLotNumberValid && !isExpiryInPast;
 
   const handleConfirm = () => {
     setTouched(true);
-    if (!isFormValid) return;
+    if (!isFormValid || isExpiryInPast) return;
     onConfirm({
       id: currentLot?.id ?? generateTempId(),
       lotNumber: lotNumberTrimmed,
@@ -210,15 +213,16 @@ export function LotAllocationDialog({
                   </PopoverContent>
                 </Popover>
                 {isExpiryInPast && (
-                  <p className="text-xs text-amber-500 font-semibold flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    {t('expiry_date_in_past_warning') || 'This expiry date is in the past. Verify before saving.'}
+                  <p className="text-xs text-destructive font-semibold flex items-center gap-1.5 mt-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                    <span className="font-bold uppercase tracking-wider text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">[EXPIRED]</span>
+                    {t('expired_lot_error') || 'Cannot select or enter an expired lot (expiry date is in the past).'}
                   </p>
                 )}
               </div>
 
               {/* Allocation summary */}
-              {isLotNumberValid && (
+              {isLotNumberValid && !isExpiryInPast && (
                 <div className="flex items-center gap-3 bg-operational-cyan/5 border border-operational-cyan/20 rounded-xl px-4 py-3">
                   <CheckCircle2 className="w-4 h-4 text-operational-cyan shrink-0" />
                   <p className="text-xs font-semibold text-operational-cyan">
@@ -256,8 +260,8 @@ export function LotAllocationDialog({
                 <Button
                   type="button"
                   onClick={handleConfirm}
-                  className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                  disabled={touched && !isFormValid}
+                  className="px-6 py-2.5 bg-[#0B1220] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={!isFormValid || isExpiryInPast}
                 >
                   <CheckCircle2 className="w-4 h-4 me-2" />
                   {t('confirm_allocation') || 'Confirm Allocation'}

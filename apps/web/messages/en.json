@@ -3484,6 +3484,7 @@
       "exchange_rate": "Exchange Rate",
       "expiry_date": "Expiry Date",
       "expiry_required": "Expiry date is required",
+      "expired_lot_error": "Cannot select or enter an expired lot (expiry date is in the past).",
       "fefo_allocation": "FEFO Lot Allocation",
       "filter_state": "Filter by State",
       "finalized_rate": "Finalized Posting Rate",

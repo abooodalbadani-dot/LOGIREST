@@ -70,10 +70,11 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
 
   useEffect(() => {
-    if (fxRates?.[0]?.rate && !form.formState.isDirty) {
-      form.reset({ fx_rate: fxRates[0].rate });
+    if (!form.formState.isDirty && grn) {
+      const activeRate = grn.fxRate || grn.poFxRate || fxRates?.[0]?.rate || 1;
+      form.reset({ fx_rate: Number(activeRate) });
     }
-  }, [fxRates, form]);
+  }, [grn, fxRates, form]);
 
   const totalSupplier = useMemo(() => {
     return grn?.lines.reduce((acc, line) => acc + (line.receivedQty * (line.unitCostForeign || 0)), 0) || 0;
@@ -83,9 +84,9 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
     return totalSupplier * fxRate;
   }, [totalSupplier, fxRate]);
 
-  // Expected rate from PO or master data (for comparison)
-  const expectedRate = grn?.poFxRate || fxRates?.[0]?.rate || 1;
-  const rateVariance = ((fxRate - expectedRate) / expectedRate) * 100;
+  // Expected rate from master data or PO (for comparison)
+  const expectedRate = fxRates?.[0]?.rate || grn?.fxRate || grn?.poFxRate || 1;
+  const rateVariance = expectedRate > 0 ? ((fxRate - expectedRate) / expectedRate) * 100 : 0;
 
   // Enforce role and workflow status (PART 1)
   const canPost = useMemo(() => {

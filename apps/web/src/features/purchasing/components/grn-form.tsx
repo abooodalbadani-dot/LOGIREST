@@ -199,7 +199,7 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
    const searchParams = useSearchParams();
    const queryPoId = searchParams ? searchParams.get('po_id') : null;
 
-   const { handleSubmit, reset, control, register, getValues, setValue, formState: { errors, isDirty } } = useForm<GRNFormValues>({
+   const { handleSubmit, reset, control, register, getValues, setValue, setError, clearErrors, formState: { errors, isDirty } } = useForm<GRNFormValues>({
       resolver: zodResolver(grnFormSchema),
       defaultValues: {
          poId: initialData?.poId || queryPoId || '',
@@ -403,7 +403,11 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
       return currencies?.find(c => c.id === currencyId)?.code || '';
    }, [currencies, currencyId]);
 
-   const { currency: baseCurrency } = useBaseCurrency();
+   const { currency: baseCurrencySetting } = useBaseCurrency();
+   const baseCurrency = useMemo(() => {
+      const baseCurrencyObj = currencies?.find(c => c.isBase);
+      return baseCurrencyObj?.code || baseCurrencySetting || 'SAR';
+   }, [currencies, baseCurrencySetting]);
    const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
    const watchedExchangeRate = useWatch({ control, name: 'exchangeRate' });
    const prevCurrencyRef = useRef<string>(selectedCurrencyCode);
@@ -412,15 +416,39 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
       if (!hasPo && selectedCurrencyCode) {
          if (selectedCurrencyCode === baseCurrency) {
             setValue('exchangeRate', 1, { shouldValidate: true, shouldDirty: true });
+            clearErrors('currencyId');
+            clearErrors('exchangeRate');
          } else if (fxRates && fxRates.length > 0 && typeof fxRates[0]?.rate === 'number') {
             const fetchedRate = fxRates[0].rate;
             if (prevCurrencyRef.current !== selectedCurrencyCode || isNew || !watchedExchangeRate || watchedExchangeRate === 1) {
                setValue('exchangeRate', fetchedRate, { shouldValidate: true, shouldDirty: true });
+               clearErrors('currencyId');
+               clearErrors('exchangeRate');
             }
+         } else if (fxRates && fxRates.length === 0) {
+            // ❌ Clear stale FX rate and set error when foreign currency has no FX rate
+            setValue('exchangeRate', '' as unknown as number, { shouldValidate: true, shouldDirty: true });
+            setError('currencyId', {
+               type: 'manual',
+               message: locale === 'ar'
+                  ? 'هذه العملة لا تملك سعر صرف مسجل مقابل العملة الأساسية. يرجى تسجيل سعر الصرف أولاً.'
+                  : 'Selected currency has no registered exchange rate to the base currency.',
+            });
          }
       }
       prevCurrencyRef.current = selectedCurrencyCode;
-   }, [selectedCurrencyCode, baseCurrency, fxRates, hasPo, isNew, setValue, watchedExchangeRate]);
+   }, [selectedCurrencyCode, baseCurrency, fxRates, hasPo, isNew, setValue, setError, clearErrors, watchedExchangeRate, locale]);
+
+   useEffect(() => {
+      const numRate = typeof watchedExchangeRate === 'number'
+         ? watchedExchangeRate
+         : (typeof watchedExchangeRate === 'string' ? parseFloat(watchedExchangeRate) : 0);
+
+      if (numRate && !isNaN(numRate) && numRate > 0) {
+         clearErrors('currencyId');
+         clearErrors('exchangeRate');
+      }
+   }, [watchedExchangeRate, clearErrors]);
 
    const currentFxRate = typeof watchedExchangeRate === 'number'
       ? watchedExchangeRate
@@ -670,21 +698,33 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
          return;
       }
 
+      const missingExpiryLines = (values.lines || []).filter(line => {
+         const matchedMasterItem = itemsData?.data?.find(i => i.id === line.item.id);
+         const hasExpiry = (line.item as any)?.hasExpiry === true || (matchedMasterItem as any)?.trackLots === true;
+         const hasLotId = !!line.lot?.id;
+         const hasExpiryDate = !!line.lot?.expiryDate;
+         return hasExpiry && !hasLotId && !hasExpiryDate;
+      });
+
+      if (missingExpiryLines.length > 0) {
+         playSound('error');
+         const itemNames = missingExpiryLines.map(l => l.item.name || l.item.code).join(', ');
+         toast.error(
+            `Item ${itemNames} requires an expiry date. Please enter it in the item row before saving.`
+         );
+         return;
+      }
+
       const expiredLines = values.lines
          .filter(line => line.lot?.expiryDate && isExpiryInPast(line.lot.expiryDate));
 
       if (expiredLines.length > 0) {
-         const role = user?.role;
-         if (role === 'WH_KEEPER') {
-            toast.error(t('expiry_date_in_past'));
-            return;
-         }
-         if (role === 'INV_MGR' || role === 'ADMIN') {
-            if (!overrideReason.trim()) {
-               toast.warning(t('expiry_date_in_past_warning'));
-               return;
-            }
-         }
+         playSound('error');
+         const itemNames = expiredLines.map(l => l.item.name || l.item.code).join(', ');
+         toast.error(
+            `Cannot save GRN: Lot for item "${itemNames}" is expired. Please select a valid lot.`
+         );
+         return;
       }
       try {
          const rawPoId = poData?.id || values.poId || watchedPoId || queryPoId || initialData?.poId;

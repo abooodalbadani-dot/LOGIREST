@@ -8,7 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role, DocumentType, Prisma, GRStatus } from '@prisma/client';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { toBaseQty } from '@logirest/shared-types';
+import { toBaseQty, getConversionFactor } from '@logirest/shared-types';
 
 @Injectable()
 export class GrnService {
@@ -45,7 +45,7 @@ export class GrnService {
     const previousGrns = await tx.goodsReceivedNote.findMany({
       where: {
         poId: po.id,
-        status: { in: ['POSTED', 'RECEIVED', 'SUBMITTED'] },
+        status: 'POSTED',
         ...(excludeGrnId && { id: { not: excludeGrnId } }),
       },
       select: {
@@ -174,6 +174,16 @@ export class GrnService {
       let capturedFxRate = body.fxRate ? new Prisma.Decimal(body.fxRate) : new Prisma.Decimal(1);
       const fxRateCapturedAt = new Date();
 
+      let targetCurrencyId = body.currencyId;
+      if (!targetCurrencyId && body.poId) {
+        const poRef = await tx.purchaseOrder.findFirst({
+          where: { OR: [{ id: body.poId }, { poNumber: body.poId }] },
+          select: { currencyId: true },
+        });
+        targetCurrencyId = poRef?.currencyId;
+      }
+      await this.validateBaseCurrencyFxRate(tx, targetCurrencyId, body.fxRate);
+
       if (body.poId) {
         const po = await tx.purchaseOrder.findFirst({
           where: {
@@ -214,7 +224,7 @@ export class GrnService {
 
         branchId = po.purchaseRequest?.branchId;
 
-        if (po.currency && !po.currency.isBase) {
+        if (po.currency && !po.currency.isBase && (body.fxRate === undefined || body.fxRate === null)) {
           const baseCurrency = await tx.currency.findFirst({
             where: { isBase: true },
           });
@@ -276,8 +286,41 @@ export class GrnService {
         );
 
         const foreignPrice = new Prisma.Decimal(line.unitPrice);
-        const basePrice = foreignPrice.mul(capturedFxRate).toDecimalPlaces(4);
         const lineUomId = line.uomId ?? null;
+
+        const item = await tx.item.findUnique({
+          where: { id: line.itemId },
+          include: {
+            uomConversions: {
+              select: { fromUomId: true, toUomId: true, factor: true },
+            },
+          },
+        });
+
+        if (!item) {
+          throw new NotFoundException(`Item with ID ${line.itemId} not found`);
+        }
+
+        if (item.hasExpiry && !line.expiryDate && !line.lotId) {
+          throw new BadRequestException(
+            `Item ${item.sku} requires an expiry date. Please enter it in the item row before saving.`,
+          );
+        }
+
+        const conversions = (item?.uomConversions ?? []).map((c) => ({
+          fromUomId: c.fromUomId,
+          toUomId: c.toUomId,
+          factor: Number(c.factor),
+        }));
+
+        const selectedUomId = lineUomId ?? item?.uomId ?? '';
+        const baseUomId = item?.uomId ?? '';
+        const uomFactor = getConversionFactor(selectedUomId, baseUomId, conversions);
+
+        const convertedPrice = foreignPrice.mul(capturedFxRate);
+        const basePrice = uomFactor > 0
+          ? convertedPrice.div(uomFactor).toDecimalPlaces(4)
+          : convertedPrice.toDecimalPlaces(4);
 
         processedLines.push({
           itemId: line.itemId,
@@ -536,7 +579,7 @@ export class GrnService {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.goodsReceivedNote.findUnique({
         where: { id },
-        select: { version: true, status: true, poId: true },
+        select: { version: true, status: true, poId: true, currencyId: true, fxRate: true },
       });
 
       if (!existing) {
@@ -556,6 +599,12 @@ export class GrnService {
           'Only DRAFT Goods Received Notes can be updated.',
         );
       }
+
+      await this.validateBaseCurrencyFxRate(
+        tx,
+        body.currencyId ?? existing.currencyId,
+        body.fxRate ?? existing.fxRate,
+      );
 
       const effectivePoId = body.poId !== undefined ? body.poId : existing.poId;
       if (effectivePoId && body.lines) {
@@ -590,8 +639,21 @@ export class GrnService {
           where: { grnId: id },
         });
 
+        const effectiveFxRate = body.fxRate ?? (existing.fxRate ? Number(existing.fxRate) : 1);
+
         processedLines = [];
         for (const line of body.lines) {
+          const item = await tx.item.findUnique({
+            where: { id: line.itemId },
+            select: { sku: true, hasExpiry: true },
+          });
+
+          if (item?.hasExpiry && !line.expiryDate && !line.lotId) {
+            throw new BadRequestException(
+              `Item ${item.sku} requires an expiry date. Please enter it in the item row before saving.`,
+            );
+          }
+
           const lotId = await this.resolveOrCreateLot(
             tx,
             line.itemId,
@@ -599,12 +661,18 @@ export class GrnService {
             line.lotNumber,
             line.expiryDate,
           );
+
+          const foreignPrice = new Prisma.Decimal(line.unitPrice);
+          const basePrice = foreignPrice.mul(effectiveFxRate).toDecimalPlaces(4);
+
           processedLines.push({
             itemId: line.itemId,
             uomId: line.uomId,
             lotId,
             quantityReceived: line.quantity,
             unitPrice: line.unitPrice,
+            unitPriceForeign: foreignPrice,
+            unitPriceBase: basePrice,
           });
         }
       }
@@ -671,6 +739,7 @@ export class GrnService {
       expiryDate?: string | null;
       receivedQuantity: number;
       unitPrice: number;
+      uomId?: string | null;
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -703,7 +772,40 @@ export class GrnService {
         ? new Prisma.Decimal(existingGrn.fxRate)
         : new Prisma.Decimal(1);
       const foreignPrice = new Prisma.Decimal(line.unitPrice);
-      const basePrice = foreignPrice.mul(fxRate).toDecimalPlaces(4);
+
+      const item = await tx.item.findUnique({
+        where: { id: line.itemId },
+        include: {
+          uomConversions: {
+            select: { fromUomId: true, toUomId: true, factor: true },
+          },
+        },
+      });
+
+      if (!item) {
+        throw new NotFoundException(`Item with ID ${line.itemId} not found`);
+      }
+
+      if (item.hasExpiry && !line.expiryDate && !line.lotId) {
+        throw new BadRequestException(
+          `Item ${item.sku} requires an expiry date. Please enter it in the item row before saving.`,
+        );
+      }
+
+      const conversions = (item?.uomConversions ?? []).map((c) => ({
+        fromUomId: c.fromUomId,
+        toUomId: c.toUomId,
+        factor: Number(c.factor),
+      }));
+
+      const selectedUomId = line.uomId ?? item?.uomId ?? '';
+      const baseUomId = item?.uomId ?? '';
+      const uomFactor = getConversionFactor(selectedUomId, baseUomId, conversions);
+
+      const convertedPrice = foreignPrice.mul(fxRate);
+      const basePrice = uomFactor > 0
+        ? convertedPrice.div(uomFactor).toDecimalPlaces(4)
+        : convertedPrice.toDecimalPlaces(4);
 
       // Check if there is an existing line with this itemId and lotId
       const existingLine = await tx.gRNLine.findFirst({
@@ -823,10 +925,24 @@ export class GrnService {
     lotNumber?: string | null,
     expiryDate?: string | null,
   ): Promise<string | null> {
+    const checkExpiry = (exp: Date | string | null | undefined) => {
+      if (!exp) return;
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const expiry = new Date(exp);
+      expiry.setUTCHours(0, 0, 0, 0);
+      if (expiry < today) {
+        throw new BadRequestException('Cannot select a lot that is already expired.');
+      }
+    };
+
     // If lotId is a valid UUID and doesn't start with 'new-', verify its existence
     if (lotId && !lotId.startsWith('new-')) {
       const existing = await tx.lot.findUnique({ where: { id: lotId } });
-      if (existing) return existing.id;
+      if (existing) {
+        checkExpiry(existing.expiryDate);
+        return existing.id;
+      }
     }
 
     // If we have a lotNumber, resolve or create the Lot
@@ -841,8 +957,12 @@ export class GrnService {
             `Lot number ${trimmedLotNumber} is already registered to another item.`,
           );
         }
+        checkExpiry(existing.expiryDate);
         return existing.id;
       }
+
+      // Check new lot expiry date
+      checkExpiry(expiryDate);
 
       // Otherwise, create a new lot
       const created = await tx.lot.create({
@@ -855,6 +975,36 @@ export class GrnService {
       return created.id;
     }
 
+    checkExpiry(expiryDate);
+
     return null;
+  }
+
+  private async validateBaseCurrencyFxRate(
+    tx: Prisma.TransactionClient,
+    currencyId?: string | null,
+    fxRate?: number | Prisma.Decimal | null,
+  ) {
+    if (!currencyId) return;
+    const currency = await tx.currency.findUnique({
+      where: { id: currencyId },
+      select: { id: true, isBase: true, code: true },
+    });
+    if (!currency) return;
+
+    if (currency.isBase && fxRate !== undefined && fxRate !== null && Number(fxRate) !== 1) {
+      throw new BadRequestException(
+        `Exchange rate must be 1 when document currency is the system base currency (${currency.code}).`,
+      );
+    }
+
+    if (!currency.isBase) {
+      const numRate = fxRate !== undefined && fxRate !== null ? Number(fxRate) : 0;
+      if (!numRate || numRate <= 0) {
+        throw new BadRequestException(
+          `Selected foreign currency (${currency.code}) requires a valid non-zero exchange rate to the system base currency.`,
+        );
+      }
+    }
   }
 }

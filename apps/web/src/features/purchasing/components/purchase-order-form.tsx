@@ -415,7 +415,12 @@ export function PurchaseOrderForm({
     return currencies?.find(c => c.id === currencyId)?.code || '';
   }, [currencies, currencyId]);
 
-  const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
+  const { currency: baseCurrencySetting, isLoading: loadingSettings } = useBaseCurrency();
+  const baseCurrency = React.useMemo(() => {
+    const baseCurrencyObj = currencies?.find(c => c.isBase);
+    return baseCurrencyObj?.code || baseCurrencySetting || 'SAR';
+  }, [currencies, baseCurrencySetting]);
+
   const { data: fxRates, isLoading: loadingFXRates } = useFXRates(selectedCurrencyCode, baseCurrency);
 
   const supplierItems = React.useMemo(() => {
@@ -456,8 +461,12 @@ export function PurchaseOrderForm({
 
     if (selectedCurrencyCode === baseCurrency) {
       form.setValue("exchangeRate", 1, { shouldValidate: true, shouldDirty: true });
+      form.clearErrors("currencyId");
+      form.clearErrors("exchangeRate");
       return;
     }
+
+    if (loadingFXRates) return;
 
     if (fxRates && fxRates.length > 0) {
       const baseCurrId = currencies?.find(c => c.code === baseCurrency)?.id;
@@ -487,9 +496,32 @@ export function PurchaseOrderForm({
 
       if (fetchedRate && !Number.isNaN(fetchedRate) && fetchedRate > 0) {
         form.setValue("exchangeRate", fetchedRate, { shouldValidate: true, shouldDirty: true });
+        form.clearErrors("currencyId");
+        form.clearErrors("exchangeRate");
+        return;
       }
     }
-  }, [fxRates, form, selectedCurrencyCode, baseCurrency, currencyId, currencies]);
+
+    // ❌ Clear stale FX rate and block submission if foreign currency has no FX rate
+    form.setValue("exchangeRate", "" as unknown as number, { shouldValidate: true, shouldDirty: true });
+    form.setError("currencyId", {
+      type: "manual",
+      message: locale === 'ar'
+        ? "هذه العملة لا تملك سعر صرف مسجل مقابل العملة الأساسية. يرجى تسجيل سعر الصرف أولاً."
+        : "Selected currency has no registered exchange rate to the base currency.",
+    });
+  }, [fxRates, loadingFXRates, form, selectedCurrencyCode, baseCurrency, currencyId, currencies, locale]);
+
+  React.useEffect(() => {
+    const numRate = typeof rate === 'number'
+      ? rate
+      : (typeof rate === 'string' ? parseFloat(rate) : 0);
+
+    if (numRate && !Number.isNaN(numRate) && numRate > 0) {
+      form.clearErrors("currencyId");
+      form.clearErrors("exchangeRate");
+    }
+  }, [rate, form]);
 
   React.useEffect(() => {
     if (currencies && baseCurrency && !form.getValues('currencyId') && !initialData) {
@@ -500,6 +532,12 @@ export function PurchaseOrderForm({
       }
     }
   }, [currencies, baseCurrency, form, initialData]);
+
+  React.useEffect(() => {
+    if (warehousesData?.data && warehousesData.data.length > 0 && !form.getValues('targetWarehouseId') && !initialData) {
+      form.setValue('targetWarehouseId', warehousesData.data[0].id, { shouldValidate: true });
+    }
+  }, [warehousesData, form, initialData]);
 
   const hasMasterDataError = !!(suppliersError || currenciesError || warehousesError);
 

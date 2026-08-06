@@ -4,7 +4,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { OutboxService } from '../../outbox/outbox.service';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Role } from '@logirest/shared-types';
 
 describe('PurchaseOrderService', () => {
@@ -28,6 +28,9 @@ describe('PurchaseOrderService', () => {
     approvalEvent: {
       create: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
+    },
+    currency: {
+      findUnique: jest.fn(),
     },
     goodsReceivedNote: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -159,6 +162,39 @@ describe('PurchaseOrderService', () => {
         }),
       );
     });
+
+    it('should retry transaction and succeed when PrismaClientKnownRequestError P2034 lock error occurs on first attempt', async () => {
+      const body = {
+        supplierId: 'supplier-1',
+        currencyId: 'currency-1',
+        lines: [{ itemId: 'item-1', quantity: 10, unitPrice: 5.5 }],
+      };
+
+      const lockError = new (require('@prisma/client').Prisma.PrismaClientKnownRequestError)(
+        'Transaction failed due to lock timeout',
+        { code: 'P2034', clientVersion: '5.x' },
+      );
+
+      mockPrisma.branch.findFirst.mockResolvedValue({ id: 'branch-1' });
+      mockPrisma.purchaseOrder.create.mockResolvedValue({
+        id: 'po-retry-1',
+        poNumber: 'PO-2026-HQ-00002',
+        supplierId: 'supplier-1',
+      });
+
+      let attempts = 0;
+      mockPrisma.$transaction.mockImplementationOnce(() => {
+        attempts++;
+        throw lockError;
+      }).mockImplementationOnce((cb: (tx: unknown) => Promise<unknown>) => {
+        attempts++;
+        return cb(mockPrisma);
+      });
+
+      const result = await service.create(body, 'user-1', 'PROC_OFFICER' as Role);
+      expect(attempts).toBe(2);
+      expect(result).toHaveProperty('id', 'po-retry-1');
+    });
   });
 
   describe('findOne', () => {
@@ -252,6 +288,21 @@ describe('PurchaseOrderService', () => {
 
       const result = await service.cancel('po-1', userId, role, body);
       expect(result).toEqual({ id: 'po-1', status: 'CANCELLED', approvalEvents: [] });
+    });
+
+    it('should throw BadRequestException if FX rate is not 1 for base currency', async () => {
+      mockPrisma.currency.findUnique.mockResolvedValue({ isBase: true, code: 'YER' });
+
+      const dto = {
+        supplierId: 'sup-1',
+        currencyId: 'cur-base',
+        exchangeRate: 25,
+        lines: [{ itemId: 'item-1', quantity: 10, unitPrice: 100 }],
+      };
+
+      await expect(
+        service.create(dto as any, 'user-1', 'PROC_OFFICER' as Role),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

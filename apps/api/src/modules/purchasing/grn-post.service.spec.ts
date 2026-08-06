@@ -56,7 +56,7 @@ describe('GrnPostService', () => {
       create: mockAuditLogCreate,
     },
     lot: {
-      findUnique: jest.fn().mockResolvedValue({ itemId: 'item-1' }),
+      findUnique: jest.fn().mockResolvedValue({ itemId: 'item-1', expiryDate: new Date('2028-12-31') }),
     },
     pOLine: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -266,5 +266,157 @@ describe('GrnPostService', () => {
     await expect(
       service.post(grnId, userId, Role.PROC_OFFICER, 1),
     ).rejects.toThrow(new BadRequestException('Cannot post GRN: Item SKU1 is frozen/locked in destination warehouse'));
+  });
+
+  it('should recalculate WAC using cost per base unit when receiving in non-base UOM', async () => {
+    const grnId = 'grn-uom-test';
+    const userId = 'user-1';
+
+    (mockLockService.lockDocument as jest.Mock).mockResolvedValue({
+      id: grnId,
+      status: 'RECEIVED',
+      version: 1,
+    });
+
+    mockGrnFindUnique.mockResolvedValue({
+      id: grnId,
+      warehouseId: 'wh-1',
+      status: 'RECEIVED',
+      version: 1,
+      fxRate: new Prisma.Decimal(1.0),
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          uomId: 'uom-box',
+          quantityReceived: new Prisma.Decimal(4),
+          unitPrice: new Prisma.Decimal(120.0),
+          unitPriceForeign: new Prisma.Decimal(120.0),
+          unitPriceBase: new Prisma.Decimal(10.0), // $120 / 12 factor = $10 per BAG
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            uomId: 'uom-bag',
+            isBatched: false,
+            hasExpiry: false,
+            uomConversions: [
+              { fromUomId: 'uom-box', toUomId: 'uom-bag', factor: new Prisma.Decimal(12) },
+            ],
+          },
+        },
+      ],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue(null);
+    mockWarehouseItemUpsert.mockResolvedValue({});
+    mockGrnUpdateMany.mockResolvedValue({ count: 1 });
+
+    await service.post(grnId, userId, Role.PROC_OFFICER, 1);
+
+    // Should call WAC recalculate with baseQuantity = 48 (4 * 12) and costToUse = 10 ($120 / 12)
+    expect(mockWacService.recalculate).toHaveBeenCalledWith(
+      expect.anything(),
+      'wh-1',
+      'item-1',
+      48,  // 4 BOX * 12 factor = 48 BAG
+      10,  // $120 / 12 factor = $10 per BAG
+      grnId,
+      expect.any(String),
+    );
+  });
+
+  it('should throw BadRequestException if item hasExpiry is true but no lot is provided', async () => {
+    const grnId = 'grn-expiry-test-1';
+    const userId = 'user-1';
+
+    (mockLockService.lockDocument as jest.Mock).mockResolvedValue({
+      id: grnId,
+      status: 'RECEIVED',
+      version: 1,
+    });
+
+    mockGrnFindUnique.mockResolvedValue({
+      id: grnId,
+      warehouseId: 'wh-1',
+      status: 'RECEIVED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-exp',
+          lotId: null, // missing lot!
+          quantityReceived: new Prisma.Decimal(5),
+          unitPrice: new Prisma.Decimal(10),
+          item: {
+            id: 'item-exp',
+            sku: 'EXP01',
+            isBatched: false,
+            hasExpiry: true, // requires expiry!
+          },
+        },
+      ],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue(null);
+
+    await expect(
+      service.post(grnId, userId, Role.PROC_OFFICER, 1),
+    ).rejects.toThrow(
+      new BadRequestException(
+        'Item EXP01 requires strict expiry tracking. You must provide an expiry date or select an existing valid lot.',
+      ),
+    );
+  });
+
+  it('should throw BadRequestException if item hasExpiry is true but the assigned lot is already expired', async () => {
+    const grnId = 'grn-expired-lot-test';
+    const userId = 'user-1';
+    const expiredLotId = 'lot-expired';
+
+    (mockLockService.lockDocument as jest.Mock).mockResolvedValue({
+      id: grnId,
+      status: 'RECEIVED',
+      version: 1,
+    });
+
+    mockGrnFindUnique.mockResolvedValue({
+      id: grnId,
+      warehouseId: 'wh-1',
+      status: 'RECEIVED',
+      version: 1,
+      fxRate: null,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-exp',
+          lotId: expiredLotId,
+          uomId: null,
+          quantityReceived: new Prisma.Decimal(5),
+          unitPrice: new Prisma.Decimal(10),
+          unitPriceBase: new Prisma.Decimal(10),
+          unitPriceForeign: new Prisma.Decimal(10),
+          item: {
+            id: 'item-exp',
+            sku: 'EXP01',
+            uomId: 'uom-base',
+            isBatched: true,
+            hasExpiry: true,
+            uomConversions: [],
+          },
+        },
+      ],
+    });
+
+    // Lot exists and belongs to item, but expired 2 years ago
+    (mockPrismaTx.lot as unknown as { findUnique: jest.Mock }).findUnique.mockResolvedValueOnce({
+      itemId: 'item-exp',
+      expiryDate: new Date('2023-01-01'),
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue(null);
+
+    await expect(
+      service.post(grnId, userId, Role.PROC_OFFICER, 1),
+    ).rejects.toThrow(BadRequestException);
   });
 });

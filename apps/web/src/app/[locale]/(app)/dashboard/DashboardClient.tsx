@@ -19,6 +19,8 @@ import { PendingDocumentsWidget } from '@/features/dashboard/components/PendingD
 import { useDashboardStats } from '@/features/dashboard/hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { useAuditLogs, type AuditLogRow } from '@/features/admin/hooks/useAuditLogs';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
+import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { Link } from '@/i18n/navigation';
 
 export default function DashboardClient() {
@@ -35,13 +37,13 @@ export default function DashboardClient() {
     );
     const auditLogs = auditLogsData?.data || [];
 
-    if (loadingStats) {
-        return <PageSkeleton />;
-    }
+    const { currency: baseCurrencySetting } = useBaseCurrency();
+    const { data: currencies } = useCurrencies();
+    const baseCurrencyCode = currencies?.find(c => c.isBase)?.code || baseCurrencySetting || 'SAR';
 
     const stats = {
         totalStockValue: statsData?.totalValue ?? 0,
-        baseCurrency: statsData?.currency ?? 'USD',
+        baseCurrency: statsData?.currency ?? baseCurrencyCode,
         pendingPRs: statsData?.pendingPrs ?? 0,
         activeStocktakes: statsData?.activeStocktakes ?? 0,
         lowStockItems: statsData?.lowStockItems ?? 0,

@@ -27,6 +27,18 @@ export class SettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getBaseCurrency(): Promise<{ baseCurrency: string; symbol: string }> {
+    const baseDbCurrency = await this.prisma.currency.findFirst({
+      where: { isBase: true, isActive: true },
+      select: { code: true, symbol: true },
+    });
+
+    if (baseDbCurrency) {
+      return {
+        baseCurrency: baseDbCurrency.code,
+        symbol: baseDbCurrency.symbol || CURRENCY_SYMBOLS[baseDbCurrency.code] || baseDbCurrency.code,
+      };
+    }
+
     const setting = await this.prisma.systemSetting.findUnique({
       where: { key: 'system_settings' },
     });
