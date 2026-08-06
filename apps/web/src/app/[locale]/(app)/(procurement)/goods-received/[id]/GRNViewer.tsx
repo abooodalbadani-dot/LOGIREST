@@ -269,6 +269,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
               locale={locale}
               isReadOnly={true}
               enableVirtualization={true}
+              headers={{ qty: locale === 'ar' ? 'الكمية المطلوبة' : 'PO Qty' }}
               extraColumns={[
                 {
                   header: tc('table_headers.received_qty'),

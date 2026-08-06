@@ -37,6 +37,7 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreatePoDto } from './dto/create-po.dto';
 import { UpdatePoDto } from './dto/update-po.dto';
+import { FindPurchaseOrdersDto } from './dto/find-purchase-orders.dto';
 import type { Request, Response } from 'express';
 
 export function parsePONotesAndExpectedDate(rawNotes: string | null | undefined, createdAtIso: string) {
@@ -105,6 +106,8 @@ function mapPODetail(po: Record<string, unknown>) {
       itemName: item?.name as string,
       quantity: Number(line.quantity),
       qty: Number(line.quantity),
+      receivedQuantity: line.receivedQuantity !== undefined ? Number(line.receivedQuantity) : 0,
+      remainingQuantity: line.remainingQuantity !== undefined ? Number(line.remainingQuantity) : Number(line.quantity),
       unitCostForeign: Number(line.unitPrice),
       unitPrice: Number(line.unitPrice),
       uomId: (line.uomId as string) || (item?.uomId as string) || '',
@@ -331,13 +334,7 @@ export class PurchaseOrderController {
   @Get()
   @AllRoles()
   async findAll(
-    @Query()
-    query: {
-      status?: string;
-      supplierId?: string;
-      search?: string;
-      page?: string;
-    },
+    @Query() query: FindPurchaseOrdersDto,
     @ActiveScope('warehouseId') warehouseId?: string,
   ) {
     const result = await this.poService.findAll(
@@ -346,6 +343,7 @@ export class PurchaseOrderController {
         supplierId: query.supplierId,
         search: query.search,
         page: query.page ? Number(query.page) : 1,
+        limit: query.limit ? Number(query.limit) : 20,
       },
       warehouseId,
     );

@@ -49,6 +49,7 @@ interface UpdateGrnLineBody {
 function mapGRNDetail(grn: Record<string, unknown>) {
   const grnLines = (grn.lines as Record<string, unknown>[]) || [];
   const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
+  const poLines = (purchaseOrder?.lines as Record<string, unknown>[]) || [];
   const supplier = (grn.supplier as Record<string, unknown> | null) || (purchaseOrder?.supplier as Record<string, unknown> | null);
   const currency = (grn.currency as Record<string, unknown> | null) || (purchaseOrder?.currency as Record<string, unknown> | null);
   const warehouse = grn.warehouse as Record<string, unknown> | null;
@@ -59,6 +60,15 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
 
     const lineUom = line.uom as Record<string, unknown> | null;
+
+    const lineItemId = (line.itemId as string) || (item?.id as string) || '';
+    const matchingPoLine = poLines.find((pl) => {
+      const plItemId = (pl.itemId as string) || ((pl.item as Record<string, unknown>)?.id as string) || '';
+      return plItemId === lineItemId || (item?.id && plItemId === (item.id as string));
+    });
+    const originalPoQty = matchingPoLine && matchingPoLine.quantity !== undefined && matchingPoLine.quantity !== null
+      ? Number((matchingPoLine.quantity as { toString: () => string }).toString())
+      : Number(line.quantityReceived);
 
     return {
       id: line.id as string,
@@ -96,7 +106,7 @@ function mapGRNDetail(grn: Record<string, unknown>) {
               : null,
           }
         : null,
-      qty: Number(line.quantityReceived),
+      qty: originalPoQty,
       receivedQty: Number(line.quantityReceived),
       uomId: (line.uomId as string) || (item?.uomId as string) || '',
       uom: lineUom
@@ -490,7 +500,7 @@ export class GrnController {
   ) {
     const grnRecord = await this.prisma.goodsReceivedNote.findUnique({
       where: { id },
-      select: { warehouseId: true },
+      select: { warehouseId: true, poId: true },
     });
     if (grnRecord) {
       await this.scopeValidationService.validateWarehouse(
@@ -500,7 +510,7 @@ export class GrnController {
       );
     }
 
-    const poId = body.poId;
+    const poId = (body.poId && body.poId.trim() !== '') ? body.poId : (grnRecord?.poId || undefined);
     const warehouseId = body.warehouseId;
 
     const incomingLines = body.lineItems || body.lines;

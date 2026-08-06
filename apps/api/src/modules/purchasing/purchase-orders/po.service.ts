@@ -9,6 +9,7 @@ import { WorkflowService } from '../../workflow/workflow.service';
 import { OutboxService } from '../../outbox/outbox.service';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType, Prisma, POStatus, Role } from '@prisma/client';
+import { toBaseQty, getConversionFactor } from '@logirest/shared-types';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -17,7 +18,7 @@ export class PurchaseOrderService {
     private readonly workflowService: WorkflowService,
     private readonly documentNumberService: DocumentNumberService,
     private readonly outboxService: OutboxService,
-  ) {}
+  ) { }
 
   async create(
     body: {
@@ -133,7 +134,7 @@ export class PurchaseOrderService {
                   uomConversions: {
                     include: {
                       fromUom: { select: { id: true, code: true, name: true } },
-                      toUom:   { select: { id: true, code: true, name: true } },
+                      toUom: { select: { id: true, code: true, name: true } },
                     },
                   },
                 },
@@ -178,7 +179,7 @@ export class PurchaseOrderService {
 
   async findAll(
     params: {
-      status?: string;
+      status?: POStatus[] | POStatus | string;
       supplierId?: string;
       search?: string;
       page?: number;
@@ -192,7 +193,11 @@ export class PurchaseOrderService {
 
     const where: Prisma.PurchaseOrderWhereInput = {};
     if (params.status) {
-      where.status = params.status as POStatus;
+      if (Array.isArray(params.status)) {
+        where.status = { in: params.status as POStatus[] };
+      } else {
+        where.status = params.status as POStatus;
+      }
     }
     if (params.supplierId) {
       where.supplierId = params.supplierId;
@@ -277,7 +282,7 @@ export class PurchaseOrderService {
                 uomConversions: {
                   include: {
                     fromUom: { select: { id: true, code: true, name: true } },
-                    toUom:   { select: { id: true, code: true, name: true } },
+                    toUom: { select: { id: true, code: true, name: true } },
                   },
                 },
               },
@@ -299,6 +304,76 @@ export class PurchaseOrderService {
       throw new NotFoundException(`Purchase Order with ID ${id} not found`);
     }
 
+    const grns = await this.prisma.goodsReceivedNote.findMany({
+      where: {
+        poId: po.id,
+        status: { in: ['POSTED', 'RECEIVED', 'SUBMITTED'] },
+      },
+      select: {
+        lines: {
+          select: {
+            itemId: true,
+            quantityReceived: true,
+            uomId: true,
+          },
+        },
+      },
+    });
+
+    const receivedQtyMap = new Map<string, number>();
+    grns.forEach((grn) => {
+      grn.lines.forEach((l) => {
+        const itemInPo = po.lines.find((pl) => pl.itemId === l.itemId)?.item;
+        const primaryUomId = itemInPo?.uomId || '';
+        const conversions = (itemInPo?.uomConversions || []).map((c) => ({
+          fromUomId: c.fromUomId,
+          toUomId: c.toUomId,
+          factor: Number(c.factor),
+        }));
+        const baseQty = toBaseQty(
+          Number(l.quantityReceived),
+          l.uomId || primaryUomId,
+          primaryUomId,
+          conversions,
+        );
+        receivedQtyMap.set(l.itemId, (receivedQtyMap.get(l.itemId) || 0) + baseQty);
+      });
+    });
+
+    const linesWithRemaining = (po.lines || []).map((line) => {
+      const primaryUomId = line.item.uomId;
+      const conversions = (line.item.uomConversions || []).map((c) => ({
+        fromUomId: c.fromUomId,
+        toUomId: c.toUomId,
+        factor: Number(c.factor),
+      }));
+
+      const grnLineForThisItem = grns.flatMap((g) => g.lines).find((l) => l.itemId === line.itemId);
+      const lineUomId = line.uomId || grnLineForThisItem?.uomId || primaryUomId;
+      const poLineBaseQty = toBaseQty(
+        Number(line.quantity),
+        lineUomId,
+        primaryUomId,
+        conversions,
+      );
+
+      const alreadyReceivedBase = receivedQtyMap.get(line.itemId) || 0;
+      const remainingBase = Math.max(0, poLineBaseQty - alreadyReceivedBase);
+
+      const factorForLineUom = getConversionFactor(lineUomId, primaryUomId, conversions);
+      const rawAlreadyReceived = factorForLineUom > 0 ? alreadyReceivedBase / factorForLineUom : alreadyReceivedBase;
+      const rawRemaining = factorForLineUom > 0 ? remainingBase / factorForLineUom : remainingBase;
+
+      const alreadyReceivedInLineUom = Math.round(Number(rawAlreadyReceived) * 10000) / 10000;
+      const remainingInLineUom = Math.round(Number(rawRemaining) * 10000) / 10000;
+
+      return {
+        ...line,
+        receivedQuantity: alreadyReceivedInLineUom,
+        remainingQuantity: remainingInLineUom,
+      };
+    });
+
     const approvalEvents = await this.prisma.approvalEvent.findMany({
       where: {
         documentId: po.id,
@@ -308,7 +383,7 @@ export class PurchaseOrderService {
       orderBy: { createdAt: 'asc' },
     });
 
-    return { ...po, approvalEvents };
+    return { ...po, ...(po.lines && { lines: linesWithRemaining }), approvalEvents };
   }
 
   async update(
@@ -391,7 +466,7 @@ export class PurchaseOrderService {
                   uomConversions: {
                     include: {
                       fromUom: { select: { id: true, code: true, name: true } },
-                      toUom:   { select: { id: true, code: true, name: true } },
+                      toUom: { select: { id: true, code: true, name: true } },
                     },
                   },
                 },

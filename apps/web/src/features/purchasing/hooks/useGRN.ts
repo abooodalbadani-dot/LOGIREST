@@ -199,6 +199,6 @@ export function useGRN(id: string | null) {
   queryKey: ['grn', id],
   queryFn: ({ signal }) => apiClient.get(`/procurement/grns/${id}`, z.object({ data: GRNDetailResponseSchema }), { signal }).then(res => res.data),
   enabled: !!id && id !== 'new' && id !== 'undefined' && id !== 'null',
-  staleTime: 60_000,
+  staleTime: 0,
  });
 }

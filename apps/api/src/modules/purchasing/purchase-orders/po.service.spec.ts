@@ -29,6 +29,9 @@ describe('PurchaseOrderService', () => {
       create: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
     },
+    goodsReceivedNote: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     $transaction: jest
       .fn()
       .mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>

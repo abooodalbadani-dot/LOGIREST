@@ -84,7 +84,7 @@ interface GRNFormProps {
 }
 
 interface GRNReceivedQtyCellProps {
-   register: UseFormRegister<GRNFormValues>;
+   control: any;
    index: number;
    isLocked: boolean;
    isWarehouseLocked: boolean;
@@ -94,7 +94,7 @@ interface GRNReceivedQtyCellProps {
 }
 
 function GRNReceivedQtyCell({
-   register,
+   control,
    index,
    isLocked,
    isWarehouseLocked,
@@ -102,23 +102,53 @@ function GRNReceivedQtyCell({
    receivedQty,
    hasError
 }: GRNReceivedQtyCellProps) {
-   const isOver = receivedQty > qty;
+   const isOver = (typeof receivedQty === 'number' ? receivedQty : 0) > qty;
    return (
-      <Input
-         type="number"
-         dir="ltr"
-         lang="en"
-         style={{ WebkitLocale: '"en"' }}
-         disabled={isLocked || isWarehouseLocked}
-         className={cn(
-            "w-full h-10 rounded-xl bg-background border border-border text-center px-2 py-0.5 font-mono text-sm font-black text-foreground outline-none transition-all disabled:opacity-50",
-            hasError
-               ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
-               : isOver
-                  ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
-                  : "focus:ring-1 focus:ring-brand-gold/50 focus:border-brand-gold shadow-none"
-         )}
-         {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
+      <Controller
+         control={control}
+         name={`lines.${index}.receivedQty` as const}
+         render={({ field: { onChange, value, onBlur, ref } }) => {
+            const displayVal = (() => {
+               if (value === undefined || value === null || value === '' || (typeof value === 'number' && isNaN(value))) {
+                  return '';
+               }
+               const num = typeof value === 'number' ? value : parseFloat(String(value));
+               if (isNaN(num)) return '';
+               return Math.round(num * 10000) / 10000;
+            })();
+            return (
+               <Input
+                  ref={ref}
+                  type="number"
+                  step="any"
+                  min={0}
+                  dir="ltr"
+                  lang="en"
+                  style={{ WebkitLocale: '"en"' }}
+                  disabled={isLocked || isWarehouseLocked}
+                  value={displayVal}
+                  onChange={(e) => {
+                     const val = e.target.value;
+                     if (val === '') {
+                        onChange('');
+                     } else {
+                        const parsed = parseFloat(val);
+                        onChange(isNaN(parsed) ? '' : Math.round(parsed * 10000) / 10000);
+                     }
+                  }}
+                  onBlur={onBlur}
+                  onFocus={(e) => e.target.select()}
+                  className={cn(
+                     "w-full h-10 rounded-xl bg-background border border-border text-center px-2 py-0.5 font-mono text-sm font-black text-foreground outline-none transition-all disabled:opacity-50 force-latin-numbers cursor-text",
+                     hasError
+                        ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
+                        : isOver
+                           ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
+                           : "focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 bg-background text-foreground hover:border-border/80"
+                  )}
+               />
+            );
+         }}
       />
    );
 }
@@ -183,9 +213,10 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
    });
 
    const watchedPoId = useWatch({ control, name: 'poId' });
-   const { data: poResponse, isLoading: isLoadingPO } = usePO(watchedPoId || queryPoId || '');
+   const effectivePoId = watchedPoId || queryPoId || initialData?.poId || '';
+   const { data: poResponse, isLoading: isLoadingPO } = usePO(effectivePoId);
    const poData = poResponse;
-   const hasPo = !!watchedPoId;
+   const hasPo = !!effectivePoId;
 
    const isNew = id === 'new';
    const lastResetId = useRef<string | null>(null);
@@ -196,7 +227,7 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
    const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
    const { data: currencies } = useCurrencies();
 
-   const { data: poListResponse } = usePOList({ status: 'APPROVED' });
+   const { data: poListResponse } = usePOList({ status: ['APPROVED', 'PARTIAL'] });
    const approvedPOs = poListResponse?.data || [];
 
    const poItems = useMemo(() => {
@@ -296,41 +327,77 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
    const isWarehouseLocked = !!warehouseLock?.isLocked;
    const watchedLines = useWatch({ control, name: 'lines' });
 
-   const extraColumns = useMemo(() => [
-      {
-         header: tc('table_headers.received_qty'),
-         cell: (field: LineItem) => {
-            const index = fields.findIndex(f => f.id === field.id);
-            const hasError = !!errors.lines?.[index]?.receivedQty;
-            return (
-               <GRNReceivedQtyCell
-                  register={register}
-                  index={index}
-                  isLocked={isLocked}
-                  isWarehouseLocked={isWarehouseLocked}
-                  qty={field.qty}
-                  receivedQty={field.receivedQty}
-                  hasError={hasError}
-               />
-            );
-         }
-      },
-      {
-         header: tc('table_headers.lot_allocation'),
-         isAction: true,
-         cell: (field: LineItem) => {
-            const hasLot = !!field.lot;
-            return (
-               <GRNLotAllocationCell
-                  field={field}
-                  hasLot={hasLot}
-                  label={t('allocate_lot')}
-                  onClick={() => handleLotClick(field)}
-               />
-            );
-         }
+   const extraColumns = useMemo(() => {
+      const cols = [];
+      if (hasPo) {
+         cols.push({
+            header: locale === 'ar' ? 'المستلم سابقاً' : 'Already Received',
+            cell: (field: LineItem) => {
+               const matchingPoLine = poData?.lines?.find(pl => (pl.item?.id || pl.itemId) === field.item.id);
+               const rawAlreadyReceived = matchingPoLine?.receivedQuantity !== undefined ? matchingPoLine.receivedQuantity : 0;
+               const alreadyReceived = Math.round(Number(rawAlreadyReceived) * 10000) / 10000;
+               return (
+                  <span className="font-mono text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                     {alreadyReceived}
+                  </span>
+               );
+            }
+         });
+         cols.push({
+            header: locale === 'ar' ? 'المتبقي للاستلام' : 'Remaining',
+            cell: (field: LineItem) => {
+               const matchingPoLine = poData?.lines?.find(pl => (pl.item?.id || pl.itemId) === field.item.id);
+               const poQty = Number(matchingPoLine?.quantity !== undefined ? matchingPoLine.quantity : field.qty);
+               const alreadyReceived = Number(matchingPoLine?.receivedQuantity !== undefined ? matchingPoLine.receivedQuantity : 0);
+               const rawRemaining = matchingPoLine?.remainingQuantity !== undefined ? matchingPoLine.remainingQuantity : Math.max(0, poQty - alreadyReceived);
+               const remaining = Math.round(Math.min(poQty, Number(rawRemaining)) * 10000) / 10000;
+               return (
+                  <span className="font-mono text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-md">
+                     {remaining}
+                  </span>
+               );
+            }
+         });
       }
-   ], [tc, fields, errors.lines, isLocked, isWarehouseLocked, register, t, handleLotClick]);
+      cols.push(
+         {
+            header: tc('table_headers.received_qty'),
+            cell: (field: LineItem) => {
+               const fieldRecord = field as unknown as { lineIndex?: number };
+               const foundIdx = fields.findIndex(f => f.id === field.id);
+               const index = typeof fieldRecord.lineIndex === 'number' ? fieldRecord.lineIndex : (foundIdx >= 0 ? foundIdx : 0);
+               const hasError = !!errors.lines?.[index]?.receivedQty;
+               return (
+                  <GRNReceivedQtyCell
+                     control={control}
+                     index={index}
+                     isLocked={isLocked}
+                     isWarehouseLocked={isWarehouseLocked}
+                     qty={field.qty}
+                     receivedQty={field.receivedQty}
+                     hasError={hasError}
+                  />
+               );
+            }
+         },
+         {
+            header: tc('table_headers.lot_allocation'),
+            isAction: true,
+            cell: (field: LineItem) => {
+               const hasLot = !!field.lot;
+               return (
+                  <GRNLotAllocationCell
+                     field={field}
+                     hasLot={hasLot}
+                     label={t('allocate_lot')}
+                     onClick={() => handleLotClick(field)}
+                  />
+               );
+            }
+         }
+      );
+      return cols;
+   }, [hasPo, locale, poData, tc, fields, errors.lines, isLocked, isWarehouseLocked, control, t, handleLotClick]);
 
    const selectedCurrencyCode = useMemo(() => {
       return currencies?.find(c => c.id === currencyId)?.code || '';
@@ -410,51 +477,66 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
       }
    }, [initialData, currencies, getValues, setValue]);
 
+   const lastResetPoKey = useRef<string | null>(null);
    useEffect(() => {
       if (isNew && poData) {
-         reset({
-            poId: poData.id,
-            supplierId: poData.supplierId || '',
-            currencyId: poData.currencyId || '',
-            exchangeRate: poData.exchangeRate || 1,
-            warehouseId: poData.targetWarehouseId || '',
-            notes: poData.notes || '',
-            lines: poData.lines.map(line => {
-               const itemId = line.item?.id || line.itemId || '';
-               const itemCode = line.item?.code || line.itemSku || '';
-               const itemName = line.item?.name || line.itemName || '';
-               const lineSelectedUom = line.uom || (line.uomId ? { id: line.uomId, code: resolveUomCode(line.uomId, line.item, null, 'PCS') } : undefined);
-               const uomId = lineSelectedUom?.id || line.uomId || line.item?.primaryUom?.id || '';
-               const uomCode = lineSelectedUom?.code || resolveUomCode(uomId, line.item, null, 'PCS');
-               const itemImage = line.item?.image || line.item?.imageUrl || itemsData?.data?.find(i => i.id === itemId)?.image || itemsData?.data?.find(i => i.id === itemId)?.imageUrl || null;
-               return {
-                  id: line.id,
-                  item: {
-                     id: itemId,
-                     code: itemCode,
-                     name: itemName,
-                     nameAr: line.item?.nameAr || itemName,
-                     nameEn: line.item?.nameEn || itemName,
-                     image: itemImage,
-                     primaryUom: line.item?.primaryUom || {
-                        id: uomId,
-                        code: uomCode
-                     }
-                  },
-                  uom: lineSelectedUom || (uomId ? { id: uomId, code: uomCode } : undefined),
-                  lot: null,
-                  qty: line.quantity || 0,
-                  receivedQty: line.quantity || 0,
-                  uomId: uomId,
-                  unitCostForeign: line.unitPrice || 0,
-                  unitCostBase: 0
-               };
-            })
-         }, {
-            keepDirty: false,
-            keepTouched: false
-         });
-         setIdempotencyKey(crypto.randomUUID());
+         const currentPoKey = `${poData.id}_${poData.version || ''}_${poData.lines?.map(l => `${l.id}:${l.receivedQuantity}:${l.remainingQuantity}`).join('|')}`;
+         if (lastResetPoKey.current !== currentPoKey) {
+            lastResetPoKey.current = currentPoKey;
+            reset({
+               poId: poData.id,
+               supplierId: poData.supplierId || '',
+               currencyId: poData.currencyId || '',
+               exchangeRate: poData.exchangeRate || 1,
+               warehouseId: poData.targetWarehouseId || '',
+               notes: poData.notes || '',
+               lines: poData.lines
+                  .map(line => {
+                     const itemId = line.item?.id || line.itemId || '';
+                     const itemCode = line.item?.code || line.itemSku || '';
+                     const itemName = line.item?.name || line.itemName || '';
+                     const lineSelectedUom = line.uom || (line.uomId ? { id: line.uomId, code: resolveUomCode(line.uomId, line.item, null, 'PCS') } : undefined);
+                     const uomId = lineSelectedUom?.id || line.uomId || line.item?.primaryUom?.id || '';
+                     const uomCode = lineSelectedUom?.code || resolveUomCode(uomId, line.item, null, 'PCS');
+                     const itemImage = line.item?.image || line.item?.imageUrl || itemsData?.data?.find(i => i.id === itemId)?.image || itemsData?.data?.find(i => i.id === itemId)?.imageUrl || null;
+
+                     const poQty = Number(line.quantity || 0);
+                     const alreadyReceived = Number(line.receivedQuantity || 0);
+                     const rawRemaining = line.remainingQuantity !== undefined
+                        ? Number(line.remainingQuantity)
+                        : Math.max(0, poQty - alreadyReceived);
+                     const remainingQty = Math.round(Math.min(poQty, rawRemaining) * 10000) / 10000;
+
+                     return {
+                        id: line.id,
+                        item: {
+                           id: itemId,
+                           code: itemCode,
+                           name: itemName,
+                           nameAr: line.item?.nameAr || itemName,
+                           nameEn: line.item?.nameEn || itemName,
+                           image: itemImage,
+                           primaryUom: line.item?.primaryUom || {
+                              id: uomId,
+                              code: uomCode
+                           }
+                        },
+                        uom: lineSelectedUom || (uomId ? { id: uomId, code: uomCode } : undefined),
+                        lot: null,
+                        qty: poQty,
+                        receivedQty: remainingQty,
+                        uomId: uomId,
+                        unitCostForeign: line.unitPrice || 0,
+                        unitCostBase: 0
+                     };
+                  })
+                  .filter(line => line.receivedQty > 0)
+            }, {
+               keepDirty: false,
+               keepTouched: false
+            });
+            setIdempotencyKey(crypto.randomUUID());
+         }
       }
    }, [isNew, poData, reset, itemsData]);
 
@@ -605,8 +687,10 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
          }
       }
       try {
+         const rawPoId = poData?.id || values.poId || watchedPoId || queryPoId || initialData?.poId;
+         const targetPoId = rawPoId && typeof rawPoId === 'string' && rawPoId.trim() !== '' ? rawPoId.trim() : undefined;
          const payload = {
-            poId: values.poId || undefined,
+            poId: targetPoId,
             supplierId: values.supplierId,
             currencyId: values.currencyId,
             warehouseId: values.warehouseId,
@@ -1000,9 +1084,12 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
                                     const liveUom = (fRecord.uom as { id: string; code: string; name?: string } | undefined) ||
                                        (liveRecord.uom as { id: string; code: string; name?: string } | undefined) ||
                                        (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
+                                    const matchingPoLine = poData?.lines?.find(pl => (pl.item?.id || pl.itemId) === f.item.id);
+                                    const poOriginalQty = matchingPoLine?.quantity !== undefined ? matchingPoLine.quantity : (live.qty ?? f.qty);
                                     return {
                                        id: f.id,
-                                       qty: live.qty ?? f.qty,
+                                       lineIndex: idx,
+                                       qty: poOriginalQty,
                                        receivedQty: live.receivedQty ?? f.receivedQty,
                                        uomId: liveUomId,
                                        uom: liveUom,
@@ -1024,6 +1111,7 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
                                        lot: live.lot ? { id: live.lot.id, lotNumber: live.lot.lotNumber, expiryDate: live.lot.expiryDate } : (f.lot ? { id: f.lot.id, lotNumber: f.lot.lotNumber, expiryDate: f.lot.expiryDate } : null),
                                     };
                                  })}
+                                 headers={{ qty: locale === 'ar' ? 'الكمية المطلوبة' : 'PO Qty' }}
                                  isReadOnly={isLocked || isWarehouseLocked}
                                  layoutMode="table"
                                  mobileLayoutPattern="goods-received-form"
@@ -1186,20 +1274,40 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
                                              <span className="text-[11px] font-extrabold text-foreground text-center block">
                                                 {tc('table_headers.received_qty') || 'الكمية المستلمة'}
                                              </span>
-                                             <Input
-                                                type="number"
-                                                dir="ltr"
-                                                lang="en"
-                                                disabled={isLocked || isWarehouseLocked}
-                                                className={cn(
-                                                   "h-9 w-[78px] sm:w-[86px] text-center font-mono text-body-md font-black force-latin-numbers rounded-lg border border-border px-1 py-0 outline-none transition-all disabled:opacity-50 shadow-sm",
-                                                   hasError
-                                                      ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
-                                                      : receivedQty > qty
-                                                         ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
-                                                         : "focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 bg-background text-foreground hover:border-border/80"
+                                             <Controller
+                                                control={control}
+                                                name={`lines.${idx}.receivedQty` as const}
+                                                render={({ field: { onChange, value, onBlur, ref } }) => (
+                                                   <Input
+                                                      ref={ref}
+                                                      type="number"
+                                                      step="any"
+                                                      min={0}
+                                                      dir="ltr"
+                                                      lang="en"
+                                                      disabled={isLocked || isWarehouseLocked}
+                                                      value={value === undefined || value === null || (typeof value === 'number' && isNaN(value)) ? '' : value}
+                                                      onChange={(e) => {
+                                                         const val = e.target.value;
+                                                         if (val === '') {
+                                                            onChange('');
+                                                         } else {
+                                                            const parsed = parseFloat(val);
+                                                            onChange(isNaN(parsed) ? '' : parsed);
+                                                         }
+                                                      }}
+                                                      onBlur={onBlur}
+                                                      onFocus={(e) => e.target.select()}
+                                                      className={cn(
+                                                         "h-9 w-[78px] sm:w-[86px] text-center font-mono text-body-md font-black force-latin-numbers rounded-lg border border-border px-1 py-0 outline-none transition-all disabled:opacity-50 shadow-sm",
+                                                         hasError
+                                                            ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
+                                                            : receivedQty > qty
+                                                               ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
+                                                               : "focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 bg-background text-foreground hover:border-border/80"
+                                                      )}
+                                                   />
                                                 )}
-                                                {...register(`lines.${idx}.receivedQty` as const, { valueAsNumber: true })}
                                              />
                                           </div>
 

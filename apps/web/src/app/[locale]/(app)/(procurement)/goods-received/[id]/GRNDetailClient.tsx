@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { VoidConfirmationModal } from '@/components/shared/VoidConfirmationModal';
 import { isDocumentLocked, type DocumentStatus, GRN_STATUS } from '@logirest/shared-types';
 import { useGRN } from '@/features/purchasing/hooks/useGRN';
+import { usePO } from '@/features/purchasing/hooks/usePO';
 import { useAuth } from '@/providers/AuthProvider';
 import { GRNForm } from '@/features/purchasing/components/grn-form';
 import { GRNViewer } from './GRNViewer';
@@ -42,6 +43,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
 
   const isNew = id === 'new';
   const { data: grn, isLoading, error } = useGRN(isNew ? null : id);
+  const { data: poData } = usePO(grn?.poId || '');
   const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
   const { data: uomsData } = useMasterDataList<UoM>('units-of-measure', UoMSchema);
 
@@ -144,6 +146,8 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
               const selectedUom = lineUom || (l.uomId ? uomsData?.data?.find((u: UoM) => u.id === l.uomId) : null);
               const uomCode = resolveUomCode(selectedUom?.id || l.uomId || l.item?.primaryUom?.id, l.item, uomsData?.data, 'PCS');
               const uomName = selectedUom?.name || (!isRawUuid(selectedUom?.code) ? selectedUom?.code : '') || uomCode;
+              const matchingPoLine = poData?.lines?.find((pl) => (pl.item?.id || pl.itemId) === l.item.id);
+              const poOriginalQty = matchingPoLine?.quantity !== undefined ? matchingPoLine.quantity : l.qty;
               return {
                 id: l.id,
                 documentId: '',
@@ -165,10 +169,10 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
                 uom: lineUom || (selectedUom ? { id: selectedUom.id, code: uomCode, name: uomName } : null),
                 lotId: l.lot?.id ?? null,
                 lot: l.lot ? { ...l.lot, isExpired: false } : null,
-                qty: l.qty,
+                qty: poOriginalQty,
                 uomId: l.uomId,
                 unitCost: null,
-                poQty: null,
+                poQty: poOriginalQty,
                 receivedQty: l.receivedQty,
                 unitCostForeign: l.unitCostForeign ?? 0,
                 unitCostBase: l.unitCostBase ?? 0,

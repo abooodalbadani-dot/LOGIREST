@@ -305,7 +305,7 @@ export class GrnPostService {
                 },
               });
               const allPostedGrns = await tx.goodsReceivedNote.findMany({
-                where: { poId, status: 'POSTED' },
+                where: { poId, status: { in: ['POSTED', 'RECEIVED', 'SUBMITTED'] } },
                 include: {
                   lines: {
                     include: {
@@ -425,6 +425,12 @@ export class GrnPostService {
                   include: {
                     supplier: true,
                     currency: true,
+                    lines: {
+                      include: {
+                        item: true,
+                        uom: true,
+                      },
+                    },
                   },
                 },
                 warehouse: true,

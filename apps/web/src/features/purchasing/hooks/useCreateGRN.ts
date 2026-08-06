@@ -35,6 +35,7 @@ export function useCreateGRN(options?: { onConflict?: () => void, messages?: { s
   onSuccess: (data) => {
    queryClient.setQueryData(['grn', data.id], data);
    queryClient.invalidateQueries({ queryKey: ['grns'] });
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
    toast.success(options?.messages?.successMessage || 'Goods received note created successfully');
   },
   onError: (error: unknown) => {

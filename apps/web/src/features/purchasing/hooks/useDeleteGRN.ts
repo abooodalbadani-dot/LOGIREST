@@ -18,14 +18,15 @@ export function useDeleteGRN() {
   },
   onSuccess: () => {
    queryClient.invalidateQueries({ queryKey: ['grns'] });
-   toast.success(t('deleted_success') || 'GRN deleted successfully');
+   toast.success(t.has('deleted_success') ? t('deleted_success') : 'تم حذف سند الاستلام بنجاح');
   },
   onError: (error: unknown) => {
    if (error instanceof Error && error.name === 'AbortError') return;
    
-   const errorCode = (error as ApiError)?.code || (error as Error)?.message || 'delete_failed';
-   const translationKey = `errors.${errorCode}`;
-   toast.error(t.has(translationKey) ? t(translationKey) : t('errors.delete_failed') || 'Failed to delete GRN');
+   const errorCode = (error as ApiError)?.code || '';
+   const translationKey = errorCode ? `errors.${errorCode}` : '';
+   const fallbackMsg = (error as ApiError)?.message || (error as Error)?.message || 'فشل حذف سند الاستلام';
+   toast.error((translationKey && t.has(translationKey)) ? t(translationKey) : (t.has('errors.delete_failed') ? t('errors.delete_failed') : fallbackMsg));
   }
  });
 }

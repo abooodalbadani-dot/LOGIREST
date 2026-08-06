@@ -35,6 +35,7 @@ export function useUpdateGRN(options?: { onConflict?: () => void }) {
    queryClient.setQueryData(['grn', id], data);
    queryClient.invalidateQueries({ queryKey: ['grns'] });
    queryClient.invalidateQueries({ queryKey: ['grn', id] });
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
   },
   onError: (error) => {
    const message = (error as { message?: string }).message;

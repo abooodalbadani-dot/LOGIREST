@@ -28,8 +28,10 @@ const POLineSchema = z.object({
  itemId: z.string().optional(),
  itemSku: z.string().optional(),
  itemName: z.string().optional(),
- quantity: z.number().optional(),
- unitPrice: z.number().optional(),
+ quantity: z.coerce.number().optional(),
+ receivedQuantity: z.coerce.number().optional(),
+ remainingQuantity: z.coerce.number().optional(),
+ unitPrice: z.coerce.number().optional(),
  uomId: z.string(),
  uom: z.object({
   id: z.string(),
@@ -75,6 +77,7 @@ export function usePO(id: string) {
   queryKey: ['purchase-orders', id],
   queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), { signal }).then(res => res.data),
   enabled: !!id && id !== 'undefined' && id !== 'null',
-  staleTime: 30_000,
+  staleTime: 0,
+  refetchOnMount: 'always',
  });
 }

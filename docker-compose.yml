@@ -79,6 +79,7 @@ services:
     volumes:
       - ./apps/api/src:/app/apps/api/src
       - ./apps/api/prisma:/app/apps/api/prisma
+      - ./apps/api/dist:/app/apps/api/dist
       - ./packages/shared-types/src:/app/packages/shared-types/src
       - ./apps/web/public/uploads:/app/apps/web/public/uploads
       - ./backups:/backups:ro

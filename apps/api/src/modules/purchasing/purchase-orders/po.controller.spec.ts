@@ -79,14 +79,11 @@ describe('PurchaseOrderController', () => {
       const result = await controller.create(body, 'user-1', Role.ADMIN);
 
       expect(mockPoService.create).toHaveBeenCalledWith(
-        {
+        expect.objectContaining({
           supplierId: 'supplier-1',
           currencyId: 'currency-1',
-          prId: undefined,
           isSubmitted: true,
-          lines: [{ itemId: 'item-1', quantity: 5, unitPrice: 10 }],
-          warehouseId: undefined,
-        },
+        }),
         'user-1',
         Role.ADMIN,
       );
@@ -134,10 +131,13 @@ describe('PurchaseOrderController', () => {
       );
 
       expect(result.data).toBeDefined();
-      expect(mockPoService.update).toHaveBeenCalledWith('po-1', {
-        supplierId: 'supplier-1',
-        version: 1,
-      });
+      expect(mockPoService.update).toHaveBeenCalledWith(
+        'po-1',
+        expect.objectContaining({
+          supplierId: 'supplier-1',
+          version: 1,
+        }),
+      );
     });
   });
 

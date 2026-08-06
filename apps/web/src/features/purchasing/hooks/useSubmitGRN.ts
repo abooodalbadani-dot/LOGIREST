@@ -37,6 +37,7 @@ export function useSubmitGRN(options?: { onConflict?: () => void }) {
 
       queryClient.invalidateQueries({ queryKey: ['grns'] });
       queryClient.invalidateQueries({ queryKey: ['grn', id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
     },
     onError: (error) => {
       console.error('[useSubmitGRN] Failed to submit GRN:', error);

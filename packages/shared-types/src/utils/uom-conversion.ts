@@ -48,21 +48,27 @@ export function toBaseQty(
     );
   }
 
-  // Direct: selectedUom → baseUom
+  // Direct match: c.fromUomId === selectedUomId && c.toUomId === baseUomId
   const direct = conversions.find(
     (c) =>
       (c.fromUomId === selectedUomId || (c.fromUomCode && c.fromUomCode === selectedUomId)) &&
       (c.toUomId === baseUomId || (c.toUomCode && c.toUomCode === baseUomId)),
   );
-  if (direct) return qty * direct.factor;
+  if (direct) {
+    const factor = Number(direct.factor);
+    return qty * factor;
+  }
 
-  // Reverse: baseUom → selectedUom (invert the factor)
+  // Reverse match: c.toUomId === selectedUomId && c.fromUomId === baseUomId
   const reverse = conversions.find(
     (c) =>
       (c.toUomId === selectedUomId || (c.toUomCode && c.toUomCode === selectedUomId)) &&
       (c.fromUomId === baseUomId || (c.fromUomCode && c.fromUomCode === baseUomId)),
   );
-  if (reverse) return qty / reverse.factor;
+  if (reverse) {
+    const factor = Number(reverse.factor);
+    return factor > 0 ? qty / factor : qty;
+  }
 
   console.warn(
     `[UOM] No conversion found: ${selectedUomId} → ${baseUomId}. Returning qty unchanged.`,
@@ -72,11 +78,6 @@ export function toBaseQty(
 
 /**
  * Returns the multiplier needed to convert 1 unit of `selectedUomId` to `baseUomId`.
- *
- * - Same UOM          → 1
- * - Direct conversion → factor
- * - Reverse lookup    → 1 / factor
- * - No match found    → 1 (defensive, with a warning)
  *
  * Useful for recalculating displayed quantity when the user switches the UOM dropdown:
  *   displayedQty = baseQty / getConversionFactor(selectedUomId, baseUomId, conversions)
@@ -99,14 +100,19 @@ export function getConversionFactor(
       (c.fromUomId === selectedUomId || (c.fromUomCode && c.fromUomCode === selectedUomId)) &&
       (c.toUomId === baseUomId || (c.toUomCode && c.toUomCode === baseUomId)),
   );
-  if (direct) return direct.factor;
+  if (direct) {
+    return Number(direct.factor);
+  }
 
   const reverse = conversions.find(
     (c) =>
       (c.toUomId === selectedUomId || (c.toUomCode && c.toUomCode === selectedUomId)) &&
       (c.fromUomId === baseUomId || (c.fromUomCode && c.fromUomCode === baseUomId)),
   );
-  if (reverse) return 1 / reverse.factor;
+  if (reverse) {
+    const factor = Number(reverse.factor);
+    return factor > 0 ? 1 / factor : 1;
+  }
 
   console.warn(
     `[UOM] No conversion factor found: ${selectedUomId} → ${baseUomId}. Defaulting to 1.`,

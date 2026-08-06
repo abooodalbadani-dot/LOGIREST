@@ -38,14 +38,14 @@ function translateApiErrorMessage(message: string, lang: string): string {
       : `No active exchange rate found from ${fromCurrency} to ${toCurrency}. Please configure the exchange rate in currency settings.`;
   }
 
-  // 2. PO status: "Cannot create a GRN against a Purchase Order that is not APPROVED. (Current status: ...)"
-  const poStatusRegex = /Cannot create a GRN against a Purchase Order that is not APPROVED\.\s*\(Current status:\s*(\w+)\)/i;
+  // 2. PO status: "Cannot create a GRN against a Purchase Order that is not APPROVED..."
+  const poStatusRegex = /Cannot create a GRN against a Purchase Order that is not (?:APPROVED|PARTIAL|PARTIALLY_RECEIVED)[^.]*\.\s*\(Current status:\s*(\w+)\)/i;
   const poMatch = message.match(poStatusRegex);
   if (poMatch) {
     const [, status] = poMatch;
     return isAr
-      ? `لا يمكن إنشاء إشعار استلام بضائع (GRN) لأمر شراء غير معتمد. (الحالة الحالية: ${status})`
-      : `Cannot create a Goods Received Note (GRN) against a Purchase Order that is not APPROVED. (Current status: ${status})`;
+      ? `لا يمكن إنشاء إشعار استلام بضائع (GRN) لأمر شراء غير معتمد أو جزئي. (الحالة الحالية: ${status})`
+      : `Cannot create a Goods Received Note (GRN) against a Purchase Order that is not APPROVED or PARTIAL. (Current status: ${status})`;
   }
 
   // 3. Lot number duplication: "Lot number ... is already registered to another item."
@@ -478,7 +478,7 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
         return { code: 'NETWORK_ERROR', message: 'errors.network', fieldErrors: null };
       });
       const normalizedErr = normalizeKeysToCamelCase(err) as ApiError & { _isToastShown?: boolean };
-      
+
       const isWarehouseLocked = typeof normalizedErr.message === 'string' &&
         normalizedErr.message.toLowerCase().includes('warehouse is locked');
 
@@ -493,7 +493,7 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
 
       const isItemFrozen = typeof normalizedErr.message === 'string' &&
         (normalizedErr.message.toLowerCase().includes('frozen/locked') ||
-         normalizedErr.message.toLowerCase().includes('is frozen'));
+          normalizedErr.message.toLowerCase().includes('is frozen'));
 
       if (isItemFrozen && typeof window !== 'undefined') {
         const lang = (typeof document !== 'undefined' ? document.documentElement.lang : 'ar') === 'en' ? 'en' : 'ar';
@@ -513,7 +513,7 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
         toast.error(toastMessage, { duration: 6000 });
         normalizedErr._isToastShown = true;
       }
-      
+
       if (isNestValidationMessage(normalizedErr)) {
         const fieldErrors: Record<string, string[]> = {};
         for (const error of normalizedErr.errors) {
@@ -545,7 +545,7 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
       if (normalizedErr.message && typeof normalizedErr.message === 'string') {
         normalizedErr.message = translateApiErrorMessage(normalizedErr.message, locale);
       }
-      
+
       console.error(`[API Error] ${method} ${path} Details: ` + JSON.stringify({
         code: normalizedErr.code,
         message: normalizedErr.message,

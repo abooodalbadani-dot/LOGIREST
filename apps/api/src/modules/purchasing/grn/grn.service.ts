@@ -8,6 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role, DocumentType, Prisma, GRStatus } from '@prisma/client';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
+import { toBaseQty } from '@logirest/shared-types';
 
 @Injectable()
 export class GrnService {
@@ -16,6 +17,136 @@ export class GrnService {
     private readonly workflowService: WorkflowService,
     private readonly documentNumberService: DocumentNumberService,
   ) {}
+
+  private async validatePoRemainingQuantities(
+    tx: Prisma.TransactionClient,
+    po: {
+      id: string;
+      lines: Array<{
+        itemId: string;
+        quantity: Prisma.Decimal | number;
+        uomId?: string | null;
+        item: {
+          id: string;
+          sku: string;
+          name: string;
+          uomId: string;
+          uomConversions?: Array<{ fromUomId: string; toUomId: string; factor: Prisma.Decimal | number }>;
+        };
+      }>;
+    },
+    grnLines: Array<{
+      itemId: string;
+      quantity: number;
+      uomId?: string | null;
+    }>,
+    excludeGrnId?: string,
+  ) {
+    const previousGrns = await tx.goodsReceivedNote.findMany({
+      where: {
+        poId: po.id,
+        status: { in: ['POSTED', 'RECEIVED', 'SUBMITTED'] },
+        ...(excludeGrnId && { id: { not: excludeGrnId } }),
+      },
+      select: {
+        lines: {
+          select: {
+            itemId: true,
+            quantityReceived: true,
+            uomId: true,
+          },
+        },
+      },
+    });
+
+    const receivedBaseQtyMap = new Map<string, number>();
+    for (const pGrn of previousGrns) {
+      for (const line of pGrn.lines) {
+        const itemInPo = po.lines.find((pl) => pl.itemId === line.itemId)?.item;
+        if (!itemInPo) continue;
+        const primaryUomId = itemInPo.uomId;
+        const conversions = (itemInPo.uomConversions || []).map((c) => ({
+          fromUomId: c.fromUomId,
+          toUomId: c.toUomId,
+          factor: Number(c.factor),
+        }));
+
+        const lineUomId = line.uomId || primaryUomId;
+        const baseQty = toBaseQty(
+          Number(line.quantityReceived),
+          lineUomId,
+          primaryUomId,
+          conversions,
+        );
+
+        const currentTotal = receivedBaseQtyMap.get(line.itemId) || 0;
+        receivedBaseQtyMap.set(line.itemId, currentTotal + baseQty);
+      }
+    }
+
+    const poBaseQtyMap = new Map<string, { totalBaseQty: number; itemCode: string; primaryUomId: string; conversions: Array<{ fromUomId: string; toUomId: string; factor: number }> }>();
+    for (const poLine of po.lines) {
+      const primaryUomId = poLine.item.uomId;
+      const conversions = (poLine.item.uomConversions || []).map((c) => ({
+        fromUomId: c.fromUomId,
+        toUomId: c.toUomId,
+        factor: Number(c.factor),
+      }));
+
+      const lineUomId = poLine.uomId || primaryUomId;
+      const baseQty = toBaseQty(
+        Number(poLine.quantity),
+        lineUomId,
+        primaryUomId,
+        conversions,
+      );
+
+      const existingEntry = poBaseQtyMap.get(poLine.itemId);
+      if (existingEntry) {
+        existingEntry.totalBaseQty += baseQty;
+      } else {
+        poBaseQtyMap.set(poLine.itemId, {
+          totalBaseQty: baseQty,
+          itemCode: poLine.item.sku || poLine.item.name,
+          primaryUomId,
+          conversions,
+        });
+      }
+    }
+
+    const incomingBaseQtyMap = new Map<string, number>();
+    for (const grnLine of grnLines) {
+      const poInfo = poBaseQtyMap.get(grnLine.itemId);
+      if (!poInfo) {
+        throw new BadRequestException(
+          `Item with ID ${grnLine.itemId} was not included in Purchase Order`,
+        );
+      }
+
+      const lineUomId = grnLine.uomId || poInfo.primaryUomId;
+      const baseQty = toBaseQty(
+        grnLine.quantity,
+        lineUomId,
+        poInfo.primaryUomId,
+        poInfo.conversions,
+      );
+
+      const currentIncoming = incomingBaseQtyMap.get(grnLine.itemId) || 0;
+      incomingBaseQtyMap.set(grnLine.itemId, currentIncoming + baseQty);
+    }
+
+    for (const [itemId, incomingBaseQty] of incomingBaseQtyMap.entries()) {
+      const poInfo = poBaseQtyMap.get(itemId)!;
+      const alreadyReceivedBaseQty = receivedBaseQtyMap.get(itemId) || 0;
+      const remainingBaseQty = Math.max(0, poInfo.totalBaseQty - alreadyReceivedBaseQty);
+
+      if (incomingBaseQty > remainingBaseQty + 0.0001) {
+        throw new BadRequestException(
+          `Cannot receive ${incomingBaseQty.toFixed(2)}. Only ${remainingBaseQty.toFixed(2)} remaining for item ${poInfo.itemCode} in PO.`,
+        );
+      }
+    }
+  }
 
   async create(
     body: {
@@ -44,11 +175,25 @@ export class GrnService {
       const fxRateCapturedAt = new Date();
 
       if (body.poId) {
-        const po = await tx.purchaseOrder.findUnique({
-          where: { id: body.poId },
+        const po = await tx.purchaseOrder.findFirst({
+          where: {
+            OR: [
+              { id: body.poId },
+              { poNumber: body.poId },
+            ],
+          },
           include: {
             purchaseRequest: true,
             currency: true,
+            lines: {
+              include: {
+                item: {
+                  include: {
+                    uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                  },
+                },
+              },
+            },
           },
         });
 
@@ -58,11 +203,14 @@ export class GrnService {
           );
         }
 
-        if (po.status !== 'APPROVED') {
+        const validPoStatuses = ['APPROVED', 'PARTIAL', 'PARTIALLY_RECEIVED', 'ISSUED'];
+        if (!validPoStatuses.includes(po.status)) {
           throw new BadRequestException(
-            `Cannot create a GRN against a Purchase Order that is not APPROVED. (Current status: ${po.status})`,
+            `Cannot create a GRN against a Purchase Order that is not APPROVED, PARTIAL or PARTIALLY_RECEIVED. (Current status: ${po.status})`,
           );
         }
+
+        await this.validatePoRemainingQuantities(tx, po, body.lines);
 
         branchId = po.purchaseRequest?.branchId;
 
@@ -174,6 +322,12 @@ export class GrnService {
             include: {
               supplier: true,
               currency: true,
+              lines: {
+                include: {
+                  item: true,
+                  uom: true,
+                },
+              },
             },
           },
           supplier: true,
@@ -320,6 +474,12 @@ export class GrnService {
           include: {
             supplier: true,
             currency: true,
+            lines: {
+              include: {
+                item: true,
+                uom: true,
+              },
+            },
           },
         },
         supplier: true,
@@ -376,7 +536,7 @@ export class GrnService {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.goodsReceivedNote.findUnique({
         where: { id },
-        select: { version: true, status: true },
+        select: { version: true, status: true, poId: true },
       });
 
       if (!existing) {
@@ -395,6 +555,33 @@ export class GrnService {
         throw new BadRequestException(
           'Only DRAFT Goods Received Notes can be updated.',
         );
+      }
+
+      const effectivePoId = body.poId !== undefined ? body.poId : existing.poId;
+      if (effectivePoId && body.lines) {
+        const po = await tx.purchaseOrder.findUnique({
+          where: { id: effectivePoId },
+          include: {
+            lines: {
+              include: {
+                item: {
+                  include: {
+                    uomConversions: { select: { fromUomId: true, toUomId: true, factor: true } },
+                  },
+                },
+              },
+            },
+          },
+        });
+        if (po) {
+          const validPoStatuses = ['APPROVED', 'PARTIAL', 'PARTIALLY_RECEIVED', 'ISSUED'];
+          if (!validPoStatuses.includes(po.status)) {
+            throw new BadRequestException(
+              `Cannot create a GRN against a Purchase Order that is not APPROVED, PARTIAL or PARTIALLY_RECEIVED. (Current status: ${po.status})`,
+            );
+          }
+          await this.validatePoRemainingQuantities(tx, po, body.lines, id);
+        }
       }
 
       let processedLines = undefined;
@@ -456,6 +643,12 @@ export class GrnService {
             include: {
               supplier: true,
               currency: true,
+              lines: {
+                include: {
+                  item: true,
+                  uom: true,
+                },
+              },
             },
           },
           supplier: true,
