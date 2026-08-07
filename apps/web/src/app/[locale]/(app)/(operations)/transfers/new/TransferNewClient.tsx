@@ -439,18 +439,30 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
       let msg: string;
       if (locale === 'ar') {
         const parts: string[] = [];
-        if (expiredLots.length > 0) parts.push(`${expiredLots.length} batch منتهية الصلاحية`);
-        if (nearExpiry.length > 0) parts.push(`${nearExpiry.length} batch قريبة من الانتهاء`);
-        msg = parts.length > 0 ? `FIFO: ${parts.join('، ')}` : 'جميع الأصناف ضمن الحدود الآمنة';
+        if (expiredLots.length > 0) {
+          const count = expiredLots.length;
+          const lotLabel = count === 1 ? 'دفعة واحدة' : count === 2 ? 'دفعتان' : `${count} دفعات`;
+          parts.push(`${lotLabel} منتهية الصلاحية`);
+        }
+        if (nearExpiry.length > 0) {
+          const count = nearExpiry.length;
+          const lotLabel = count === 1 ? 'دفعة واحدة' : count === 2 ? 'دفعتان' : `${count} دفعات`;
+          parts.push(`${lotLabel} قريبة من الانتهاء`);
+        }
+        msg = parts.length > 0 ? `تنبيه FEFO (الأقرب انتهاءً): ${parts.join('، ')}` : 'FEFO: جميع الأصناف والدفعات ضمن الحدود الآمنة';
       } else {
         const parts: string[] = [];
-        if (expiredLots.length > 0) parts.push(`${expiredLots.length} expired lots`);
-        if (nearExpiry.length > 0) parts.push(`${nearExpiry.length} lots near expiry`);
-        msg = parts.length > 0 ? `FIFO: ${parts.join(', ')} — prioritize these` : 'All items within safe limits';
+        if (expiredLots.length > 0) parts.push(`${expiredLots.length} expired lot${expiredLots.length > 1 ? 's' : ''}`);
+        if (nearExpiry.length > 0) parts.push(`${nearExpiry.length} lot${nearExpiry.length > 1 ? 's' : ''} near expiry`);
+        msg = parts.length > 0 ? `FEFO Warning: ${parts.join(', ')} — prioritize earliest expiry` : 'FEFO: All item lots are within safe expiry limits';
       }
-      toast.info(msg);
+      if (expiredLots.length > 0) {
+        toast.warning(msg);
+      } else {
+        toast.info(msg);
+      }
     } catch {
-      toast.error(locale === 'ar' ? 'فشل جلب بيانات FIFO' : 'Failed to fetch FIFO data');
+      toast.error(locale === 'ar' ? 'فشل جلب بيانات FEFO' : 'Failed to fetch FEFO data');
     } finally {
       setIsSuggestingFIFO(false);
     }
@@ -709,7 +721,7 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
                 className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 rounded-full border border-amber-500/20 text-amber-500 text-label-xxs font-semibold uppercase transition-all disabled:opacity-30"
               >
                 <Sparkles className="w-3 h-3" />
-                {isSuggestingFIFO ? (locale === 'ar' ? 'جاري...' : 'Loading...') : (locale === 'ar' ? 'اقتراح FIFO' : 'Suggest FIFO')}
+                {isSuggestingFIFO ? (locale === 'ar' ? 'جاري...' : 'Loading...') : (locale === 'ar' ? 'اقتراح FEFO' : 'Suggest FEFO')}
               </button>
               <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 rounded-full border border-emerald-500/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

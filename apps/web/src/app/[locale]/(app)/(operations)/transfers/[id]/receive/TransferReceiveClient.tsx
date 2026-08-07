@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, getLineUomDisplay } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { LockBanner } from '@/components/shared/LockBanner';
@@ -636,7 +636,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                     <div className="flex flex-col bg-gray-50 dark:bg-card p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center justify-center">
                       <span className="text-[9px] font-bold text-gray-500 uppercase">{t('shipped_qty')}</span>
                       <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
-                        {line.shippedQty ?? line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
+                        {line.shippedQty ?? line.qty} {getLineUomDisplay(line)}
                       </span>
                     </div>
 

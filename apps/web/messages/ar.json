@@ -2772,8 +2772,8 @@
   "operations": {
     "adjustment": {
       "new": "جديد",
-      "suggest_fifo": "اقتراح FIFO تلقائي",
-      "fifo_applied": "تم تطبيق اقتراحات FIFO بنجاح.",
+      "suggest_fifo": "اقتراح FEFO تلقائي",
+      "fifo_applied": "تم تطبيق اقتراحات FEFO بنجاح.",
       "shortage_warning": "عجز جزئي: تعذر تخصيص {qty} وحدات لعدم كفاية المخزون.",
       "fetching_lots": "جاري جلب الدفعات المتاحة...",
       "select_warehouse_error": "يرجى تحديد مستودع أولاً.",

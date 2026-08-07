@@ -136,6 +136,44 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const isDraft = normStatus === 'DRAFT' && canPerformActionV2('KITCHEN_REQUEST', status, 'SUBMIT', user?.role);
   const isFulfilled = normStatus === 'FULFILLED' || normStatus === 'EXECUTED' || normStatus === 'POSTED' || !!request.issueId || !!request.issueDocument;
 
+  const resolvedIssues = useMemo(() => {
+    const list: Array<{ id: string; label: string }> = [];
+    const reqObj = request as unknown as Record<string, unknown>;
+    const rawIssueDocs = reqObj.issueDocuments as Array<{ id: string; issueNumber?: string; documentNumber?: string; status?: string }> | undefined;
+    const rawIssueDoc = (request.issueDocument || reqObj.inventoryIssue || reqObj.issue) as { id: string; issueNumber?: string; documentNumber?: string } | undefined;
+    const rawIssueId = request.issueId || (reqObj.issueId as string);
+
+    if (Array.isArray(rawIssueDocs) && rawIssueDocs.length > 0) {
+      for (const doc of rawIssueDocs) {
+        if (doc && doc.id) {
+          list.push({
+            id: doc.id,
+            label: doc.documentNumber || doc.issueNumber || `ISS-${doc.id.slice(0, 8).toUpperCase()}`,
+          });
+        }
+      }
+    } else if (rawIssueDoc && rawIssueDoc.id) {
+      list.push({
+        id: rawIssueDoc.id,
+        label: rawIssueDoc.issueNumber || rawIssueDoc.documentNumber || `ISS-${rawIssueDoc.id.slice(0, 8).toUpperCase()}`,
+      });
+    } else if (rawIssueId) {
+      list.push({
+        id: rawIssueId,
+        label: `ISS-${rawIssueId.slice(0, 8).toUpperCase()}`,
+      });
+    } else if (normStatus === 'FULFILLED' || normStatus === 'EXECUTED' || normStatus === 'POSTED') {
+      const suffix = request.requestNumber?.split('-').pop() || '00035';
+      list.push({
+        id: request.id,
+        label: `ISS-2026-HQ-${suffix}`,
+      });
+    }
+    return list;
+  }, [request, normStatus]);
+
+  const showRelatedIssueBlock = resolvedIssues.length > 0 || isFulfilled;
+
   const updateStatus = useUpdateKitchenRequestStatus();
   const updateDraft = useUpdateKitchenRequest();
   const fulfillRequest = useFulfillKitchenRequest();
@@ -780,7 +818,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                     <>
                       <div className={cn(
                         "grid grid-cols-2 gap-4 relative z-10",
-                        isFulfilled ? "md:grid-cols-4 md:gap-6" : "md:grid-cols-3 md:gap-6"
+                        showRelatedIssueBlock ? "md:grid-cols-4 md:gap-6" : "md:grid-cols-3 md:gap-6"
                       )}>
                         <div className="space-y-1.5 min-w-0">
                           <span className="text-label-sm font-bold uppercase tracking-wider text-muted-foreground/70 flex items-center gap-1.5 mb-1">
@@ -812,7 +850,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                           <p className="text-body-md font-bold tracking-tight text-foreground/90 truncate">{request.requestedBy}</p>
                         </div>
 
-                        {isFulfilled && (
+                        {showRelatedIssueBlock && (
                           <div className="space-y-1.5 min-w-0">
                             <span className="text-label-sm font-bold uppercase tracking-wider text-operational-cyan/90 flex items-center gap-1.5 mb-1">
                               <div className="p-1 rounded-md bg-operational-cyan/10 shadow-sm border border-operational-cyan/20 shrink-0">
@@ -820,14 +858,17 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                               </div>
                               <span className="truncate">{locale === 'ar' ? 'سند الصرف المرتبط' : 'Related Issue Document'}</span>
                             </span>
-                            <p className="text-body-md font-bold tracking-tight truncate">
-                              <Link
-                                href={`/issues/${request.issueDocument?.id || request.issueId || id}`}
-                                className="inline-flex items-center gap-1.5 text-operational-cyan hover:text-operational-cyan/80 hover:underline font-mono text-sm transition-all truncate"
-                              >
-                                {request.issueDocument?.issueNumber || (request.issueId ? `ISS-${request.issueId.slice(0, 8).toUpperCase()}` : `ISS-2026-HQ-${request.requestNumber.split('-').pop() || '00035'}`)}
-                              </Link>
-                            </p>
+                            <div className="flex flex-col gap-1 min-w-0">
+                              {resolvedIssues.map((issue) => (
+                                <Link
+                                  key={issue.id}
+                                  href={`/issues/${issue.id}`}
+                                  className="inline-flex items-center gap-1.5 text-operational-cyan hover:text-operational-cyan/80 hover:underline font-mono text-sm font-bold transition-all truncate"
+                                >
+                                  {issue.label}
+                                </Link>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

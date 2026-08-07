@@ -2772,8 +2772,8 @@
   "operations": {
     "adjustment": {
       "new": "New",
-      "suggest_fifo": "Suggest FIFO",
-      "fifo_applied": "FIFO suggestions applied successfully.",
+      "suggest_fifo": "Suggest FEFO",
+      "fifo_applied": "FEFO suggestion applied successfully.",
       "shortage_warning": "Partial shortage: {qty} units could not be allocated due to insufficient stock.",
       "fetching_lots": "Fetching available lots...",
       "select_warehouse_error": "Please select a warehouse first.",

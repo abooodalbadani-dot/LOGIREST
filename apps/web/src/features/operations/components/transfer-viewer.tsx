@@ -5,7 +5,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { WorkflowActionBar } from '@/components/shared/WorkflowActionBar';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, getLineUomDisplay } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { ArrowLeft, Truck, PackageCheck } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
@@ -237,7 +237,7 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
                             <div className="grid grid-cols-3 gap-px bg-border/40">
                                 <div className="flex flex-col bg-card p-3 text-center">
                                     <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('transfer_qty')}</span>
-                                    <span className="text-xs font-bold text-foreground" dir="ltr">{line.qty} {line.item?.primaryUom?.code}</span>
+                                    <span className="text-xs font-bold text-foreground" dir="ltr">{line.qty} {getLineUomDisplay(line)}</span>
                                 </div>
                                 <div className="flex flex-col bg-card p-3 text-center">
                                     <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('shipped_qty')}</span>

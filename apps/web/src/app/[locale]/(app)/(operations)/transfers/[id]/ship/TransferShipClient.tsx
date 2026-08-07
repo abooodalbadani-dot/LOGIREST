@@ -6,7 +6,7 @@ import { useRouter } from '@/i18n/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, getLineUomDisplay } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -31,6 +31,13 @@ import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
 import { resolveBarcodeAndUom } from '@/utils/barcode-resolver';
+
+export function formatScannedQuantity(qty: number): number {
+ if (Math.abs(qty - Math.round(qty)) < 0.001) {
+  return Math.round(qty);
+ }
+ return parseFloat(qty.toFixed(4));
+}
 
 export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.transfer');
@@ -155,7 +162,10 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   }
 
   const currentScanned = scannedLines[matchingLine.id] ?? 0;
-  if ((currentScanned + incrementQty) > matchingLine.qty) {
+  const rawNext = currentScanned + incrementQty;
+  const formattedNext = formatScannedQuantity(rawNext);
+
+  if (formattedNext > (matchingLine.qty + 0.0001)) {
    setScanStatus('error');
    const msg = t('scan_duplicate_warning') || "Item already fully verified.";
    setStatusMessage(msg);
@@ -219,7 +229,10 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   );
  }
 
- const allScanned = transfer.lines.every(l => (scannedLines[l.id] ?? 0) >= l.qty);
+ const allScanned = transfer.lines.every(l => {
+  const scanned = formatScannedQuantity(scannedLines[l.id] ?? 0);
+  return scanned >= (l.qty - 0.0001);
+ });
 
  return (
   <div className="p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -355,19 +368,20 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
             {
              header: tCommon('status'),
              cell: (line: TransferLine) => {
-              const scanned = scannedLines[line.id] ?? 0;
-              const isFullyScanned = scanned >= line.qty;
+              const scannedRaw = scannedLines[line.id] ?? 0;
+              const scannedDisplay = formatScannedQuantity(scannedRaw);
+              const isFullyScanned = scannedRaw >= (line.qty - 0.0001);
               return (
                <div className="flex justify-center">
                 <div className={cn(
                  "px-3 py-1 rounded-lg text-label-xs font-semibold uppercase flex items-center gap-2",
                  isFullyScanned 
                  ? "bg-muted/50 text-foreground border border-emerald-500/20" 
-                 : scanned > 0 
+                 : scannedRaw > 0 
                  ? "bg-muted/50 text-foreground border border-cyan-500/20"
                  : "border border-gray-300 dark:border-gray-600 bg-white dark:bg-card"
                 )}>
-                 {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
+                 {isFullyScanned ? `✓ ${t('verified_label')}` : `${scannedDisplay}/${line.qty}`}
                 </div>
                </div>
               );
@@ -380,8 +394,9 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
          {/* Mobile View (Matches Transfer Details style) */}
          <div className="flex flex-col gap-3 md:hidden p-4">
           {transfer.lines.map((line) => {
-           const scanned = scannedLines[line.id] ?? 0;
-           const isFullyScanned = scanned >= line.qty;
+           const scannedRaw = scannedLines[line.id] ?? 0;
+           const scannedDisplay = formatScannedQuantity(scannedRaw);
+           const isFullyScanned = scannedRaw >= (line.qty - 0.0001);
            const itemImage = (line.item as unknown as { image?: string | null }).image;
            return (
             <div key={line.id} className="bg-white dark:bg-card border border-gray-200 dark:border-gray-800 rounded-xl p-3.5 shadow-sm flex flex-col gap-3">
@@ -409,28 +424,28 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
               <div className="flex flex-col bg-gray-50 dark:bg-card p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
                <span className="text-[9px] font-bold text-gray-500 uppercase">{t('transfer_qty')}</span>
                <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
-                {line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
+                {line.qty} {getLineUomDisplay(line)}
                </span>
               </div>
               <div className={cn(
                "flex flex-col p-2.5 rounded-lg border text-center transition-colors",
                isFullyScanned 
                ? "bg-emerald-50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-800/30" 
-               : scanned > 0 
+               : scannedRaw > 0 
                ? "bg-cyan-50 dark:bg-cyan-950/10 border-cyan-100 dark:border-cyan-800/30" 
                : "bg-gray-50 dark:bg-card border-gray-100 dark:border-gray-800"
               )}>
                <span className={cn(
                 "text-[9px] font-bold uppercase",
-                isFullyScanned ? "text-emerald-700 dark:text-emerald-400" : scanned > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-gray-500"
+                isFullyScanned ? "text-emerald-700 dark:text-emerald-400" : scannedRaw > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-gray-500"
                )}>
                 {tCommon('status')}
                </span>
                <span className={cn(
                 "text-xs font-bold mt-1",
-                isFullyScanned ? "text-emerald-700 dark:text-emerald-400" : scanned > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-[#0B1220] dark:text-gray-200"
+                isFullyScanned ? "text-emerald-700 dark:text-emerald-400" : scannedRaw > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-[#0B1220] dark:text-gray-200"
                )} dir="ltr">
-                {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
+                {isFullyScanned ? `✓ ${t('verified_label')}` : `${scannedDisplay}/${line.qty}`}
                </span>
               </div>
              </div>

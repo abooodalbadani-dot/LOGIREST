@@ -4,110 +4,117 @@ import { ALL_DOCUMENT_STATUSES, DocumentStatus } from '@/types/DocumentStatus';
 export type KitchenRequestStatus = DocumentStatus;
 
 export interface KitchenRequestItem {
- id: string;
- itemId: string;
- itemName: string;
- itemCode?: string;
- uom: string;
- uomId?: string | null;
- quantity: number;
- notes?: string;
- fulfilledQuantity?: number;
- image?: string | null;
- itemImage?: string | null;
+  id: string;
+  itemId: string;
+  itemName: string;
+  itemCode?: string;
+  uom: string;
+  uomId?: string | null;
+  quantity: number;
+  notes?: string;
+  fulfilledQuantity?: number;
+  image?: string | null;
+  itemImage?: string | null;
 }
 
 export interface KitchenRequest {
- id: string;
- requestNumber: string;
- departmentId: string;
- departmentName?: string;
- warehouseId: string;
- warehouseName?: string;
- status: KitchenRequestStatus;
- items: KitchenRequestItem[];
- notes?: string;
- requestedBy: string;
- requestedAt: string;
- approvedBy?: string;
- approvedAt?: string;
- rejectedBy?: string;
- rejectedAt?: string;
- rejectionReason?: string;
- fulfilledBy?: string;
- fulfilledAt?: string;
- createdAt: string;
- updatedAt: string;
- version: number;
+  id: string;
+  requestNumber: string;
+  departmentId: string;
+  departmentName?: string;
+  warehouseId: string;
+  warehouseName?: string;
+  status: KitchenRequestStatus;
+  items: KitchenRequestItem[];
+  notes?: string;
+  requestedBy: string;
+  requestedAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  fulfilledBy?: string;
+  fulfilledAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
 }
 
 export const KitchenRequestItemSchema = z.object({
- itemId: z.string().min(1, 'required'),
- quantity: z.number().positive('must_be_positive'),
- uomId: z.string().optional().or(z.literal('')),
- notes: z.string().optional().or(z.literal('')),
+  itemId: z.string().min(1, 'required'),
+  quantity: z.number().positive('must_be_positive'),
+  uomId: z.string().optional().or(z.literal('')),
+  notes: z.string().optional().or(z.literal('')),
 });
 
 export const KitchenRequestSchema = z.object({
- departmentId: z.string().min(1, 'required'),
- warehouseId: z.string().min(1, 'required'),
- notes: z.string().optional().or(z.literal('')),
- items: z.array(KitchenRequestItemSchema).min(1, 'min_one_item'),
+  departmentId: z.string().min(1, 'required'),
+  warehouseId: z.string().min(1, 'required'),
+  notes: z.string().optional().or(z.literal('')),
+  items: z.array(KitchenRequestItemSchema).min(1, 'min_one_item'),
 });
 
 export type CreateKitchenRequestDTO = z.infer<typeof KitchenRequestSchema>;
 
 export const KitchenRequestDetailSchema = z.object({
- id: z.string(),
- requestNumber: z.string(),
- departmentId: z.string(),
- departmentName: z.string().optional(),
- warehouseId: z.string(),
- warehouseName: z.string().optional(),
- status: z.enum(ALL_DOCUMENT_STATUSES),
- items: z.array(z.object({
   id: z.string(),
-  itemId: z.string(),
-  itemName: z.string(),
-  itemCode: z.string().optional(),
-  barcode: z.string().optional(),
-  itemBarcode: z.string().optional(),
-  uom: z.string(),
-  uomId: z.string().optional().nullable(),
-  uomConversions: z.array(z.object({
-   fromUomId: z.string().optional(),
-   toUomId: z.string().optional(),
-   factor: z.number().optional(),
-   fromUomCode: z.string().optional(),
-   fromUomName: z.string().optional(),
-   toUomCode: z.string().optional(),
-   toUomName: z.string().optional(),
-  })).optional().default([]),
-  quantity: z.number(),
+  requestNumber: z.string(),
+  departmentId: z.string(),
+  departmentName: z.string().optional(),
+  warehouseId: z.string(),
+  warehouseName: z.string().optional(),
+  status: z.enum(ALL_DOCUMENT_STATUSES),
+  items: z.array(z.object({
+    id: z.string(),
+    itemId: z.string(),
+    itemName: z.string(),
+    itemCode: z.string().optional(),
+    barcode: z.string().optional(),
+    itemBarcode: z.string().optional(),
+    uom: z.string(),
+    uomId: z.string().optional().nullable(),
+    uomConversions: z.array(z.object({
+      fromUomId: z.string().optional(),
+      toUomId: z.string().optional(),
+      factor: z.number().optional(),
+      fromUomCode: z.string().optional(),
+      fromUomName: z.string().optional(),
+      toUomCode: z.string().optional(),
+      toUomName: z.string().optional(),
+    })).optional().default([]),
+    quantity: z.number(),
+    notes: z.string().optional(),
+    fulfilledQuantity: z.number().optional(),
+    image: z.string().optional().nullable(),
+    itemImage: z.string().optional().nullable(),
+  })),
   notes: z.string().optional(),
-  fulfilledQuantity: z.number().optional(),
-  image: z.string().optional().nullable(),
-  itemImage: z.string().optional().nullable(),
- })),
- notes: z.string().optional(),
- requestedBy: z.string(),
- requestedAt: z.string(),
- approvedBy: z.string().optional(),
- approvedAt: z.string().optional(),
- rejectedBy: z.string().optional(),
- rejectedAt: z.string().optional(),
- rejectionReason: z.string().optional(),
- fulfilledBy: z.string().optional(),
- fulfilledAt: z.string().optional(),
- issueId: z.string().nullable().optional(),
- issueDocument: z.object({
-   id: z.string(),
-   issueNumber: z.string(),
-   status: z.string().optional(),
- }).nullable().optional(),
- createdAt: z.string().default(() => new Date().toISOString()),
- updatedAt: z.string().default(() => new Date().toISOString()),
- version: z.number().default(1),
+  requestedBy: z.string(),
+  requestedAt: z.string(),
+  approvedBy: z.string().optional(),
+  approvedAt: z.string().optional(),
+  rejectedBy: z.string().optional(),
+  rejectedAt: z.string().optional(),
+  rejectionReason: z.string().optional(),
+  fulfilledBy: z.string().optional(),
+  fulfilledAt: z.string().optional(),
+  issueId: z.string().nullable().optional(),
+  issueDocument: z.object({
+    id: z.string(),
+    issueNumber: z.string().optional(),
+    documentNumber: z.string().optional(),
+    status: z.string().optional(),
+  }).nullable().optional(),
+  issueDocuments: z.array(z.object({
+    id: z.string(),
+    issueNumber: z.string().optional(),
+    documentNumber: z.string().optional(),
+    status: z.string().optional(),
+  })).optional().default([]),
+  createdAt: z.string().default(() => new Date().toISOString()),
+  updatedAt: z.string().default(() => new Date().toISOString()),
+  version: z.number().default(1),
 });
 
 export type KitchenRequestDetail = z.infer<typeof KitchenRequestDetailSchema>;

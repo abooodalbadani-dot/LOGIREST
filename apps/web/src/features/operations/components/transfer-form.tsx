@@ -7,7 +7,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, getLineUomDisplay } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -240,7 +240,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
              <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
               <span className="text-[9px] font-bold text-gray-500 uppercase">{t('transfer_qty')}</span>
               <span className="text-xs font-bold text-[#0B1220] dark:text-gray-200 mt-1" dir="ltr">
-               {line.qty} {locale === 'ar' ? (line.item?.primaryUom?.nameAr || line.item?.primaryUom?.name || 'حبة') : (line.item?.primaryUom?.code || 'PCS')}
+               {line.qty} {getLineUomDisplay(line)}
               </span>
              </div>
              <div className="flex flex-col bg-gray-50 dark:bg-card p-2 rounded-lg border border-gray-100 dark:border-gray-800 text-center">
