@@ -34,29 +34,29 @@ export function KPICard({ title, value, icon: Icon, accent, description, trend, 
 
   const renderValue = () => {
     const valStr = String(value);
-    const currencySymbol = symbol || 'USD';
-    if (valStr.includes(currencySymbol)) {
-      const parts = valStr.split(currencySymbol);
+    const activeSymbol = symbol || currency || '';
+
+    if (activeSymbol && valStr.includes(activeSymbol)) {
+      const parts = valStr.split(activeSymbol);
       return (
         <>
-          {parts[0]}<span className="text-sm font-normal text-muted-foreground mx-1">{currencySymbol}</span>{parts[1]}
+          {parts[0]}<span className="text-sm font-normal text-muted-foreground mx-1">{activeSymbol}</span>{parts[1]}
         </>
       );
     }
-    const currencyCode = currency || 'USD';
-    if (valStr.includes(currencyCode)) {
-      const parts = valStr.split(currencyCode);
+    if (currency && valStr.includes(currency)) {
+      const parts = valStr.split(currency);
       return (
         <>
-          {parts[0]}<span className="text-sm font-normal text-muted-foreground mx-1">{currencyCode}</span>{parts[1]}
+          {parts[0]}<span className="text-sm font-normal text-muted-foreground mx-1">{currency}</span>{parts[1]}
         </>
       );
     }
-    if (currencySymbol !== 'USD' && valStr.includes('USD')) {
-      const parts = valStr.split('USD ');
+    if (activeSymbol && (valStr.includes('US$') || valStr.includes('$ US') || valStr.includes('USD') || valStr.includes('$'))) {
+      const cleanVal = valStr.replace(/US\$/g, '').replace(/\$\s*US/g, '').replace(/USD/g, '').replace(/\$/g, '').trim();
       return (
         <>
-          {parts[0]}<span className="text-sm font-normal text-muted-foreground mx-1">USD</span>{parts[1]}
+          {cleanVal} <span className="text-sm font-normal text-muted-foreground mx-1">{activeSymbol}</span>
         </>
       );
     }

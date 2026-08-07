@@ -73,9 +73,18 @@ export class CurrenciesService {
           name: data.name ?? '',
           isBase: data.isBase ?? false,
           symbol: data.symbol,
-          isActive: data.isActive ?? true,
+          isActive: data.isBase ? true : (data.isActive ?? true),
         },
       });
+
+      if (currency.isBase) {
+        await tx.systemSetting.upsert({
+          where: { key: 'system_settings' },
+          create: { key: 'system_settings', value: JSON.stringify({ baseCurrency: currency.code }) },
+          update: { value: JSON.stringify({ baseCurrency: currency.code }) },
+        });
+      }
+
       return this.mapDbCurrencyToFrontend(currency);
     });
   }
@@ -96,10 +105,19 @@ export class CurrenciesService {
           name: data.name,
           isBase: data.isBase,
           symbol: data.symbol,
-          isActive: data.isActive,
+          isActive: data.isBase ? true : data.isActive,
           version: data.version ? { increment: 1 } : undefined,
         },
       });
+
+      if (currency.isBase) {
+        await tx.systemSetting.upsert({
+          where: { key: 'system_settings' },
+          create: { key: 'system_settings', value: JSON.stringify({ baseCurrency: currency.code }) },
+          update: { value: JSON.stringify({ baseCurrency: currency.code }) },
+        });
+      }
+
       return this.mapDbCurrencyToFrontend(currency);
     });
   }

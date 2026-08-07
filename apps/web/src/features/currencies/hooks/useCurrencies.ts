@@ -46,6 +46,9 @@ export function useCreateCurrency() {
   },
   onSuccess: () => {
    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+   queryClient.invalidateQueries({ queryKey: ['settings-currency'] });
+   queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+   queryClient.invalidateQueries({ queryKey: ['settings'] });
    toast.success(t('created_success'));
   },
   onError: (error: unknown) => {
@@ -70,6 +73,9 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
   },
   onSuccess: (data) => {
    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+   queryClient.invalidateQueries({ queryKey: ['settings-currency'] });
+   queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+   queryClient.invalidateQueries({ queryKey: ['settings'] });
    queryClient.setQueryData([...QUERY_KEY, data.id], data);
    toast.success(t('updated_success'));
   },

@@ -32,7 +32,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         queryFn: ({ signal }) =>
             apiClient.get('/settings/currency', CurrencyResponseSchema, { signal }),
         enabled: !!userId,
-        staleTime: Infinity,
+        staleTime: 1000 * 30,
     });
 
     const value: CurrencyContextValue = {
