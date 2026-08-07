@@ -1138,7 +1138,8 @@
     "post_success": "تم ترحيل المستند بنجاح",
     "posted_success": "تم ترحيل المستند بنجاح",
     "approved_success": "تم اعتماد المستند بنجاح",
-    "rejected_success": "تم رفض المستند بنجاح"
+    "rejected_success": "تم رفض المستند بنجاح",
+    "more_actions": "المزيد من الإجراءات"
   },
   "communications": {
     "notifications": {
@@ -1363,7 +1364,7 @@
       "status_pending": "قيد الانتظار",
       "status_ready": "جاهز",
       "stock_shortages": "نقص المخزون",
-      "stock_valuation": "إجمالي تقييم المخزون",
+      "stock_valuation": "إجمالي قيمة المخزون",
       "stock_velocity": "سرعة المخزون",
       "throughput": "معدل التدفق",
       "transfer_request": "طلب تحويل",

@@ -243,6 +243,14 @@ export class KitchenRequestsService {
         department: true,
         warehouse: true,
         requestedBy: true,
+        inventoryIssue: {
+          select: {
+            id: true,
+            issueNumber: true,
+            status: true,
+            createdAt: true,
+          },
+        },
       },
     });
 

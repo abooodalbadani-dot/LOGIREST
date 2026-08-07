@@ -7,6 +7,8 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
+import { getCurrentUserContext } from '../../common/user.context';
 import { PrismaService } from '../../database/prisma.service';
 import { ConcurrencyService } from '../../services/concurrency.service';
 import { DocumentType as PrismaDocType, Prisma, Role } from '@prisma/client';
@@ -461,6 +463,10 @@ export class WorkflowService {
           })) + 1;
 
         // Create ApprovalEvent
+        const userCtx = getCurrentUserContext();
+        const effectiveUserId = userId || userCtx?.id || 'SYSTEM';
+        const effectiveUserRole = userRole || (userCtx?.role as Role) || Role.ADMIN;
+
         await transaction.approvalEvent.create({
           data: {
             documentId,
@@ -468,8 +474,8 @@ export class WorkflowService {
             fromStatus: doc.status,
             toStatus: targetStatus,
             actionPerformed: action,
-            userId,
-            userRole,
+            userId: effectiveUserId,
+            userRole: effectiveUserRole,
             stepNumber,
             comments: comments || null,
           },

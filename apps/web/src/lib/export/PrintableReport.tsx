@@ -285,8 +285,8 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
 
       {/* UNIFIED HEADER ARCHITECTURE */}
       <header style={{ width: '100%', marginBottom: '10mm', display: 'flex', flexDirection: 'column' }}>
-        {/* TOP ROW: Identity (Start/Right in AR, Left in EN) & Report Info (End/Left in AR, Right in EN) */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '6mm' }}>
+        {/* TOP ROW: Identity (Left) & Report Info (Right) */}
+        <div style={{ display: 'flex', flexDirection: lang === 'ar' ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '6mm' }}>
 
           {/* START QUADRANT: Dynamic Identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -302,7 +302,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
                   <img
                     src={src}
                     {...(src.startsWith('data:') ? {} : { crossOrigin: "anonymous" })}
-                    style={{ width: '80mm', height: 'auto', maxHeight: '24mm', objectFit: 'contain', objectPosition: lang === 'ar' ? 'right center' : 'left center' }}
+                    style={{ width: '80mm', height: 'auto', maxHeight: '24mm', objectFit: 'contain', objectPosition: lang === 'ar' ? 'left center' : 'right center' }}
                     alt="Logo"
                   />
                 </div>
@@ -346,6 +346,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
         {/* BOTTOM ROW: The Global Metadata Strip */}
         <div style={{
           display: 'flex',
+          flexDirection: lang === 'ar' ? 'row-reverse' : 'row',
           width: '100%',
           alignItems: 'flex-start',
           justifyContent: 'space-between',

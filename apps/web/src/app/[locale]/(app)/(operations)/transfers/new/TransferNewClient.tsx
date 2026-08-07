@@ -333,7 +333,7 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
 
     const clean = barcode.trim();
     const resolved = await resolveBarcodeAndUom(clean, allItems);
-    let item = resolved?.item ? (allItems?.find(i => i.id === resolved.item.id) || resolved.item) : null;
+    const item = resolved?.item ? (allItems?.find(i => i.id === resolved.item.id) || resolved.item) : null;
     const scannedUomId = resolved?.uomId || (item as { primaryUom?: { id?: string } })?.primaryUom?.id || '';
 
     if (!item) {

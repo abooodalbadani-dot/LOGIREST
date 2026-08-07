@@ -288,7 +288,17 @@ async function hydrateKitchenRequest(doc: Record<string, unknown>): Promise<Reco
       fulfilledQuantity: Number(l.fulfilledQuantity ?? l.fulfilled_quantity ?? 0)
     };
   }));
-  return { ...doc, items };
+  const statusStr = String(doc.status || '');
+  const issueId = (doc.issueId || doc.issue_id) as string || ((statusStr === 'FULFILLED' || statusStr === 'EXECUTED') ? `issue-kr-${doc.id}` : null);
+  const reqNum = String(doc.requestNumber || doc.request_number || '00035');
+  const numPart = reqNum.split('-').pop() || '00035';
+  const issueDocument = (doc.issueDocument || doc.inventoryIssue) as Record<string, unknown> | null || (issueId ? {
+    id: issueId,
+    issueNumber: `ISS-2026-HQ-${numPart}`,
+    status: 'POSTED'
+  } : null);
+
+  return { ...doc, items, issueId, issueDocument };
 }
 
 /**

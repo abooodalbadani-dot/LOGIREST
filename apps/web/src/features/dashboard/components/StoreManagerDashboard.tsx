@@ -131,14 +131,14 @@ export function StoreManagerDashboard() {
                 <section className="lg:col-span-2 space-y-4" aria-labelledby="fulfillment-queue-title">
                     <div className="bg-card border border-border shadow-sm rounded-2xl relative overflow-hidden group transition-all duration-200">
                         <div className="absolute top-0 start-0 w-2 h-full bg-status-success/20 group-hover:bg-status-success transition-all duration-200" />
-                        <div className="p-8 pb-4">
-                            <div className="flex items-center justify-between mb-8">
+                        <div className="p-4 sm:p-6 md:p-8 md:pb-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                                 <div>
-                                    <h3 id="fulfillment-queue-title" className="text-xl md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.fulfillment_queue')}</h3>
-                                    <p className="text-xs font-semibold text-status-success uppercase tracking-widest mt-1">{t('store.fefo_guided')}</p>
+                                    <h3 id="fulfillment-queue-title" className="text-lg md:text-2xl font-bold text-foreground tracking-tight uppercase">{t('store.fulfillment_queue')}</h3>
+                                    <p className="text-[10px] md:text-xs font-semibold text-brand-gold md:text-status-success uppercase tracking-widest mt-1">{t('store.fefo_guided')}</p>
                                 </div>
                                 {totalQueueItems > 0 && (
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2 md:gap-3 self-end sm:self-auto">
                                         <div className="flex -space-x-2.5">
                                             {Array.from({ length: Math.min(totalQueueItems, 3) }).map((_, i) => (
                                                 <div key={i} className="w-9 h-9 rounded-full border border-card bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground/40" />
@@ -152,28 +152,28 @@ export function StoreManagerDashboard() {
                                     </div>
                                 )}
                             </div>
-                            <div className="divide-y divide-transparent">
+                            <div className="flex flex-col gap-3 md:gap-0 md:divide-y md:divide-border/40">
                                 {stats.fulfillmentQueue.map((job) => (
                                     <Link key={job.id} href={job.type === 'ISSUE' ? `/issues/${job.id}` : `/transfers/${job.id}`} className="block">
-                                        <div className="px-8 py-6 flex items-center justify-between hover:bg-surface-container-high/10 transition-all duration-140 ease-industrial group">
-                                            <div className="flex items-center gap-8">
-                                                <div className="flex flex-col items-center justify-center w-14 h-14 bg-card border border-border shadow-sm rounded-2xl font-mono text-label-sm font-semibold group-hover:bg-operational-cyan/10 transition-all duration-200">
-                                                    <span className="opacity-50 text-status-success mb-1">{tc('id')}</span>
+                                        <div className="p-4 md:px-6 md:py-5 flex items-center justify-between hover:bg-surface-container-high/10 transition-all duration-200 group bg-surface-lowest md:bg-transparent border border-border/50 md:border-transparent rounded-2xl md:rounded-none">
+                                            <div className="flex items-center gap-4 md:gap-8 min-w-0">
+                                                <div className="flex flex-col items-center justify-center shrink-0 w-12 h-12 md:w-14 md:h-14 bg-background border border-border/60 shadow-sm rounded-xl md:rounded-2xl font-mono text-[10px] md:text-label-sm font-semibold group-hover:bg-brand-gold/10 group-hover:text-brand-gold transition-all duration-200">
+                                                    <span className="opacity-50 text-status-success md:text-status-success mb-0.5 md:mb-1 text-[8px] md:text-[10px] uppercase">{tc('id')}</span>
                                                     {job.documentNumber.split('-').pop() || job.documentNumber}
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-4">
-                                                        <span className="text-body-md font-semibold text-foreground uppercase">{job.destination}</span>
-                                                        <Badge className={`rounded-lg text-label-xxs font-semibold uppercase px-2.5 py-1 border-none ${job.priority.toLowerCase() === 'high' || job.priority.toLowerCase() === 'urgent' ? 'bg-status-error text-white animate-pulse' : 'bg-muted text-muted-foreground'}`}>
+                                                <div className="space-y-1 md:space-y-2 min-w-0">
+                                                    <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                                                        <span className="text-sm md:text-body-md font-bold text-foreground uppercase truncate">{job.destination}</span>
+                                                        <Badge className={`rounded-md md:rounded-lg text-[9px] md:text-label-xxs font-semibold uppercase px-2 py-0.5 md:px-2.5 md:py-1 border-none ${job.priority.toLowerCase() === 'high' || job.priority.toLowerCase() === 'urgent' ? 'bg-status-error text-white animate-pulse' : 'bg-muted text-muted-foreground'}`}>
                                                             {t(`store.urgency_${(job.priority || 'normal').toLowerCase() === 'high' ? 'urgent' : (job.priority || 'normal').toLowerCase()}`)}
                                                         </Badge>
                                                     </div>
-                                                    <p className="text-label-xs text-status-success font-semibold uppercase">
-                                                        {job.itemsCount} {tc('units_label')} • {job.type === 'ISSUE' ? t('store.direct_issue') : t('store.transfer_request')}
+                                                    <p className="text-[10px] md:text-label-xs text-muted-foreground md:text-status-success font-semibold uppercase truncate">
+                                                        <span className="text-brand-gold md:text-status-success">{job.itemsCount} {tc('units_label')}</span> <span className="opacity-50">•</span> {job.type === 'ISSUE' ? t('store.direct_issue') : t('store.transfer_request')}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-10">
+                                            <div className="flex items-center gap-4 md:gap-10 shrink-0">
                                                 <div className="hidden md:flex flex-col items-end gap-2">
                                                     <span className="text-label-xxs font-semibold text-status-success uppercase italic">{t('store.fefo_buffer')}</span>
                                                     <div className="flex gap-1">
@@ -183,8 +183,8 @@ export function StoreManagerDashboard() {
                                                     </div>
                                                 </div>
                                                 <PermissionGate action="edit" resource="operations_issues">
-                                                    <div className="flex items-center justify-center rounded-2xl bg-card border border-border shadow-sm h-12 w-12 p-0 hover:bg-status-success hover:text-black transition-all hover:scale-110 active:scale-95">
-                                                        <ArrowRightLeft className="w-4 h-4" />
+                                                    <div className="flex items-center justify-center rounded-xl md:rounded-2xl bg-card md:bg-background border border-border/50 shadow-sm h-10 w-10 md:h-12 md:w-12 p-0 group-hover:bg-brand-gold group-hover:border-brand-gold group-hover:text-black text-foreground transition-all duration-300 hover:scale-105 active:scale-95">
+                                                        <ArrowRightLeft className="w-4 h-4 md:w-5 md:h-5" />
                                                     </div>
                                                 </PermissionGate>
                                             </div>

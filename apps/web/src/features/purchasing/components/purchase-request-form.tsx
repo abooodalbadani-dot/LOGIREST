@@ -16,7 +16,8 @@ import {
   Edit3,
   ArrowRight,
   History,
-  ArrowLeft
+  ArrowLeft,
+  MoreHorizontal
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -27,6 +28,8 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { cn } from '@/lib/utils';
 
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, parseISO } from 'date-fns';
 import {
@@ -391,113 +394,171 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       {/* Standard Submit Button for Drafts */}
       {isStrictlyDraft && (
         <>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={form.handleSubmit((v) => onSave(v, false), onFormError)}
-            className="w-full md:w-auto order-3 md:order-none h-12 px-8 border-none bg-card border border-border shadow-sm text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
-          >
-            <Save className="w-3.5 h-3.5 me-2" />
-            {tc('save')}
-          </Button>
-          <Button
-            type="button"
-            disabled={isSubmitting}
-            onClick={form.handleSubmit(handleSubmitClick, onFormError)}
-            className="w-full md:w-auto order-4 md:order-none flex items-center justify-center h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
-          >
-            {isSubmitting ? tc('saving') : (
-              <>
-                <Send className="w-3.5 h-3.5 me-2" />
-                {t('submit')}
-              </>
+          {/* Mobile Secondary Actions Dropdown */}
+          {initialData?.id && (
+            <div className="md:hidden flex w-full justify-end mb-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full h-12 rounded-xl flex items-center justify-center gap-2 border-border shadow-sm text-muted-foreground hover:bg-surface-container font-semibold uppercase text-label-xs transition-all active:scale-95">
+                    <MoreHorizontal className="w-4 h-4" />
+                    {tc('more_actions')}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl border-border bg-card shadow-xl p-2">
+                  <ActionGuard documentType="PR" status={status} action="EDIT" role={user?.role}>
+                    <PermissionGate action="update" resource="pr">
+                      <DropdownMenuItem onClick={() => router.push(`/purchase-requests/${initialData?.id}/edit`)} className="gap-3 py-3 rounded-lg font-semibold text-label-xs uppercase text-operational-cyan focus:bg-operational-cyan/10 focus:text-operational-cyan cursor-pointer transition-colors">
+                        <Edit3 className="w-4 h-4" />
+                        {tc('edit')}
+                      </DropdownMenuItem>
+                    </PermissionGate>
+                  </ActionGuard>
+
+                  <DropdownMenuItem onClick={async () => {
+                    const confirmed = window.confirm(t('cancel_confirm') || 'Are you sure you want to cancel this request?');
+                    if (!confirmed) return;
+                    try {
+                      await cancelPR.mutateAsync({ id: initialData.id, version: initialData.version ?? 0 });
+                      toast.success(t('cancel_success'));
+                      router.push('/purchase-requests', { skipGuard: true });
+                    } catch (error) {
+                      const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+                      if (!isToastShown) toast.error(tc('error'));
+                    }
+                  }} className="gap-3 py-3 rounded-lg font-semibold text-label-xs uppercase text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer transition-colors mt-1">
+                    <Trash2 className="w-4 h-4" />
+                    {t('cancel_request')}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem onClick={async () => {
+                    const confirmed = window.confirm('Are you sure you want to delete this draft request? This action is permanent.');
+                    if (!confirmed) return;
+                    try {
+                      await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
+                      toast.success(t('deleted_success'));
+                      router.push('/purchase-requests', { skipGuard: true });
+                    } catch (error) {
+                      const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+                      if (!isToastShown) toast.error(tc('error'));
+                    }
+                  }} className="gap-3 py-3 rounded-lg font-semibold text-label-xs uppercase text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer transition-colors mt-1">
+                    <Trash2 className="w-4 h-4" />
+                    {tc('actions.delete') || 'Delete'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+
+          {/* Primary Mobile + Desktop Row */}
+          <div className="flex w-full md:w-auto items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={form.handleSubmit((v) => onSave(v, false), onFormError)}
+              className="flex-1 md:flex-none h-12 px-8 border-none bg-card border border-border shadow-sm text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
+            >
+              <Save className="w-3.5 h-3.5 md:me-2" />
+              <span className="hidden md:inline">{tc('save')}</span>
+              <span className="md:hidden">{tc('save')}</span>
+            </Button>
+            <Button
+              type="button"
+              disabled={isSubmitting}
+              onClick={form.handleSubmit(handleSubmitClick, onFormError)}
+              className="flex-1 md:flex-none flex items-center justify-center h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
+            >
+              {isSubmitting ? tc('saving') : (
+                <>
+                  <Send className="w-3.5 h-3.5 md:me-2" />
+                  <span className="hidden md:inline">{t('submit')}</span>
+                  <span className="md:hidden">{t('submit')}</span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Desktop Secondary Actions (Hidden on Mobile) */}
+          <div className="hidden md:flex items-center gap-3">
+            {initialData?.id && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={cancelPR.isPending}
+                onClick={async () => {
+                  const confirmed = window.confirm(t('cancel_confirm') || 'Are you sure you want to cancel this request?');
+                  if (!confirmed) return;
+                  try {
+                    await cancelPR.mutateAsync({ id: initialData.id, version: initialData.version ?? 0 });
+                    toast.success(t('cancel_success'));
+                    router.push('/purchase-requests', { skipGuard: true });
+                  } catch (error) {
+                    const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+                    if (!isToastShown) toast.error(tc('error'));
+                  }
+                }}
+                className="h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+              >
+                <Trash2 className="w-3.5 h-3.5 me-2" />
+                {t('cancel_request')}
+              </Button>
             )}
-          </Button>
 
-          {/* Cancel Button for Draft Documents */}
-          {initialData?.id && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={cancelPR.isPending}
-              onClick={async () => {
-                const confirmed = window.confirm(t('cancel_confirm') || 'Are you sure you want to cancel this request?');
-                if (!confirmed) return;
-                try {
-                  await cancelPR.mutateAsync({ id: initialData.id, version: initialData.version ?? 0 });
-                  toast.success(t('cancel_success'));
-                  router.push('/purchase-requests', { skipGuard: true });
-                } catch (error) {
-                  const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
-                  if (!isToastShown) {
-                    toast.error(tc('error'));
+            {initialData?.id && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={deletePR.isPending}
+                onClick={async () => {
+                  const confirmed = window.confirm('Are you sure you want to delete this draft request? This action is permanent.');
+                  if (!confirmed) return;
+                  try {
+                    await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
+                    toast.success(t('deleted_success'));
+                    router.push('/purchase-requests', { skipGuard: true });
+                  } catch (error) {
+                    const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
+                    if (!isToastShown) toast.error(tc('error'));
                   }
-                }
-              }}
-              className="w-full md:w-auto order-2 md:order-none h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
-            >
-              <Trash2 className="w-3.5 h-3.5 me-2" />
-              {t('cancel_request')}
-            </Button>
-          )}
+                }}
+                className="flex items-center justify-center h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+              >
+                <Trash2 className="w-3.5 h-3.5 me-2" />
+                {tc('actions.delete') || 'Delete'}
+              </Button>
+            )}
 
-          {/* Delete Button for Draft Documents */}
-          {initialData?.id && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={deletePR.isPending}
-              onClick={async () => {
-                const confirmed = window.confirm('Are you sure you want to delete this draft request? This action is permanent.');
-                if (!confirmed) return;
-                try {
-                  await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
-                  toast.success(t('deleted_success'));
-                  router.push('/purchase-requests', { skipGuard: true });
-                } catch (error) {
-                  const isToastShown = error && typeof error === 'object' && (error as Record<string, unknown>)._isToastShown === true;
-                  if (!isToastShown) {
-                    toast.error(tc('error'));
-                  }
-                }
-              }}
-              className="w-full md:w-auto order-1 md:order-none flex items-center justify-center h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
-            >
-              <Trash2 className="w-3.5 h-3.5 me-2" />
-              {tc('actions.delete') || 'Delete'}
-            </Button>
-          )}
-
-          {/* EDIT Action ONLY for Drafts (if needed) */}
-          {initialData?.id && (
-            <ActionGuard documentType="PR" status={status} action="EDIT" role={user?.role}>
-              <PermissionGate action="update" resource="pr">
-                <Button
-                  onClick={() => router.push(`/purchase-requests/${initialData?.id}/edit`)}
-                  variant="outline"
-                  className="w-full md:w-auto flex items-center justify-center h-12 px-8 border-none bg-card border border-border shadow-sm text-operational-cyan text-label-xs font-semibold uppercase rounded-xl hover:bg-operational-cyan/5 transition-all shadow-xl shadow-black/5"
-                >
-                  <Edit3 className="w-4 h-4 me-2 opacity-60" />
-                  {tc('edit')}
-                </Button>
-              </PermissionGate>
-            </ActionGuard>
-          )}
+            {initialData?.id && (
+              <ActionGuard documentType="PR" status={status} action="EDIT" role={user?.role}>
+                <PermissionGate action="update" resource="pr">
+                  <Button
+                    onClick={() => router.push(`/purchase-requests/${initialData?.id}/edit`)}
+                    variant="outline"
+                    className="flex items-center justify-center h-12 px-8 border-none bg-card border border-border shadow-sm text-operational-cyan text-label-xs font-semibold uppercase rounded-xl hover:bg-operational-cyan/5 transition-all shadow-xl shadow-black/5"
+                  >
+                    <Edit3 className="w-4 h-4 me-2 opacity-60" />
+                    {tc('edit')}
+                  </Button>
+                </PermissionGate>
+              </ActionGuard>
+            )}
+          </div>
         </>
       )}
 
       {/* Workflow Actions for Locked Documents */}
       {isLocked && (
-        <>
+        <div className="flex w-full md:w-auto items-center gap-3">
           <ActionGuard documentType="PR" status={status} action="APPROVE" role={user?.role}>
             <PermissionGate action="approve" resource="pr">
               <Button
                 onClick={() => router.push(`/purchase-requests/${initialData?.id}/approve`)}
-                className="w-full md:w-auto flex items-center justify-center h-12 px-10 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 rounded-xl transition-all active:scale-95"
+                className="flex-1 md:flex-none flex items-center justify-center h-12 px-10 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 rounded-xl transition-all active:scale-95"
               >
                 <ShieldCheck className="w-4 h-4 me-2" />
-                {t('go_to_approval')}
+                <span className="hidden md:inline">{t('go_to_approval')}</span>
+                <span className="md:hidden">{t('go_to_approval')}</span>
               </Button>
             </PermissionGate>
           </ActionGuard>
@@ -506,14 +567,15 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             <PermissionGate action="create" resource="po">
               <Button
                 onClick={() => setConvertToPOOpen(true)}
-                className="w-full md:w-auto flex items-center justify-center bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-12 px-10 text-label-xs font-semibold uppercase rounded-xl active:scale-95 border-none shadow-xl shadow-primary/20"
+                className="flex-1 md:flex-none flex items-center justify-center bg-brand-gold hover:bg-brand-gold-hover text-white transition-colors h-12 px-10 text-label-xs font-semibold uppercase rounded-xl active:scale-95 border-none shadow-xl shadow-primary/20"
               >
                 <ArrowRight className="w-4 h-4 me-2 rtl:rotate-180" />
-                {t('convert_to_po')}
+                <span className="hidden md:inline">{t('convert_to_po')}</span>
+                <span className="md:hidden">{t('convert_to_po')}</span>
               </Button>
             </PermissionGate>
           </ActionGuard>
-        </>
+        </div>
       )}
     </div>
   );
@@ -570,7 +632,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                     name="department_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-2 md:mb-3 flex items-center gap-2 ps-1">
+                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground mb-2 md:mb-3 flex items-center gap-2 ps-1">
                           <Package className="w-3 h-3" />
                           {t('department')}
                         </FormLabel>
@@ -580,7 +642,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                             value={field.value ?? undefined}
                             onSelect={(item) => field.onChange(item.id)}
                             placeholder={tc('select_warehouse')}
-                            className="bg-card h-9 md:h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-brand-gold/50"
+                            className="bg-card h-9 md:h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-brand-gold/50 min-w-0 flex-1 [&_span]:truncate [&_span]:max-w-[120px] [&_span]:md:max-w-[200px]"
                             disabled={isFormDisabled}
                           />
                         </FormControl>
@@ -597,7 +659,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                       const isValidDate = selectedDate && !isNaN(selectedDate.getTime());
                       return (
                         <FormItem>
-                          <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-2 md:mb-3 flex items-center gap-2 ps-1">
+                          <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground mb-2 md:mb-3 flex items-center gap-2 ps-1">
                             <Calendar className="w-3 h-3" />
                             {t('expected_date')}
                           </FormLabel>
@@ -609,14 +671,14 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                                   variant="outline"
                                   disabled={isFormDisabled}
                                   className={cn(
-                                    "bg-card h-9 md:h-11 w-full rounded-xl border border-border px-3 font-mono text-label-xs uppercase shadow-sm focus:ring-1 focus:ring-brand-gold/50 flex items-center justify-between font-semibold",
-                                    !field.value && "text-muted-foreground/60"
+                                    "bg-card h-9 md:h-11 w-full rounded-xl border border-border px-3 font-mono text-label-xs uppercase shadow-sm focus:ring-1 focus:ring-brand-gold flex items-center justify-between font-semibold",
+                                    !field.value && "text-muted-foreground"
                                   )}
                                 >
-                                  <span lang="en" dir="ltr" className="force-latin-numbers inline-block text-right font-mono text-label-xs">
+                                  <span lang="en" dir="ltr" className="force-latin-numbers inline-block text-right font-mono text-label-xs ">
                                     {isValidDate ? format(selectedDate, "dd/MM/yyyy") : tc('select_date')}
                                   </span>
-                                  <Calendar className="w-4 h-4 text-muted-foreground/60 shrink-0 ms-2" />
+                                  <Calendar className="w-4 h-4 text-muted-foreground shrink-0 ms-2" />
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 border border-border bg-card shadow-xl rounded-xl" align="start">
@@ -643,9 +705,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                     name="notes"
                     render={({ field }) => (
                       <FormItem className="col-span-2 md:col-span-2 lg:col-span-3">
-                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-2 md:mb-3 ps-1">{tc('notes')}</FormLabel>
+                        <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground mb-2 md:mb-3 ps-1">{tc('notes')}</FormLabel>
                         <FormControl>
-                          <Input placeholder={tc('notes')} className="bg-card h-9 md:h-11 rounded-xl font-semibold text-label-xs uppercase" {...field} disabled={isFormDisabled} />
+                          <Input placeholder={tc('notes')} className="bg-card border border-border h-9 md:h-11 rounded-xl font-semibold text-label-xs uppercase shadow-sm focus-visible:ring-1 focus-visible:ring-brand-gold/50" {...field} disabled={isFormDisabled} />
                         </FormControl>
                         <FormMessage className="text-label-xxs font-semibold uppercase" />
                       </FormItem>
@@ -722,28 +784,29 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                       const currentUomId = live.uom_id || line.uomId || primaryUomId || '';
                       const resolvedCode = resolveUomCode(currentUomId, selectedItem);
 
-                      if (isFormDisabled || availableUoms.length <= 1) {
-                        return (
-                          <span className="text-label-xs font-semibold text-muted-foreground uppercase px-2.5 py-1 bg-surface-container rounded font-mono font-bold">
-                            {resolvedCode}
-                          </span>
-                        );
-                      }
-
                       return (
-                        <SmartCombobox
-                          items={availableUoms}
+                        <Select
+                          disabled={isFormDisabled || isSubmitting}
                           value={currentUomId}
-                          onSelect={(uom) => {
+                          onValueChange={(val) => {
                             if (index >= 0) {
-                              form.setValue(`lines.${index}.uom_id`, String(uom.id), { shouldDirty: true, shouldValidate: true });
+                              form.setValue(`lines.${index}.uom_id` as const, val || '', { shouldDirty: true, shouldValidate: true });
                             }
                           }}
-                          getPrimaryLabel={(uom) => uom.code || uom.name || 'UOM'}
-                          getSecondaryLabel={() => undefined}
-                          triggerClassName="h-9 w-full bg-card border border-border text-foreground rounded-lg text-xs font-bold uppercase shadow-sm focus:ring-1 focus:ring-operational-cyan"
-                          disabled={isFormDisabled || isSubmitting}
-                        />
+                        >
+                          <SelectTrigger className="h-9 w-full bg-background border border-border text-foreground rounded-md text-xs font-bold uppercase">
+                            <span className="flex-1 text-start truncate font-bold uppercase">
+                              {resolvedCode || 'UOM'}
+                            </span>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableUoms.map((u) => (
+                              <SelectItem key={u.id} value={String(u.id)} className="text-xs font-bold uppercase">
+                                {u.code || u.name || 'EA'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       );
                     }}
                     renderQty={(line) => {

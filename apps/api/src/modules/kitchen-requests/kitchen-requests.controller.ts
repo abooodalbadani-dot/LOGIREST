@@ -120,6 +120,13 @@ function mapKitchenRequestDetail(
     updatedAt: updatedAtIso,
     version: kr.version as number,
     issueId: (kr.issueId as string) || null,
+    issueDocument: kr.inventoryIssue
+      ? {
+          id: (kr.inventoryIssue as Record<string, unknown>).id as string,
+          issueNumber: (kr.inventoryIssue as Record<string, unknown>).issueNumber as string,
+          status: (kr.inventoryIssue as Record<string, unknown>).status as string,
+        }
+      : null,
     items,
   };
 }
@@ -138,7 +145,6 @@ export class KitchenRequestsController {
   @Roles(
     Role.ADMIN,
     Role.STORE_MGR,
-    Role.WH_KEEPER,
     Role.BRANCH_MGR,
     Role.KITCHEN_CHIEF,
   )
@@ -223,11 +229,16 @@ export class KitchenRequestsController {
   @Put(':id')
   @Roles(
     Role.ADMIN,
-    Role.WH_KEEPER,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
     Role.KITCHEN_CHIEF,
   )
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'kitchen_request',
+    action: 'EDIT',
+    modelName: 'kitchenRequest',
+  })
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateKitchenRequestDto,
@@ -269,7 +280,6 @@ export class KitchenRequestsController {
   @Post(':id/submit')
   @Roles(
     Role.ADMIN,
-    Role.WH_KEEPER,
     Role.STORE_MGR,
     Role.BRANCH_MGR,
     Role.KITCHEN_CHIEF,

@@ -260,7 +260,8 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
   },
   'kitchen_request': {
     [KITCHEN_REQUEST_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: KITCHEN_REQUEST_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR', 'STORE_MGR', 'WH_KEEPER', 'KITCHEN_CHIEF'] },
+      'SUBMIT': { targetStatus: KITCHEN_REQUEST_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'BRANCH_MGR', 'STORE_MGR', 'KITCHEN_CHIEF'] },
+      'EDIT': { targetStatus: KITCHEN_REQUEST_STATUS.DRAFT, allowedRoles: ['ADMIN', 'BRANCH_MGR', 'STORE_MGR', 'KITCHEN_CHIEF'] },
       'CANCEL': { targetStatus: KITCHEN_REQUEST_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR', 'STORE_MGR', 'WH_KEEPER', 'KITCHEN_CHIEF'] },
     },
     [KITCHEN_REQUEST_STATUS.SUBMITTED]: {

@@ -1138,7 +1138,8 @@
     "post_success": "Document posted successfully",
     "posted_success": "Document posted successfully",
     "approved_success": "Document approved successfully",
-    "rejected_success": "Document rejected successfully"
+    "rejected_success": "Document rejected successfully",
+    "more_actions": "More Actions"
   },
   "communications": {
     "notifications": {

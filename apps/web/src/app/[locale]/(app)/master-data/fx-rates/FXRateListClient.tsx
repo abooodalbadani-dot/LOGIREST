@@ -41,7 +41,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
  const rates = data ?? [];
 
  useEffect(() => {
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   setIsMounted(true);
  }, []);
 

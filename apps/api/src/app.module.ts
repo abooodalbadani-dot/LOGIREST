@@ -35,6 +35,7 @@ import { CsrfGuard } from './guards/csrf.guard';
 import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
 import { DeprecationInterceptor } from './common/interceptors/deprecation.interceptor';
 import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
+import { UserContextInterceptor } from './common/user-context.interceptor';
 import { LockCleanupJob } from './jobs/lock-cleanup.job';
 import { LowStockAlertJob } from './jobs/low-stock-alert.job';
 import { ExpiryAlertJob } from './jobs/expiry-alert.job';
@@ -171,6 +172,10 @@ const rootDir = process.cwd().includes('apps')
     {
       provide: APP_GUARD,
       useClass: WarehouseLockGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserContextInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

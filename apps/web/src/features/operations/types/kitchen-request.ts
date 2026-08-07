@@ -100,6 +100,11 @@ export const KitchenRequestDetailSchema = z.object({
  fulfilledBy: z.string().optional(),
  fulfilledAt: z.string().optional(),
  issueId: z.string().nullable().optional(),
+ issueDocument: z.object({
+   id: z.string(),
+   issueNumber: z.string(),
+   status: z.string().optional(),
+ }).nullable().optional(),
  createdAt: z.string().default(() => new Date().toISOString()),
  updatedAt: z.string().default(() => new Date().toISOString()),
  version: z.number().default(1),

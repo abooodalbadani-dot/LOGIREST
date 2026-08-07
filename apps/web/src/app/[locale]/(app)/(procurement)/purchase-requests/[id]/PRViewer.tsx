@@ -122,30 +122,33 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
         )}
       </div>
 
-      {/* Rejection Banner for Rejected PRs */}
-      {(document.status === 'REJECTED' || rejectionEvent) && (
-        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 p-6 rounded-2xl space-y-2 animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center gap-2 font-bold text-sm uppercase">
-            <XCircle className="w-5 h-5 text-rose-500" />
-            {locale === 'ar' ? 'سبب رفض الطلب (Rejection Reason)' : 'Rejection Reason'}
-          </div>
-          <p className="text-sm font-semibold text-foreground bg-card/80 p-4 rounded-xl border border-rose-500/20 shadow-xs">
-            {rejectionEvent?.comments ||
-              (locale === 'ar'
-                ? 'تم رفض الطلب بواسطة إدارة المشتريات'
-                : 'Request rejected by management')}
-          </p>
-          {rejectionEvent && rejectionEvent.createdAt && (
-            <div className="text-xs text-muted-foreground/80 ps-1">
-              {tc.has('by') ? tc('by') : locale === 'ar' ? 'بواسطة' : 'By'}:{' '}
-              <strong>{rejectionEvent.user?.name || rejectionEvent.user?.role || 'المسؤول'}</strong> •{' '}
-              {new Date(rejectionEvent.createdAt).toLocaleString(
-                locale === 'ar' ? 'ar-SA' : 'en-US'
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+        {/* Main Content Area */}
+        <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+          {/* Rejection Banner for Rejected PRs */}
+          {(document.status === 'REJECTED' || rejectionEvent) && (
+            <div className="bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 p-6 rounded-2xl space-y-2 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 font-bold text-sm uppercase">
+                <XCircle className="w-5 h-5 text-rose-500" />
+                {locale === 'ar' ? 'سبب رفض الطلب (Rejection Reason)' : 'Rejection Reason'}
+              </div>
+              <p className="text-sm font-semibold text-foreground bg-card/80 p-4 rounded-xl border border-rose-500/20 shadow-xs">
+                {rejectionEvent?.comments ||
+                  (locale === 'ar'
+                    ? 'تم رفض الطلب بواسطة إدارة المشتريات'
+                    : 'Request rejected by management')}
+              </p>
+              {rejectionEvent && rejectionEvent.createdAt && (
+                <div className="text-xs text-muted-foreground/80 ps-1">
+                  {tc.has('by') ? tc('by') : locale === 'ar' ? 'بواسطة' : 'By'}:{' '}
+                  <strong>{rejectionEvent.user?.name || rejectionEvent.user?.role || 'المسؤول'}</strong> •{' '}
+                  {new Date(rejectionEvent.createdAt).toLocaleString(
+                    locale === 'ar' ? 'ar-SA' : 'en-US'
+                  )}
+                </div>
               )}
             </div>
           )}
-        </div>
-      )}
 
       <DocumentReadOnlyOverlay
         isPosted={document?.status === 'APPROVED' || document?.status === 'REJECTED'}
@@ -192,9 +195,9 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
           </div>
 
           {/* Desktop Metadata Info Cards */}
-          <div className="hidden md:grid md:grid-cols-3 gap-3 mb-6">
+          <div className="hidden md:grid bg-card p-4 rounded-md border grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* المستودع الطالب */}
-            <div className="bg-surface-container-low border border-border rounded-[var(--radius-lg)] p-4 flex flex-col gap-1 items-start">
+            <div className="flex flex-col gap-1 items-start">
               <span className="text-label-sm text-muted-foreground flex items-center gap-1.5">
                 <Building2 className="w-4 h-4 text-primary" />
                 {t('department')}
@@ -205,7 +208,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
             </div>
 
             {/* التاريخ المتوقع */}
-            <div className="bg-surface-container-low border border-border rounded-[var(--radius-lg)] p-4 flex flex-col gap-1 items-start">
+            <div className="flex flex-col gap-1 items-start">
               <span className="text-label-sm text-muted-foreground flex items-center gap-1.5 ">
                 <Calendar className="w-4 h-4 text-amber-500" />
                 {t('expected_date')}
@@ -219,7 +222,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
             </div>
 
             {/* ملاحظات */}
-            <div className="bg-surface-container-low border border-border rounded-[var(--radius-lg)] p-4 flex flex-col gap-1 items-start">
+            <div className="flex flex-col gap-1 items-start">
               <span className="text-label-sm text-muted-foreground flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-operational-cyan" />
                 {tc('notes')}
@@ -251,6 +254,9 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
               <DocumentLineItemTable
                 mobileLayoutPattern="purchase-request-form"
                 hideLotColumns={true}
+                renderQty={(line) => (
+                  <span className="text-body-md text-foreground font-medium">{line.qty}</span>
+                )}
                 lines={document.lines.map((l) => ({
                   id: l.id,
                   item: {
@@ -292,11 +298,11 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
                 return (
                   <div
                     key={l.id || idx}
-                    className="bg-card border border-border-color rounded-[var(--radius-md)] p-3 flex flex-col gap-3"
+                    className="bg-card border border-border-color rounded-[var(--radius-md)] p-3 flex flex-col"
                   >
-                    {/* Top Row: Unit badge on one side, Item name & Image & code on the other */}
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    {/* Row 1: Item Image & Name (Right-aligned) */}
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         {image ? (
                           <img
                             src={image}
@@ -308,33 +314,25 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
                             N/A
                           </div>
                         )}
-                        <div className="flex flex-col min-w-0">
+                        <div className="flex flex-col min-w-0 text-start">
                           <span className="font-bold text-foreground text-sm truncate">
                             {itemName}
                           </span>
-                          <span className="text-xs font-mono font-bold text-brand-gold truncate">
+                          <span className="text-xs font-mono font-bold text-brand-gold truncate mt-0.5">
                             {itemCode}
                           </span>
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-label-xs font-bold uppercase shrink-0 border border-border/50">
-                        {uomCode || 'EA'}
-                      </span>
                     </div>
 
-                    {/* Bottom Row: Quantity */}
-                    <div className="flex justify-between items-center border-t border-border-muted pt-2 text-start">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-                        {t.has('qty')
-                          ? t('qty')
-                          : tc.has('qty')
-                            ? tc('qty')
-                            : locale === 'ar'
-                              ? 'الكمية'
-                              : 'Quantity'}
+                    {/* Row 2: QTY and UOM */}
+                    <div className="flex items-center justify-between mt-3 p-2 bg-surface-container-lowest rounded-sm">
+                      <span className="text-muted-foreground text-sm">
+                        {t.has('qty') ? t('qty') : tc.has('qty') ? tc('qty') : locale === 'ar' ? 'الكمية' : 'Quantity'}:
+                        <strong className="text-foreground font-mono ml-1">{l.reqQty}</strong>
                       </span>
-                      <span className="text-body-md font-bold force-latin-numbers text-foreground">
-                        {l.reqQty}
+                      <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-label-xs font-bold uppercase border border-border/50">
+                        {uomCode || 'EA'}
                       </span>
                     </div>
                   </div>
@@ -344,18 +342,20 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
           </div>
         </div>
       </DocumentReadOnlyOverlay>
+        </div>
 
-      {/* Audit Trail Timeline */}
-      <div className="space-y-10">
-        {timelineEntries.length > 0 && (
-          <div className="bg-card border border-border shadow-sm p-6 sm:p-8 rounded-2xl md:rounded-[2rem] shadow-sm border border-surface-variant/5 transition-all">
-            <div className="flex items-center gap-3 mb-6 md:mb-10">
-              <History className="w-4 h-4 text-primary opacity-40" />
-              <h3 className="text-xs font-bold uppercase text-primary">{tc('audit_trail')}</h3>
+        {/* Audit Trail Sidebar */}
+        <div className="lg:col-span-4 xl:col-span-3">
+          {timelineEntries.length > 0 && (
+            <div className="bg-card border border-border shadow-sm p-6 rounded-xl border border-surface-variant/5 transition-all sticky top-24">
+              <div className="flex items-center gap-3 mb-6 md:mb-10">
+                <History className="w-4 h-4 text-primary opacity-40" />
+                <h3 className="text-xs font-bold uppercase text-primary">{tc('audit_trail')}</h3>
+              </div>
+              <StatusTimeline entries={timelineEntries} />
             </div>
-            <StatusTimeline entries={timelineEntries} />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

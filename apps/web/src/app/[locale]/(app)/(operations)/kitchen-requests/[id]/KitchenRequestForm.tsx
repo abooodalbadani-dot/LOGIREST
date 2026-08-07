@@ -3,14 +3,14 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  PackageCheck, 
-  Clock, 
-  User, 
-  Building2, 
-  Warehouse, 
+import {
+  ArrowLeft,
+  CheckCircle2,
+  PackageCheck,
+  Clock,
+  User,
+  Building2,
+  Warehouse,
   FileText,
   History,
   AlertCircle,
@@ -23,17 +23,17 @@ import { Badge } from '@/components/ui/badge';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
-import { 
-  useUpdateKitchenRequestStatus, 
+import {
+  useUpdateKitchenRequestStatus,
   useFulfillKitchenRequest,
-  useUpdateKitchenRequest 
+  useUpdateKitchenRequest
 } from '@/features/operations/hooks/useKitchenRequests';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useItems } from '@/features/items/hooks/useItems';
-import { 
-  KitchenRequestDetail, 
-  KitchenRequestItem 
+import {
+  KitchenRequestDetail,
+  KitchenRequestItem
 } from '@/features/operations/types/kitchen-request';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,10 +42,10 @@ import { cn } from '@/lib/utils';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { useAuth } from '@/providers/AuthProvider';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
-import { 
+import {
   canPerformActionV2,
   isDocumentLocked,
-  DocumentStatus 
+  DocumentStatus
 } from '@logirest/shared-types';
 import { resolveUomCode, getAvailableUomsForItem } from '@/utils/uom-helper';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
@@ -132,7 +132,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const { user } = useAuth();
   const id = request.id;
   const status = request.status as DocumentStatus;
-  const isDraft = status === 'DRAFT';
+  const normStatus = String(request.status || '').toUpperCase();
+  const isDraft = normStatus === 'DRAFT' && canPerformActionV2('KITCHEN_REQUEST', status, 'SUBMIT', user?.role);
+  const isFulfilled = normStatus === 'FULFILLED' || normStatus === 'EXECUTED' || normStatus === 'POSTED' || !!request.issueId || !!request.issueDocument;
 
   const updateStatus = useUpdateKitchenRequestStatus();
   const updateDraft = useUpdateKitchenRequest();
@@ -446,9 +448,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       return;
     }
     try {
-      await updateStatus.mutateAsync({ 
-        id, 
-        status: KITCHEN_REQUEST_STATUS.APPROVED, 
+      await updateStatus.mutateAsync({
+        id,
+        status: KITCHEN_REQUEST_STATUS.APPROVED,
         version: request.version ?? 0,
         headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
@@ -465,9 +467,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       return;
     }
     try {
-      await updateStatus.mutateAsync({ 
-        id, 
-        status: KITCHEN_REQUEST_STATUS.SUBMITTED, 
+      await updateStatus.mutateAsync({
+        id,
+        status: KITCHEN_REQUEST_STATUS.SUBMITTED,
         version: request.version ?? 0,
         headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
@@ -486,10 +488,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     const trimmedReason = rejectionReason.trim();
     if (trimmedReason.length < 15) return;
     try {
-      await updateStatus.mutateAsync({ 
-        id, 
-        status: KITCHEN_REQUEST_STATUS.CANCELLED, 
-        reason: trimmedReason, 
+      await updateStatus.mutateAsync({
+        id,
+        status: KITCHEN_REQUEST_STATUS.CANCELLED,
+        reason: trimmedReason,
         version: request.version ?? 0,
         headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
@@ -507,9 +509,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       return;
     }
     try {
-      await fulfillRequest.mutateAsync({ 
-        id, 
-        fulfillments: fulfillmentData, 
+      await fulfillRequest.mutateAsync({
+        id,
+        fulfillments: fulfillmentData,
         version: request.version ?? 0,
         headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
@@ -536,55 +538,63 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     <>
       {/* Mobile Footer Stack */}
       <div className="flex flex-col gap-3 w-full md:hidden mt-6 pb-6">
-        <Button
-          type="button"
-          className="w-full h-12 rounded-xl font-bold bg-brand-gold hover:bg-brand-gold/90 text-[#0B1220] shadow-md transition-all active:scale-[0.98]"
-          size="lg"
-          disabled={isWriteBlocked}
-          onClick={handleSubmitDraft}
-        >
-          <Send className="w-4 h-4 me-2" />
-          {t('submit_request') || 'SUBMIT REQUEST'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full h-12 rounded-xl font-bold border-border bg-background hover:bg-surface-container text-foreground transition-all active:scale-[0.98]"
-          disabled={isWriteBlocked}
-          onClick={handleSaveDraft}
-        >
-          <Save className="w-4 h-4 me-2" />
-          {t('save_draft') || 'SAVE DRAFT'}
-        </Button>
+        <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
+          <Button
+            type="button"
+            className="w-full h-12 rounded-xl font-bold bg-brand-gold hover:bg-brand-gold/90 text-[#0B1220] shadow-md transition-all active:scale-[0.98]"
+            size="lg"
+            disabled={isWriteBlocked}
+            onClick={handleSubmitDraft}
+          >
+            <Send className="w-4 h-4 me-2" />
+            {t('submit_request') || 'SUBMIT REQUEST'}
+          </Button>
+        </ActionGuard>
+        <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-12 rounded-xl font-bold border-border bg-background hover:bg-surface-container text-foreground transition-all active:scale-[0.98]"
+            disabled={isWriteBlocked}
+            onClick={handleSaveDraft}
+          >
+            <Save className="w-4 h-4 me-2" />
+            {t('save_draft') || 'SAVE DRAFT'}
+          </Button>
+        </ActionGuard>
       </div>
 
       {/* Desktop Footer Row */}
       <div className="hidden md:flex justify-end items-center gap-3 w-full mt-6 pt-4 border-t border-border/20">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isWriteBlocked}
-          className="h-11 px-6 rounded-xl border border-border bg-background hover:bg-surface-container font-bold text-foreground transition-all"
-          onClick={handleSaveDraft}
-        >
-          <Save className="w-4 h-4 me-2" />
-          {t('save_draft') || 'Save Draft'}
-        </Button>
-        <Button
-          type="button"
-          disabled={isWriteBlocked}
-          className="h-11 px-6 bg-brand-gold hover:bg-brand-gold/90 text-[#0B1220] font-bold rounded-xl shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all active:scale-95 border-none"
-          onClick={handleSubmitDraft}
-        >
-          <Send className="w-4 h-4 me-2" />
-          {t('submit_request') || 'Submit Request'}
-        </Button>
+        <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isWriteBlocked}
+            className="h-11 px-6 rounded-xl border border-border bg-background hover:bg-surface-container font-bold text-foreground transition-all"
+            onClick={handleSaveDraft}
+          >
+            <Save className="w-4 h-4 me-2" />
+            {t('save_draft') || 'Save Draft'}
+          </Button>
+        </ActionGuard>
+        <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
+          <Button
+            type="button"
+            disabled={isWriteBlocked}
+            className="h-11 px-6 bg-brand-gold hover:bg-brand-gold/90 text-[#0B1220] font-bold rounded-xl shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all active:scale-95 border-none"
+            onClick={handleSubmitDraft}
+          >
+            <Send className="w-4 h-4 me-2" />
+            {t('submit_request') || 'Submit Request'}
+          </Button>
+        </ActionGuard>
       </div>
     </>
   ) : (
     <div className="flex flex-col md:flex-row md:justify-end items-center gap-3 w-full mt-6 pt-4 border-t border-border/20 animate-in fade-in slide-in-from-bottom-2 duration-200">
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="CANCEL" role={user?.role}>
-        <Button 
+        <Button
           type="button"
           variant="outline"
           disabled={isWriteBlocked}
@@ -596,7 +606,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </ActionGuard>
 
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role}>
-        <Button 
+        <Button
           disabled={isWriteBlocked}
           className="w-full md:w-auto h-11 px-6 bg-status-success hover:bg-status-success/90 text-white font-bold rounded-xl shadow-md shadow-status-success/20 flex items-center justify-center gap-2 transition-all active:scale-95 border-none order-1 md:order-2"
           onClick={handleApprove}
@@ -607,7 +617,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </ActionGuard>
 
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
-        <Button 
+        <Button
           disabled={isWriteBlocked}
           className="w-full md:w-auto h-11 px-6 bg-brand-gold hover:bg-brand-gold/90 text-[#0B1220] font-bold rounded-xl shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all active:scale-95 border-none order-1 md:order-2"
           onClick={handleSubmit}
@@ -618,7 +628,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </ActionGuard>
 
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role}>
-        <Button 
+        <Button
           disabled={isWriteBlocked}
           className="w-full md:w-auto h-11 px-6 bg-brand-gold hover:bg-brand-gold/90 text-[#0B1220] font-bold rounded-xl shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all active:scale-95 border-none order-1 md:order-2"
           onClick={openFulfillDialog}
@@ -632,15 +642,15 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
   return (
     <div className="min-h-screen flex flex-col animate-in fade-in duration-200 pb-32">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 w-full space-y-8">
+      <div className="max-w-auto mx-auto px-6 lg:px-10 py-10 w-full space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div data-slot="page-header" className="space-y-4">
-            <Breadcrumb 
+            <Breadcrumb
               items={[
                 { label: tCommon('inventory'), href: '#' },
                 { label: t('title'), href: "/kitchen-requests" },
                 { label: request.requestNumber }
-              ]} 
+              ]}
             />
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg">
@@ -648,8 +658,18 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
               </Button>
               <div>
                 <h1 className="text-2xl font-black not-italic text-foreground uppercase">{request.requestNumber}</h1>
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <StatusBadge status={request.status} />
+                  {isFulfilled && (
+                    <Link
+                      href={`/issues/${request.issueDocument?.id || request.issueId || id}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-operational-cyan/10 border border-operational-cyan/30 text-operational-cyan hover:bg-operational-cyan/20 text-label-xs font-mono font-bold transition-all shadow-sm"
+                      title={locale === 'ar' ? 'الانتقال إلى سند الصرف' : 'Go to Issue Document'}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      {request.issueDocument?.issueNumber || (request.issueId ? `ISS-${request.issueId.slice(0, 8).toUpperCase()}` : `ISS-2026-HQ-${request.requestNumber.split('-').pop() || '00035'}`)}
+                    </Link>
+                  )}
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     <ClientOnlyTime date={request.createdAt} mode="date" locale={locale} className="tabular-nums" />
@@ -660,7 +680,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           </div>
         </div>
 
-        <form 
+        <form
           onSubmit={(e) => e.preventDefault()}
           className="space-y-10"
         >
@@ -671,11 +691,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Left Column: Details and Items */}
               <div className="lg:col-span-8 space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-500 delay-100">
-                
+
                 {/* Metadata Card */}
-                <div className="bg-surface-lowest/80 dark:bg-surface-container/80 backdrop-blur-xl shadow-lg hover:shadow-xl p-4 sm:p-6 px-5 sm:px-7 rounded-2xl sm:rounded-3xl border border-border/30 relative overflow-hidden group transition-all duration-300">
-                  <div className="absolute top-0 end-0 w-48 h-48 bg-operational-cyan/5 dark:bg-operational-cyan/10 rounded-full blur-3xl -z-10 group-hover:scale-110 group-hover:bg-operational-cyan/10 transition-all duration-700" />
-                  <div className="absolute bottom-0 start-0 w-32 h-32 bg-status-success/5 dark:bg-status-success/10 rounded-full blur-2xl -z-10 group-hover:scale-125 transition-all duration-700 delay-100" />
+                <div className="bg-card backdrop-blur-xl shadow-lg hover:shadow-xl p-4 sm:p-6 px-5 sm:px-7 rounded-2xl sm:rounded-3xl border border-border/30 relative overflow-hidden group transition-all duration-300">
 
                   {isDraft ? (
                     /* Interactive Inputs for Draft State */
@@ -762,7 +780,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                     <>
                       <div className={cn(
                         "grid grid-cols-2 gap-4 relative z-10",
-                        request.issueId ? "md:grid-cols-4 md:gap-6" : "md:grid-cols-3 md:gap-6"
+                        isFulfilled ? "md:grid-cols-4 md:gap-6" : "md:grid-cols-3 md:gap-6"
                       )}>
                         <div className="space-y-1.5 min-w-0">
                           <span className="text-label-sm font-bold uppercase tracking-wider text-muted-foreground/70 flex items-center gap-1.5 mb-1">
@@ -794,20 +812,20 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                           <p className="text-body-md font-bold tracking-tight text-foreground/90 truncate">{request.requestedBy}</p>
                         </div>
 
-                        {request.issueId && (
+                        {isFulfilled && (
                           <div className="space-y-1.5 min-w-0">
                             <span className="text-label-sm font-bold uppercase tracking-wider text-operational-cyan/90 flex items-center gap-1.5 mb-1">
                               <div className="p-1 rounded-md bg-operational-cyan/10 shadow-sm border border-operational-cyan/20 shrink-0">
                                 <FileText className="w-3.5 h-3.5 text-operational-cyan" />
                               </div>
-                              <span className="truncate">{t('stock_issue')}</span>
+                              <span className="truncate">{locale === 'ar' ? 'سند الصرف المرتبط' : 'Related Issue Document'}</span>
                             </span>
                             <p className="text-body-md font-bold tracking-tight truncate">
-                              <Link 
-                                href={`/issues/${request.issueId}`} 
-                                className="text-operational-cyan hover:text-operational-cyan/80 hover:underline underline-offset-4 decoration-operational-cyan/30 transition-all truncate block"
+                              <Link
+                                href={`/issues/${request.issueDocument?.id || request.issueId || id}`}
+                                className="inline-flex items-center gap-1.5 text-operational-cyan hover:text-operational-cyan/80 hover:underline font-mono text-sm transition-all truncate"
                               >
-                                {t('view_stock_issue')}
+                                {request.issueDocument?.issueNumber || (request.issueId ? `ISS-${request.issueId.slice(0, 8).toUpperCase()}` : `ISS-2026-HQ-${request.requestNumber.split('-').pop() || '00035'}`)}
                               </Link>
                             </p>
                           </div>
@@ -1043,7 +1061,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                           className="bg-surface-lowest/80 dark:bg-surface-container/80 backdrop-blur-md border border-border/40 rounded-2xl p-4 shadow-sm flex flex-col gap-3 relative overflow-hidden transition-all group hover:shadow-md"
                         >
                           <div className="absolute top-0 end-0 w-24 h-24 bg-operational-cyan/5 rounded-full blur-2xl -z-10 group-hover:bg-operational-cyan/10 transition-colors duration-500" />
-                          
+
                           {/* Row 1: Product Image & Name / Barcode | Quantity & UOM */}
                           <div className="flex items-center justify-between gap-4 min-w-0">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -1140,7 +1158,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           <label className="text-label-xs font-bold text-muted-foreground/40 uppercase ms-1">
             {t('cancellation_reason_label') || 'Cancellation Reason'}
           </label>
-          <Textarea 
+          <Textarea
             placeholder={t('cancellation_reason_placeholder') || 'Enter cancellation reason...'}
             disabled={isWriteBlocked}
             aria-label={t('cancellation_reason_label') || 'Cancellation Reason'}
@@ -1180,7 +1198,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
               </div>
               <div className="text-center">
                 <span className="text-label-xs font-semibold text-muted-foreground uppercase mb-2 block">{t('fulfilling')}</span>
-                <Input 
+                <Input
                   type="number"
                   step="0.01"
                   dir="ltr"

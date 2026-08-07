@@ -69,7 +69,7 @@ export const useTheme = () => {
 
  // Avoid hydration mismatch by only returning theme after mount
  useEffect(() => {
- // eslint-disable-next-line react-hooks/set-state-in-effect
+  
  setMounted(true);
  }, []);
 

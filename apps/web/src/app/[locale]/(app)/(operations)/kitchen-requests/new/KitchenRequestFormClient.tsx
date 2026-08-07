@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   useCreateKitchenRequest,
   useUpdateKitchenRequestStatus
@@ -26,9 +27,13 @@ import {
   FileText,
   Calculator,
   ListFilter,
-  Trash2
+  Trash2,
+  ScanLine,
+  Camera
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CameraBarcodeScanner } from '@/components/shared/CameraBarcodeScanner';
 import { cn } from '@/lib/utils';
 import {
   KitchenRequestSchema,
@@ -137,7 +142,7 @@ function KitchenRequestNotesCell({ value, onChange, placeholder, disabled }: Kit
         onBlur={() => onChange(localVal)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full bg-transparent text-sm border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-md outline-none transition-all"
+        className="w-full bg-background border border-border text-foreground text-sm placeholder-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-md outline-none transition-all h-9 px-3"
       />
     </div>
   );
@@ -145,11 +150,15 @@ function KitchenRequestNotesCell({ value, onChange, placeholder, disabled }: Kit
 
 export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.kitchen_request');
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const tCommon = useTranslations('common');
 
   const form = useForm<KitchenRequestFormValues>({
     resolver: zodResolver(KitchenRequestSchema),
     defaultValues: {
+      departmentId: '',
+      warehouseId: '',
+      notes: '',
       items: [],
     }
   });
@@ -158,7 +167,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
   const { user } = useAuth();
 
-  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
+  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses({ ignoreScope: true });
   const warehouses = useMemo(() => warehousesData?.data || [], [warehousesData]);
 
   const { data: departmentsData, isLoading: isLoadingDepartments, error: errorDepartments } = useDepartments();
@@ -261,14 +270,14 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
   // Filter and map warehouses/departments/items using centralized mappers
   const warehouseItems = useMemo(() => {
-    const filtered = !assignedWarehouseIds
+    const filtered = !assignedWarehouseIds || isScopeless
       ? warehouses
       : warehouses.filter(w => assignedWarehouseIds.includes(w.id));
     return filtered.map(w => mapWarehouseToCombobox(w));
-  }, [warehouses, assignedWarehouseIds]);
+  }, [warehouses, assignedWarehouseIds, isScopeless]);
 
   const departmentItems = useMemo(() => {
-    const filtered = !assignedDepartmentIds
+    const filtered = !assignedDepartmentIds || isScopeless
       ? departmentsList
       : departmentsList.filter(d => assignedDepartmentIds.includes(d.id));
     return filtered.map(d => ({
@@ -276,7 +285,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       name: d.name || '',
       code: d.code,
     }));
-  }, [departmentsList, assignedDepartmentIds]);
+  }, [departmentsList, assignedDepartmentIds, isScopeless]);
 
   useEffect(() => {
     if (departmentItems.length === 1) {
@@ -381,11 +390,12 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
       <form className="space-y-8">
         {/* Header Information */}
-        <div className="bg-card border border-border shadow-sm p-4 sm:p-6 md:p-8 rounded-[2rem] space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 shadow-2xl p-4 sm:p-6 md:p-8 rounded-[2rem] space-y-4 relative overflow-hidden">
+          <div className="absolute inset-0 bg-card pointer-events-none" />
+          <div className="relative grid grid-cols-2 gap-4">
             <div className="w-full space-y-2">
-              <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
-                <Building2 className="w-3.5 h-3.5" />
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
                 {t('department')}
               </label>
               <SmartCombobox
@@ -395,7 +405,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 getPrimaryLabel={(dept) => dept.name}
                 getSecondaryLabel={() => undefined}
                 placeholder={tCommon('select_department')}
-                triggerClassName="w-full bg-background border border-border text-foreground rounded-md shadow-sm h-12 md:h-14 px-4 md:px-6 text-body-md font-bold focus:ring-2 focus:ring-primary/20"
+                triggerClassName="w-full bg-background/50 border border-border/50 text-foreground rounded-xl shadow-inner h-11 md:h-11 px-3 md:px-4  text-label-xs font-semibold uppercase focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               />
               {form.formState.errors.departmentId && (
                 <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.department_required')}</p>
@@ -403,33 +413,51 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
             </div>
 
             <div className="w-full space-y-2">
-              <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
-                <Warehouse className="w-3.5 h-3.5" />
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-2">
+                <Warehouse className="w-4 h-4 text-primary" />
                 {t('warehouse')}
               </label>
-              <SmartCombobox
-                items={warehouseItems}
-                value={form.watch('warehouseId')}
-                onSelect={(w) => form.setValue('warehouseId', String(w.id), { shouldValidate: true })}
-                getPrimaryLabel={(w) => w.name}
-                placeholder={tCommon('select_warehouse')}
-                triggerClassName="w-full bg-background border border-border text-foreground rounded-md shadow-sm h-12 md:h-14 px-4 md:px-6 text-body-md font-bold focus:ring-2 focus:ring-primary/20"
-              />
+              <Select
+                value={form.watch('warehouseId') || ''}
+                onValueChange={(val) => form.setValue('warehouseId', val || '', { shouldValidate: true })}
+              >
+                <SelectTrigger className="w-full bg-background/50 border border-border/50 text-foreground rounded-xl shadow-inner h-11 md:h-11 px-3 md:px-4 text-label-xs font-semibold uppercase focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all">
+                  <SelectValue placeholder={tCommon('select_warehouse')}>
+                    {(() => {
+                      const selected = warehouseItems.find(w => String(w.id) === form.watch('warehouseId'));
+                      if (!selected) return null;
+                      return (
+                        <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden w-full">
+                          <span className="truncate text-right flex-1 min-w-0">{selected.name}</span>
+                          <Badge className="hidden md:inline-flex shrink-0 text-[10px]" variant="secondary">{selected.code || `WH-${selected.id}`}</Badge>
+                        </div>
+                      );
+                    })()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {warehouseItems.map(w => (
+                    <SelectItem key={w.id} value={String(w.id)}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {form.formState.errors.warehouseId && (
                 <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.warehouse_required')}</p>
               )}
             </div>
           </div>
 
-          <div className="w-full space-y-2">
-            <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
-              <FileText className="w-3.5 h-3.5" />
+          <div className="relative w-full space-y-2">
+            <label className="text-label-xs font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
               {tCommon('notes')}
             </label>
             <Input
               {...form.register('notes')}
               placeholder={t('notes_placeholder')}
-              className="w-full bg-background border border-border text-foreground rounded-md shadow-sm h-12 md:h-14 px-4 md:px-6 text-body-md font-bold focus:ring-2 focus:ring-primary/20"
+              className="w-full bg-card focus:bg-card border border-border text-foreground rounded-md shadow-inner h-9 md:h-11 px-3 md:px-4 text-label-xs font-semibold uppercase focus:ring-2 focus:border-brand-gold transition-all placeholder:text-muted-foreground/50"
             />
           </div>
         </div>
@@ -438,12 +466,12 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         <div className="space-y-6">
           <div className="flex items-center justify-between px-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-bg-card/20 to-transparent border border-primary/20 text-primary shadow-lg shadow-primary/10">
                 <Calculator className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-label-sm font-semibold uppercase text-muted-foreground/80 font-display">{t('items')}</h3>
-                <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">{t('specify_components')}</p>
+                <h3 className="text-label-sm font-semibold uppercase text-foreground tracking-wide font-display">{t('items')}</h3>
+                <p className="text-label-xxs font-semibold text-primary/70 uppercase mt-1 tracking-wider">{t('specify_components')}</p>
               </div>
             </div>
           </div>
@@ -451,24 +479,43 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
           {/* Input Bars (Scanning + Combobox) */}
           <div className="mb-6 w-full grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <div className="space-y-2">
-              <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground tracking-wider ms-1 whitespace-nowrap block">
                 {locale === 'ar' ? 'مسح الباركود' : 'Barcode Scanner'}
               </label>
-              <ScanInput
-                onScan={handleScan}
-                placeholder={
-                  !watchedWarehouseId
-                    ? (locale === 'ar' ? 'يرجى تحديد المستودع أولاً...' : 'Please select a Warehouse first...')
-                    : (locale === 'ar' ? 'امسح باركود الصنف...' : "Scan item barcode...")
-                }
-                className="w-full"
-                scannerMode={true}
-                size="lg"
-                disabled={!watchedWarehouseId || isLoadingItems}
-              />
+              <div className="flex items-center gap-2 border border-border/50 rounded-xl px-3 h-11 md:h-11 w-full bg-background/50 shadow-inner focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all">
+                <ScanLine className="w-4 h-4 text-primary shrink-0" />
+                <input
+                  type="text"
+                  placeholder={
+                    !watchedWarehouseId
+                      ? (locale === 'ar' ? 'يرجى تحديد المستودع أولاً...' : 'Please select a Warehouse first...')
+                      : (locale === 'ar' ? 'امسح باركود الصنف...' : "Scan item barcode...")
+                  }
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-label-xs font-semibold uppercase text-foreground placeholder:text-muted-foreground min-w-0"
+                  dir="rtl"
+                  disabled={!watchedWarehouseId || isLoadingItems}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleScan(e.currentTarget.value);
+                      e.currentTarget.value = '';
+                    }
+                  }}
+                />
+                <Camera
+                  onClick={() => {
+                    if (!watchedWarehouseId) {
+                      toast.error(locale === 'ar' ? 'يرجى تحديد المستودع أولاً' : 'Please select a Warehouse first');
+                      return;
+                    }
+                    setIsCameraOpen(true);
+                  }}
+                  className="w-4 h-4 text-primary hover:text-foreground transition-colors shrink-0 cursor-pointer"
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 whitespace-nowrap block">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground tracking-wider ms-1 whitespace-nowrap block">
                 {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
               </label>
               <SmartCombobox
@@ -486,7 +533,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 }}
                 getPrimaryLabel={(item) => item.name}
                 placeholder={tCommon('select_item')}
-                triggerClassName="bg-background border border-border shadow-sm h-[52px] px-4 rounded-xl text-label-xs font-semibold focus-visible:ring-operational-cyan/30 w-full"
+                triggerClassName="w-full bg-background/50 border border-border/50 text-foreground rounded-xl shadow-inner h-11 md:h-11 px-3 md:px-4 text-label-xs font-semibold uppercase focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-muted-foreground/50"
               />
             </div>
           </div>
@@ -559,14 +606,6 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                       const currentUomId = itemValues?.uomId || line.selectedItem?.primaryUom?.id || (availableUoms[0]?.id ? String(availableUoms[0].id) : '');
                       const resolvedCode = resolveUomCode(currentUomId, line.selectedItem);
 
-                      if (availableUoms.length <= 1) {
-                        return (
-                          <span className="text-body-sm text-foreground font-semibold uppercase px-2 py-1 bg-surface-container rounded font-mono">
-                            {resolvedCode}
-                          </span>
-                        );
-                      }
-
                       return (
                         <Select
                           value={currentUomId}
@@ -611,28 +650,28 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                     return (
                       <div
                         key={field.id}
-                        className="bg-card dark:bg-card border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm relative animate-in fade-in duration-200 flex flex-col gap-3"
+                        className="bg-card dark:bg-card border border-border rounded-xl p-2.5 shadow-sm relative animate-in fade-in duration-200 flex flex-col gap-2"
                       >
                         {/* Header: Image + Item Name + Code on Start side, Delete Button on End side */}
-                        <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             {selectedItem.image ? (
                               <img
                                 src={selectedItem.image}
                                 alt={selectedItem.name}
-                                className="w-10 h-10 object-cover rounded-xl border border-border shrink-0 shadow-sm"
+                                className="w-8 h-8 object-cover rounded-lg border border-border shrink-0 shadow-sm"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-surface-container flex items-center justify-center rounded-xl border border-border text-[9px] text-muted-foreground font-mono shrink-0">
+                              <div className="w-8 h-8 bg-surface-container flex items-center justify-center rounded-lg border border-border text-[8px] text-muted-foreground font-mono shrink-0">
                                 N/A
                               </div>
                             )}
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className="text-sm font-black text-[#0B1220] dark:text-white truncate">
+                              <span className="text-xs font-bold text-foreground truncate">
                                 {selectedItem.name}
                               </span>
                               <span
-                                className="text-label-xs text-muted-foreground truncate max-w-[140px] inline-block font-mono tracking-wider mt-0.5"
+                                className="text-[10px] text-muted-foreground truncate max-w-[140px] inline-block font-mono tracking-wider"
                                 dir="ltr"
                                 title={selectedItem.code || ''}
                               >
@@ -641,24 +680,24 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                             </div>
                           </div>
 
-                          {/* Delete Button (transparent icon with text-destructive) */}
+                          {/* Delete Button */}
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
                             onClick={() => remove(index)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl shrink-0 transition-colors h-9 w-9"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0 transition-colors h-7 w-7"
                             aria-label={tCommon('actions.remove_line') || 'Remove'}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
 
                         {/* QTY & Interactive UOM side-by-side */}
-                        <div className="grid grid-cols-2 gap-3 w-full">
+                        <div className="grid grid-cols-2 gap-2 w-full">
                           {/* QTY */}
-                          <div className="space-y-1">
-                            <label className="text-label-xs font-semibold text-muted-foreground block">
+                          <div className="space-y-0.5">
+                            <label className="text-[10px] font-semibold text-muted-foreground block">
                               {locale === 'ar' ? 'الكمية' : 'Qty'}
                             </label>
                             <QuantityInput
@@ -667,61 +706,56 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                                 form.setValue(`items.${index}.quantity`, val === '' ? 0 : val, { shouldDirty: true, shouldValidate: true });
                               }}
                               disabled={form.formState.isSubmitting}
-                              className="w-full text-center font-black text-base h-10 bg-background dark:bg-background border border-border dark:border-border text-gray-900 dark:text-gray-100 focus:border-[#b48e67] focus:ring-1 focus:ring-[#b48e67] rounded-xl outline-none transition-all"
+                              className="w-full text-center font-bold text-sm h-8 bg-background border border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg outline-none transition-all"
                             />
                             {form.formState.errors.items?.[index]?.quantity && (
-                              <p className="text-label-xxs font-bold text-red-500 uppercase mt-1">
+                              <p className="text-[10px] font-bold text-red-500 uppercase mt-0.5">
                                 {t('validation.qty_positive')}
                               </p>
                             )}
                           </div>
 
                           {/* Interactive UOM */}
-                          <div className="space-y-1">
-                            <label className="text-label-xs font-semibold text-muted-foreground block">
+                          <div className="space-y-0.5">
+                            <label className="text-[9px] font-semibold text-muted-foreground block">
                               {tCommon('table_headers.uom') || 'UOM'}
                             </label>
-                            {availableUoms.length > 1 ? (
-                              <Select
-                                value={currentUomId}
-                                onValueChange={(val) => {
-                                  if (val) {
-                                    form.setValue(`items.${index}.uomId`, val, { shouldDirty: true, shouldValidate: true });
-                                  }
-                                }}
-                                disabled={form.formState.isSubmitting}
-                              >
-                                <SelectTrigger className="w-full h-10 bg-background dark:bg-background border border-border dark:border-border rounded-xl text-xs font-bold uppercase text-gray-900 dark:text-gray-100">
-                                  <span className="flex-1 text-start truncate font-bold uppercase">
-                                    {resolvedCode || 'UOM'}
-                                  </span>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {availableUoms.map((uom) => (
-                                    <SelectItem key={uom.id} value={String(uom.id)}>
-                                      {uom.code || uom.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <div className="h-10 flex items-center justify-center bg-background dark:bg-background border border-border dark:border-border rounded-xl text-xs font-bold uppercase text-gray-700 dark:text-gray-300 font-mono">
-                                {resolvedCode}
-                              </div>
-                            )}
+                            <Select
+                              value={currentUomId}
+                              onValueChange={(val) => {
+                                if (val) {
+                                  form.setValue(`items.${index}.uomId`, val, { shouldDirty: true, shouldValidate: true });
+                                }
+                              }}
+                              disabled={form.formState.isSubmitting}
+                            >
+                              <SelectTrigger className="w-full h-8 bg-background border border-border rounded-lg text-xs font-bold uppercase text-foreground">
+                                <span className="flex-1 text-start truncate font-bold uppercase">
+                                  {resolvedCode || 'UOM'}
+                                </span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableUoms.map((uom) => (
+                                  <SelectItem key={uom.id} value={String(uom.id)}>
+                                    {uom.code || uom.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
 
                         {/* Full-width Line Notes below QTY/UOM */}
-                        <div className="w-full space-y-1">
-                          <label className="text-label-xs font-semibold text-muted-foreground block">
+                        <div className="w-full space-y-0.5">
+                          <label className="text-[10px] font-semibold text-muted-foreground block">
                             {tCommon('notes') || (locale === 'ar' ? 'الملاحظات' : 'Notes')}
                           </label>
                           <Input
                             type="text"
                             placeholder={locale === 'ar' ? 'ملاحظات السطر...' : 'Line notes...'}
                             {...form.register(`items.${index}.notes`)}
-                            className="w-full h-10 text-xs px-3 bg-background dark:bg-background border border-border dark:border-border rounded-xl focus:border-gray-400 dark:focus:border-gray-600 outline-none font-medium text-gray-900 dark:text-gray-100 placeholder:text-muted-foreground/50"
+                            disabled={form.formState.isSubmitting}
+                            className="w-full h-10 bg-background border border-border text-foreground text-xs placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg outline-none transition-all h-8 px-2.5"
                           />
                         </div>
                       </div>
@@ -757,35 +791,31 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
           </Button>
         </div>
 
-        {/* Mobile Footer (md:hidden) */}
-        <div className="flex flex-col gap-3 w-full md:hidden mt-6 pb-6 border-t border-border pt-4">
-          {/* Primary Action on Top */}
-          <Button
-            type="button"
-            size="lg"
-            onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)}
-            isLoading={createRequest.isPending || updateStatus.isPending}
-            className="w-full bg-[#0B1220] dark:bg-[#b48e67] text-white dark:text-[#0B1220] font-bold rounded-xl shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-opacity h-12"
-          >
-            <Send className="w-4 h-4 me-2" />
-            {t('submit')}
-          </Button>
-
-          {/* Secondary Action Below */}
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={form.handleSubmit((data) => onSubmit(data, true), onFormError)}
-            isLoading={createRequest.isPending}
-            disabled={updateStatus.isPending}
-            className="w-full bg-transparent border border-border text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-muted dark:hover:bg-neutral-900 transition-all shadow-sm flex items-center justify-center gap-2 h-12"
-          >
-            <Save className="w-4 h-4 me-2" />
-            {t('save_draft')}
+        {/* Mobile Footer */}
+        <div className="flex flex-col gap-3 w-full md:hidden mt-6 pb-6">
+          <Button className="w-full" size="lg" onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)} isLoading={createRequest.isPending || updateStatus.isPending}>إرسال للاعتماد</Button>
+          <Button className="w-full" size="lg" variant="outline" onClick={form.handleSubmit((data) => onSubmit(data, true), onFormError)} isLoading={createRequest.isPending} disabled={updateStatus.isPending}>
+            <Save className="w-4 h-4 mr-2" />
+            حفظ مسودة
           </Button>
         </div>
       </form>
+
+      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+        <DialogContent className="max-w-full p-4">
+          <DialogHeader>
+            <DialogTitle>{locale === 'ar' ? 'مسح الباركود بالكاميرا' : 'Camera Barcode Scanner'}</DialogTitle>
+          </DialogHeader>
+          {isCameraOpen && (
+            <CameraBarcodeScanner
+              onScanSuccess={(code) => {
+                setIsCameraOpen(false);
+                handleScan(code);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

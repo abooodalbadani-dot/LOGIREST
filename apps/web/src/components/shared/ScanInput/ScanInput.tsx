@@ -206,7 +206,7 @@ export const ScanInput = forwardRef(
                 <div className="w-full">
                     <div className={cn(
                         "relative flex items-center transition-all duration-200 overflow-hidden flex-1 min-w-[200px] w-full",
-                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : className ? className : "flex items-center w-full bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-700 text-[#0B1220] dark:text-white rounded-md h-12 px-4 text-start focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden flex-1 min-w-[200px]",
+                        variant === 'retro' ? "rounded-sm border-[4px] shadow-2xl" : className ? className : "flex items-center gap-2 border border-border rounded-md px-3 h-10 w-full bg-background focus-within:border-[#b48e67] focus-within:ring-1 focus-within:ring-[#b48e67] overflow-hidden flex-1 min-w-[200px]",
                         variant === 'retro' && config.container,
                         variant === 'retro' ? (
                             scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
@@ -222,7 +222,7 @@ export const ScanInput = forwardRef(
                         {/* Background glow when focused */}
                         {variant === 'retro' && <div className="absolute inset-0 bg-gradient-to-r from-operational-cyan/5 via-transparent to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />}
 
-                        <div className={cn(variant === 'retro' ? "shrink-0 flex items-center text-muted-foreground/40 transition-colors group-focus-within:text-operational-cyan z-10 ps-6" : "absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-20")}>
+                        <div className={cn(variant === 'retro' ? "shrink-0 flex items-center text-muted-foreground/40 transition-colors group-focus-within:text-operational-cyan z-10 ps-6" : "shrink-0 text-muted-foreground pointer-events-none")}>
                             {isScanning ? (
                                 <Loader2 className={cn("animate-spin text-operational-cyan", variant === 'retro' ? config.icon : "w-5 h-5")} />
                             ) : scanStatus === 'success' ? (
@@ -234,7 +234,7 @@ export const ScanInput = forwardRef(
                             )}
                         </div>
                         {isManual ? (
-                            <div className={cn("flex-1 min-w-0 z-10 flex items-center h-full", variant === 'retro' ? config.input : "pe-4 ps-12")}>
+                            <div className={cn("flex-1 min-w-0 z-10 flex items-center h-full", variant === 'retro' ? config.input : "")}>
                                 <SmartCombobox
                                     items={items || []}
                                     placeholder={placeholder || tc('search_placeholder') || 'Search item...'}
@@ -265,8 +265,8 @@ export const ScanInput = forwardRef(
                                 onChange={onChangeWrapper}
                                 autoComplete="off"
                                 className={cn(
-                                    "flex-1 min-w-0 bg-transparent border-none text-[#0B1220] dark:text-white transition-all duration-200 outline-none z-10 h-full focus:ring-0 focus:outline-none shadow-none",
-                                    variant === 'retro' ? "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black" : "placeholder:text-muted-foreground text-sm md:text-base font-semibold pe-4 ps-12 focus:ring-0 focus:outline-none",
+                                    "flex-1 min-w-0 bg-transparent border-none text-[#0B1220] dark:text-white transition-all duration-200 outline-none z-10 h-full focus:ring-0 focus:outline-none shadow-none px-0",
+                                    variant === 'retro' ? "placeholder:text-muted-foreground font-mono tracking-[0.25em] font-black" : "placeholder:text-muted-foreground text-sm font-semibold focus:ring-0 focus:outline-none",
                                     readOnly && "cursor-default select-all opacity-70",
                                     variant === 'retro' && config.input
                                 )}
@@ -327,7 +327,7 @@ export const ScanInput = forwardRef(
                         )}
 
                         {variant === 'standard' && (
-                            <div className="shrink-0 flex items-center gap-1.5 z-10 ms-auto pe-2">
+                            <div className="shrink-0 flex items-center gap-1.5 z-10">
                                 {(!readOnly) && (items || onManualTrigger) && (
                                     <button
                                         type="button"

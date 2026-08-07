@@ -16,7 +16,7 @@ export function HydrationSafe({ children, fallback = null }: {
  const [isMounted, setIsMounted] = React.useState(false);
 
  React.useEffect(() => {
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   setIsMounted(true);
  }, []);
 

@@ -75,12 +75,12 @@ export default function ProfilePage() {
   // Initialize fields once user is loaded
   useEffect(() => {
     if (user) {
-      /* eslint-disable react-hooks/set-state-in-effect */
+       
       setName(displayName || user.name || '');
       setEmail(user.email || '');
       setPhone(user.phone || '');
       setNotifPrefs(notificationPreferences);
-      /* eslint-enable react-hooks/set-state-in-effect */
+       
     }
   }, [user, displayName, notificationPreferences]);
 

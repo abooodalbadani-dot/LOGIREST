@@ -63,7 +63,8 @@ export class NotificationController {
       throw new NotFoundException(`Notification with ID ${id} not found`);
     }
     if (role !== Role.ADMIN) {
-      if (notification.targetRole !== role) {
+      const allowedRoles: Role[] = role === Role.INV_MGR ? [Role.INV_MGR, Role.WH_KEEPER] : [role];
+      if (!allowedRoles.includes(notification.targetRole as Role)) {
         throw new ForbiddenException(
           'You do not have access to this notification.',
         );

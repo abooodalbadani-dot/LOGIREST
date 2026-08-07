@@ -38,8 +38,7 @@ export class NotificationService {
   }
 
   async getNotifications(role: Role, warehouseId?: string) {
-    const roles: Role[] =
-      role === Role.INV_MGR ? [Role.INV_MGR, Role.WH_KEEPER] : [role];
+    const roles: Role[] = [role];
 
     return this.prisma.notificationLog.findMany({
       where: {
@@ -62,8 +61,7 @@ export class NotificationService {
   }
 
   async markAllAsRead(role: Role, warehouseId?: string) {
-    const roles: Role[] =
-      role === Role.INV_MGR ? [Role.INV_MGR, Role.WH_KEEPER] : [role];
+    const roles: Role[] = [role];
 
     const result = await this.prisma.notificationLog.updateMany({
       where: {
