@@ -9,7 +9,7 @@ export interface VirtualizedMobileGridProps<T> {
   data: T[];
   /** Callback to render the mobile card for a given item */
   renderCard: (item: T, index: number) => React.ReactNode;
-  /** Estimated height of a single card in pixels (default: 130) */
+  /** Estimated height of a single card in pixels (default: 200) */
   estimateSize?: number;
   /** Overscan count for pre-rendering offscreen items (default: 5) */
   overscan?: number;
@@ -43,7 +43,7 @@ function getItemKey<T>(
 export function VirtualizedMobileGrid<T>({
   data,
   renderCard,
-  estimateSize = 130,
+  estimateSize = 200,
   overscan = 5,
   className,
   maxHeight = 650,
@@ -64,12 +64,26 @@ export function VirtualizedMobileGrid<T>({
     return null;
   }
 
+  // For small lists (<= 4 cards), render a natural flex stack to eliminate scrollbars & truncation
+  if (data.length <= 4) {
+    return (
+      <div className={cn('w-full min-w-0 flex flex-col gap-3 md:hidden', className)}>
+        {data.map((item, index) => {
+          const key = getItemKey(item, index, keyExtractor);
+          return (
+            <div key={key} className="w-full">
+              {renderCard(item, index)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   const calculatedHeight =
     typeof maxHeight === 'number'
       ? Math.min(data.length * estimateSize, maxHeight)
-      : data.length * estimateSize < 600
-        ? `${data.length * estimateSize}px`
-        : maxHeight;
+      : maxHeight;
 
   return (
     <div

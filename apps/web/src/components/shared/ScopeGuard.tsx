@@ -21,7 +21,8 @@ export function ScopeGuard({ warehouseId, children }: ScopeGuardProps) {
         return <>{children}</>;
     }
 
-    if (SCOPELESS_ROLES.includes(user?.role ?? '')) {
+    // Even for administrative roles, if an explicit active warehouse scope is selected in the header, enforce scope mismatch check
+    if (SCOPELESS_ROLES.includes(user?.role ?? '') && !activeWarehouseId) {
         return <>{children}</>;
     }
 

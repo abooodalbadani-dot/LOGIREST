@@ -6,16 +6,17 @@ import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 /**
  * List of document detail/edit route patterns paired with their module list fallbacks.
+ * Uses flexible matching to support locale prefixes (/ar, /en) and layout groupings.
  */
 const DETAIL_ROUTE_FALLBACKS: Array<{ pattern: RegExp; fallback: string }> = [
-  { pattern: /^\/(operations\/)?adjustments\/[^/]+$/, fallback: '/adjustments' },
-  { pattern: /^\/(operations\/)?issues\/[^/]+$/, fallback: '/issues' },
-  { pattern: /^\/(operations\/)?transfers\/[^/]+$/, fallback: '/transfers' },
-  { pattern: /^\/(operations\/)?stocktake\/[^/]+$/, fallback: '/stocktake' },
-  { pattern: /^\/(procurement\/)?goods-received\/[^/]+$/, fallback: '/goods-received' },
-  { pattern: /^\/(procurement\/)?purchase-orders\/[^/]+$/, fallback: '/purchase-orders' },
-  { pattern: /^\/(procurement\/)?purchase-requests\/[^/]+$/, fallback: '/purchase-requests' },
-  { pattern: /^\/kitchen-requests\/[^/]+$/, fallback: '/kitchen-requests' },
+  { pattern: /(^|\/)(adjustments)\/[^/]+$/, fallback: '/adjustments' },
+  { pattern: /(^|\/)(issues)\/[^/]+$/, fallback: '/issues' },
+  { pattern: /(^|\/)(transfers)\/[^/]+$/, fallback: '/transfers' },
+  { pattern: /(^|\/)(stocktake)\/[^/]+$/, fallback: '/stocktake' },
+  { pattern: /(^|\/)(goods-received)\/[^/]+$/, fallback: '/goods-received' },
+  { pattern: /(^|\/)(purchase-orders)\/[^/]+$/, fallback: '/purchase-orders' },
+  { pattern: /(^|\/)(purchase-requests)\/[^/]+$/, fallback: '/purchase-requests' },
+  { pattern: /(^|\/)(kitchen-requests)\/[^/]+$/, fallback: '/kitchen-requests' },
 ];
 
 /**
@@ -36,12 +37,21 @@ export function useScopeRedirectListener() {
     branchId,
   });
 
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
     const prevWarehouse = prevScopeRef.current.warehouseId;
     const prevBranch = prevScopeRef.current.branchId;
 
-    const warehouseChanged = prevWarehouse !== null && warehouseId !== null && prevWarehouse !== warehouseId;
-    const branchChanged = prevBranch !== null && branchId !== null && prevBranch !== branchId;
+    // Skip on initial page mount (already loaded with current scope)
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      prevScopeRef.current = { warehouseId, branchId };
+      return;
+    }
+
+    const warehouseChanged = prevWarehouse !== warehouseId;
+    const branchChanged = prevBranch !== branchId;
 
     // Update reference to current scope
     prevScopeRef.current = { warehouseId, branchId };
@@ -54,7 +64,6 @@ export function useScopeRedirectListener() {
             `[Scope Bleed Guard] Active scope changed (${prevWarehouse} → ${warehouseId}). Redirecting from ${pathname} to ${item.fallback}`
           );
           router.replace(item.fallback);
-          break;
         }
       }
     }

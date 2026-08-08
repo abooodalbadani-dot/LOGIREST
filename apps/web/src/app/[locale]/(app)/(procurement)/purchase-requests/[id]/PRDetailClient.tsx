@@ -11,6 +11,7 @@ import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { WorkflowActionBar } from '@/components/shared/WorkflowActionBar';
 import { type DocumentStatus } from '@logirest/shared-types';
 import { useAuth } from '@/providers/AuthProvider';
+import { ScopeGuard } from '@/components/shared/ScopeGuard';
 import { PurchaseRequestForm } from '@/features/purchasing/components/purchase-request-form';
 import { PRViewer } from './PRViewer';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
@@ -112,7 +113,7 @@ export function PRDetailClient({ id }: { id: string | null }) {
 
   if (!isFormMode) {
     return (
-      <>
+      <ScopeGuard warehouseId={pr.warehouseId}>
         <PRViewer document={pr} locale={locale} actions={renderViewerActions()} />
         
         <ConvertToPOModal
@@ -126,7 +127,7 @@ export function PRDetailClient({ id }: { id: string | null }) {
           <DialogContent className="sm:max-w-[500px] p-6 rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold text-foreground">
-                {t('reject_confirm_title')}
+                {locale === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection'}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -137,50 +138,60 @@ export function PRDetailClient({ id }: { id: string | null }) {
                 <Textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder={t('reject_reason_placeholder')}
-                  rows={3}
-                  className="rounded-xl"
+                  placeholder={locale === 'ar' ? 'اشرح سبب رفض هذا الطلب...' : 'Enter rejection reason...'}
+                  rows={4}
+                  className="bg-surface-container-highest/30 border border-border/70 rounded-xl"
                 />
               </div>
             </div>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setRejectModalOpen(false)}>
-                {tc('actions.cancel')}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => setRejectModalOpen(false)}
+                className="rounded-xl border-border/70"
+              >
+                {tc('cancel')}
               </Button>
               <Button
+                variant="destructive"
                 onClick={handleReject}
                 disabled={rejectMutation.isPending || !rejectReason.trim()}
-                className="bg-rose-600 hover:bg-rose-700 text-white border-none"
+                className="rounded-xl font-bold uppercase"
               >
-                {rejectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-                {t('reject')}
+                {rejectMutation.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                {locale === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection'}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Cancel Confirmation Modal */}
+        {/* Cancel Modal */}
         <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
           <DialogContent className="sm:max-w-[450px] p-6 rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold text-foreground">
-                {t('cancel_confirm_title')}
+                {locale === 'ar' ? 'تأكيد الإلغاء' : 'Confirm Cancellation'}
               </DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground py-2">
-              {t('cancel_confirm_desc')}
+              {locale === 'ar' ? 'هل أنت متأكد من إلغاء هذا الطلب؟ هذا الإجراء لا يمكن التراجع عنه.' : 'Are you sure you want to cancel this request? This action cannot be undone.'}
             </p>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setCancelModalOpen(false)}>
-                {tc('actions.cancel')}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => setCancelModalOpen(false)}
+                className="rounded-xl border-border/70"
+              >
+                {tc('cancel')}
               </Button>
               <Button
+                variant="destructive"
                 onClick={handleCancel}
                 disabled={cancelMutation.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 border-none"
+                className="rounded-xl font-bold uppercase"
               >
-                {cancelMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-                {tc('actions.confirm')}
+                {cancelMutation.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                {locale === 'ar' ? 'تأكيد الإلغاء' : 'Confirm Cancellation'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -191,7 +202,7 @@ export function PRDetailClient({ id }: { id: string | null }) {
           onReload={handleReload}
           onClose={handleClose}
         />
-      </>
+      </ScopeGuard>
     );
   }
 
