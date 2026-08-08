@@ -727,11 +727,22 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
           <DocumentLockWrapper isLocked={isDocLocked && status !== 'SUBMITTED'}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left Column: Details and Items */}
-              <div className="lg:col-span-8 space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-500 delay-100">
+              {/* Full-Width Container: Details and Items */}
+              <div className="col-span-12 space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-500 delay-100">
 
                 {/* Metadata Card */}
                 <div className="bg-card backdrop-blur-xl shadow-lg hover:shadow-xl p-4 sm:p-6 px-5 sm:px-7 rounded-2xl sm:rounded-3xl border border-border/30 relative overflow-hidden group transition-all duration-300">
+                  {history.length > 0 && (
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-border/40 pb-4 mb-4">
+                      <div className="flex items-center gap-2">
+                        <History className="w-4 h-4 text-brand-gold" />
+                        <span className="text-label-xs font-bold uppercase tracking-wider text-brand-gold me-1">
+                          {tCommon('history') || 'History'}:
+                        </span>
+                      </div>
+                      <StatusTimeline entries={history} orientation="horizontal" />
+                    </div>
+                  )}
 
                   {isDraft ? (
                     /* Interactive Inputs for Draft State */
@@ -951,7 +962,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                           const index = lines.findIndex(l => l.id === line.id);
                           const uomOpts = getAvailableUomsForItem(fullItem);
                           const selectedUom = uomOpts.find(u => u.id === line.uomId);
-                          const displayUom = selectedUom?.code || selectedUom?.name || resolveUomCode(line.uomId, fullItem, null, 'PCS');
+                          const displayUom = selectedUom?.code || selectedUom?.name || resolveUomCode(line.uomId, fullItem, null, '—');
                           return (
                             <Select
                               value={line.uomId}
@@ -975,7 +986,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                         }
                         return (
                           <span className="text-label-xs font-semibold uppercase text-foreground font-mono">
-                            {resolveUomCode(line.uomId, fullItem, null, 'PCS')}
+                            {resolveUomCode(line.uomId, fullItem, null, '—')}
                           </span>
                         );
                       }}
@@ -994,7 +1005,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                       const barcodeText = line.item.code || '—';
                       const uomOpts = getAvailableUomsForItem(fullItem);
                       const selectedUom = uomOpts.find(u => u.id === line.uomId);
-                      const displayUom = selectedUom?.code || selectedUom?.name || resolveUomCode(line.uomId, fullItem, null, 'PCS');
+                       const displayUom = selectedUom?.code || selectedUom?.name || resolveUomCode(line.uomId, fullItem, null, '—');
 
                       if (isDraft) {
                         return (
@@ -1157,23 +1168,6 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                         </div>
                       );
                     })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Timeline and Meta */}
-              <div className="lg:col-span-4 space-y-8">
-                <div className="bg-surface-lowest dark:bg-surface-container shadow-sm border-0 p-8 rounded-2xl relative overflow-hidden group">
-                  <div className="relative space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
-                        <History className="w-5 h-5 text-foreground" />
-                      </div>
-                      <h4 className="text-label-xs font-semibold uppercase">{tCommon('history')}</h4>
-                    </div>
-                    <div className="ps-2">
-                      <StatusTimeline entries={history} />
-                    </div>
                   </div>
                 </div>
               </div>

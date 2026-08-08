@@ -12,13 +12,14 @@ import {
   AdjustmentDirection,
   Prisma,
 } from '@prisma/client';
+import { toBaseQty } from '@logirest/shared-types';
 
 @Injectable()
 export class AdjustmentVoidService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
-  ) {}
+  ) { }
 
   async void(
     adjustmentId: string,
@@ -43,7 +44,15 @@ export class AdjustmentVoidService {
               where: { id: adjustmentId },
               include: {
                 lines: {
-                  include: { item: true },
+                  include: {
+                    item: {
+                      include: {
+                        uomConversions: {
+                          select: { fromUomId: true, toUomId: true, factor: true },
+                        },
+                      },
+                    },
+                  },
                 },
               },
             });
@@ -72,7 +81,18 @@ export class AdjustmentVoidService {
 
             for (const line of sortedLines) {
               const item = line.item;
-              const qtyVal = Number(line.quantity);
+              const lineUomId = line.uomId || item.uomId;
+              const conversions = (item.uomConversions || []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const qtyVal = toBaseQty(
+                Number(line.quantity),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
 
               if (line.direction === AdjustmentDirection.IN) {
                 const lockedItem = await this.lockService.lockItem(
@@ -117,7 +137,18 @@ export class AdjustmentVoidService {
 
             for (const line of sortedLines) {
               const item = line.item;
-              const qtyVal = Number(line.quantity);
+              const lineUomId = line.uomId || item.uomId;
+              const conversions = (item.uomConversions || []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const qtyVal = toBaseQty(
+                Number(line.quantity),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
 
               if (line.direction === AdjustmentDirection.IN) {
                 if (item.isBatched || item.hasExpiry) {
@@ -180,7 +211,7 @@ export class AdjustmentVoidService {
                 }
 
                 // WAC recalculation & Cost Ledger entry for IN adjustment void
-                // 1. Check if any subsequent cost-impacting document exists for the same item in the same warehouse
+                // 1. Check if  subsequent cost-impacting document exists for the same item in the same warehouse
                 const subsequentGrn = await tx.goodsReceivedNote.findFirst({
                   where: {
                     warehouseId: adj.warehouseId,

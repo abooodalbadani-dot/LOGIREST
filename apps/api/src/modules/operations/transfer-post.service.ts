@@ -72,18 +72,12 @@ export class TransferPostService {
           }
 
           // 3. Strict Origin Warehouse Branch Scope Check
-          const originScope = await tx.userWarehouseScope.findUnique({
-            where: {
-              userId_warehouseId: {
-                userId,
-                warehouseId: lockedDoc.fromWarehouseId,
-              },
-            },
-          });
-          if (!originScope) {
-            const errorMsg = `User ${userId} with role ${userRole} is not authorized for the origin warehouse branch ${lockedDoc.fromWarehouseId}`;
-            throw new ForbiddenException(errorMsg);
-          }
+          await this.scopeValidationService.validateWarehouse(
+            userId,
+            userRole,
+            lockedDoc.fromWarehouseId,
+            tx,
+          );
 
           // Optimistic locking version check
           if (
@@ -397,18 +391,12 @@ export class TransferPostService {
           }
 
           // 2. Strict Destination Warehouse Branch Scope Check
-          const destinationScope = await tx.userWarehouseScope.findUnique({
-            where: {
-              userId_warehouseId: {
-                userId,
-                warehouseId: lockedDoc.toWarehouseId,
-              },
-            },
-          });
-          if (!destinationScope) {
-            const errorMsg = `User ${userId} with role ${userRole} is not authorized for the destination warehouse branch ${lockedDoc.toWarehouseId}`;
-            throw new ForbiddenException(errorMsg);
-          }
+          await this.scopeValidationService.validateWarehouse(
+            userId,
+            userRole,
+            lockedDoc.toWarehouseId,
+            tx,
+          );
 
           // 3. Status Guard (Defense-in-depth)
           if (lockedDoc.status !== 'IN_TRANSIT') {

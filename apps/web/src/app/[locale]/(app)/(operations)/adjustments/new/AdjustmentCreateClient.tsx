@@ -624,8 +624,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     },
     {
       header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
-      headerClassName: "min-w-[130px]",
-      cellClassName: "min-w-[130px]",
+      headerClassName: "min-w-[100px] md:min-w-[120px] text-center whitespace-nowrap",
+      cellClassName: "min-w-[100px] md:min-w-[120px] text-center",
       cell: (line: NewAdjustmentLine) => {
         const isIncrease = line.direction === 'INCREASE';
         return (
@@ -638,7 +638,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, unitCost: val } : l));
               }}
               className={cn(
-                "w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1",
+                "w-full md:w-28 text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1 force-latin-numbers",
                 isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost < 0) && "border-destructive/40 focus-visible:ring-1 focus-visible:ring-destructive/30"
               )}
             />
@@ -648,6 +648,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     },
     {
       header: t('qty_before') || (locale === 'ar' ? 'قبل' : 'Qty Before'),
+      headerClassName: "min-w-[80px] max-w-[95px] text-center whitespace-nowrap",
+      cellClassName: "min-w-[80px] max-w-[95px] text-center",
       cell: (line: NewAdjustmentLine) => {
         const scaledQtyBefore = getScaledQtyBefore(
           line.qtyBefore,
@@ -668,10 +670,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     },
     {
       header: tCommon('table_headers.lot') || tCommon('lot_number') || (locale === 'ar' ? 'رقم الدفعة' : 'Lot Number'),
-      headerClassName: "min-w-[240px]",
-      cellClassName: "min-w-[240px]",
+      headerClassName: "min-w-[220px] md:min-w-[260px] text-center whitespace-nowrap",
+      cellClassName: "min-w-[220px] md:min-w-[260px] text-center",
       cell: (line: NewAdjustmentLine) => (
-        <div className="flex justify-center w-full min-w-[220px]">
+        <div className="flex justify-center w-full min-w-0">
           <AdjustmentLotSelector
             itemId={line.itemId}
             warehouseId={warehouseId}
@@ -679,7 +681,6 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             lotNumber={line.lotNumber}
             direction={line.direction}
             locale={locale}
-            triggerClassName="w-full h-9 rounded-xl border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-start px-3 font-mono text-xs outline-none transition-all text-foreground focus:ring-1 focus:ring-brand-gold shadow-sm flex items-center justify-between min-w-[200px]"
             onChange={(lotId, lotNumber) => {
               setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotId, lotNumber } : l));
             }}
@@ -689,6 +690,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     },
     {
       header: t('qty_after') || (locale === 'ar' ? 'بعد' : 'Qty After'),
+      headerClassName: "min-w-[80px] max-w-[95px] text-center whitespace-nowrap",
+      cellClassName: "min-w-[80px] max-w-[95px] text-center",
       cell: (line: NewAdjustmentLine) => {
         const scaledQtyBefore = getScaledQtyBefore(
           line.qtyBefore,
@@ -699,7 +702,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         const qAdj = line.qty || 0;
         const after = line.direction === "INCREASE" ? scaledQtyBefore + qAdj : scaledQtyBefore - qAdj;
         return (
-          <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 sm:min-w-[180px] sm:max-w-[220px] text-center whitespace-normal">
+          <div className="flex flex-col items-center justify-center gap-0 sm:gap-1.5 tabular-nums min-w-0 text-center whitespace-normal">
             <span
               className={cn(
                 "font-mono font-bold",
@@ -914,7 +917,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
               </div>
 
               {/* High-density interactive virtualized table */}
-              <div className="bg-card backdrop-blur-xl shadow-xl rounded-[2rem] border border-border/70 overflow-hidden mt-4">
+              <div className="bg-card backdrop-blur-xl shadow-xl rounded-[2rem] border border-border/70 mt-4">
                 <DocumentLineItemTable<NewAdjustmentLine>
                   lines={lines}
                   locale={locale}
@@ -959,7 +962,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                             setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: safeVal, baseQty: newBaseQty } : l));
                           });
                         }}
-                        className="w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm min-w-0 px-1"
+                        className="w-full md:w-28 text-center font-black text-sm h-9 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm min-w-0 px-1 force-latin-numbers"
                       />
                     </div>
                   )}
@@ -984,7 +987,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                     if (itemUoMs.length <= 1) {
                       const resolvedCode = resolveUomCode(line.uomId, matchedItem || line.item, uoms);
                       return (
-                        <div className="flex items-center justify-center w-full">
+                        <div className="flex items-center justify-center w-full min-w-0">
                           <span className="h-9 px-3 text-xs font-bold font-mono text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-xl flex items-center justify-center min-w-[70px]">
                             {resolvedCode}
                           </span>
@@ -999,7 +1002,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                     }));
 
                     return (
-                      <div className="flex items-center justify-center w-full">
+                      <div className="flex items-center justify-center w-full min-w-0">
                         <SmartCombobox
                           items={comboboxItems}
                           value={line.uomId}
@@ -1009,7 +1012,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                             ));
                           }}
                           placeholder={line.item?.primaryUom?.code || "UOM"}
-                          triggerClassName="h-9 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full min-w-[140px] font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
+                          triggerClassName="h-9 px-3 text-xs border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:min-w-[140px] font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
                         />
                       </div>
                     );

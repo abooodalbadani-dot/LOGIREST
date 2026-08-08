@@ -214,7 +214,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                     if (!hasCounted) return common('dash');
 
                     const masterItem = masterItems.find(i => i.id === line.item.id || i.code === line.item.code);
-                    const primaryUomCode = line.uom || masterItem?.primaryUom?.code || 'PCS';
+                    const primaryUomCode = line.uom || masterItem?.primaryUom?.code || '—';
                     const conversions = masterItem?.uomConversions || [];
                     const conversion = conversions.find(c => Number(c.factor) > 1);
 

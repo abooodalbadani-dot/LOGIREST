@@ -120,7 +120,7 @@ export class WorkflowStateGuard implements CanActivate {
     ) {
       warehouseId = existingDoc.warehouseId;
     } else if (modelName === 'purchaseOrder') {
-      warehouseId = existingDoc.purchaseRequest?.warehouseId;
+      warehouseId = existingDoc.warehouseId || existingDoc.purchaseRequest?.warehouseId;
     } else if (modelName === 'transfer') {
       if (action === 'SHIP' || action === 'CANCEL') {
         warehouseId = existingDoc.fromWarehouseId;

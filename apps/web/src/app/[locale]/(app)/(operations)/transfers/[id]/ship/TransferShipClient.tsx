@@ -39,6 +39,17 @@ export function formatScannedQuantity(qty: number): number {
  return parseFloat(qty.toFixed(4));
 }
 
+/**
+ * Converts an integer base-unit count to a line-UOM quantity.
+ * e.g. 7 PCS ÷ factor=12 → 0.5833 BOX  (but 12 PCS ÷ 12 → 1 BOX exactly)
+ * Uses integer arithmetic to avoid floating-point drift.
+ */
+export function baseToLineQty(baseCount: number, factor: number): number {
+ const whole = Math.floor(baseCount / factor);
+ const remainder = baseCount % factor;
+ return remainder === 0 ? whole : whole + remainder / factor;
+}
+
 export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.transfer');
  const tCommon = useTranslations('common');
@@ -50,6 +61,9 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  const { playSound } = useAudioFeedback();
 
  const [scannedLines, setScannedLines] = useState<Record<string, number>>({});
+ // Phase 2 Precision Guard: integer base-unit counts for cross-UOM scans.
+ // Key: lineId, Value: { baseCount (integer scanned units), factor (conversion denominator) }
+ const [scannedBaseData, setScannedBaseData] = useState<Record<string, { baseCount: number; factor: number }>>({});
  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
  const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
  const [statusMessage, setStatusMessage] = useState<string>('');
@@ -144,8 +158,38 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
    );
 
    if (conv && conv.factor > 0) {
+    const factor = Number(conv.factor);
     matchingLine = line;
-    incrementQty = conv.fromUomId === scannedUomId ? Number(conv.factor) : Number(1 / conv.factor);
+    // Phase 2 Precision Guard:
+    // Instead of computing 1/factor (which produces 0.0833... for factor=12),
+    // we track an integer baseCount of the smaller-unit scanned.
+    // Direction: scanned=small→line=large means factor is how many small fit in 1 large.
+    const isScannedSmaller = conv.toUomId === scannedUomId; // e.g. scanned PCS, line BOX
+    if (isScannedSmaller) {
+     // Increment base integers; convert to line-UOM at display time
+     const current = scannedBaseData[line.id] ?? { baseCount: 0, factor };
+     const nextBase = current.baseCount + 1;
+     const lineQtyEquivalent = baseToLineQty(nextBase, factor);
+
+     if (lineQtyEquivalent > (line.qty + 0.0001)) {
+      setScanStatus('error');
+      const msg = t('scan_duplicate_warning') || 'Item already fully verified.';
+      setStatusMessage(msg);
+      toast.warning(msg);
+      setTimeout(() => setScanStatus('idle'), 2000);
+      throw new Error('ScanDuplicate');
+     }
+
+     setScannedBaseData(prev => ({ ...prev, [line.id]: { baseCount: nextBase, factor } }));
+     setScannedLines(prev => ({ ...prev, [line.id]: lineQtyEquivalent }));
+     setScanStatus('success');
+     setStatusMessage(`${t('scan_success')}: ${line.item?.name} (${nextBase} / ${line.qty * factor} ${scannedItem.code || ''})`); 
+     setTimeout(() => { setScanStatus('idle'); setStatusMessage(''); }, 2500);
+     return;
+    } else {
+     // Scanned a LARGER unit (e.g. BOX) against a smaller line: straightforward integer add
+     incrementQty = factor;
+    }
    }
   }
 
@@ -184,7 +228,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
    setScanStatus('idle');
    setStatusMessage('');
   }, 2500);
- }, [transfer, scannedLines, isMutationBlocked, isWarehouseLocked, isLockError, t, locale]);
+ }, [transfer, scannedLines, scannedBaseData, isMutationBlocked, isWarehouseLocked, isLockError, t, locale]);
 
  const handleShip = () => {
   if (!transfer) return;

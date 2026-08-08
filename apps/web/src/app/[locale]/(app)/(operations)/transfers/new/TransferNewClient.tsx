@@ -181,10 +181,10 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
         code: l.item?.code || '',
         name: (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || l.item?.name || '',
         image: l.item?.image || null,
-        primaryUom: { code: l.item?.primaryUom?.code || l.uomId || 'PCS' },
+        primaryUom: { code: l.item?.primaryUom?.code || l.uomId || '—' },
       },
       qty: l.qty || l.shippedQty || 1,
-      uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+      uomId: l.uomId || l.item?.primaryUom?.id || '',
       notes: l.notes || '',
     })) : []
   );
@@ -205,10 +205,10 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
             code: l.item?.code || '',
             name: (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn) || l.item?.name || '',
             image: l.item?.image || null,
-            primaryUom: { code: l.item?.primaryUom?.code || l.uomId || 'PCS' },
+            primaryUom: { code: l.item?.primaryUom?.code || l.uomId || '—' },
           },
           qty: l.qty || l.shippedQty || 1,
-          uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+          uomId: l.uomId || l.item?.primaryUom?.id || '',
           notes: l.notes || '',
         })));
       }
@@ -291,7 +291,7 @@ export function TransferNewClient({ initialData, id, onConflict }: TransferNewCl
       id: l.id,
       itemId: l.itemId || l.item?.id || '',
       qty: l.qty || l.shippedQty || 1,
-      uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+      uomId: l.uomId || l.item?.primaryUom?.id || '',
       notes: l.notes || '',
     }));
   }, [initialData]);

@@ -153,18 +153,21 @@ export function PurchaseOrderLineItems({
 
                      <style jsx>{`
     .scrollbar-thin::-webkit-scrollbar {
-     width: 6px;
-     height: 6px;
+     width: 8px;
+     height: 8px;
     }
     .scrollbar-thin::-webkit-scrollbar-track {
-     background: transparent;
-    }
-    .scrollbar-thin::-webkit-scrollbar-thumb {
-     background: rgba(var(--operational-cyan-rgb), 0.1);
+     background: rgba(180, 142, 103, 0.08);
      border-radius: 10px;
     }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+     background: #b48e67;
+     border-radius: 10px;
+     border: 1px solid rgba(180, 142, 103, 0.3);
+    }
     .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-     background: rgba(var(--operational-cyan-rgb), 0.2);
+     background: #c4a276;
+     box-shadow: 0 0 8px rgba(180, 142, 103, 0.5);
     }
    `}</style>
               </div>
@@ -236,7 +239,7 @@ function LineItemCard({
                                                                                                   itemId: selected.id,
                                                                                                   itemName: selected.name,
                                                                                                   itemCode: selected.code,
-                                                                                                  uomId: selected.primaryUom?.id || 'PCS',
+                                                                                                  uomId: selected.primaryUom?.id || '',
                                                                                                   unitPrice: safePrice as unknown as number,
                                                                                                   quantity: rowValues?.quantity || 1,
                                                                                                   notes: rowValues?.notes || ''
@@ -481,12 +484,11 @@ function LineItemRow({
                                                                              if (selected) {
                                                                                     const rawPrice = selected.lastPurchasePrice;
                                                                                     const safePrice = (rawPrice === undefined || rawPrice === null || Number.isNaN(rawPrice)) ? "" : rawPrice;
-
                                                                                     update(index, {
                                                                                            itemId: selected.id,
                                                                                            itemName: selected.name,
                                                                                            itemCode: selected.code,
-                                                                                           uomId: selected.primaryUom?.id || 'PCS',
+                                                                                           uomId: selected.primaryUom?.id || '',
                                                                                            unitPrice: safePrice as unknown as number,
                                                                                            quantity: rowValues?.quantity || 1,
                                                                                            notes: rowValues?.notes || ''

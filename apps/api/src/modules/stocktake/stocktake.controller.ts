@@ -52,6 +52,7 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
     const barcodeMappings =
       (item?.barcodeMappings as Record<string, unknown>[]) || [];
     const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
+    const uomConversions = (item?.uomConversions as Record<string, unknown>[]) || [];
 
     const count = counts.find(
       (c: Record<string, unknown>) =>
@@ -67,7 +68,8 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
       itemId: (snapshot?.itemId as string) || '',
       itemName: (item?.name as string) || '',
       barcode: (barcodeMappings[0]?.barcode as string) || '',
-      uom: (unitOfMeasure?.code as string) || 'PCS',
+      uom: (unitOfMeasure?.code as string) || undefined,
+      uomId: (unitOfMeasure?.id as string) || undefined,
       snapshotQty: snapshotQty,
       countedQty: countedQty,
       variance: variance,
@@ -76,6 +78,8 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
       expiryDate: safeIsoString(lot?.expiryDate),
       unitCost: snapshot ? Number(snapshot.wacSnapshot) : 0,
       image: (item?.image as string) || null,
+      uomConversions,
+      barcodeMappings,
     };
   });
 

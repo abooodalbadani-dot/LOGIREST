@@ -137,3 +137,9 @@ When prompting or interacting with AI agents within the IDE, the following instr
 ## 5. Project Proposal Reference
 **Active Proposal Link/Path:** `[C:\kitchen-store-inventory-system\PROJECT PROPOSAL.md]`
 The agent must read the specified proposal document to cross-reference and validate whether a specific feature or screen belongs to the active MVP boundary before execution.
+
+## 6. Strict Void & Reversal Math Protocol (`strict-void-reversal-math`)
+When implementing or reviewing void/cancellation logic (e.g., GRN Void, Issue Void, Transfer Void, Adjustment Void):
+- **UOM Conversion (Quantity Guard)**: NEVER decrement or increment stock ledgers using `line.quantityReceived`, `line.quantity`, or `transactionQty`. Always fetch UOM conversions, compute `baseQuantity` via `toBaseQty`, and apply `baseQuantity` to `WarehouseItem` and `WarehouseItemLot` records.
+- **Financial Reversal (Value Guard)**: Ensure `costLedger` and `stockLedger` log `-baseQuantity` (or appropriate signed base unit amount) and base unit cost (`baseUnitCost`).
+- **WAC Restoration**: Ensure `newWac` correctly reflects the inventory state prior to the voided document (by querying the latest `CostLedger` entry excluding the voided document ID).

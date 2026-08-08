@@ -45,6 +45,7 @@ type PrismaDynamicDelegate = {
   findUnique: (args: {
     where: { id: string };
     select?: Record<string, boolean>;
+    include?: Record<string, unknown>;
   }) => Promise<DynamicDocument | null>;
   updateMany: (args: {
     where: { id: string; version: number };
@@ -269,10 +270,16 @@ export class WorkflowService {
 
     try {
       const execute = async (transaction: Prisma.TransactionClient) => {
+        const includeConfig =
+          modelName === 'purchaseOrder'
+            ? { purchaseRequest: { select: { warehouseId: true } } }
+            : undefined;
+
         const doc = await (
           transaction as unknown as Record<string, PrismaDynamicDelegate>
         )[modelName].findUnique({
           where: { id: documentId },
+          include: includeConfig,
         });
 
         if (!doc) {
@@ -321,9 +328,12 @@ export class WorkflowService {
               if (doc.fromWarehouseId) warehouseIds.push(doc.fromWarehouseId);
             }
           } else {
-            if (doc.warehouseId) warehouseIds.push(doc.warehouseId);
-            if (doc.fromWarehouseId) warehouseIds.push(doc.fromWarehouseId);
-            if (doc.toWarehouseId) warehouseIds.push(doc.toWarehouseId);
+            if (doc.warehouseId) warehouseIds.push(doc.warehouseId as string);
+            if ((doc as Record<string, unknown>).purchaseRequest && ((doc as Record<string, unknown>).purchaseRequest as Record<string, unknown>).warehouseId) {
+              warehouseIds.push(((doc as Record<string, unknown>).purchaseRequest as Record<string, unknown>).warehouseId as string);
+            }
+            if (doc.fromWarehouseId) warehouseIds.push(doc.fromWarehouseId as string);
+            if (doc.toWarehouseId) warehouseIds.push(doc.toWarehouseId as string);
           }
 
           for (const whId of warehouseIds) {
@@ -629,10 +639,12 @@ export class WorkflowService {
           docType === 'po' &&
           (targetStatus === 'SUBMITTED' || targetStatus === 'PENDING_APPROVAL')
         ) {
+          const poWhId = (updatedDoc.warehouseId as string | null) || ((updatedDoc as Record<string, unknown>).purchaseRequest as Record<string, unknown> | null)?.warehouseId as string | null || null;
           await this.outboxService.writeEvent(transaction, 'PO_SUBMITTED', {
             id: updatedDoc.id,
             documentNumber: updatedDoc.poNumber,
             supplierId: updatedDoc.supplierId,
+            warehouseId: poWhId,
           });
         } else if (docType === 'po' && targetStatus === 'APPROVED') {
           const supplier =

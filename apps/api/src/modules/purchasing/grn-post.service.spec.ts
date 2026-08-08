@@ -325,6 +325,65 @@ describe('GrnPostService', () => {
     );
   });
 
+  it('should correctly calculate total financial value (100) and cost per base unit (8.3333) when receiving 1 BOX (factor 12) at unit price 100', async () => {
+    const grnId = 'grn-financial-valuation-test';
+    const userId = 'user-1';
+
+    (mockLockService.lockDocument as jest.Mock).mockResolvedValue({
+      id: grnId,
+      status: 'RECEIVED',
+      version: 1,
+    });
+
+    mockGrnFindUnique.mockResolvedValue({
+      id: grnId,
+      warehouseId: 'wh-1',
+      status: 'RECEIVED',
+      version: 1,
+      fxRate: new Prisma.Decimal(1.0),
+      lines: [
+        {
+          id: 'line-fin-1',
+          itemId: 'item-box-12',
+          uomId: 'uom-box-id',
+          quantityReceived: new Prisma.Decimal(1), // 1 BOX
+          unitPrice: new Prisma.Decimal(100.0), // 100 per BOX
+          unitPriceForeign: new Prisma.Decimal(100.0),
+          unitPriceBase: new Prisma.Decimal(100.0), // raw stored value
+          item: {
+            id: 'item-box-12',
+            sku: 'BOX12SKU',
+            uomId: 'uom-piece-id',
+            isBatched: false,
+            hasExpiry: false,
+            uomConversions: [
+              { fromUomId: 'uom-box-id', toUomId: 'uom-piece-id', factor: new Prisma.Decimal(12) },
+            ],
+          },
+        },
+      ],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue(null);
+    mockWarehouseItemUpsert.mockResolvedValue({});
+    mockGrnUpdateMany.mockResolvedValue({ count: 1 });
+
+    await service.post(grnId, userId, Role.PROC_OFFICER, 1);
+
+    // 1 BOX @ 100 total value = 100. Base quantity = 12 pieces.
+    // Cost per base unit = 100 / 12 = 8.333333333333334.
+    // Total financial addition to WAC = 12 * (100 / 12) = 100.
+    expect(mockWacService.recalculate).toHaveBeenCalledWith(
+      expect.anything(),
+      'wh-1',
+      'item-box-12',
+      12, // 1 BOX * 12 factor = 12 pieces
+      100 / 12, // 8.333333333333334 cost per base unit
+      grnId,
+      expect.any(String),
+    );
+  });
+
   it('should throw BadRequestException if item hasExpiry is true but no lot is provided', async () => {
     const grnId = 'grn-expiry-test-1';
     const userId = 'user-1';

@@ -144,7 +144,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
               const itemImage = (l.item as { image?: string | null; imageUrl?: string | null }).image || (l.item as { image?: string | null; imageUrl?: string | null }).imageUrl || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.image || itemsData?.data?.find((i: Item) => i.id === l.item.id)?.imageUrl || null;
               const lineUom = (l as { uom?: { id: string; code: string; name?: string } }).uom;
               const selectedUom = lineUom || (l.uomId ? uomsData?.data?.find((u: UoM) => u.id === l.uomId) : null);
-              const uomCode = resolveUomCode(selectedUom?.id || l.uomId || l.item?.primaryUom?.id, l.item, uomsData?.data, 'PCS');
+              const uomCode = resolveUomCode(selectedUom?.id || l.uomId || l.item?.primaryUom?.id, l.item, uomsData?.data, '—');
               const uomName = selectedUom?.name || (!isRawUuid(selectedUom?.code) ? selectedUom?.code : '') || uomCode;
               const matchingPoLine = poData?.lines?.find((pl) => (pl.item?.id || pl.itemId) === l.item.id);
               const poOriginalQty = matchingPoLine?.quantity !== undefined ? matchingPoLine.quantity : l.qty;

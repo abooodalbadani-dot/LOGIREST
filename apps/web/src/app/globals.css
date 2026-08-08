@@ -212,7 +212,7 @@
   --popover: #FFFFFF;
   --popover-foreground: #1A1A1A;
 
-  --surface-container-lowest: #ffffff;
+  --surface-container-lowest: #f9f2ed;
   --surface-container-low: #f9f2ed;
   --surface-container: #f4ede7;
   --surface-container-high: #eee7e2;
@@ -655,29 +655,42 @@
 }
 
 @layer utilities {
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+
+  .custom-scrollbar::-webkit-scrollbar,
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
+  .custom-scrollbar::-webkit-scrollbar-track,
+  .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #b48e67;
+    border-radius: 9999px;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #c4a276;
   }
 }
 
 @layer base {
+
+  /* Firefox Scrollbars */
+  * {
+    scrollbar-color: #b48e67 transparent;
+    scrollbar-width: thin;
+  }
+
+  /* Webkit Global Scrollbars */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 3px;
+    height: 3px;
   }
 
   ::-webkit-scrollbar-track {
@@ -685,12 +698,38 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    background: #b48e67;
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #c4a276;
+  }
+
+  /* Horizontal Scrollbars (Tables & Horizontal Scroll Containers) */
+  ::-webkit-scrollbar:horizontal,
+  .custom-scrollbar::-webkit-scrollbar:horizontal,
+  .overflow-x-auto::-webkit-scrollbar:horizontal {
+    height: 3px;
+  }
+
+  ::-webkit-scrollbar-track:horizontal,
+  .custom-scrollbar::-webkit-scrollbar-track:horizontal,
+  .overflow-x-auto::-webkit-scrollbar-track:horizontal {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb:horizontal,
+  .custom-scrollbar::-webkit-scrollbar-thumb:horizontal,
+  .overflow-x-auto::-webkit-scrollbar-thumb:horizontal {
+    background: #b48e67;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:horizontal:hover,
+  .custom-scrollbar::-webkit-scrollbar-thumb:horizontal:hover,
+  .overflow-x-auto::-webkit-scrollbar-thumb:horizontal:hover {
+    background: #c4a276;
   }
 }
 
@@ -736,6 +775,66 @@
   /* CRITICAL: Forces paths that slightly exceed viewBox to render */
   padding: 4px;
   /* Safety margin to prevent canvas clipping */
+}
+
+/* ==========================================================================
+   ELEGANT THIN GOLD SCROLLBAR - TRANSPARENT TRACK SYSTEM
+   ========================================================================== */
+::-webkit-scrollbar {
+  width: 3px !important;
+  height: 3px !important;
+  display: block !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+  border-radius: 9999px !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b48e67 !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c4a276 !important;
+}
+
+/* Horizontal Scrollbars Specifically (Tables & Horizontal Containers) */
+::-webkit-scrollbar:horizontal,
+.custom-scrollbar::-webkit-scrollbar:horizontal,
+.overflow-x-auto::-webkit-scrollbar:horizontal,
+table::-webkit-scrollbar:horizontal {
+  height: 3px !important;
+  display: block !important;
+}
+
+::-webkit-scrollbar-track:horizontal,
+.custom-scrollbar::-webkit-scrollbar-track:horizontal,
+.overflow-x-auto::-webkit-scrollbar-track:horizontal {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb:horizontal,
+.custom-scrollbar::-webkit-scrollbar-thumb:horizontal,
+.overflow-x-auto::-webkit-scrollbar-thumb:horizontal {
+  background: #b48e67 !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+::-webkit-scrollbar-thumb:horizontal:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:horizontal:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:horizontal:hover {
+  background: #c4a276 !important;
+}
+
+* {
+  scrollbar-color: #b48e67 transparent !important;
+  scrollbar-width: thin !important;
 }
 
 .report-svg-mark svg {

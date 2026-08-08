@@ -645,7 +645,14 @@ export class GrnService {
         for (const line of body.lines) {
           const item = await tx.item.findUnique({
             where: { id: line.itemId },
-            select: { sku: true, hasExpiry: true },
+            select: {
+              sku: true,
+              hasExpiry: true,
+              uomId: true,
+              uomConversions: {
+                select: { fromUomId: true, toUomId: true, factor: true },
+              },
+            },
           });
 
           if (item?.hasExpiry && !line.expiryDate && !line.lotId) {
@@ -662,8 +669,21 @@ export class GrnService {
             line.expiryDate,
           );
 
+          const conversions = (item?.uomConversions ?? []).map((c) => ({
+            fromUomId: c.fromUomId,
+            toUomId: c.toUomId,
+            factor: Number(c.factor),
+          }));
+
+          const selectedUomId = line.uomId ?? item?.uomId ?? '';
+          const baseUomId = item?.uomId ?? '';
+          const uomFactor = getConversionFactor(selectedUomId, baseUomId, conversions);
+
           const foreignPrice = new Prisma.Decimal(line.unitPrice);
-          const basePrice = foreignPrice.mul(effectiveFxRate).toDecimalPlaces(4);
+          const convertedPrice = foreignPrice.mul(effectiveFxRate);
+          const basePrice = uomFactor > 0
+            ? convertedPrice.div(uomFactor).toDecimalPlaces(4)
+            : convertedPrice.toDecimalPlaces(4);
 
           processedLines.push({
             itemId: line.itemId,

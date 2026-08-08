@@ -740,7 +740,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   )}
                 </div>
 
-                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl shadow-sm">
                   <DocumentLineItemTable
                     mobileLayoutPattern="purchase-request-form"
                     lines={fields.map((f, idx) => {

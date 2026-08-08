@@ -209,7 +209,7 @@ export function PurchaseOrderForm({
 
     const resolved = await resolveBarcodeAndUom(barcode, itemsData?.data);
     const item = resolved?.item;
-    const targetUomId = resolved?.uomId || item?.primaryUom?.id || 'PCS';
+    const targetUomId = resolved?.uomId || item?.primaryUom?.id || '';
 
     if (item) {
       const currentLines = form.getValues('lines') as PurchaseOrderFormValues['lines'];
@@ -365,7 +365,7 @@ export function PurchaseOrderForm({
           itemCode: l.item?.code || '',
           quantity: l.reqQty || 0,
           unitPrice: 0,
-          uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+          uomId: l.uomId || l.item?.primaryUom?.id || '',
           notes: '',
         }));
         replace(prLines);
@@ -393,7 +393,7 @@ export function PurchaseOrderForm({
         itemCode: l.item?.code || '',
         quantity: l.reqQty || 0,
         unitPrice: 0,
-        uomId: l.uomId || l.item?.primaryUom?.id || 'PCS',
+        uomId: l.uomId || l.item?.primaryUom?.id || '',
         notes: '',
       }));
       replace(prLines);

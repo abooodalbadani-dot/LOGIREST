@@ -20,6 +20,24 @@ function isUuid(str?: string | null): boolean {
     /^[0-9a-f]{24}$/i.test(str);
 }
 
+const loggedMissingConversions = new Set<string>();
+
+function warnMissingConversion(selectedUomId: string, baseUomId: string, isFactor = false) {
+  const key = `${selectedUomId}->${baseUomId}`;
+  if (!loggedMissingConversions.has(key)) {
+    loggedMissingConversions.add(key);
+    if (isFactor) {
+      console.warn(
+        `[UOM] No conversion factor found: ${selectedUomId} → ${baseUomId}. Defaulting to 1.`,
+      );
+    } else {
+      console.warn(
+        `[UOM] No conversion found: ${selectedUomId} → ${baseUomId}. Returning qty unchanged.`,
+      );
+    }
+  }
+}
+
 /**
  * Converts a quantity from a selected UOM to the item's base UOM.
  *
@@ -70,9 +88,7 @@ export function toBaseQty(
     return factor > 0 ? qty / factor : qty;
   }
 
-  console.warn(
-    `[UOM] No conversion found: ${selectedUomId} → ${baseUomId}. Returning qty unchanged.`,
-  );
+  warnMissingConversion(selectedUomId, baseUomId, false);
   return qty;
 }
 
@@ -114,8 +130,6 @@ export function getConversionFactor(
     return factor > 0 ? 1 / factor : 1;
   }
 
-  console.warn(
-    `[UOM] No conversion factor found: ${selectedUomId} → ${baseUomId}. Defaulting to 1.`,
-  );
+  warnMissingConversion(selectedUomId, baseUomId, true);
   return 1;
 }

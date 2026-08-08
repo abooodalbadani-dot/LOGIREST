@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations, useLocale } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useForm, Controller, useWatch, useFieldArray, type UseFormRegister } from 'react-hook-form';
+import { useForm, Controller, useWatch, useFieldArray, type UseFormRegister, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ const grnFormSchema = z.object({
    poId: z.string().optional().nullable().or(z.literal('')),
    supplierId: z.string().min(1, 'Supplier is required'),
    currencyId: z.string().min(1, 'Required'),
-   exchangeRate: z.coerce.number().positive().min(0.000001).optional().or(z.literal('')),
+   exchangeRate: z.union([z.coerce.number().positive().min(0.000001), z.literal('')]).optional(),
    warehouseId: z.string().min(1, 'Required'),
    notes: z.string().optional(),
    lines: z.array(LineItemSchema)
@@ -84,7 +84,7 @@ interface GRNFormProps {
 }
 
 interface GRNReceivedQtyCellProps {
-   control: any;
+   control: Control<GRNFormValues>;
    index: number;
    isLocked: boolean;
    isWarehouseLocked: boolean;
@@ -109,7 +109,7 @@ function GRNReceivedQtyCell({
          name={`lines.${index}.receivedQty` as const}
          render={({ field: { onChange, value, onBlur, ref } }) => {
             const displayVal = (() => {
-               if (value === undefined || value === null || value === '' || (typeof value === 'number' && isNaN(value))) {
+               if (value === undefined || value === null || (typeof value === 'number' && isNaN(value))) {
                   return '';
                }
                const num = typeof value === 'number' ? value : parseFloat(String(value));
@@ -363,14 +363,13 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
          {
             header: tc('table_headers.received_qty'),
             cell: (field: LineItem) => {
-               const fieldRecord = field as unknown as { lineIndex?: number };
-               const foundIdx = fields.findIndex(f => f.id === field.id);
-               const index = typeof fieldRecord.lineIndex === 'number' ? fieldRecord.lineIndex : (foundIdx >= 0 ? foundIdx : 0);
-               const hasError = !!errors.lines?.[index]?.receivedQty;
+               const index = fields.findIndex(f => f.id === field.id);
+               const safeIndex = index >= 0 ? index : 0;
+               const hasError = !!errors.lines?.[safeIndex]?.receivedQty;
                return (
                   <GRNReceivedQtyCell
                      control={control}
-                     index={index}
+                     index={safeIndex}
                      isLocked={isLocked}
                      isWarehouseLocked={isWarehouseLocked}
                      qty={field.qty}
@@ -427,7 +426,7 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
             }
          } else if (fxRates && fxRates.length === 0) {
             // ❌ Clear stale FX rate and set error when foreign currency has no FX rate
-            setValue('exchangeRate', '' as unknown as number, { shouldValidate: true, shouldDirty: true });
+            setValue('exchangeRate', '', { shouldValidate: true, shouldDirty: true });
             setError('currencyId', {
                type: 'manual',
                message: locale === 'ar'
@@ -523,9 +522,9 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
                      const itemId = line.item?.id || line.itemId || '';
                      const itemCode = line.item?.code || line.itemSku || '';
                      const itemName = line.item?.name || line.itemName || '';
-                     const lineSelectedUom = line.uom || (line.uomId ? { id: line.uomId, code: resolveUomCode(line.uomId, line.item, null, 'PCS') } : undefined);
+                     const lineSelectedUom = line.uom || (line.uomId ? { id: line.uomId, code: resolveUomCode(line.uomId, line.item, null, '—') } : undefined);
                      const uomId = lineSelectedUom?.id || line.uomId || line.item?.primaryUom?.id || '';
-                     const uomCode = lineSelectedUom?.code || resolveUomCode(uomId, line.item, null, 'PCS');
+                     const uomCode = lineSelectedUom?.code || resolveUomCode(uomId, line.item, null, '—');
                      const itemImage = line.item?.image || line.item?.imageUrl || itemsData?.data?.find(i => i.id === itemId)?.image || itemsData?.data?.find(i => i.id === itemId)?.imageUrl || null;
 
                      const poQty = Number(line.quantity || 0);
@@ -700,7 +699,7 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
 
       const missingExpiryLines = (values.lines || []).filter(line => {
          const matchedMasterItem = itemsData?.data?.find(i => i.id === line.item.id);
-         const hasExpiry = (line.item as any)?.hasExpiry === true || (matchedMasterItem as any)?.trackLots === true;
+         const hasExpiry = line.item.hasExpiry === true || matchedMasterItem?.trackLots === true;
          const hasLotId = !!line.lot?.id;
          const hasExpiryDate = !!line.lot?.expiryDate;
          return hasExpiry && !hasLotId && !hasExpiryDate;
@@ -771,13 +770,12 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
             queryClient.invalidateQueries({ queryKey: ['grns'] });
          }
       } catch (error) {
-         const isConflict = error && typeof error === 'object' && 'name' in error && error.name === 'ConflictError';
+         const errObj = (typeof error === 'object' && error !== null) ? (error as Record<string, unknown>) : null;
+         const isConflict = errObj?.name === 'ConflictError';
          if (!isConflict) {
-            const errObj = error as { message?: string; code?: string; _isToastShown?: boolean } | null;
             const apiMessage = error instanceof Error
                ? error.message
-               : errObj?.message || (typeof error === 'string' ? error : undefined);
-            const apiCode = errObj?.code;
+               : (typeof errObj?.message === 'string' ? errObj.message : (typeof error === 'string' ? error : undefined));
             console.error('[GRNForm] Submit Error:', apiMessage || error);
             playSound('error');
             const isToastShown = errObj?._isToastShown === true;
@@ -1112,18 +1110,14 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
                         </div>
 
                         {/* Existing Desktop Table View */}
-                        <div className="hidden md:block">
-                           <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
+                           <div className="hidden md:block">
+                           <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl shadow-sm">
                               <DocumentLineItemTable<LineItem>
                                  lines={fields.map((f, idx) => {
                                     const live = watchedLines?.[idx] || {};
                                     const matchedItem = itemsData?.data?.find(i => i.id === f.item.id);
                                     const liveUomId = live.uomId || f.uomId;
-                                    const fRecord = f as Record<string, unknown>;
-                                    const liveRecord = live as Record<string, unknown>;
-                                    const liveUom = (fRecord.uom as { id: string; code: string; name?: string } | undefined) ||
-                                       (liveRecord.uom as { id: string; code: string; name?: string } | undefined) ||
-                                       (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
+                                    const liveUom = live.uom || f.uom || (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
                                     const matchingPoLine = poData?.lines?.find(pl => (pl.item?.id || pl.itemId) === f.item.id);
                                     const poOriginalQty = matchingPoLine?.quantity !== undefined ? matchingPoLine.quantity : (live.qty ?? f.qty);
                                     return {
@@ -1209,11 +1203,7 @@ export function GRNForm({ initialData, id, onConflict, actions, onBindSaveForm }
                                  const live = watchedLines?.[idx] || {};
                                  const matchedItem = itemsData?.data?.find(i => i.id === f.item.id);
                                  const liveUomId = live.uomId || f.uomId;
-                                 const fRecord = f as Record<string, unknown>;
-                                 const liveRecord = live as Record<string, unknown>;
-                                 const liveUom = (fRecord.uom as { id: string; code: string; name?: string } | undefined) ||
-                                    (liveRecord.uom as { id: string; code: string; name?: string } | undefined) ||
-                                    (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
+                                 const liveUom = live.uom || f.uom || (liveUomId ? uomsData?.data?.find(u => u.id === liveUomId) : undefined);
 
                                  const itemCode = f.item.code;
                                  const itemName = f.item.name || f.item.nameAr || f.item.nameEn || '';

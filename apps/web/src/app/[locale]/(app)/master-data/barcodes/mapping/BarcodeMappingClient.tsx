@@ -72,7 +72,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
   // Compute available UOM options dynamically for the selected item
   const availableUoms = useMemo(() => {
     if (!selectedItem) return [];
-    const options = getAvailableUomsForItem(selectedItem as any);
+    const options = getAvailableUomsForItem(selectedItem);
     if (options.length === 0 && selectedItem.primaryUom?.id) {
       options.push({
         id: selectedItem.primaryUom.id,
@@ -86,7 +86,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
   // Auto-default selectedUomId to the item's Primary UOM when selectedItem changes
   useEffect(() => {
     if (selectedItem) {
-      const primaryId = selectedItem.primaryUom?.id || (selectedItem as unknown as { uomId?: string }).uomId || '';
+      const primaryId = selectedItem.primaryUom?.id || '';
       setSelectedUomId(primaryId);
     } else {
       setSelectedUomId('');
@@ -121,7 +121,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
       });
 
       const selectedUomObj = availableUoms.find(u => u.id === selectedUomId);
-      const uomName = selectedUomObj?.name || selectedUomObj?.code || resolveUomCode(selectedUomId, selectedItem as any, _uoms);
+      const uomName = selectedUomObj?.name || selectedUomObj?.code || resolveUomCode(selectedUomId, selectedItem, _uoms);
 
       const newMapping: MappingEntry = {
         id: Math.random().toString(36).substr(2, 9),
@@ -399,7 +399,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                     onChange={(e) => setSelectedUomId(e.target.value)}
                     className={cn(
                       "w-full h-12 px-4 rounded-xl font-semibold text-sm bg-background border border-border text-foreground transition-all focus:border-brand-gold shadow-sm appearance-none outline-none cursor-pointer",
-                      !selectedItem && "opacity-50 cursor-not-allowed italic"
+                      !selectedItem && "opacity-50 cursor-not-allowed "
                     )}
                   >
                     {!selectedItem ? (
@@ -409,7 +409,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                     ) : (
                       availableUoms.map((uom) => (
                         <option key={uom.id} value={uom.id}>
-                          {uom.name || uom.code} {uom.id === (selectedItem.primaryUom?.id || (selectedItem as unknown as { uomId?: string }).uomId) ? ` (${tc('primary_uom', { defaultValue: 'Primary' })})` : ''}
+                          {uom.name || uom.code} {uom.id === selectedItem.primaryUom?.id ? ` (${tc('primary_uom', { defaultValue: 'Primary' })})` : ''}
                         </option>
                       ))
                     )}

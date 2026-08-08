@@ -271,7 +271,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const handleSelectBatch = (item: StocktakeItemVM) => {
     const masterItem = masterItems.find((i) => i.id === item.itemId || i.code === item.barcode);
     const availableUoms = getAvailableUomsForItem(masterItem);
-    const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: item.uom, code: resolveUomCode(item.uom, null, null, 'PCS') }];
+    const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: item.uom, code: resolveUomCode(item.uom, null, null, '—') }];
     const matchedOpt = findMatchingUomOption(pendingScannedUom, uomOptions) || uomOptions[0];
     const activeUomKey = matchedOpt.id;
 
@@ -374,7 +374,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       const item = matchingRows[0];
       const masterItem = masterItems.find((i) => i.id === item.itemId || i.code === item.barcode);
       const availableUoms = getAvailableUomsForItem(masterItem);
-      const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: item.uom, code: resolveUomCode(item.uom, null, null, 'PCS') }];
+      const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: item.uom, code: resolveUomCode(item.uom, null, null, '—') }];
 
       const matchedOpt = findMatchingUomOption(targetUomIdOrCode, uomOptions) || uomOptions[0];
       const activeUomKey = matchedOpt.id;
@@ -553,13 +553,13 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                     const isTouched = touchedItems.has(line.id);
                     const masterItem = masterItems.find((i) => i.id === line.itemId || i.code === line.barcode);
                     const availableUoms = getAvailableUomsForItem(masterItem);
-                    const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: line.uom, code: resolveUomCode(line.uom, null, null, 'PCS') }];
+                    const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: line.uom, code: resolveUomCode(line.uom, null, null, '—') }];
                     
                     const activeUomId = selectedLineUoms[line.id] || uomOptions[0].id;
                     const uomCounts = multiUomCounts[line.id] || {};
                     const activeUomCount = uomCounts[activeUomId] ?? (localCounts[line.id] ?? 0);
                     const breakdownText = getLineUomBreakdown(line.id, line.itemId, line.uom);
-                    const baseUomCode = resolveUomCode(line.uom, masterItem, null, 'PCS');
+                    const baseUomCode = resolveUomCode(line.uom, masterItem, null, '—');
 
                     return (
                       <div className="relative flex flex-col items-center justify-center gap-1.5 w-full max-w-[220px] mx-auto py-1">
@@ -644,13 +644,13 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                 const isTouched = touchedItems.has(line.id);
                 const masterItem = masterItems.find((i) => i.id === line.itemId || i.code === line.barcode);
                 const availableUoms = getAvailableUomsForItem(masterItem);
-                const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: line.uom, code: resolveUomCode(line.uom, null, null, 'PCS') }];
+                const uomOptions: UomOption[] = availableUoms.length > 0 ? availableUoms : [{ id: line.uom, code: resolveUomCode(line.uom, null, null, '—') }];
                 
                 const activeUomId = selectedLineUoms[line.id] || uomOptions[0].id;
                 const uomCounts = multiUomCounts[line.id] || {};
                 const activeUomCount = uomCounts[activeUomId] ?? (localCounts[line.id] ?? 0);
                 const breakdownText = getLineUomBreakdown(line.id, line.itemId, line.uom);
-                const baseUomCode = resolveUomCode(line.uom, masterItem, null, 'PCS');
+                const baseUomCode = resolveUomCode(line.uom, masterItem, null, '—');
 
                 return (
                   <div

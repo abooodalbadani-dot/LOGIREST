@@ -6,12 +6,16 @@ import { useWarehouseScope } from '@/providers/WarehouseScopeProvider';
 import { Lock, AlertTriangle } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { useScopeRedirectListener } from '@/hooks/useScopeRedirectListener';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const locale = useLocale();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isLocked } = useWarehouseScope();
   const t = useTranslations('common');
+
+  // Step 1: Global scope change listener that redirects users away from document detail routes on scope change
+  useScopeRedirectListener();
 
   return (
     <div className="flex h-[100dvh] flex-col md:flex-row overflow-hidden bg-background">

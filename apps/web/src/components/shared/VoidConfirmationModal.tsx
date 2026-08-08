@@ -40,7 +40,7 @@ export function VoidConfirmationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] sm:max-w-2xl mx-auto p-6 rounded-[1.5rem] bg-slate-900 border border-slate-800 shadow-2xl text-slate-100">
+      <DialogContent className="w-[90vw] sm:max-w-2xl mx-auto p-6 rounded-[1.5rem] bg-card border border-slate-800 shadow-2xl text-slate-100">
         <DialogHeader className="flex flex-col gap-3 mb-4">
           <DialogTitle className="flex items-center gap-2 text-red-500 font-bold text-lg pe-8">
             <Ban className="w-5 h-5" />

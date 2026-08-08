@@ -270,10 +270,10 @@ export function AdjustmentLotSelector({
   };
 
   return (
-    <div className="flex items-center gap-2 w-full min-w-[220px] dir-auto">
+    <div className="flex items-center gap-2 w-full min-w-0 dir-auto">
       {isCreatedLot ? (
-        <div className="flex items-center justify-between gap-2 h-9 px-3 bg-brand-gold/15 border border-brand-gold/40 rounded-xl w-full text-brand-gold font-mono text-xs font-bold shadow-sm">
-          <div className="flex items-center gap-1.5 truncate">
+        <div className="flex items-center justify-between gap-2 h-9 px-3 bg-brand-gold/15 border border-brand-gold/40 rounded-xl w-full text-brand-gold font-mono text-xs font-bold shadow-sm min-w-0">
+          <div className="flex items-center gap-1.5 truncate min-w-0">
             <Tag className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{createdLotNumber}</span>
           </div>
@@ -281,7 +281,7 @@ export function AdjustmentLotSelector({
             <button
               type="button"
               onClick={handleClearCreated}
-              className="text-brand-gold/70 hover:text-brand-gold p-0.5 rounded-md hover:bg-brand-gold/20 transition-colors"
+              className="text-brand-gold/70 hover:text-brand-gold p-0.5 rounded-md hover:bg-brand-gold/20 transition-colors shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -300,7 +300,7 @@ export function AdjustmentLotSelector({
                 onChange(
                   selected.id,
                   selected.lotNumber,
-                  selected.expiryDate || null,
+                  selected.expiryDate ? String(selected.expiryDate) : null,
                 );
               }
             }}
@@ -315,7 +315,7 @@ export function AdjustmentLotSelector({
             }
             triggerClassName={
               triggerClassName ||
-              "w-full h-9 rounded-xl border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-start px-3 font-mono text-xs outline-none transition-all text-foreground focus:ring-1 focus:ring-brand-gold shadow-sm flex items-center justify-between min-w-[200px]"
+              "w-full h-9 rounded-xl border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-start px-3 font-mono text-xs outline-none transition-all text-foreground focus:ring-1 focus:ring-brand-gold shadow-sm flex items-center justify-between min-w-[130px] md:min-w-[150px] truncate"
             }
           />
         </div>

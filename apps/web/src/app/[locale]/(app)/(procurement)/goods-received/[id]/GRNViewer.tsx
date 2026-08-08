@@ -314,7 +314,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
                 const itemImage = line.item?.image || line.item?.imageUrl || null;
                 const itemName = line.item?.name || '—';
                 const itemCode = line.item?.code || '—';
-                const uomCode = resolveUomCode(line.uomId, line.item, null, 'PCS');
+                const uomCode = resolveUomCode(line.uomId, line.item, null, '—');
                 const lotNum = line.lot?.lotNumber || '—';
                 const expiry = line.lot?.expiryDate
                   ? formatDate(line.lot.expiryDate, locale as 'ar' | 'en')

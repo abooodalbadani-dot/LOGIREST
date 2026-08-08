@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Role, DocumentType, Prisma } from '@prisma/client';
+import { toBaseQty } from '@logirest/shared-types';
 
 @Injectable()
 export class IssueVoidService {
@@ -56,7 +57,15 @@ export class IssueVoidService {
         where: { id: issueId },
         include: {
           lines: {
-            include: { item: true },
+            include: {
+              item: {
+                include: {
+                  uomConversions: {
+                    select: { fromUomId: true, toUomId: true, factor: true },
+                  },
+                },
+              },
+            },
           },
         },
       });
@@ -73,7 +82,18 @@ export class IssueVoidService {
 
       for (const line of sortedLines) {
         const item = line.item;
-        const qtyVal = Number(line.quantity);
+        const lineUomId = line.uomId || item.uomId;
+        const conversions = (item.uomConversions || []).map((c) => ({
+          fromUomId: c.fromUomId,
+          toUomId: c.toUomId,
+          factor: Number(c.factor),
+        }));
+        const qtyVal = toBaseQty(
+          Number(line.quantity),
+          lineUomId,
+          item.uomId,
+          conversions,
+        );
 
         const whItem = await this.lockService.lockItem(
           tx,

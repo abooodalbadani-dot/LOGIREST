@@ -656,7 +656,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
             )}
 
             {/* Table */}
-            <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-card border-y border-x-0 sm:border border-border shadow-sm rounded-none sm:rounded-2xl shadow-sm">
               <div className="p-4 sm:p-6 md:p-8 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   <div className="w-1 h-6 bg-primary/20 rounded-full" />

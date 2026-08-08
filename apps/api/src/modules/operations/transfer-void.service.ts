@@ -13,13 +13,14 @@ import {
   AdjustmentDirection,
   Transfer,
 } from '@prisma/client';
+import { toBaseQty } from '@logirest/shared-types';
 
 @Injectable()
 export class TransferVoidService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
-  ) {}
+  ) { }
 
   async void(
     transferId: string,
@@ -69,7 +70,15 @@ export class TransferVoidService {
               where: { id: transferId },
               include: {
                 lines: {
-                  include: { item: true },
+                  include: {
+                    item: {
+                      include: {
+                        uomConversions: {
+                          select: { fromUomId: true, toUomId: true, factor: true },
+                        },
+                      },
+                    },
+                  },
                 },
               },
             });
@@ -114,7 +123,18 @@ export class TransferVoidService {
             // 1. Lock and validate balances in destination warehouse (we need to deduct received stock)
             for (const line of sortedLines) {
               const item = line.item;
-              const receivedQty = Number(line.quantityReceived);
+              const lineUomId = line.uomId || item.uomId;
+              const conversions = (item.uomConversions || []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const baseReceivedQty = toBaseQty(
+                Number(line.quantityReceived),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
 
               // Lock WarehouseItem first (destination warehouse)
               const lockedItem = await this.lockService.lockItem(
@@ -124,9 +144,9 @@ export class TransferVoidService {
               );
               if (lockedItem) {
                 const itemQty = Number(lockedItem.qtyOnHand);
-                if (itemQty < receivedQty) {
+                if (itemQty < baseReceivedQty) {
                   throw new BadRequestException(
-                    `Cannot void Transfer: Destination warehouse item ${item.sku} has been partially consumed. Available: ${itemQty}, Required to void: ${receivedQty}`,
+                    `Cannot void Transfer: Destination warehouse item ${item.sku} has been partially consumed. Available: ${itemQty}, Required to void: ${baseReceivedQty}`,
                   );
                 }
               }
@@ -141,7 +161,7 @@ export class TransferVoidService {
                   a.lotId.localeCompare(b.lotId),
                 );
 
-                let remainingReceived = receivedQty;
+                let remainingReceived = baseReceivedQty;
                 for (const alloc of sortedAllocations) {
                   if (remainingReceived <= 0) break;
 
@@ -174,9 +194,25 @@ export class TransferVoidService {
             // 2. Perform reversals
             for (const line of sortedLines) {
               const item = line.item;
-              const shippedQty = Number(line.quantityShipped);
-              const receivedQty = Number(line.quantityReceived);
-              const discrepancy = shippedQty - receivedQty;
+              const lineUomId = line.uomId || item.uomId;
+              const conversions = (item.uomConversions || []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const baseShippedQty = toBaseQty(
+                Number(line.quantityShipped),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
+              const baseReceivedQty = toBaseQty(
+                Number(line.quantityReceived),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
+              const discrepancy = baseShippedQty - baseReceivedQty;
 
               // Retrieve source warehouse WAC before shipping
               const sourceWhItem = await tx.warehouseItem.findUnique({
@@ -200,7 +236,7 @@ export class TransferVoidService {
                   a.lotId.localeCompare(b.lotId),
                 );
 
-                let remainingReceived = receivedQty;
+                let remainingReceived = baseReceivedQty;
                 for (const alloc of sortedAllocations) {
                   const receivedForLot = Math.min(
                     Number(alloc.quantityAllocated),
@@ -296,7 +332,7 @@ export class TransferVoidService {
                       itemId: item.id,
                     },
                   },
-                  data: { qtyOnHand: { increment: shippedQty } },
+                  data: { qtyOnHand: { increment: baseShippedQty } },
                 });
 
                 await tx.stockLedger.create({
@@ -304,7 +340,7 @@ export class TransferVoidService {
                     warehouseId: transfer.fromWarehouseId,
                     itemId: item.id,
                     lotId: null,
-                    quantity: shippedQty,
+                    quantity: baseShippedQty,
                     documentId: transfer.id,
                     documentType: DocumentType.TRANSFER,
                     idempotencyKey: `${DocumentType.TRANSFER}:stock_void_src:${transfer.id}:${item.id}:${line.id}`,
@@ -319,7 +355,7 @@ export class TransferVoidService {
                       itemId: item.id,
                     },
                   },
-                  data: { qtyOnHand: { decrement: receivedQty } },
+                  data: { qtyOnHand: { decrement: baseReceivedQty } },
                 });
 
                 await tx.stockLedger.create({
@@ -327,7 +363,7 @@ export class TransferVoidService {
                     warehouseId: transfer.toWarehouseId,
                     itemId: item.id,
                     lotId: null,
-                    quantity: -receivedQty,
+                    quantity: -baseReceivedQty,
                     documentId: transfer.id,
                     documentType: DocumentType.TRANSFER,
                     idempotencyKey: `${DocumentType.TRANSFER}:stock_void_dest:${transfer.id}:${item.id}:${line.id}`,
@@ -344,7 +380,7 @@ export class TransferVoidService {
                       itemId: item.id,
                     },
                   },
-                  data: { qtyOnHand: { increment: shippedQty } },
+                  data: { qtyOnHand: { increment: baseShippedQty } },
                 });
 
                 await tx.warehouseItem.update({
@@ -354,12 +390,12 @@ export class TransferVoidService {
                       itemId: item.id,
                     },
                   },
-                  data: { qtyOnHand: { decrement: receivedQty } },
+                  data: { qtyOnHand: { decrement: baseReceivedQty } },
                 });
               }
 
               // Recalculate destination WAC from cost ledger entries excluding this transfer
-              // 1. Check if any subsequent cost-impacting document exists for the same item in the destination warehouse
+              // 1. Check if  subsequent cost-impacting document exists for the same item in the destination warehouse
               const subsequentGrn = await tx.goodsReceivedNote.findFirst({
                 where: {
                   warehouseId: transfer.toWarehouseId,
@@ -514,7 +550,7 @@ export class TransferVoidService {
                 data: {
                   warehouseId: transfer.toWarehouseId,
                   itemId: item.id,
-                  quantity: -receivedQty,
+                  quantity: -baseReceivedQty,
                   unitPrice: sourceWac,
                   newWac: roundedWac,
                   documentId: transfer.id,

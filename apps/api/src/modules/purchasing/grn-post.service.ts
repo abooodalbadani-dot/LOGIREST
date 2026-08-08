@@ -271,26 +271,26 @@ export class GrnPostService {
               // Recalculate WAC (unit cost must be in base UOM)
               const costIdempotencyKey = `${PrismaDocType.GOODS_RECEIVED_NOTE}:cost:${grn.id}:${item.id}:${line.id}`;
 
-              // unitPriceBase is always stored correctly pre-divided by the UOM factor
-              // (since the grn.service.ts create/updateLine path was fixed to do this division).
-              // Fall back to recomputing from raw foreign price only for truly legacy rows
-              // that predate the unitPriceBase column (i.e., the column is NULL).
-              const uomFactor = getConversionFactor(lineUomId, item.uomId, conversions);
+              // Step 1: Calculate total financial value of received line using transaction quantity & foreign fx rate
               const fxRate = grn.fxRate ? Number(grn.fxRate) : 1;
+              const transactionQty = Number(line.quantityReceived);
+              const transactionPriceInBaseCurrency = Number(line.unitPrice) * fxRate;
+              const lineTotalValue = transactionQty * transactionPriceInBaseCurrency;
 
-              const costToUse: number =
-                line.unitPriceBase !== null && line.unitPriceBase !== undefined
-                  ? Number(line.unitPriceBase)                                          // ← always correct post-fix
-                  : uomFactor > 0                                                        // ← legacy NULL fallback
-                    ? (Number(line.unitPrice) * fxRate) / uomFactor
-                    : Number(line.unitPrice) * fxRate;
+              // Step 2: Derive cost per base unit (piece) for WAC calculation
+              const uomFactor = getConversionFactor(lineUomId, item.uomId, conversions);
+              const baseUnitCost: number = baseQuantity > 0
+                ? lineTotalValue / baseQuantity
+                : uomFactor > 0
+                  ? transactionPriceInBaseCurrency / uomFactor
+                  : transactionPriceInBaseCurrency;
 
               await this.wacService.recalculate(
                 tx,
                 grn.warehouseId,
                 item.id,
                 baseQuantity,
-                costToUse,
+                baseUnitCost,
                 grn.id,
                 costIdempotencyKey,
               );

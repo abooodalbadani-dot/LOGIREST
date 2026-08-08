@@ -138,6 +138,12 @@ export class StocktakeService {
                 unitOfMeasure: true,
                 category: true,
                 barcodeMappings: true,
+                uomConversions: {
+                  include: {
+                    fromUom: true,
+                    toUom: true,
+                  },
+                },
               },
             },
             lot: true,

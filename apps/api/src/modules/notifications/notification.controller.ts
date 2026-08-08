@@ -43,10 +43,11 @@ export class NotificationController {
   @Get()
   @AllRoles()
   async getNotifications(
+    @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') warehouseId?: string,
   ) {
-    return this.notificationService.getNotifications(role, warehouseId);
+    return this.notificationService.getNotifications(role, userId, warehouseId);
   }
 
   @Patch(':id/read')
@@ -62,7 +63,7 @@ export class NotificationController {
     if (!notification) {
       throw new NotFoundException(`Notification with ID ${id} not found`);
     }
-    if (role !== Role.ADMIN) {
+    if (role !== Role.ADMIN && role !== Role.GM) {
       const allowedRoles: Role[] = role === Role.INV_MGR ? [Role.INV_MGR, Role.WH_KEEPER] : [role];
       if (!allowedRoles.includes(notification.targetRole as Role)) {
         throw new ForbiddenException(
@@ -87,11 +88,13 @@ export class NotificationController {
   @Post('read-all')
   @AllRoles()
   async markAllAsRead(
+    @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') warehouseId?: string,
   ) {
     const result = await this.notificationService.markAllAsRead(
       role,
+      userId,
       warehouseId,
     );
     return {

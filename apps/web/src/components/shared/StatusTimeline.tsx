@@ -46,59 +46,108 @@ const STATUS_CONFIG: Record<Status, { icon: ElementType, color: string, glow: st
  converted_to_po: { icon: CheckCircle2, color: 'text-amber-500', glow: 'bg-amber-500/20' },
 };
 
-export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) {
- const tCommon = useTranslations('common');
- const locale = useLocale() as 'ar' | 'en';
+export function StatusTimeline({ 
+  entries,
+  orientation = 'vertical',
+}: { 
+  entries: StatusTimelineEntry[];
+  orientation?: 'vertical' | 'horizontal';
+}) {
+  const tCommon = useTranslations('common');
+  const locale = useLocale() as 'ar' | 'en';
 
- return (
- <div className="relative space-y-8 before:absolute before:inset-y-0 before:start-[19px] before:w-[2px] before:bg-surface-container-highest/50">
- {entries.map((entry, idx) => {
- const statusKey = (entry.status || 'draft').toLowerCase() as Status;
- const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG.draft;
- const Icon = config.icon;
- const isLatest = idx === entries.length - 1;
+  if (orientation === 'horizontal') {
+    return (
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-nowrap w-full py-0.5">
+        {entries.map((entry, idx) => {
+          const statusKey = (entry.status || 'draft').toLowerCase() as Status;
+          const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG.draft;
+          const Icon = config.icon;
+          const isLatest = idx === entries.length - 1;
 
- const statusLabel = tCommon.has(`statuses.${statusKey}`)
-   ? tCommon(`statuses.${statusKey}`)
-   : statusKey.replace(/_/g, ' ').toUpperCase();
+          const statusLabel = tCommon.has(`statuses.${statusKey}`)
+            ? tCommon(`statuses.${statusKey}`)
+            : statusKey.replace(/_/g, ' ').toUpperCase();
 
- return (
- <div key={idx} className="relative flex gap-6 animate-in fade-in slide-in-from-start-4 duration-200" style={{ animationDelay: `${idx * 100}ms` }}>
- <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border shadow-sm border border-surface-container-highest shadow-xl overflow-hidden group">
- <div className={cn("absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity", config.glow)} />
- <Icon className={cn("w-5 h-5 relative z-10", config.color, isLatest && "animate-pulse")} />
- </div>
- 
- <div className="flex flex-col justify-center space-y-1 py-1">
- <div className="flex items-center gap-2">
- <p className={cn(
- "text-label-xs font-semibold uppercase",
- config.color,
- isLatest && "drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
- )}>
- {statusLabel}
- </p>
- {isLatest && (
- <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-500 animate-ping" />
- )}
- </div>
- <div className="flex items-center gap-2 text-muted-foreground/60">
-    <ClientOnlyTime 
-     date={entry.at} 
-     mode="datetime" 
-     showSeconds={true}
-     locale={locale}
-     className="text-label-xs font-bold" 
-    />
- <span className="w-1 h-1 rounded-full bg-muted-foreground/20" />
- <span className="text-label-xs font-semibold uppercase">
- {entry.by}
- </span>
- </div>
- </div>
- </div>
- );
- })}
- </div>
- );
+          return (
+            <div
+              key={idx}
+              className="flex items-center gap-2 bg-surface-container-highest/40 backdrop-blur-md border border-border/70 rounded-xl px-2.5 py-1 shadow-xs shrink-0 whitespace-nowrap"
+            >
+              <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-card border border-border/80 shrink-0 overflow-hidden">
+                <div className={cn("absolute inset-0 opacity-20 transition-opacity rounded-full", config.glow)} />
+                <Icon className={cn("w-3 h-3 relative z-10", config.color, isLatest && "animate-pulse")} />
+              </div>
+              
+              <div className="flex items-center gap-1.5 text-start text-[10px]">
+                <span className={cn("font-black uppercase tracking-wider", config.color)}>
+                  {statusLabel}
+                </span>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="text-muted-foreground/80 font-bold">{entry.by}</span>
+                <span className="text-muted-foreground/40">•</span>
+                <ClientOnlyTime date={entry.at} mode="datetime" showSeconds={false} locale={locale} className="text-muted-foreground/70 font-semibold" />
+              </div>
+
+              {idx < entries.length - 1 && (
+                <span className="text-muted-foreground/30 ms-1 font-mono text-[9px]">→</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative space-y-8 before:absolute before:inset-y-0 before:start-[19px] before:w-[2px] before:bg-surface-container-highest/50">
+      {entries.map((entry, idx) => {
+        const statusKey = (entry.status || 'draft').toLowerCase() as Status;
+        const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG.draft;
+        const Icon = config.icon;
+        const isLatest = idx === entries.length - 1;
+
+        const statusLabel = tCommon.has(`statuses.${statusKey}`)
+          ? tCommon(`statuses.${statusKey}`)
+          : statusKey.replace(/_/g, ' ').toUpperCase();
+
+        return (
+          <div key={idx} className="relative flex gap-6 animate-in fade-in slide-in-from-start-4 duration-200" style={{ animationDelay: `${idx * 100}ms` }}>
+            <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-card border border-surface-container-highest shadow-xl overflow-hidden group">
+              <div className={cn("absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity", config.glow)} />
+              <Icon className={cn("w-5 h-5 relative z-10", config.color, isLatest && "animate-pulse")} />
+            </div>
+            
+            <div className="flex flex-col justify-center space-y-1 py-1">
+              <div className="flex items-center gap-2">
+                <p className={cn(
+                  "text-label-xs font-semibold uppercase",
+                  config.color,
+                  isLatest && "drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
+                )}>
+                  {statusLabel}
+                </p>
+                {isLatest && (
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-500 animate-ping" />
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground/60">
+                <ClientOnlyTime 
+                  date={entry.at} 
+                  mode="datetime" 
+                  showSeconds={true}
+                  locale={locale}
+                  className="text-label-xs font-bold" 
+                />
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/20" />
+                <span className="text-label-xs font-semibold uppercase">
+                  {entry.by}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }

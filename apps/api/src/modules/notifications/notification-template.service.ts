@@ -341,6 +341,46 @@ export class NotificationTemplateService implements OnModuleInit {
     }
 
     let targetRoles: Role[] = [];
+
+    // Warehouse-scoped events: ABAC intersection of role AND warehouseId access.
+    // GM and ADMIN have global visibility and bypass warehouse scope filtering.
+    const warehouseScopedEventTypes = new Set(['GRN_POSTED', 'PO_APPROVED']);
+    if (warehouseScopedEventTypes.has(eventType)) {
+      const warehouseId = data.warehouseId;
+      // Roles that require explicit warehouse scope (non-global)
+      const scopedRoles: Role[] = [Role.PROC_MGR, Role.APPROVER];
+      // Roles with global access (no warehouse scope restriction)
+      const globalRoles: Role[] = [Role.GM];
+
+      const [scopedUsers, globalUsers] = await Promise.all([
+        warehouseId
+          ? this.prisma.user.findMany({
+              where: {
+                role: { in: scopedRoles },
+                isActive: true,
+                warehouseScopes: {
+                  some: { warehouseId },
+                },
+              },
+              select: { email: true },
+            })
+          : this.prisma.user.findMany({
+              where: { role: { in: scopedRoles }, isActive: true },
+              select: { email: true },
+            }),
+        this.prisma.user.findMany({
+          where: { role: { in: globalRoles }, isActive: true },
+          select: { email: true },
+        }),
+      ]);
+
+      const emails = new Set([
+        ...scopedUsers.map((u) => u.email),
+        ...globalUsers.map((u) => u.email),
+      ]);
+      return Array.from(emails).join(', ');
+    }
+
     switch (eventType) {
       case 'SECURITY_ALERT_REPLAY_ATTACK':
         targetRoles = [Role.ADMIN];
@@ -351,9 +391,6 @@ export class NotificationTemplateService implements OnModuleInit {
       case 'PR_SUBMITTED':
         targetRoles = [Role.APPROVER];
         break;
-      case 'GRN_POSTED':
-        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
-        break;
       case 'LOW_STOCK_ALERT':
         targetRoles = [Role.INV_MGR, Role.PROC_MGR];
         break;
@@ -362,9 +399,6 @@ export class NotificationTemplateService implements OnModuleInit {
         break;
       case 'STOCKTAKE_POSTED':
         targetRoles = [Role.ADMIN, Role.GM];
-        break;
-      case 'PO_APPROVED':
-        targetRoles = [Role.PROC_MGR, Role.APPROVER, Role.GM];
         break;
       default:
         break;

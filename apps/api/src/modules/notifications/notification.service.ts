@@ -37,18 +37,71 @@ export class NotificationService {
     });
   }
 
-  async getNotifications(role: Role, warehouseId?: string) {
-    const roles: Role[] = [role];
+  private async getAuthorizedWarehouseIds(userId: string): Promise<Set<string>> {
+    const [whScopes, branchScopes, deptScopes] = await Promise.all([
+      this.prisma.userWarehouseScope.findMany({
+        where: { userId },
+        select: { warehouseId: true },
+      }),
+      this.prisma.userBranchScope.findMany({
+        where: { userId },
+        select: { branchId: true },
+      }),
+      this.prisma.userDepartmentScope.findMany({
+        where: { userId },
+        include: { department: { select: { branchId: true } } },
+      }),
+    ]);
+
+    const authorizedWhIds = new Set<string>(whScopes.map((s) => s.warehouseId));
+    const branchIds = [
+      ...branchScopes.map((b) => b.branchId),
+      ...deptScopes.map((d) => d.department.branchId),
+    ];
+
+    if (branchIds.length > 0) {
+      const branchWhs = await this.prisma.warehouse.findMany({
+        where: { branchId: { in: branchIds } },
+        select: { id: true },
+      });
+      branchWhs.forEach((w) => authorizedWhIds.add(w.id));
+    }
+
+    return authorizedWhIds;
+  }
+
+  async getNotifications(role: Role, userId?: string, activeWarehouseId?: string) {
+    if (role === Role.ADMIN || role === Role.GM || !userId) {
+      return this.prisma.notificationLog.findMany({
+        where: {
+          targetRole: role,
+          isRead: false,
+          ...(activeWarehouseId
+            ? { OR: [{ warehouseId: null }, { warehouseId: activeWarehouseId }] }
+            : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+    }
+
+    const authorizedWhIds = await this.getAuthorizedWarehouseIds(userId);
+    const whIdList = Array.from(authorizedWhIds);
+
+    const allowedWhIds = activeWarehouseId
+      ? (authorizedWhIds.has(activeWarehouseId) ? [activeWarehouseId] : [])
+      : whIdList;
 
     return this.prisma.notificationLog.findMany({
       where: {
-        targetRole: { in: roles },
+        targetRole: role,
         isRead: false,
-        OR: [{ warehouseId: null }, { warehouseId: warehouseId || undefined }],
+        OR: [
+          { warehouseId: null },
+          { warehouseId: { in: allowedWhIds } },
+        ],
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
       take: 50,
     });
   }
@@ -60,14 +113,36 @@ export class NotificationService {
     });
   }
 
-  async markAllAsRead(role: Role, warehouseId?: string) {
-    const roles: Role[] = [role];
+  async markAllAsRead(role: Role, userId?: string, activeWarehouseId?: string) {
+    if (role === Role.ADMIN || role === Role.GM || !userId) {
+      const result = await this.prisma.notificationLog.updateMany({
+        where: {
+          targetRole: role,
+          isRead: false,
+          ...(activeWarehouseId
+            ? { OR: [{ warehouseId: null }, { warehouseId: activeWarehouseId }] }
+            : {}),
+        },
+        data: { isRead: true },
+      });
+      return { count: result.count };
+    }
+
+    const authorizedWhIds = await this.getAuthorizedWarehouseIds(userId);
+    const whIdList = Array.from(authorizedWhIds);
+
+    const allowedWhIds = activeWarehouseId
+      ? (authorizedWhIds.has(activeWarehouseId) ? [activeWarehouseId] : [])
+      : whIdList;
 
     const result = await this.prisma.notificationLog.updateMany({
       where: {
-        targetRole: { in: roles },
+        targetRole: role,
         isRead: false,
-        OR: [{ warehouseId: null }, { warehouseId: warehouseId || undefined }],
+        OR: [
+          { warehouseId: null },
+          { warehouseId: { in: allowedWhIds } },
+        ],
       },
       data: { isRead: true },
     });

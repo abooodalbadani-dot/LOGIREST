@@ -266,4 +266,68 @@ describe('GrnVoidService', () => {
       service.void('grn-1', 'user-1', Role.WH_KEEPER),
     ).rejects.toThrow('Only System Administrators or Inventory Managers can void documents');
   });
+
+  it('should deduct baseQuantity (12 BAGs) instead of transaction quantity (1 BOX) when voiding GRN line', async () => {
+    const grnId = 'grn-uom-void-test';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockGrnFindUnique.mockResolvedValue({
+      id: grnId,
+      warehouseId,
+      status: 'POSTED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-uom-void',
+          itemId: 'item-uom-void',
+          uomId: 'uom-box-id',
+          quantityReceived: new Prisma.Decimal(1), // 1 BOX
+          unitPrice: new Prisma.Decimal(100),
+          item: {
+            id: 'item-uom-void',
+            sku: 'UOMSKU01',
+            uomId: 'uom-bag-id',
+            isBatched: false,
+            hasExpiry: false,
+            uomConversions: [
+              { fromUomId: 'uom-box-id', toUomId: 'uom-bag-id', factor: new Prisma.Decimal(12) },
+            ],
+          },
+        },
+      ],
+    });
+
+    mockLockService.lockItem = jest.fn().mockResolvedValue({
+      itemId: 'item-uom-void',
+      qtyOnHand: new Prisma.Decimal(84),
+    });
+
+    mockCostLedgerFindFirst.mockResolvedValue({
+      id: 'cost-prev',
+      newWac: new Prisma.Decimal(41.4467),
+    });
+
+    mockGrnUpdate.mockResolvedValue({ id: grnId, status: 'VOIDED' });
+
+    await service.void(grnId, userId, Role.ADMIN, 1);
+
+    // Decrement should be baseQuantity = 12 BAGs, NOT 1 BOX!
+    expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
+      where: {
+        warehouseId_itemId: {
+          warehouseId,
+          itemId: 'item-uom-void',
+        },
+      },
+      data: { qtyOnHand: { decrement: 12 } },
+    });
+
+    // Stock ledger should log -12
+    expect(mockStockLedgerCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        quantity: -12,
+      }),
+    });
+  });
 });

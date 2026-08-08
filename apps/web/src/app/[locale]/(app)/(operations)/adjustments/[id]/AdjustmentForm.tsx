@@ -769,8 +769,8 @@ export function AdjustmentForm({
       },
       {
         header: locale === "ar" ? "تكلفة الوحدة" : "Unit Cost",
-        headerClassName: "min-w-[130px]",
-        cellClassName: "min-w-[130px]",
+        headerClassName: "min-w-[100px] md:min-w-[120px] text-center whitespace-nowrap",
+        cellClassName: "min-w-[100px] md:min-w-[120px] text-center",
         cell: (line: AdjustmentFormLine) => {
           const isIncrease = line.direction === "INCREASE";
           if (!canEdit) {
@@ -795,7 +795,7 @@ export function AdjustmentForm({
                   updateLine(line.id, { unitCost: val });
                 }}
                 className={cn(
-                  "w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1",
+                  "w-full md:w-28 text-center font-black text-sm h-9 bg-surface-container-highest/30 border border-border text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm disabled:opacity-30 disabled:bg-transparent disabled:border-transparent disabled:shadow-none min-w-0 px-1 force-latin-numbers",
                   isIncrease &&
                   (line.unitCost === null ||
                     line.unitCost === undefined ||
@@ -809,8 +809,8 @@ export function AdjustmentForm({
       },
       {
         header: t("qty_before") || "Qty Before",
-        headerClassName: "min-w-[100px] text-center whitespace-nowrap",
-        cellClassName: "min-w-[100px] text-center",
+        headerClassName: "min-w-[80px] max-w-[95px] text-center whitespace-nowrap",
+        cellClassName: "min-w-[80px] max-w-[95px] text-center",
         cell: (line: AdjustmentFormLine) => {
           const scaledQtyBefore = getScaledQtyBefore(
             line.qtyBefore,
@@ -835,8 +835,8 @@ export function AdjustmentForm({
       },
       {
         header: t("qty_after") || "Qty After",
-        headerClassName: "min-w-[100px] text-center whitespace-nowrap",
-        cellClassName: "min-w-[100px] text-center",
+        headerClassName: "min-w-[80px] max-w-[95px] text-center whitespace-nowrap",
+        cellClassName: "min-w-[80px] max-w-[95px] text-center",
         cell: (line: AdjustmentFormLine) => {
           const scaledQtyBefore = getScaledQtyBefore(
             line.qtyBefore,
@@ -873,8 +873,8 @@ export function AdjustmentForm({
       },
       {
         header: tc("table_headers.lot") || "Lot",
-        headerClassName: "min-w-[140px] max-w-[160px] text-center whitespace-nowrap",
-        cellClassName: "min-w-[140px] max-w-[160px] text-center truncate",
+        headerClassName: "min-w-[220px] md:min-w-[260px] text-center whitespace-nowrap",
+        cellClassName: "min-w-[220px] md:min-w-[260px] text-center",
         cell: (line: AdjustmentFormLine) => {
           if (!canEdit) {
             const rawLine = line as unknown as Record<string, unknown>;
@@ -996,27 +996,42 @@ export function AdjustmentForm({
         <DocumentLockWrapper isLocked={isLocked}>
           <div className="flex-1 w-full p-1 sm:p-4 lg:p-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 print:block items-start max-w-[1920px] mx-auto">
-              {/* Main Content: Unified Master Container (Document Details + Items Table) */}
-              <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
+              {/* Main Content: Unified Full-Width Master Container (Document Details + Audit Trail + Items Table) */}
+              <div className="col-span-12 flex flex-col gap-6">
                 <div className="bg-card backdrop-blur-3xl p-3.5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-border/70 space-y-6 lg:space-y-8 transition-all duration-500 group">
                   {/* Decorative background glow */}
-                  <div className="absolute top-0 end-0 w-96 h-96 bg-brand-gold/5 blur-[100px] pointer-events-none rounded-full" />
-                  <div className="absolute bottom-0 start-0 w-80 h-80 bg-brand-gold/5 blur-[90px] pointer-events-none rounded-full" />
 
-                  {/* SECTION 1: Document Details (تفاصيل الوثيقة) */}
+                  {/* SECTION 1: Document Details & Audit Trail (تفاصيل الوثيقة وسجل المراجعة) */}
                   <div className="relative border-b border-slate-200/60 dark:border-white/10 pb-8 space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/15 flex items-center justify-center border border-brand-gold/30 shadow-sm">
-                        <Warehouse className="w-5.5 h-5.5 text-brand-gold" />
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/15 flex items-center justify-center border border-brand-gold/30 shadow-sm shrink-0">
+                          <Warehouse className="w-5.5 h-5.5 text-brand-gold" />
+                        </div>
+                        <div>
+                          <h3 className="text-body-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                            {t("details_section")}
+                          </h3>
+                          <p className="text-xs text-muted-foreground/70 font-semibold mt-0.5">
+                            {locale === 'ar' ? 'بيانات المستودع والسبب والتفاصيل' : 'Warehouse & Document Specification'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-body-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
-                          {t("details_section")}
-                        </h3>
-                        <p className="text-xs text-muted-foreground/70 font-semibold mt-0.5">
-                          {locale === 'ar' ? 'بيانات المستودع والسبب والتفاصيل' : 'Warehouse & Document Specification'}
-                        </p>
-                      </div>
+
+                      {/* Integrated Responsive Horizontal Audit Trail Bar */}
+                      {timelineEntries.length > 0 && (
+                        <div className="w-full xl:w-auto bg-surface-container-highest/20 backdrop-blur-md border border-brand-gold/20 rounded-2xl px-3 py-2 sm:px-4 sm:py-2 flex items-center gap-3 overflow-hidden min-w-0">
+                          <div className="flex items-center gap-1.5 shrink-0 text-brand-gold">
+                            <History className="w-4 h-4" />
+                            <span className="text-[11px] font-bold uppercase tracking-wider hidden sm:inline">
+                              {tc("audit_trail")}:
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar">
+                            <StatusTimeline entries={timelineEntries} orientation="horizontal" />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* 3-Column Responsive Header Inputs */}
@@ -1143,7 +1158,7 @@ export function AdjustmentForm({
                         </div>
                       </div>
 
-                      <div className="bg-card backdrop-blur-xl shadow-xl rounded-[2rem] border border-border/70 overflow-hidden">
+                      <div className="bg-card backdrop-blur-xl shadow-xl rounded-[2rem] border border-border/70">
                         <DocumentLineItemTable<AdjustmentFormLine>
                           lines={lines.map((l): AdjustmentFormLine => {
                             const lineObj = l as unknown as AdjustmentFormLine;
@@ -1206,7 +1221,7 @@ export function AdjustmentForm({
                                     const val = parseFloat(e.target.value);
                                     updateLine(line.id, { qtyAdjusted: val || 0 });
                                   }}
-                                  className="w-full text-center font-black text-sm h-9 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm min-w-0 px-1"
+                                  className="w-full md:w-28 text-center font-black text-sm h-9 bg-surface-container-highest/30 backdrop-blur-md border border-border/70 text-foreground focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-md outline-none transition-all shadow-sm min-w-0 px-1 force-latin-numbers"
                                 />
                               </div>
                             )
@@ -1235,7 +1250,7 @@ export function AdjustmentForm({
                             }));
 
                             return (
-                              <div className="flex items-center justify-center w-full">
+                              <div className="flex items-center justify-center w-full min-w-0">
                                 <SmartCombobox
                                   items={comboboxItems}
                                   value={line.uomId}
@@ -1243,7 +1258,7 @@ export function AdjustmentForm({
                                     updateLine(line.id, { uomId: uom.id });
                                   }}
                                   placeholder={line.item?.primaryUom?.code || "UOM"}
-                                  triggerClassName="h-9 px-3 text-sm border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:w-28 font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
+                                  triggerClassName="h-9 px-3 text-xs border border-border/70 bg-surface-container-highest/30 backdrop-blur-md text-foreground text-center rounded-xl w-full md:min-w-[140px] font-semibold shadow-sm focus-visible:ring-brand-gold transition-all"
                                 />
                               </div>
                             );
@@ -1255,42 +1270,13 @@ export function AdjustmentForm({
                   </div>
                 </div>
               </div>
-
-              {/* Sidebar (col-span-12 lg:col-span-4 xl:col-span-3): Audit Trail & Document Information */}
-              <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-6 print-hidden">
-                <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] group border border-slate-200/60 dark:border-white/5">
-                  <div className="absolute top-0 end-0 w-32 h-32 bg-brand-gold/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-brand-gold/10 transition-all duration-700" />
-                  <div className="relative space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 dark:bg-brand-gold/5 flex items-center justify-center border border-brand-gold/20">
-                        <History className="w-5 h-5 text-brand-gold" />
-                      </div>
-                      <h4 className="text-label-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white/90">
-                        {tc("audit_trail")}
-                      </h4>
-                    </div>
-                    {timelineEntries.length > 0 ? (
-                      <div className="ps-2">
-                        <StatusTimeline entries={timelineEntries} />
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-8 opacity-20 gap-3">
-                        <Clock className="w-10 h-10" />
-                        <p className="text-label-xs font-semibold uppercase">
-                          {t("no_history")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </DocumentLockWrapper>
 
         {isLocked ? (
           <div className="static md:sticky md:bottom-0 z-40 md:z-50 bg-card/95 backdrop-blur-2xl border border-border md:border-x-0 md:border-b-0 md:border-t p-4 md:px-8 md:py-5 mt-6 md:mt-auto flex flex-col md:flex-row items-center justify-between gap-4 print-hidden w-full shadow-2xl rounded-2xl md:rounded-none">
-            <div className="flex items-center text-slate-600 dark:text-slate-400 text-xs md:text-sm gap-3 font-bold bg-slate-100 dark:bg-slate-900/50 px-5 py-3 rounded-2xl border border-slate-200 dark:border-white/5 w-full md:w-auto justify-center md:justify-start">
+            <div className="flex items-center text-slate-600 dark:text-slate-400 text-xs md:text-sm gap-3 font-bold bg-card/50 px-5 py-3 rounded-2xl border border-border w-full md:w-auto justify-center md:justify-start">
               <Info className="w-5 h-5 text-brand-gold shrink-0" />
               <span>{t("document_locked")}</span>
             </div>

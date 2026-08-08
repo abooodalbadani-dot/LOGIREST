@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ScopeValidationService {
@@ -42,7 +42,9 @@ export class ScopeValidationService {
     userId: string,
     role: Role,
     warehouseId: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
+    const db = tx || this.prisma;
     if (role === Role.ADMIN || role === Role.GM) return;
 
     if (!warehouseId || warehouseId.trim() === '') {
@@ -50,19 +52,19 @@ export class ScopeValidationService {
     }
 
     if (role === Role.KITCHEN_CHIEF) {
-      const wh = await this.prisma.warehouse.findUnique({
+      const wh = await db.warehouse.findUnique({
         where: { id: warehouseId },
         select: { branchId: true },
       });
       if (!wh) {
         throw new ForbiddenException('Warehouse not found.');
       }
-      const deptScopes = await this.prisma.userDepartmentScope.findMany({
+      const deptScopes = await db.userDepartmentScope.findMany({
         where: { userId },
         include: { department: true },
       });
       const hasScopeInBranch = deptScopes.some(
-        (ds) => ds.department.branchId === wh.branchId,
+        (ds: { department: { branchId: string } }) => ds.department.branchId === wh.branchId,
       );
       if (!hasScopeInBranch) {
         throw new ForbiddenException(
@@ -79,14 +81,14 @@ export class ScopeValidationService {
       role === Role.STORE_MGR ||
       role === Role.PROC_OFFICER
     ) {
-      const wh = await this.prisma.warehouse.findUnique({
+      const wh = await db.warehouse.findUnique({
         where: { id: warehouseId },
         select: { branchId: true },
       });
       if (!wh) {
         throw new ForbiddenException('Warehouse not found.');
       }
-      const hasBranchScope = await this.prisma.userBranchScope.findUnique({
+      const hasBranchScope = await db.userBranchScope.findUnique({
         where: { userId_branchId: { userId, branchId: wh.branchId } },
       });
       if (hasBranchScope) {
@@ -99,7 +101,7 @@ export class ScopeValidationService {
       }
     }
 
-    const hasScope = await this.prisma.userWarehouseScope.findUnique({
+    const hasScope = await db.userWarehouseScope.findUnique({
       where: { userId_warehouseId: { userId, warehouseId } },
     });
     if (!hasScope) {
@@ -113,14 +115,16 @@ export class ScopeValidationService {
     userId: string,
     role: Role,
     departmentId: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
+    const db = tx || this.prisma;
     if (role === Role.ADMIN || role === Role.GM) return;
 
     if (!departmentId || departmentId.trim() === '') {
       throw new BadRequestException('Department ID is required.');
     }
 
-    const hasScope = await this.prisma.userDepartmentScope.findUnique({
+    const hasScope = await db.userDepartmentScope.findUnique({
       where: { userId_departmentId: { userId, departmentId } },
     });
     if (!hasScope) {
@@ -134,14 +138,16 @@ export class ScopeValidationService {
     userId: string,
     role: Role,
     warehouseIds: string[],
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
+    const db = tx || this.prisma;
     if (role === Role.ADMIN || role === Role.GM) return;
     if (!warehouseIds || warehouseIds.length === 0) {
       throw new BadRequestException(
         'At least one Warehouse ID must be provided.',
       );
     }
-    const scopes = await this.prisma.userWarehouseScope.findMany({
+    const scopes = await db.userWarehouseScope.findMany({
       where: { userId, warehouseId: { in: warehouseIds } },
       select: { warehouseId: true },
     });

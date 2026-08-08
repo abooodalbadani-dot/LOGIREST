@@ -13,6 +13,18 @@ describe('NotificationService', () => {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
+    userWarehouseScope: {
+      findMany: jest.fn(),
+    },
+    userBranchScope: {
+      findMany: jest.fn(),
+    },
+    userDepartmentScope: {
+      findMany: jest.fn(),
+    },
+    warehouse: {
+      findMany: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -25,6 +37,11 @@ describe('NotificationService', () => {
 
     service = module.get<NotificationService>(NotificationService);
     jest.clearAllMocks();
+
+    mockPrismaService.userWarehouseScope.findMany.mockResolvedValue([{ warehouseId: 'wh-1' }]);
+    mockPrismaService.userBranchScope.findMany.mockResolvedValue([]);
+    mockPrismaService.userDepartmentScope.findMany.mockResolvedValue([]);
+    mockPrismaService.warehouse.findMany.mockResolvedValue([]);
   });
 
   describe('createNotification', () => {
@@ -77,14 +94,42 @@ describe('NotificationService', () => {
       ];
       mockPrismaService.notificationLog.findMany.mockResolvedValue(mockList);
 
-      const result = await service.getNotifications(Role.WH_KEEPER, 'wh-1');
+      const result = await service.getNotifications(Role.WH_KEEPER, 'user-1', 'wh-1');
 
       expect(result).toEqual(mockList);
       expect(mockPrismaService.notificationLog.findMany).toHaveBeenCalledWith({
         where: {
           targetRole: Role.WH_KEEPER,
           isRead: false,
-          OR: [{ warehouseId: null }, { warehouseId: 'wh-1' }],
+          OR: [{ warehouseId: null }, { warehouseId: { in: ['wh-1'] } }],
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 50,
+      });
+    });
+
+    it('should bypass scope check for ADMIN role', async () => {
+      const mockList = [
+        {
+          id: 'notif-admin',
+          targetRole: Role.ADMIN,
+          warehouseId: 'wh-99',
+          message: 'System alert',
+          isRead: false,
+        },
+      ];
+      mockPrismaService.notificationLog.findMany.mockResolvedValue(mockList);
+
+      const result = await service.getNotifications(Role.ADMIN, 'user-admin', 'wh-99');
+
+      expect(result).toEqual(mockList);
+      expect(mockPrismaService.notificationLog.findMany).toHaveBeenCalledWith({
+        where: {
+          targetRole: Role.ADMIN,
+          isRead: false,
+          OR: [{ warehouseId: null }, { warehouseId: 'wh-99' }],
         },
         orderBy: {
           createdAt: 'desc',
@@ -115,7 +160,7 @@ describe('NotificationService', () => {
         count: 5,
       });
 
-      const result = await service.markAllAsRead(Role.APPROVER, 'wh-1');
+      const result = await service.markAllAsRead(Role.APPROVER, 'user-1', 'wh-1');
 
       expect(result).toEqual({ count: 5 });
       expect(mockPrismaService.notificationLog.updateMany).toHaveBeenCalledWith(
@@ -123,7 +168,7 @@ describe('NotificationService', () => {
           where: {
             targetRole: Role.APPROVER,
             isRead: false,
-            OR: [{ warehouseId: null }, { warehouseId: 'wh-1' }],
+            OR: [{ warehouseId: null }, { warehouseId: { in: ['wh-1'] } }],
           },
           data: { isRead: true },
         },

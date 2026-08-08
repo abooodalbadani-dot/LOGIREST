@@ -207,7 +207,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                       {renderQty ? renderQty(line) : formatQuantity(line.qty, locale as 'ar' | 'en')}
                     </div>
                     <span className="uppercase text-[10px] font-bold text-slate-400 shrink-0">
-                      {getLineUomDisplay(line) || 'PCS'}
+                      {getLineUomDisplay(line) || '—'}
                     </span>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   <span className="text-slate-900 dark:text-white shrink-0">{locale === 'ar' ? 'المعدل' : 'Adjustment'}</span>
                   <div className="font-semibold text-slate-900 dark:text-white flex items-center justify-end gap-1" dir="ltr">
                     <span className="font-mono">{formatQuantity(line.qty, locale as 'ar' | 'en')}</span>
-                    <span className="uppercase text-xs text-slate-500 ms-1">{getLineUomDisplay(line) || 'PCS'}</span>
+                    <span className="uppercase text-xs text-slate-500 ms-1">{getLineUomDisplay(line) || '—'}</span>
                     {adjLine && (
                       adjLine.direction === 'INCREASE' ? (
                         <span className="text-emerald-500 text-[10px] font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded ms-1">{locale === 'ar' ? 'زيادة ↑' : 'Inc ↑'}</span>
@@ -400,7 +400,7 @@ export function DocumentLineItemTable<T extends LineItem>({
           ? "w-full overflow-y-auto custom-scrollbar p-2 bg-[#0B1220]"
           : borderless
             ? "w-full overflow-x-auto relative custom-scrollbar bg-transparent p-1 md:p-0"
-            : "w-full overflow-x-auto relative custom-scrollbar rounded-xl border border-border bg-card shadow-sm",
+            : "w-full overflow-x-auto relative custom-scrollbar rounded-xl border border-border bg-card shadow-sm pb-2",
         dense ? "border-border/80" : ""
       )}
       style={enableVirtualization || layoutMode === 'two-tier' ? { maxHeight, overflowY: 'auto' } : {}}
@@ -416,19 +416,29 @@ export function DocumentLineItemTable<T extends LineItem>({
           dense ? "border-b border-border" : ""
         )}>
           <tr>
-            <th className={cn("sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground", noCollapse ? "w-auto min-w-[130px] md:min-w-[180px]" : mobileLayoutPattern === 'transfer-form' ? "w-[250px] min-w-[250px]" : "w-full min-w-[120px] md:min-w-[180px]", dense ? "px-3 py-2 h-9 text-[10px]" : "px-8 h-14")}>{h.name}</th>
+            <th className={cn(
+              "sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground",
+              noCollapse
+                ? "w-auto min-w-[130px] md:min-w-[180px]"
+                : mobileLayoutPattern === 'transfer-form'
+                  ? "w-[240px] min-w-[220px]"
+                  : extraColumns.length >= 3
+                    ? "w-auto min-w-[180px] md:min-w-[200px] max-w-[260px]"
+                    : "w-auto min-w-[180px] md:min-w-[220px]",
+              dense ? "px-3 py-2 h-9 text-[10px]" : "px-8 h-14"
+            )}>{h.name}</th>
             {!hideLotColumns && (
               <>
                 <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground truncate max-w-[150px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.lot}</th>
                 <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground truncate max-w-[120px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.expiry}</th>
               </>
             )}
-            <th className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", noCollapse ? "min-w-[85px] md:min-w-[120px]" : mobileLayoutPattern === 'transfer-form' ? "w-[140px] min-w-[130px]" : "min-w-[120px]", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.qty}</th>
+            <th className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", noCollapse ? "min-w-[85px] md:min-w-[120px]" : mobileLayoutPattern === 'transfer-form' ? "w-[140px] min-w-[130px]" : "min-w-[100px]", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.qty}</th>
             {!hideUomColumn && (
-              <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground min-w-[140px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.uom}</th>
+              <th className={cn("px-6 py-4 font-medium text-start whitespace-nowrap text-muted-foreground min-w-[110px]", noCollapse ? "table-cell" : "hidden md:table-cell", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.uom}</th>
             )}
             {extraColumns.map((col, i) => (
-              <th key={i} className={cn("px-6 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", col.headerClassName, dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{col.header}</th>
+              <th key={i} className={cn("px-4 py-4 font-medium text-center whitespace-nowrap text-muted-foreground", extraColumns.length >= 3 ? "min-w-[100px]" : "", col.headerClassName, dense ? "px-3 py-2 h-9 text-[10px]" : "px-4 h-14")}>{col.header}</th>
             ))}
             {!isReadOnly && onRemoveLine && (
               <th className={cn("px-6 py-4 font-medium whitespace-nowrap w-10 text-muted-foreground", dense ? "px-3 py-2 h-9" : "px-6 h-14")} />
@@ -490,7 +500,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 </span>
                                 {hideUomColumn && (
                                   <span className="text-[10px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                    {getLineUomDisplay(line) || 'PCS'}
+                                    {getLineUomDisplay(line) || '—'}
                                   </span>
                                 )}
                               </div>
@@ -609,7 +619,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                       <span className="font-mono tracking-wider uppercase" dir="ltr">{line.item.code}</span>
                                       {hideUomColumn && (
                                         <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                          {getLineUomDisplay(line) || 'PCS'}
+                                          {getLineUomDisplay(line) || '—'}
                                         </span>
                                       )}
                                     </div>
@@ -897,9 +907,11 @@ export function DocumentLineItemTable<T extends LineItem>({
 
                                     {/* Before -> After */}
                                     <div className="flex flex-col gap-0.5">
-                                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                                        {locale === 'ar' ? 'قبل ← بعد' : 'Before → After'}
-                                      </span>
+                                      <div className="flex items-center justify-center gap-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate" dir="ltr">
+                                        <span>{locale === 'ar' ? 'قبل' : 'Before'}</span>
+                                        <span className="text-muted-foreground/40">→</span>
+                                        <span>{locale === 'ar' ? 'بعد' : 'After'}</span>
+                                      </div>
                                       <div className="flex items-center justify-center gap-1 font-mono text-xs" dir="ltr">
                                         {(() => {
                                           const beforeCol = extraColumns.find(col => 
@@ -1284,7 +1296,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                   <span className="text-[10px] font-mono font-extrabold text-foreground bg-surface-container-highest px-2 py-0.5 rounded-md border border-border/50 uppercase truncate" dir="ltr">{line.item.code}</span>
                                   {!hideUomColumn && (
                                     <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                      {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                      {getLineUomDisplay(line) || '—'}
                                     </span>
                                   )}
                                 </div>
@@ -1390,7 +1402,16 @@ export function DocumentLineItemTable<T extends LineItem>({
                         )}
 
                         {/* Desktop Layout cells (hidden on mobile) */}
-                        <td className={cn(noCollapse ? "table-cell align-middle sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[130px] md:min-w-[180px]" : mobileLayoutPattern === 'transfer-form' ? "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:w-[250px] md:max-w-[250px]" : "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]", noCollapse ? (dense ? "px-3 py-1 text-xs" : "px-4 py-2") : (dense ? "md:px-4 md:py-1.5" : "md:px-8 md:py-5"))}>
+                        <td className={cn(
+                          noCollapse
+                            ? "table-cell align-middle sticky start-0 z-20 bg-card border-e border-border/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[130px] md:min-w-[180px]"
+                            : mobileLayoutPattern === 'transfer-form'
+                              ? "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:w-[240px] md:max-w-[240px]"
+                              : extraColumns.length >= 3
+                                ? "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px] md:max-w-[260px]"
+                                : "hidden md:table-cell md:align-middle md:sticky md:start-0 md:z-20 md:bg-card md:border-e md:border-border/50 md:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:min-w-[180px]",
+                          noCollapse ? (dense ? "px-3 py-1 text-xs" : "px-4 py-2") : (dense ? "md:px-4 md:py-1.5" : "md:px-6 md:py-4")
+                        )}>
                           <div className="flex items-center gap-2.5">
                             {getItemImage(line.item) ? (
                               <img src={getItemImage(line.item) || ''} alt="Product" className="w-8 h-8 object-cover rounded-md border border-border shrink-0" />
@@ -1409,7 +1430,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 </span>
                                 {hideUomColumn && (
                                   <span className="text-[10px] bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
-                                    {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                    {getLineUomDisplay(line) || '—'}
                                   </span>
                                 )}
                               </div>
@@ -1810,9 +1831,11 @@ export function DocumentLineItemTable<T extends LineItem>({
 
                             {/* Before -> After */}
                             <div className="flex flex-col gap-0.5">
-                              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                                {locale === 'ar' ? 'قبل ← بعد' : 'Before → After'}
-                              </span>
+                              <div className="flex items-center justify-center gap-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate" dir="ltr">
+                                <span>{locale === 'ar' ? 'قبل' : 'Before'}</span>
+                                <span className="text-muted-foreground/40">→</span>
+                                <span>{locale === 'ar' ? 'بعد' : 'After'}</span>
+                              </div>
                               <div className="flex items-center justify-center gap-1 font-mono text-xs" dir="ltr">
                                 {(() => {
                                   const beforeCol = extraColumns.find(col => 
@@ -2192,7 +2215,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                             <span className="text-[10px] font-mono font-extrabold text-foreground bg-surface-container-highest px-2 py-0.5 rounded-md border border-border/50 uppercase truncate" dir="ltr">{line.item.code}</span>
                             {!hideUomColumn && (
                               <span className="text-[9px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                {getLineUomDisplay(line) || '—'}
                               </span>
                             )}
                           </div>
@@ -2220,7 +2243,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                                 <span className="text-[8px] font-mono font-extrabold text-foreground bg-surface-container-highest px-1 py-0.5 rounded border border-border/50 uppercase truncate" dir="ltr">{line.item.code}</span>
                                 {!hideUomColumn && (
                                   <span className="text-[7px] bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-1 py-0.5 rounded uppercase font-bold tracking-wider">
-                                    {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                                    {getLineUomDisplay(line) || '—'}
                                   </span>
                                 )}
                               </div>
@@ -2322,7 +2345,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                         </span>
                         {hideUomColumn && (
                           <span className="text-[9.5px] bg-[#1F2937] text-gray-300 px-1.5 py-0.5 rounded uppercase font-semibold">
-                            {line.item.primaryUom?.name || line.item.primaryUom?.code || 'PCS'}
+                            {getLineUomDisplay(line) || '—'}
                           </span>
                         )}
                       </div>

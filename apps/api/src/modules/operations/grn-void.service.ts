@@ -7,13 +7,14 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Role, DocumentType, Prisma } from '@prisma/client';
+import { toBaseQty } from '@logirest/shared-types';
 
 @Injectable()
 export class GrnVoidService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
-  ) {}
+  ) { }
 
   async void(
     grnId: string,
@@ -61,7 +62,15 @@ export class GrnVoidService {
               where: { id: grnId },
               include: {
                 lines: {
-                  include: { item: true },
+                  include: {
+                    item: {
+                      include: {
+                        uomConversions: {
+                          select: { fromUomId: true, toUomId: true, factor: true },
+                        },
+                      },
+                    },
+                  },
                 },
               },
             });
@@ -81,7 +90,7 @@ export class GrnVoidService {
               );
             }
 
-            // Assert no subsequent GRNs containing any of the items have been posted in the warehouse
+            // Assert no subsequent GRNs containing  of the items have been posted in the warehouse
             const subsequentGrn = await tx.goodsReceivedNote.findFirst({
               where: {
                 warehouseId: grn.warehouseId,
@@ -106,7 +115,18 @@ export class GrnVoidService {
 
             for (const line of sortedLines) {
               const item = line.item;
-              const qtyVal = Number(line.quantityReceived);
+              const lineUomId = line.uomId || item.uomId;
+              const conversions = (item.uomConversions || []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const baseQuantity = toBaseQty(
+                Number(line.quantityReceived),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
 
               const lockedItem = await this.lockService.lockItem(
                 tx,
@@ -115,7 +135,7 @@ export class GrnVoidService {
               );
               if (lockedItem) {
                 const itemQty = Number(lockedItem.qtyOnHand);
-                if (itemQty < qtyVal) {
+                if (itemQty < baseQuantity) {
                   throw new BadRequestException(
                     'GRN voiding is rejected because items from this receipt have been partially or fully issued/consumed.',
                   );
@@ -138,7 +158,7 @@ export class GrnVoidService {
                 );
                 if (lockedLots.length > 0) {
                   const lotQty = Number(lockedLots[0].qtyOnHand);
-                  if (lotQty < qtyVal) {
+                  if (lotQty < baseQuantity) {
                     throw new BadRequestException(
                       'GRN voiding is rejected because items from this receipt have been partially or fully issued/consumed.',
                     );
@@ -149,8 +169,22 @@ export class GrnVoidService {
 
             for (const line of sortedLines) {
               const item = line.item;
-              const qtyVal = Number(line.quantityReceived);
-              const unitPrice = Number(line.unitPrice);
+              const lineUomId = line.uomId || item.uomId;
+              const conversions = (item.uomConversions || []).map((c) => ({
+                fromUomId: c.fromUomId,
+                toUomId: c.toUomId,
+                factor: Number(c.factor),
+              }));
+              const baseQuantity = toBaseQty(
+                Number(line.quantityReceived),
+                lineUomId,
+                item.uomId,
+                conversions,
+              );
+              const fxRate = grn.fxRate ? Number(grn.fxRate) : 1;
+              const transactionPriceInBaseCurrency = Number(line.unitPrice) * fxRate;
+              const lineTotalValue = Number(line.quantityReceived) * transactionPriceInBaseCurrency;
+              const baseUnitCost = baseQuantity > 0 ? lineTotalValue / baseQuantity : transactionPriceInBaseCurrency;
 
               if (item.isBatched || item.hasExpiry) {
                 const lotId = line.lotId!;
@@ -163,7 +197,7 @@ export class GrnVoidService {
                       lotId,
                     },
                   },
-                  data: { qtyOnHand: { decrement: qtyVal } },
+                  data: { qtyOnHand: { decrement: baseQuantity } },
                 });
 
                 await tx.warehouseItem.update({
@@ -173,7 +207,7 @@ export class GrnVoidService {
                       itemId: item.id,
                     },
                   },
-                  data: { qtyOnHand: { decrement: qtyVal } },
+                  data: { qtyOnHand: { decrement: baseQuantity } },
                 });
 
                 await tx.stockLedger.create({
@@ -181,7 +215,7 @@ export class GrnVoidService {
                     warehouseId: grn.warehouseId,
                     itemId: item.id,
                     lotId,
-                    quantity: -qtyVal,
+                    quantity: -baseQuantity,
                     documentId: grn.id,
                     documentType: DocumentType.GOODS_RECEIVED_NOTE,
                     idempotencyKey: `${DocumentType.GOODS_RECEIVED_NOTE}:stock:${grn.id}:${item.id}:${line.id}:void`,
@@ -195,7 +229,7 @@ export class GrnVoidService {
                       itemId: item.id,
                     },
                   },
-                  data: { qtyOnHand: { decrement: qtyVal } },
+                  data: { qtyOnHand: { decrement: baseQuantity } },
                 });
 
                 await tx.stockLedger.create({
@@ -203,7 +237,7 @@ export class GrnVoidService {
                     warehouseId: grn.warehouseId,
                     itemId: item.id,
                     lotId: null,
-                    quantity: -qtyVal,
+                    quantity: -baseQuantity,
                     documentId: grn.id,
                     documentType: DocumentType.GOODS_RECEIVED_NOTE,
                     idempotencyKey: `${DocumentType.GOODS_RECEIVED_NOTE}:stock:${grn.id}:${item.id}:${line.id}:void`,
@@ -242,8 +276,8 @@ export class GrnVoidService {
                 data: {
                   warehouseId: grn.warehouseId,
                   itemId: item.id,
-                  quantity: -qtyVal,
-                  unitPrice: unitPrice,
+                  quantity: -baseQuantity,
+                  unitPrice: baseUnitCost,
                   newWac: roundedWac,
                   documentId: grn.id,
                   documentType: DocumentType.GOODS_RECEIVED_NOTE,
