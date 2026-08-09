@@ -728,4 +728,35 @@ export class StocktakeService {
       return this.findOne(id, tx);
     });
   }
+
+  async close(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: { comments?: string; version?: number; ipAddress?: string },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const session = await tx.stocktakeSession.findUnique({
+        where: { id },
+      });
+
+      if (!session) {
+        throw new NotFoundException(`StocktakeSession with ID ${id} not found`);
+      }
+
+      await this.workflowService.executeTransition(
+        id,
+        'stocktakeSession',
+        'CLOSE',
+        userId,
+        userRole,
+        body.comments || 'Session closed and archived',
+        body.version,
+        body.ipAddress,
+        tx,
+      );
+
+      return this.findOne(id, tx);
+    });
+  }
 }

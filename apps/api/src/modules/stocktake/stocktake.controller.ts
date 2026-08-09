@@ -645,4 +645,35 @@ export class StocktakeController {
     );
     return mapStocktakeDetail(session);
   }
+
+  @Post(':id/close')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.BRANCH_MGR)
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'stocktake',
+    action: 'CLOSE',
+    modelName: 'stocktakeSession',
+  })
+  @HttpCode(HttpStatus.OK)
+  async close(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const session = await this.stocktakeService.close(id, userId, role, {
+      comments: body.comments,
+      version: body.version,
+      ipAddress,
+    });
+    return mapStocktakeDetail(session);
+  }
 }
