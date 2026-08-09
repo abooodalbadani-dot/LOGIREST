@@ -1,4 +1,4 @@
-﻿-- AlterEnum
+-- AlterEnum
 ALTER TYPE "AdjustmentReason" ADD VALUE 'OPENING_STOCK';
 
 -- AlterTable
