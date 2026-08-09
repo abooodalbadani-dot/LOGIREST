@@ -1,6 +1,7 @@
 "use client"
 
 import { Input } from '@/components/ui/input';
+import { Button } from "@/components/ui/button";
 import * as React from "react";
 import { RelationalName } from "@/components/shared/RelationalName";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
@@ -100,6 +101,12 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
     }));
   }, [filteredItems]);
 
+  const ownerName =
+    session.postedBy ||
+    (session.startedBy && session.startedBy !== 'System' && session.startedBy !== 'SYSTEM'
+      ? session.startedBy
+      : user?.name || common('system_administrator') || 'System Administrator');
+
   return (
     <div className="min-h-screen pb-48 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
@@ -125,7 +132,11 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
             className="h-6 px-2 text-label-xxs font-semibold border-none"
           />
         }
-        actions={<DocumentExportMenu documentType="STOCKTAKE" documentId={session.id} documentNumber={session.sessionNumber} />}
+        actions={
+          session.items && session.items.length > 0 ? (
+            <DocumentExportMenu documentType="STOCKTAKE" documentId={session.id} documentNumber={session.sessionNumber} />
+          ) : null
+        }
         isEditing={true}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
@@ -137,6 +148,31 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
           <LockBanner lockState={lockState} />
         )}
 
+        {['STARTED', 'COUNTING'].includes(session.status) && (
+          <Card className="p-4 sm:p-6 bg-operational-cyan/10 border border-operational-cyan/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3 text-start">
+              <div className="p-3 bg-operational-cyan/20 rounded-xl text-operational-cyan shrink-0">
+                <Play className="w-6 h-6 fill-current" />
+              </div>
+              <div className="space-y-1 text-start">
+                <h4 className="text-body-md font-bold text-foreground">
+                  {locale === 'ar' ? 'الجلسة قيد الجرد الآن' : 'Stocktake Session is Active'}
+                </h4>
+                <p className="text-label-xs text-muted-foreground">
+                  {locale === 'ar' ? 'المستودع مجمّد حالياً. اضغط على الزر أدناه لإدخال الكميات وتدوين النتائج.' : 'Warehouse is locked. Click the button to enter and log counted quantities.'}
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              onClick={() => router.push(`/stocktake/${session.id}/count`)}
+              className="w-full sm:w-auto h-11 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-slate-950 font-extrabold text-label-xs uppercase rounded-xl shrink-0 shadow-lg shadow-operational-cyan/20 animate-pulse"
+            >
+              {locale === 'ar' ? 'بدء إدخال الكميات ↵' : 'Enter Count ↵'}
+            </Button>
+          </Card>
+        )}
+
         {/* Form Content Wrapper with Visual Locking */}
         <div className={cn(
           "space-y-6 transition-all duration-500",
@@ -146,7 +182,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
               { label: common('warehouse'), value: <RelationalName name={warehouseName} rawId={session.warehouseId} />, icon: Warehouse, color: 'text-primary' },
-              { label: t('owner'), value: session.postedBy || common('system_user'), icon: User, color: 'text-foreground' },
+              { label: t('owner'), value: ownerName, icon: User, color: 'text-foreground' },
               { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
               { label: t('last_updated'), value: session.updatedAt ? <ClientOnlyTime date={session.updatedAt} mode="time" /> : common('dash'), icon: Clock, color: 'text-amber-500' },
             ].map((item, idx) => (
@@ -387,10 +423,10 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
               const timeline = (session.auditLog ?? []).map(log => ({
                 status: log.status.toLowerCase() as Status,
                 at: log.createdAt,
-                by: log.userName || common('system_user'),
+                by: (log.userName && log.userName !== 'SYSTEM' && log.userName !== 'System') ? log.userName : ownerName,
               }));
               if (timeline.length === 0) {
-                timeline.push({ status: 'draft' as Status, at: session.createdAt || new Date().toISOString(), by: session.startedBy || common('system_user') });
+                timeline.push({ status: 'draft' as Status, at: session.createdAt || new Date().toISOString(), by: ownerName });
               }
               return <StatusTimeline entries={timeline} />;
             })()}

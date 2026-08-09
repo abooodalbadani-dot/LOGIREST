@@ -40,6 +40,9 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  branchId: selectedBranchId 
  }, { enabled: !!selectedBranchId });
  let warehouses = warehousesData?.data || [];
+ if (selectedBranchId) {
+  warehouses = warehouses.filter((w: MasterDataItem & { branchId?: string | null }) => !w.branchId || w.branchId === selectedBranchId);
+ }
 
  if (user?.role !== 'ADMIN' && user?.scopes) {
   const allowedWarehouseIds = user.scopes

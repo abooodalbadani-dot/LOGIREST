@@ -147,6 +147,17 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
             </Button>
           </ActionGuard>
 
+          {['STARTED', 'COUNTING'].includes(status) && (
+            <Button
+              type="button"
+              onClick={() => router.push(`/stocktake/${id}/count`)}
+              className="h-10 px-5 rounded-xl bg-operational-cyan hover:bg-operational-cyan/90 text-slate-950 font-extrabold uppercase text-label-xs flex items-center shadow-lg shadow-operational-cyan/20 animate-pulse"
+            >
+              <Play className="w-4 h-4 me-2 fill-current" />
+              {locale === 'ar' ? 'إدخال الكميات / متابعة الجرد' : 'Enter Count / Continue'}
+            </Button>
+          )}
+
           {status === 'REVIEW' && (
             <ActionGuard documentType="STOCKTAKE" status={status} action="RECOUNT" role={user?.role}>
               <Button

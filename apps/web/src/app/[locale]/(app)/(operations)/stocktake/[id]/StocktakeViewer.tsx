@@ -28,6 +28,8 @@ import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRU
 import { ItemSchema, type Item } from "@/types/master-data";
 import { Stocktake, StocktakeItem } from "@/features/operations/types/stocktake";
 
+import { useAuth } from "@/providers/AuthProvider";
+
 interface StocktakeViewerProps {
   session: Stocktake;
   locale: 'ar' | 'en';
@@ -39,6 +41,13 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   const common = useTranslations('common')
   const tp = useTranslations('print')
   const router = useRouter()
+  const { user } = useAuth()
+
+  const ownerName =
+    session.postedBy ||
+    (session.startedBy && session.startedBy !== 'System' && session.startedBy !== 'SYSTEM'
+      ? session.startedBy
+      : user?.name || common('system_administrator') || 'System Administrator');
 
   const [manifestSearch, setManifestSearch] = React.useState('')
   const warehouseName = session.warehouseName;
@@ -119,7 +128,9 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         actions={
           <div className="flex items-center gap-3">
             {actions}
-            <DocumentExportMenu documentType="STOCKTAKE" documentId={session.id} documentNumber={session.sessionNumber} />
+            {session.items && session.items.length > 0 && (
+              <DocumentExportMenu documentType="STOCKTAKE" documentId={session.id} documentNumber={session.sessionNumber} />
+            )}
           </div>
         }
       />
@@ -129,7 +140,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: common('warehouse'), value: <RelationalName name={warehouseName} rawId={session.warehouseId} />, icon: Warehouse, color: 'text-primary' },
-            { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-foreground' },
+            { label: t('owner'), value: ownerName, icon: User, color: 'text-foreground' },
             { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
             { label: t('last_updated'), value: <ClientOnlyTime date={session.updatedAt ?? session.snapshotAt} mode="time" />, icon: Clock, color: 'text-amber-500' },
           ].map((item, idx) => (
@@ -293,10 +304,10 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
             const timeline = (session.auditLog ?? []).map(log => ({
               status: log.status.toLowerCase() as Status,
               at: log.createdAt,
-              by: log.userName || common('system_user'),
+              by: (log.userName && log.userName !== 'SYSTEM' && log.userName !== 'System') ? log.userName : ownerName,
             }));
             if (timeline.length === 0) {
-              timeline.push({ status: 'draft' as Status, at: session.createdAt ?? session.snapshotAt, by: session.startedBy || common('system_user') });
+              timeline.push({ status: 'draft' as Status, at: session.createdAt ?? session.snapshotAt, by: ownerName });
             }
             return <StatusTimeline entries={timeline} />;
           })()}

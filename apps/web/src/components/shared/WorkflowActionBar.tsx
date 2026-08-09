@@ -135,8 +135,11 @@ export function WorkflowActionBar({
   const targetResource = resource || DEFAULT_RESOURCE_MAP[documentType] || 'pr';
   const role = userRole ?? undefined;
 
-  // Separation of Duties: Anti-Self-Approval Rule
+  // Separation of Duties: Anti-Self-Approval Rule (Exempt for STOCKTAKE, ADJUSTMENT, and ADMIN role)
   const isSelfApproval = Boolean(
+    documentType !== 'STOCKTAKE' &&
+    documentType !== 'ADJUSTMENT' &&
+    role !== 'ADMIN' &&
     documentCreatorId && currentUserId && documentCreatorId === currentUserId
   );
 

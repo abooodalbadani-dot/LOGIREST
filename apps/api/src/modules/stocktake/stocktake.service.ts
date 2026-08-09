@@ -157,7 +157,18 @@ export class StocktakeService {
       throw new NotFoundException(`StocktakeSession with ID ${id} not found`);
     }
 
-    return session;
+    const auditLogs = await client.auditLog.findMany({
+      where: { targetId: id },
+      include: {
+        user: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return {
+      ...session,
+      auditLogs,
+    };
   }
 
   async start(

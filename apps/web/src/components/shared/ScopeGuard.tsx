@@ -10,7 +10,7 @@ interface ScopeGuardProps {
     children: React.ReactNode;
 }
 
-const SCOPELESS_ROLES: string[] = ['ADMIN', 'GM', 'INV_MGR', 'AUDITOR', 'VIEWER'];
+const SCOPELESS_ROLES: string[] = ['ADMIN'];
 
 export function ScopeGuard({ warehouseId, children }: ScopeGuardProps) {
     const { user } = useAuth();

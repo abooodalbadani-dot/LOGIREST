@@ -14,7 +14,10 @@ import {
  FileText, 
  Settings2,
  ChevronRight,
- ClipboardList
+ ClipboardList,
+ CheckCircle2,
+ Lock,
+ Scale
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -59,16 +62,18 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  const createStocktake = useCreateStocktake();
  const { playSound } = useAudioFeedback();
 
+ const isScopeless = user?.role === 'ADMIN';
+
  const assignedWarehouseIds = React.useMemo(() => {
-  if (!user?.scopes) return null;
+  if (isScopeless || !user?.scopes) return null;
   const ids = user.scopes.map(s => s.warehouseId).filter(Boolean) as string[];
   return ids.length > 0 ? ids : null;
- }, [user?.scopes]);
+ }, [user, isScopeless]);
 
  const filteredWarehouses = React.useMemo(() => {
-  if (!warehouses || !assignedWarehouseIds) return warehouses;
+  if (isScopeless || !warehouses || !assignedWarehouseIds) return warehouses;
   return warehouses.filter(w => assignedWarehouseIds.includes(w.id));
- }, [warehouses, assignedWarehouseIds]);
+ }, [warehouses, assignedWarehouseIds, isScopeless]);
 
  const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -289,48 +294,94 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
 
   </div>
 
-  {/* Contextual Advisory Sidebar (spans 1 column) */}
-  <div className="hidden lg:block bg-muted/20 border border-border/30 rounded-2xl p-6 space-y-4">
-   {locale === 'ar' ? (
-    <>
-     <div className="flex items-center justify-start gap-3 mb-2">
-      <div className="p-2 rounded-xl bg-brand-gold/10 text-brand-gold border border-brand-gold/20 shrink-0">
-       <ClipboardList className="w-5 h-5" />
+   {/* Contextual Advisory Sidebar */}
+   <div className="bg-card/40 border border-border/50 dark:border-brand-gold/20 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl backdrop-blur-md order-first lg:order-last">
+    {locale === 'ar' ? (
+     <>
+      <div className="flex items-center justify-start gap-3 pb-3 border-b border-border/30">
+       <div className="p-2.5 rounded-xl bg-brand-gold/15 text-brand-gold border border-brand-gold/30 shadow-sm shrink-0">
+        <ClipboardList className="w-5 h-5" />
+       </div>
+       <h4 className="text-title-sm font-bold text-foreground">
+        إرشادات جلسة الجرد
+       </h4>
       </div>
-      <h4 className="text-title-sm font-bold text-foreground">
-       إرشادات جلسة الجرد
-      </h4>
-     </div>
-     <p className="text-label-sm text-muted-foreground/60 leading-relaxed text-start">
-      يرجى قراءة إرشادات الجرد الفعلي التالية لضمان دقة وصحة البيانات المالية للمخزن:
-     </p>
-     <ul className="space-y-3 text-label-sm text-muted-foreground/80 list-disc list-inside leading-relaxed text-start">
-      <li>تأكد من ترحيل جميع مستندات الاستلام (GRN) قبل بدء جلسة الجرد.</li>
-      <li>سيتم قفل مستودع الجلسة تلقائياً لمنع أي حركات مخزنية أثناء عملية الجرد.</li>
-      <li>تأكد من مطابقة وتسوية جميع الفروقات بعد الانتهاء من إدخال الكميات الفعلية.</li>
-     </ul>
-    </>
-   ) : (
-    <>
-     <div className="flex items-center justify-start gap-3 mb-2">
-      <div className="p-2 rounded-xl bg-brand-gold/10 text-brand-gold border border-brand-gold/20 shrink-0">
-       <ClipboardList className="w-5 h-5" />
+      <p className="text-label-sm text-muted-foreground/70 leading-relaxed text-start">
+       يرجى قراءة إرشادات الجرد الفعلي التالية لضمان دقة وصحة البيانات المالية للمخزن:
+      </p>
+      <div className="space-y-3 text-start pt-1">
+       <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+        <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-500 shrink-0 mt-0.5">
+         <CheckCircle2 className="w-4 h-4" />
+        </div>
+        <span className="text-label-sm text-foreground/90 leading-relaxed">
+         تأكد من ترحيل جميع مستندات الاستلام (GRN) قبل بدء جلسة الجرد.
+        </span>
+       </div>
+
+       <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+        <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-500 shrink-0 mt-0.5">
+         <Lock className="w-4 h-4" />
+        </div>
+        <span className="text-label-sm text-foreground/90 leading-relaxed">
+         سيتم قفل مستودع الجلسة تلقائياً لمنع أي حركات مخزنية أثناء عملية الجرد.
+        </span>
+       </div>
+
+       <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+        <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-500 shrink-0 mt-0.5">
+         <Scale className="w-4 h-4" />
+        </div>
+        <span className="text-label-sm text-foreground/90 leading-relaxed">
+         تأكد من مطابقة وتسوية جميع الفروقات بعد الانتهاء من إدخال الكميات الفعلية.
+        </span>
+       </div>
       </div>
-      <h4 className="text-title-sm font-bold text-foreground">
-       Session Guidelines
-      </h4>
-     </div>
-     <p className="text-label-sm text-muted-foreground/60 leading-relaxed text-start">
-      Please review the following counting and inventory protocols to ensure the integrity of the ledger:
-     </p>
-     <ul className="space-y-3 text-label-sm text-muted-foreground/80 list-disc list-inside leading-relaxed text-start">
-      <li>Ensure all Goods Received Notes (GRNs) are posted before starting the session.</li>
-      <li>The selected warehouse will be locked automatically to restrict stock movements during counting.</li>
-      <li>Ensure all variances are settled after completing the count entry.</li>
-     </ul>
-    </>
-   )}
-  </div>
+     </>
+    ) : (
+     <>
+      <div className="flex items-center justify-start gap-3 pb-3 border-b border-border/30">
+       <div className="p-2.5 rounded-xl bg-brand-gold/15 text-brand-gold border border-brand-gold/30 shadow-sm shrink-0">
+        <ClipboardList className="w-5 h-5" />
+       </div>
+       <h4 className="text-title-sm font-bold text-foreground">
+        Session Guidelines
+       </h4>
+      </div>
+      <p className="text-label-sm text-muted-foreground/70 leading-relaxed text-start">
+       Please review the following counting and inventory protocols to ensure the integrity of the ledger:
+      </p>
+      <div className="space-y-3 text-start pt-1">
+       <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+        <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-500 shrink-0 mt-0.5">
+         <CheckCircle2 className="w-4 h-4" />
+        </div>
+        <span className="text-label-sm text-foreground/90 leading-relaxed">
+         Ensure all Goods Received Notes (GRNs) are posted before starting the session.
+        </span>
+       </div>
+
+       <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+        <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-500 shrink-0 mt-0.5">
+         <Lock className="w-4 h-4" />
+        </div>
+        <span className="text-label-sm text-foreground/90 leading-relaxed">
+         The selected warehouse will be locked automatically to restrict stock movements during counting.
+        </span>
+       </div>
+
+       <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+        <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-500 shrink-0 mt-0.5">
+         <Scale className="w-4 h-4" />
+        </div>
+        <span className="text-label-sm text-foreground/90 leading-relaxed">
+         Ensure all variances are settled after completing the count entry.
+        </span>
+       </div>
+      </div>
+     </>
+    )}
+   </div>
  </div>
 
  </form>

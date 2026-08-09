@@ -45,7 +45,7 @@ export class WarehousesDirectController {
     @Query('ignoreScope') ignoreScope?: string,
     @Query('search') search?: string,
   ) {
-    const limitNum = Math.min(limitQuery ? parseInt(limitQuery, 10) : 20, 50);
+    const limitNum = Math.min(limitQuery ? parseInt(limitQuery, 10) : 100, 500);
     const pageNum = pageQuery ? parseInt(pageQuery, 10) : 1;
     const skip = (pageNum - 1) * limitNum;
 
@@ -53,6 +53,10 @@ export class WarehousesDirectController {
     if (includeInactive !== 'true') {
       filter.isActive = true;
     }
+
+    // Only ADMIN role has global unrestricted warehouse access
+    const isGlobalRole = role === 'ADMIN';
+
     if (branchId) {
       filter.branchId = branchId;
     }
@@ -62,7 +66,7 @@ export class WarehousesDirectController {
         { code: { contains: search, mode: 'insensitive' } },
       ];
     }
-    if (role !== 'ADMIN' && ignoreScope !== 'true') {
+    if (!isGlobalRole) {
       filter.userScopes = {
         some: {
           userId,

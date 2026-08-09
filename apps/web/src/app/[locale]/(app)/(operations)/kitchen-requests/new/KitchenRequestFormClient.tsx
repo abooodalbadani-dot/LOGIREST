@@ -265,7 +265,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
     return ids.length > 0 ? ids : null;
   }, [user?.scopes]);
 
-  const isScopeless = user?.role ? ['ADMIN', 'GM', 'INV_MGR', 'AUDITOR', 'VIEWER'].includes(user.role) : false;
+  const isScopeless = user?.role === 'ADMIN';
   const hasNoScope = !isScopeless && assignedWarehouseIds === null && assignedDepartmentIds === null;
 
   // Filter and map warehouses/departments/items using centralized mappers

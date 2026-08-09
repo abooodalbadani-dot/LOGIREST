@@ -86,6 +86,17 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
   const totalItems = snapshots.length;
   const countedItems = counts.length;
 
+  const rawAuditLogs = (session?.auditLogs as Record<string, unknown>[]) || (session?.auditLog as Record<string, unknown>[]) || [];
+  const auditLog = rawAuditLogs.map((log: Record<string, unknown>) => {
+    const logUser = log.user as Record<string, unknown> | null;
+    const actionStr = (log.action as string) || '';
+    return {
+      status: actionStr.replace(/^STOCKTAKE_/, '').replace(/^SESSION_/, '').toLowerCase(),
+      createdAt: safeIsoString(log.createdAt) || new Date().toISOString(),
+      userName: (logUser?.name as string) || (log.userName as string) || 'System',
+    };
+  });
+
   return {
     id: (session?.id as string) || '',
     sessionNumber,
@@ -94,7 +105,7 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
     warehouseName: (warehouse?.name as string) || '',
     status: (session?.status as string) || 'DRAFT',
     snapshotAt: safeIsoString(session?.createdAt) || new Date().toISOString(),
-    startedBy: 'System',
+    startedBy: (session?.startedBy as string) || 'System',
     startedAt: safeIsoString(session?.createdAt) || new Date().toISOString(),
     postedAt:
       session?.status === 'POSTED' && session?.createdAt
@@ -112,7 +123,7 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
     updatedAt:
       safeIsoString(session?.updatedAt || session?.createdAt) ||
       new Date().toISOString(),
-    auditLog: [],
+    auditLog,
   };
 }
 
@@ -432,7 +443,7 @@ export class StocktakeController {
   }
 
   @Post(':id/approve')
-  @Roles(Role.ADMIN, Role.GM, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.APPROVER, Role.INV_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -463,7 +474,7 @@ export class StocktakeController {
   }
 
   @Post(':id/reject')
-  @Roles(Role.ADMIN, Role.GM, Role.APPROVER, Role.BRANCH_MGR)
+  @Roles(Role.ADMIN, Role.GM, Role.APPROVER, Role.INV_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',

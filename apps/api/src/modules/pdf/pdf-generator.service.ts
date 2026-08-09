@@ -14,17 +14,23 @@ export class PdfGeneratorService {
 
   private async getBaseCurrencyCode(): Promise<string> {
     try {
+      const baseDbCurrency = await this.prisma.currency.findFirst({
+        where: { isBase: true, isActive: true },
+        select: { code: true },
+      });
+      if (baseDbCurrency?.code) {
+        return baseDbCurrency.code;
+      }
       const setting = await this.prisma.systemSetting.findUnique({
         where: { key: 'system_settings' },
       });
       if (setting?.value) {
         const parsed = JSON.parse(setting.value);
-        return (
+        const code =
           parsed.baseCurrency ??
           parsed.base_currency ??
-          process.env.BASE_CURRENCY_CODE ??
-          ''
-        );
+          process.env.BASE_CURRENCY_CODE;
+        if (code) return code;
       }
     } catch (e) {
       console.warn(
@@ -32,7 +38,7 @@ export class PdfGeneratorService {
         e,
       );
     }
-    return process.env.BASE_CURRENCY_CODE ?? '';
+    return process.env.BASE_CURRENCY_CODE || '_';
   }
 
   private async getRestaurantLogoHtml(): Promise<string> {
@@ -1233,12 +1239,12 @@ export class PdfGeneratorService {
             ev.actionPerformed === 'SUBMIT'
               ? isAr ? 'إرسال' : 'Submitted'
               : ev.actionPerformed === 'APPROVE'
-              ? isAr ? 'اعتماد' : 'Approved'
-              : ev.actionPerformed === 'REJECT'
-              ? isAr ? 'رفض' : 'Rejected'
-              : ev.actionPerformed === 'CANCEL'
-              ? isAr ? 'إلغاء' : 'Cancelled'
-              : ev.actionPerformed;
+                ? isAr ? 'اعتماد' : 'Approved'
+                : ev.actionPerformed === 'REJECT'
+                  ? isAr ? 'رفض' : 'Rejected'
+                  : ev.actionPerformed === 'CANCEL'
+                    ? isAr ? 'إلغاء' : 'Cancelled'
+                    : ev.actionPerformed;
           const userName = ev.user?.name || ev.user?.role || (isAr ? 'النظام' : 'System');
           const commentsText = ev.comments || '—';
           const evDate = this.formatDate(ev.createdAt, timeZone);

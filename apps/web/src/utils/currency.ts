@@ -13,17 +13,17 @@ export function convertToBase(foreignAmount: number | null | undefined, fxRate: 
  * The calling component wraps the output in <span dir="ltr"> in RTL context.
  */
 export function formatCurrency(
-  amount: number | null | undefined, 
-  currencyCode?: string | null, 
+  amount: number | null | undefined,
+  currencyCode?: string | null,
   locale: 'ar' | 'en' = 'en'
 ): string {
   const safeAmount = amount == null || isNaN(amount) ? 0 : amount;
-  const safeCode = (currencyCode && currencyCode.length === 3) ? currencyCode.toUpperCase() : 'USD';
+  const safeCode = (currencyCode && currencyCode.length === 3) ? currencyCode.toUpperCase() : '_';
   const safeLocale = locale || 'en';
-  
+
   // Use 'ar-u-nu-latn' to force Western Arabic numerals (1, 2, 3...) in Arabic locale
   const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
-  
+
   try {
     return new Intl.NumberFormat(formatterLocale, {
       style: 'currency',
@@ -44,20 +44,20 @@ export function formatCurrency(
  * Format a plain number with locale separators.
  */
 export function formatNumber(
-  value: number | null | undefined, 
-  locale: 'ar' | 'en' = 'en', 
+  value: number | null | undefined,
+  locale: 'ar' | 'en' = 'en',
   precision?: number
 ): string {
   const safeValue = value == null || isNaN(value) ? 0 : value;
   const safeLocale = locale || 'en';
   const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
-  
+
   const options: Intl.NumberFormatOptions = {};
   if (precision !== undefined) {
     options.minimumFractionDigits = precision;
     options.maximumFractionDigits = precision;
   }
-  
+
   return new Intl.NumberFormat(formatterLocale, options).format(safeValue);
 }
 
@@ -68,7 +68,7 @@ export function formatQuantity(value: number | null | undefined, locale: 'ar' | 
   const safeValue = value == null || isNaN(value) ? 0 : value;
   const safeLocale = locale || 'en';
   const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
-  
+
   return new Intl.NumberFormat(formatterLocale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 3,
@@ -89,11 +89,11 @@ export function formatDate(date: Date | string | null | undefined, locale: 'ar' 
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '—';
-  
+
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
-  
+
   return `${day}/${month}/${year}`;
 }
 
@@ -101,22 +101,22 @@ export function formatDate(date: Date | string | null | undefined, locale: 'ar' 
  * Format a datetime string with standardized locale (YYYY-MM-DD HH:MM).
  */
 export function formatDateTime(
-  date: Date | string | null | undefined, 
+  date: Date | string | null | undefined,
   locale: 'ar' | 'en' = 'en',
   includeSeconds: boolean = false
 ): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '—';
-  
+
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
-  
+
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const secondsStr = includeSeconds ? `:${String(d.getSeconds()).padStart(2, '0')}` : '';
-  
+
   return `${day}/${month}/${year} ${hours}:${minutes}${secondsStr}`;
 }
 
