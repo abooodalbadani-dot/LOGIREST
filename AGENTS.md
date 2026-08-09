@@ -21,6 +21,12 @@ c:\kitchen-store-inventory-system\specs\048-rbac-master-data-guards\plan.md
 
 If you violate these rules, the PR will be immediately rejected. Provide strictly typed, production-ready code only.
 
+# CRITICAL PRISMA WORKFLOW RULE:
+1. NEVER modify `schema.prisma` without generating a migration.
+2. Immediately after adding or editing any tables, fields, or enums in `schema.prisma`, you MUST ALWAYS execute the following command locally to generate the SQL migration file:
+   `cd apps/api && npx prisma migrate dev --name <descriptive_name>`
+3. You are strictly forbidden from committing code or initiating a deployment before verifying that a new `.sql` migration file has been successfully generated in the `prisma/migrations/` directory.
+
 
 ## CRITICAL ARCHITECTURE RULES FOR ENTIRE WORKSPACE (FRONTEND & BACKEND):
 
